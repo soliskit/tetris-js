@@ -5,6 +5,9 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Keep content clear of notches and home bars when installed. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,7 +23,10 @@ body {
   align-items: stretch;
   gap: 16px;
   padding: 16px;
-  width: min(100%, 360px);
+  width: min(100%, 480px);
+  /* Fill the screen height exactly so nothing needs scrolling. */
+  height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .glass {
@@ -75,6 +81,16 @@ body {
   cursor: pointer;
 }
 
+/* Takes the space left over by the other rows; the board is sized to fit it. */
+.board-area {
+  flex: 1;
+  min-height: 0;
+  container-type: size;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .board {
   padding: 8px;
   border-radius: 20px;
@@ -82,7 +98,8 @@ body {
 
 #tetris {
   display: block;
-  width: 100%;
+  /* Largest 1:2 board that fits, less the 16px of board padding. */
+  width: min(100cqw - 16px, (100cqh - 16px) / 2);
   aspect-ratio: 1 / 2;
   touch-action: none;
 }
