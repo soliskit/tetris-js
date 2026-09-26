@@ -6,19 +6,8 @@
 import { position } from './position.js';
 import { cellAt } from './gameState.js';
 
-let nextId = 0;
-
-function makeId() {
-  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID();
-  }
-  nextId += 1;
-  return `tetromino-${nextId}`;
-}
-
 export class Tetromino {
-  constructor({ rotations, color, wallKickData, position: pos = position(0, 0), rotationState = 0, id = makeId() }) {
-    this.id = id;
+  constructor({ rotations, color, wallKickData, position: pos = position(0, 0), rotationState = 0 }) {
     this.color = color;
     this.position = pos;
     this.rotations = rotations;
@@ -32,7 +21,6 @@ export class Tetromino {
 
   copy() {
     return new Tetromino({
-      id: this.id,
       color: this.color,
       position: this.position,
       rotations: this.rotations,
@@ -93,17 +81,6 @@ export class Tetromino {
         }
       }
     }
-  }
-
-  toJSON() {
-    return {
-      id: this.id,
-      color: this.color,
-      position: this.position,
-      rotations: this.rotations,
-      rotationState: this.rotationState,
-      wallKickData: this.wallKickData
-    };
   }
 
   static fromJSON(data) {
