@@ -30,6 +30,7 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 * Level rises every 1000 points, speeding up gravity from 0.7s down to 0.25s per row
 * High score and paused games are saved in `localStorage`, so you can continue later
 * The game pauses automatically when the tab is hidden
+* Installable as an app: use Add to Home Screen (iPhone, Android) or the install button in the address bar (desktop Chrome and Edge) to play full screen without the browser bar, even offline
 
 ## Controls
 
@@ -75,6 +76,9 @@ Any controller with the standard mapping works through the Gamepad API.
 index.js                     Express server for the public folder
 public/
   index.html                 Page layout
+  manifest.webmanifest       App name, icons and display mode for installing
+  sw.js                      Service worker that caches the game for offline play
+  icons/                     App icons (icon.svg is the source for the PNGs)
   style.css                  Styles
   script.js                  Canvas rendering, touch input and UI wiring
   game/
