@@ -222,3 +222,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 render();
+
+// Installable app: cache the game so it also works offline.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
