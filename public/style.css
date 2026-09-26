@@ -126,7 +126,3 @@ button.round {
   font-size: 0.75rem;
   opacity: 0.8;
 }
-
-[hidden] {
-  display: none !important;
-}

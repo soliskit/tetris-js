@@ -38,40 +38,24 @@ const PAD_ACTIONS = [
 ];
 
 export class InputController {
-  constructor(gameManager, { target = globalThis.window } = {}) {
+  constructor(gameManager) {
     this.gameManager = gameManager;
-    this.target = target;
     this.movement = null;
     this.movementTimer = null;
     this.softDropTimer = null;
     this.heldKeys = new Set();
     this.heldButtons = new Set();
     this.stickDirection = null;
-    this.pollHandle = null;
 
-    this.onKeyDown = event => this.handleKey(event, true);
-    this.onKeyUp = event => this.handleKey(event, false);
-    this.onBlur = () => this.releaseAllInput();
-    this.onGamepadDisconnected = () => this.releaseAllInput();
-    this.poll = () => {
+    window.addEventListener('keydown', event => this.handleKey(event, true));
+    window.addEventListener('keyup', event => this.handleKey(event, false));
+    window.addEventListener('blur', () => this.releaseAllInput());
+    window.addEventListener('gamepaddisconnected', () => this.releaseAllInput());
+    const poll = () => {
       this.pollGamepads();
-      this.pollHandle = globalThis.requestAnimationFrame(this.poll);
+      requestAnimationFrame(poll);
     };
-
-    target.addEventListener('keydown', this.onKeyDown);
-    target.addEventListener('keyup', this.onKeyUp);
-    target.addEventListener('blur', this.onBlur);
-    target.addEventListener('gamepaddisconnected', this.onGamepadDisconnected);
-    this.pollHandle = globalThis.requestAnimationFrame(this.poll);
-  }
-
-  destroy() {
-    this.target.removeEventListener('keydown', this.onKeyDown);
-    this.target.removeEventListener('keyup', this.onKeyUp);
-    this.target.removeEventListener('blur', this.onBlur);
-    this.target.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected);
-    globalThis.cancelAnimationFrame(this.pollHandle);
-    this.releaseAllInput();
+    requestAnimationFrame(poll);
   }
 
   handleKey(event, pressed) {
@@ -104,7 +88,7 @@ export class InputController {
   }
 
   pollGamepads() {
-    const pads = globalThis.navigator?.getGamepads?.() ?? [];
+    const pads = navigator.getGamepads?.() ?? [];
     const gamepad = Array.from(pads).find(pad => pad && pad.connected);
     if (!gamepad) return;
     const pressed = new Set(
