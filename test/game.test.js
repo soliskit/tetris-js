@@ -155,11 +155,11 @@ test('hold swaps once per piece', () => {
   const first = game.currentTetromino;
   const upcoming = game.nextTetrominos[0];
   game.handleAction(PlayerAction.hold);
-  assert.equal(game.heldTetromino.id, first.id);
-  assert.equal(game.currentTetromino.id, upcoming.id);
+  assert.equal(game.heldTetromino.color, first.color);
+  assert.equal(game.currentTetromino.color, upcoming.color);
   assert.equal(game.canHoldTetromino, false);
   game.handleAction(PlayerAction.hold);
-  assert.equal(game.heldTetromino.id, first.id);
+  assert.equal(game.heldTetromino.color, first.color);
 });
 
 test('pause saves and continue restores the session', () => {
@@ -176,7 +176,7 @@ test('pause saves and continue restores the session', () => {
   restored.handleAction(PlayerAction.continueGame);
   assert.equal(restored.state, GameState.paused);
   assert.deepEqual(restored.currentTetromino.position, game.currentTetromino.position);
-  assert.equal(restored.currentTetromino.id, game.currentTetromino.id);
+  assert.deepEqual(restored.currentTetromino, game.currentTetromino);
   restored.togglePause();
   assert.equal(restored.state, GameState.playing);
   restored.handleAction(PlayerAction.rotate);
