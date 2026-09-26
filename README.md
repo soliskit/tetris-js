@@ -13,6 +13,10 @@ npm start
 
 Then open http://localhost:3000. Set the `PORT` environment variable to use a different port.
 
+## Deployment
+
+The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
+
 ## Features
 
 * 10 by 20 board with a ghost piece showing where the current piece will land
