@@ -2,6 +2,8 @@
 
 Tetris for your web browser. The game logic is a JavaScript port of the Swift Tetris 2.0 app, served as static files by a small Express server.
 
+**Play it now: https://soliskit.github.io/tetris-js/**
+
 ## Getting started
 
 Requires Node.js 18 or newer.
