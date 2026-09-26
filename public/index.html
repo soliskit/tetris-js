@@ -7,14 +7,36 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="controls">
-    <button id="newGameButton">New Game</button>
-    <button id="continueGameButton">Continue Game</button>
-    <button id="playPauseButton">Play/Pause</button>
-  </div>
-  <div class="game-container">
-    <canvas id="tetris" width="300" height="600"></canvas>
-  </div>
-  <script src="script.js"></script>
+  <main class="app">
+    <div class="scores glass">
+      <div id="score" class="score">Score: 0</div>
+      <div id="highScore" class="high-score">High Score: 0</div>
+    </div>
+
+    <div class="previews">
+      <canvas id="heldPreview" class="preview glass" width="120" height="120" title="Hold"></canvas>
+      <div class="next">
+        <canvas id="next0" class="preview glass" width="120" height="120"></canvas>
+        <canvas id="next1" class="preview small glass" width="88" height="88"></canvas>
+        <canvas id="next2" class="preview small glass" width="88" height="88"></canvas>
+      </div>
+    </div>
+
+    <div class="board glass">
+      <canvas id="tetris" width="300" height="600"></canvas>
+    </div>
+
+    <div class="controls">
+      <div id="gameOverControls">
+        <div class="buttons">
+          <button id="newGameButton" class="glass">New Game</button>
+          <button id="continueGameButton" class="glass">Continue</button>
+        </div>
+        <p id="keyHint" class="hint">Return: New Game</p>
+      </div>
+      <button id="playPauseButton" class="glass round" aria-label="Pause">&#10074;&#10074;</button>
+    </div>
+  </main>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
