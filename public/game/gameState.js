@@ -18,7 +18,7 @@ export const PlayerAction = Object.freeze({
   drop: 'drop'
 });
 
-export function emptyCell() {
+function emptyCell() {
   return { isFilled: false, color: null };
 }
 
