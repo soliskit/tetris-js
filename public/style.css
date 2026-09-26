@@ -1,27 +1,132 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
-  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, #4b0082 0%, #5856d6 30%, #32ade6 55%, #007aff 80%, #30b0c7 100%);
+  background-attachment: fixed;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 16px;
+  width: min(100%, 360px);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.scores {
+  align-self: center;
+  text-align: center;
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.high-score {
+  font-size: 0.8rem;
+}
+
+.previews {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.next {
+  display: flex;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.preview {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+}
+
+.preview.small {
+  width: 44px;
+  height: 44px;
+  opacity: 0.6;
+}
+
+#heldPreview {
+  cursor: pointer;
+}
+
+.board {
+  padding: 8px;
+  border-radius: 20px;
+}
+
+#tetris {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 2;
+  touch-action: none;
 }
 
 .controls {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  min-height: 56px;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
 button {
-  margin: 5px;
-  padding: 10px 20px;
-  font-size: 16px;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 999px;
+  cursor: pointer;
 }
 
-.game-container {
-  position: relative;
+button:active {
+  opacity: 0.7;
 }
 
-canvas {
-  border: 1px solid #fff;
+button.round {
+  margin-left: auto;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.hint {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+[hidden] {
+  display: none !important;
 }
