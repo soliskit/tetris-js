@@ -56,6 +56,7 @@ test('a new game manager waits at game over with an empty board and three upcomi
   assert.equal(filledCells(game), 0);
   assert.equal(game.nextTetrominos.length, 3);
   assert.equal(game.heldTetromino, null);
+  assert.equal(game.canHoldTetromino, true);
   assert.equal(game.score, 0);
   assert.equal(game.level, 1);
   assert.equal(scheduler.pending, 0, 'no gravity before a game starts');
@@ -70,26 +71,30 @@ test('without injected storage it falls back to memory when localStorage is miss
 
 // State guards
 
+// Each action on its own, so opposite moves cannot cancel out.
+const PLAY_ACTIONS = [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop, 'softDrop'];
+const perform = (game, action) => (action === 'softDrop' ? game.softDrop() : game.handleAction(action));
+
 test('moves, rotations, holds and drops do nothing at game over [STA-1]', () => {
-  const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
-  const before = snapshot(game);
-  for (const action of [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop]) {
-    game.handleAction(action);
+  for (const action of PLAY_ACTIONS) {
+    const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage(), factory: fixedFactory(purple) });
+    game.currentTetromino.position = position(5, 3); // room to move every way
+    const before = snapshot(game);
+    perform(game, action);
+    assert.equal(snapshot(game), before, action);
   }
-  game.softDrop();
-  assert.equal(snapshot(game), before);
 });
 
 test('moves, rotations, holds, drops and gravity do nothing while paused [STA-2]', () => {
-  const { game, scheduler } = newGame();
-  game.handleAction(PlayerAction.pause);
-  const before = snapshot(game);
-  for (const action of [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop]) {
-    game.handleAction(action);
+  for (const action of PLAY_ACTIONS) {
+    const { game, scheduler } = newGame({ factory: fixedFactory(purple) });
+    game.softDrop();
+    game.handleAction(PlayerAction.pause);
+    const before = snapshot(game);
+    perform(game, action);
+    scheduler.advance(10000);
+    assert.equal(snapshot(game), before, action);
   }
-  game.softDrop();
-  scheduler.advance(10000);
-  assert.equal(snapshot(game), before);
 });
 
 test('new game is ignored while a game is running [STA-1]', () => {
@@ -518,4 +523,206 @@ test('in 200 random games the rules always hold [SAF-6] [PCE-6] [SAF-4]', () => 
     assert.deepEqual(game.faults, [], `round ${round}: the invariant monitor never fires in legal play`);
   }
   assert.ok(gamesOver > 100, `most games played to the end (${gamesOver} of 200)`);
+});
+
+// Found by mutation testing: each test below catches a wrong change that
+// the tests above let through.
+
+test('saves use the storage keys of earlier versions, so saves on devices keep working [STA-4] [SCO-3]', () => {
+  const { game, storage } = newGame({ factory: fixedFactory(cyan) });
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(storage.getItem('highScore'), '100');
+  assert.equal(storage.getItem('isSessionSaved'), 'true');
+  assert.ok(storage.getItem('savedGameSession'));
+});
+
+test('by default gravity runs on the browser timers, and a soft drop replaces the pending tick [PLY-2] [PLY-3]', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const game = new GameManager({ storage: createMemoryStorage() });
+  game.handleAction(PlayerAction.newGame);
+  t.mock.timers.tick(600);
+  game.softDrop();
+  t.mock.timers.tick(100); // the old tick would have been due now
+  assert.equal(game.currentTetromino.position.row, 1);
+  t.mock.timers.tick(600);
+  assert.equal(game.currentTetromino.position.row, 2);
+});
+
+test('a new game starts with a fresh lock delay, whatever the last game left behind [PLY-6] [STA-1]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  game.lockDelayResetCount = 15;
+  game.lowestRowReached = 19;
+  game.state = GameState.gameOver;
+  game.stopGameLoop();
+  game.handleAction(PlayerAction.newGame);
+  landOnSurface(game);
+  game.softDrop();
+  assert.equal(filledCells(game), 0, 'waits instead of locking at once');
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 4);
+});
+
+test('continuing a saved game starts with a fresh lock delay [PLY-6] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  newGame({ storage, factory: fixedFactory(yellow) }).game.togglePause();
+  const scheduler = createFakeScheduler();
+  const game = new GameManager({ scheduler, storage, factory: fixedFactory(yellow) });
+  game.lockDelayResetCount = 15;
+  game.lowestRowReached = 19;
+  game.handleAction(PlayerAction.continueGame);
+  game.togglePause();
+  landOnSurface(game);
+  game.softDrop();
+  assert.equal(filledCells(game), 0, 'waits instead of locking at once');
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 4);
+});
+
+test('if a save fails after an earlier one worked, the old save is no longer offered [STA-4] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const setItem = storage.setItem;
+  let savesFail = false;
+  storage.setItem = (key, value) => {
+    if (savesFail && key === 'savedGameSession') throw new Error('QuotaExceededError');
+    setItem(key, value);
+  };
+  const { game } = newGame({ storage });
+  game.togglePause();
+  assert.equal(game.isSessionSaved, true);
+  game.togglePause();
+  savesFail = true;
+  game.togglePause();
+  assert.equal(game.isSessionSaved, false);
+});
+
+test('a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  fillRows(game, [...Array(18).keys()].map(row => row + 2), [0]);
+  game.lockDelayResetCount = 15; // the landing locks at once
+  game.softDrop();
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
+});
+
+test('after a piece locks, the next piece waits a full gravity interval before falling [PLY-2] [PLY-6]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  while (!game.isOnSurface) scheduler.advance(700);
+  scheduler.advance(700); // lands; the lock delay starts
+  scheduler.advance(500); // locks; the next piece appears
+  assert.equal(filledCells(game), 4);
+  assert.equal(game.currentTetromino.position.row, 0);
+  scheduler.advance(699);
+  assert.equal(game.currentTetromino.position.row, 0);
+  scheduler.advance(1);
+  assert.equal(game.currentTetromino.position.row, 1);
+});
+
+test('a hard drop gives the next piece a full gravity interval [PLY-2] [PLY-4]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  scheduler.advance(600);
+  game.handleAction(PlayerAction.drop);
+  scheduler.advance(699);
+  assert.equal(game.currentTetromino.position.row, 0);
+  scheduler.advance(1);
+  assert.equal(game.currentTetromino.position.row, 1);
+});
+
+test('moves, rotations and pauses in the air do not use up lock delay resets [PLY-6] [STA-2]', () => {
+  const { game } = newGame({ factory: fixedFactory(purple) });
+  game.softDrop();
+  game.softDrop();
+  for (let i = 0; i < 20; i++) game.handleAction([PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate][i % 3]);
+  game.togglePause();
+  game.togglePause();
+  assert.equal(game.lockDelayResetCount, 0);
+});
+
+test('the 16th move on the surface does not extend the lock delay [PLY-6]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.softDrop();
+  for (let i = 0; i < 15; i++) {
+    scheduler.advance(400);
+    game.handleAction(i % 2 === 0 ? PlayerAction.moveLeft : PlayerAction.moveRight);
+  }
+  assert.equal(game.lockDelayResetCount, 15);
+  scheduler.advance(400);
+  game.handleAction(PlayerAction.moveLeft); // 16th
+  scheduler.advance(100);
+  assert.equal(filledCells(game), 4, 'locked 0.5s after the 15th reset');
+});
+
+test('pressing rotate when the piece cannot turn does not extend the lock delay [PLY-6]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.softDrop();
+  scheduler.advance(400);
+  game.handleAction(PlayerAction.rotate); // the O piece never turns
+  assert.equal(game.lockDelayResetCount, 0);
+  scheduler.advance(100);
+  assert.equal(filledCells(game), 4);
+});
+
+test('a rotation that kicks the piece down to a new lowest row resets the lock delay count [PLY-6]', () => {
+  const { game } = newGame({ factory: fixedFactory(purple) });
+  for (const [row, column] of [[15, 8], [18, 8], [15, 2], [15, 4], [17, 5]]) game.gameBoard[row][column] = filled();
+  game.currentTetromino.position = position(15, 4);
+  game.lowestRowReached = 15;
+  game.softDrop(); // resting: the lock delay starts
+  assert.notEqual(game.lockDelayTask, null);
+  game.lockDelayResetCount = 5;
+  game.handleAction(PlayerAction.rotate);
+  assert.equal(game.currentTetromino.position.row, 17, 'kicked two rows down');
+  assert.ok(game.lockDelayResetCount <= 1, `count was ${game.lockDelayResetCount}`);
+});
+
+test('a line clear that ends the game does not leave a save to continue [STA-3] [STA-4]', () => {
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  fillRows(game, [19], [9]);
+  for (const row of [0, 1]) for (const column of [3, 4, 5, 6]) game.gameBoard[row][column] = filled();
+  game.currentTetromino.rotationState = 1;
+  game.currentTetromino.position = position(2, 7); // vertical in column 9
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.score, 100);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.isSessionSaved, false);
+});
+
+test('continue is ignored during a game even when a save exists [STA-4]', () => {
+  const { game } = newGame();
+  game.togglePause();
+  game.togglePause();
+  game.handleAction(PlayerAction.moveLeft);
+  const before = snapshot(game);
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(snapshot(game), before);
+});
+
+test('a piece swapped in from hold starts with a fresh lock delay [PLY-6] [PLY-7]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  game.handleAction(PlayerAction.hold);
+  game.handleAction(PlayerAction.drop); // hold is available again
+  landOnSurface(game);
+  game.lockDelayResetCount = 15;
+  game.lowestRowReached = 19;
+  game.handleAction(PlayerAction.hold); // the held piece comes in at the top
+  landOnSurface(game);
+  game.softDrop();
+  assert.equal(filledCells(game), 4, 'only the first piece is locked');
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 8);
+});
+
+test('a first hold that brings in a piece with no room ends the game with no timers [STA-3] [PLY-7]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow]), onFault: fault => faults.push(fault) });
+  for (let i = 0; i < 5; i++) game.softDrop();
+  game.gameBoard[0][4] = filled(); // where the next piece appears
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
 });

@@ -39,7 +39,9 @@ export function createBoard(rows, columns) {
   return Array.from({ length: rows }, () => Array.from({ length: columns }, emptyCell));
 }
 
-// Port of Support/Array.swift: returns undefined instead of throwing when out of bounds.
+// Port of Support/Array.swift: returns undefined instead of throwing when out
+// of bounds. (Arrays already give undefined for a missing index; only a
+// missing row needs guarding.)
 /**
  * @param {Board} board
  * @param {number} row
@@ -47,8 +49,5 @@ export function createBoard(rows, columns) {
  * @returns {Cell | undefined}
  */
 export function cellAt(board, row, column) {
-  if (row < 0 || row >= board.length || column < 0 || column >= board[row].length) {
-    return undefined;
-  }
-  return board[row][column];
+  return board[row]?.[column];
 }

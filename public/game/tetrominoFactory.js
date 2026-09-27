@@ -70,19 +70,20 @@ export function allPieces() {
   ];
 }
 
+// Fisher Yates shuffle, in place.
 /**
  * @template T
  * @param {T[]} items
  * @param {() => number} random
- * @returns {T[]}
+ * @returns {T[]} The same array.
  */
-function shuffled(items, random) {
-  const result = items.slice();
-  for (let i = result.length - 1; i > 0; i--) {
+function shuffle(items, random) {
+  // Stryker disable next-line EqualityOperator: also running i = 0 would swap the first item with itself.
+  for (let i = items.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    [items[i], items[j]] = [items[j], items[i]];
   }
-  return result;
+  return items;
 }
 
 export class TetrominoFactory {
@@ -96,7 +97,7 @@ export class TetrominoFactory {
   /** @returns {Tetromino} */
   generate() {
     if (this.bag.length === 0) {
-      this.bag = shuffled(allPieces(), this.random);
+      this.bag = shuffle(allPieces(), this.random);
     }
     // Never undefined: the bag was just refilled if it was empty.
     return /** @type {Tetromino} */ (this.bag.shift());

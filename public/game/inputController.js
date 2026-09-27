@@ -71,7 +71,7 @@ export class InputController {
       try {
         this.pollGamepads();
       } catch (error) {
-        globalThis.console?.error('Tetris gamepad error:', error);
+        console.error('Tetris gamepad error:', error);
       }
     };
     requestAnimationFrame(poll);
@@ -111,8 +111,8 @@ export class InputController {
   }
 
   pollGamepads() {
-    const pads = navigator.getGamepads?.() ?? [];
-    const gamepad = Array.from(pads).find(pad => pad && pad.connected);
+    if (!navigator.getGamepads) return; // no gamepad support in this browser
+    const gamepad = navigator.getGamepads().find(pad => pad?.connected);
     if (!gamepad) return;
     const pressed = new Set(
       Object.entries(PAD_BUTTONS)

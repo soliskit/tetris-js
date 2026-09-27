@@ -8,7 +8,7 @@
 // (game over, no timers), reports the fault and keeps the last good save.
 
 import { below, position } from './position.js';
-import { GameState, PlayerAction, cellAt, createBoard } from './gameState.js';
+import { GameState, PlayerAction, createBoard } from './gameState.js';
 import { parseSession, serializeSession } from './session.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
@@ -124,13 +124,14 @@ export class GameManager {
     try {
       return this.storage.getItem(key);
     } catch {
-      return null;
+      // Unreadable storage counts as empty.
     }
+    return null;
   }
 
   get highScore() {
     const value = Number(this.readItem(HIGH_SCORE_KEY));
-    return Number.isSafeInteger(value) && value > 0 ? value : 0;
+    return Number.isSafeInteger(value) ? Math.max(value, 0) : 0;
   }
 
   /** @param {number} value */
@@ -149,7 +150,7 @@ export class GameManager {
   /** @param {boolean} value */
   set isSessionSaved(value) {
     try {
-      this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
+      this.storage.setItem(IS_SESSION_SAVED_KEY, String(value));
     } catch {
       // Not saved.
     }
@@ -218,8 +219,9 @@ export class GameManager {
   dropTetromino() {
     if (this.state !== GameState.playing) return;
     if (this.currentTetromino.fits(this.gameBoard, below(this.currentTetromino.position))) {
+      // No lock delay can be running: it only runs while the piece rests on
+      // something (checked by the invariant monitor).
       this.currentTetromino.position = below(this.currentTetromino.position);
-      this.cancelLockDelay();
       this.noteLowestRow();
     } else {
       this.pieceLanded();
@@ -234,7 +236,7 @@ export class GameManager {
   }
 
   startLockDelay() {
-    if (this.lockDelayTask !== null) this.scheduler.clearTimeout(this.lockDelayTask);
+    this.scheduler.clearTimeout(this.lockDelayTask);
     // Only runs while playing: leaving play cancels it (checked by SAF-4).
     this.lockDelayTask = this.schedule(() => {
       this.lockAndSpawnNext();
@@ -276,7 +278,7 @@ export class GameManager {
   }
 
   cancelLockDelay() {
-    if (this.lockDelayTask !== null) this.scheduler.clearTimeout(this.lockDelayTask);
+    this.scheduler.clearTimeout(this.lockDelayTask);
     this.lockDelayTask = null;
   }
 
@@ -289,11 +291,10 @@ export class GameManager {
     }
   }
 
+  // The piece always fits on the board (checked by the invariant monitor).
   lockTetrominoInPlace() {
     for (const cell of this.currentTetromino.cells) {
-      if (cellAt(this.gameBoard, cell.row, cell.column) !== undefined) {
-        this.gameBoard[cell.row][cell.column] = { isFilled: true, color: this.currentTetromino.color };
-      }
+      this.gameBoard[cell.row][cell.column] = { isFilled: true, color: this.currentTetromino.color };
     }
   }
 
@@ -304,15 +305,14 @@ export class GameManager {
       if (row.every(cell => cell.isFilled)) completedLineIndices.push(index);
     });
     if (completedLineIndices.length === 0) return false;
-    for (const index of completedLineIndices.slice().reverse()) {
+    // Remove from the bottom up so earlier removals do not shift later ones.
+    for (const index of completedLineIndices.reverse()) {
       this.gameBoard.splice(index, 1);
     }
     const newLines = createBoard(completedLineIndices.length, this.columns);
     this.gameBoard.unshift(...newLines);
     this.score += LINE_SCORES[completedLineIndices.length];
-    if (this.score > this.highScore) {
-      this.highScore = this.score;
-    }
+    this.highScore = Math.max(this.highScore, this.score);
     return true;
   }
 
@@ -335,7 +335,7 @@ export class GameManager {
   }
 
   stopGameLoop() {
-    if (this.gameLoopTask !== null) this.scheduler.clearTimeout(this.gameLoopTask);
+    this.scheduler.clearTimeout(this.gameLoopTask);
     this.gameLoopTask = null;
   }
 
@@ -376,6 +376,7 @@ export class GameManager {
     if (this.state === GameState.playing) {
       if (!this.currentTetromino.fits(board)) return 'piece overlaps the board';
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
+      if (this.lockDelayTask !== null && !this.isOnSurface) return 'lock delay running off the surface';
     } else if (this.gameLoopTask !== null || this.lockDelayTask !== null) {
       return 'timers running while not playing';
     }
@@ -465,7 +466,7 @@ export class GameManager {
 
   hardDrop() {
     if (this.state !== GameState.playing) return;
-    this.cancelLockDelay();
+    // Locking brings in the next piece, which resets the lock delay.
     this.currentTetromino.position = this.ghostTetromino.position;
     this.lockAndSpawnNext();
     if (this.state === GameState.playing) {
