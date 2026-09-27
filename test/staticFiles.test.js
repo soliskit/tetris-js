@@ -32,11 +32,15 @@ test('every file the page references exists and uses a relative path [APP-3]', (
   }
 });
 
-test('the page ids used by script.js all exist [APP-3]', () => {
+test('the page ids used by script.js all exist, and canvases are canvases [APP-3]', () => {
   const script = read('script.js');
-  const ids = [...script.matchAll(/getElementById\('([^']+)'\)/g)].map(match => match[1]);
-  for (const id of new Set(ids)) assert.match(html, new RegExp(`id="${id}"`), id);
-  for (const id of ['next0', 'next1', 'next2']) assert.match(html, new RegExp(`id="${id}"`), id);
+  const ids = [...script.matchAll(/\belement\('([^']+)'\)/g)].map(match => match[1]);
+  const canvasIds = [...script.matchAll(/\bcanvasElement\('([^']+)'\)/g)].map(match => match[1]);
+  canvasIds.push(...JSON.parse(script.match(/(\[[^\]]*\])\.map\(canvasElement\)/)[1].replace(/'/g, '"')));
+  assert.ok(ids.length >= 7 && canvasIds.length === 5, `${ids.length} elements, ${canvasIds.length} canvases`);
+  for (const id of ids) assert.match(html, new RegExp(`id="${id}"`), id);
+  for (const id of canvasIds) assert.match(html, new RegExp(`<canvas id="${id}"`), `${id} is a canvas`);
+  assert.doesNotMatch(script, /getElementById\('/, 'elements are looked up through element() or canvasElement()');
 });
 
 test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
