@@ -103,7 +103,9 @@ const violations = [
   ['the score turning negative', game => { game.score = -100; }, 'score is invalid'],
   ['the score becoming a fraction', game => { game.score = 12.5; }, 'score is invalid'],
   ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece overlaps the board'],
-  ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing']
+  ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing'],
+  ['the score not being a multiple of 100', game => { game.score = 150; }, 'score is invalid'],
+  ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface']
 ];
 
 for (const [name, corrupt, reason] of violations) {
@@ -114,6 +116,14 @@ for (const [name, corrupt, reason] of violations) {
     assertSafeStop(game, scheduler, reported, reason);
   });
 }
+
+test('the invariant monitor catches a lock delay running while paused [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame();
+  game.togglePause();
+  game.startLockDelay();
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, 'timers running while not playing');
+});
 
 test('the invariant monitor catches timers running while paused [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame();
