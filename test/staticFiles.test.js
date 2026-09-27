@@ -23,7 +23,7 @@ function pngSize(file) {
   return `${data.readUInt32BE(16)}x${data.readUInt32BE(20)}`;
 }
 
-test('every file the page references exists and uses a relative path', () => {
+test('every file the page references exists and uses a relative path [APP-3]', () => {
   const references = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => match[1]);
   assert.ok(references.length >= 5);
   for (const reference of references) {
@@ -32,21 +32,21 @@ test('every file the page references exists and uses a relative path', () => {
   }
 });
 
-test('the page ids used by script.js all exist', () => {
+test('the page ids used by script.js all exist [APP-3]', () => {
   const script = read('script.js');
   const ids = [...script.matchAll(/getElementById\('([^']+)'\)/g)].map(match => match[1]);
   for (const id of new Set(ids)) assert.match(html, new RegExp(`id="${id}"`), id);
   for (const id of ['next0', 'next1', 'next2']) assert.match(html, new RegExp(`id="${id}"`), id);
 });
 
-test('the viewport fits notches and blocks zooming', () => {
+test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
   const viewport = html.match(/<meta name="viewport" content="([^"]+)"/)[1];
   for (const part of ['width=device-width', 'initial-scale=1.0', 'maximum-scale=1.0', 'user-scalable=no', 'viewport-fit=cover']) {
     assert.ok(viewport.includes(part), part);
   }
 });
 
-test('the page has the tags iPhone needs to install the game', () => {
+test('the page has the tags iPhone needs to install the game [APP-1] [APP-4]', () => {
   for (const tag of [
     '<link rel="manifest" href="manifest.webmanifest">',
     '<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">',
@@ -57,7 +57,7 @@ test('the page has the tags iPhone needs to install the game', () => {
   }
 });
 
-test('the manifest describes a portrait, full screen app that starts in its own folder', () => {
+test('the manifest describes a portrait, full screen app that starts in its own folder [APP-1]', () => {
   assert.equal(manifest.name, 'Tetris');
   assert.equal(manifest.short_name, 'Tetris');
   assert.equal(manifest.display, 'fullscreen');
@@ -68,7 +68,7 @@ test('the manifest describes a portrait, full screen app that starts in its own 
   assert.match(manifest.background_color, /^#[0-9a-f]{6}$/i);
 });
 
-test('manifest icons exist, match their declared sizes and include a maskable one', () => {
+test('manifest icons exist, match their declared sizes and include a maskable one [APP-1]', () => {
   for (const icon of manifest.icons) {
     assert.ok(!icon.src.startsWith('/'), `${icon.src} must be relative`);
     assert.equal(pngSize(icon.src), icon.sizes, icon.src);
@@ -80,20 +80,20 @@ test('manifest icons exist, match their declared sizes and include a maskable on
   assert.equal(pngSize('icons/apple-touch-icon.png'), '180x180');
 });
 
-test('the offline cache lists only files that exist, with relative paths', () => {
+test('the offline cache lists only files that exist, with relative paths [APP-2] [APP-3]', () => {
   for (const file of appShell) {
     assert.ok(!file.startsWith('/'), `${file} must be relative`);
     if (file !== './') assert.ok(exists(file), `${file} exists`);
   }
 });
 
-test('the offline cache includes every file the game needs to start', () => {
+test('the offline cache includes every file the game needs to start [APP-2]', () => {
   const gameModules = fs.readdirSync(path.join(publicDir, 'game')).map(file => `game/${file}`);
   const required = ['./', 'index.html', 'style.css', 'script.js', 'manifest.webmanifest', ...gameModules];
   for (const file of required) assert.ok(appShell.includes(file), `${file} is cached for offline play`);
   for (const icon of manifest.icons) assert.ok(appShell.includes(icon.src), `${icon.src} is cached`);
 });
 
-test('the service worker is registered with a relative path', () => {
+test('the service worker is registered with a relative path [APP-2] [APP-3]', () => {
   assert.match(read('script.js'), /serviceWorker\.register\('sw\.js'\)/);
 });

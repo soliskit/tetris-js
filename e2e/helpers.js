@@ -5,9 +5,13 @@ import { GameManager, createMemoryStorage } from '../public/game/gameManager.js'
 import { PlayerAction } from '../public/game/gameState.js';
 import { allPieces } from '../public/game/tetrominoFactory.js';
 
-export { PieceColors } from '../public/game/tetrominoFactory.js';
+import { PieceColors } from '../public/game/tetrominoFactory.js';
 
-export const BOARD_COLOR = '#8E8E93'; // gray, not used by any piece
+export { PieceColors };
+
+// Locked blocks in test boards. Saves may only hold real piece colors, and
+// no test moves a blue piece, so blue cells are always locked blocks.
+export const BOARD_COLOR = PieceColors.blue;
 
 // Builds a saved game in Node with the real engine, for the page to continue.
 // board: list of [row, column] cells to fill. piece: color of every piece.
