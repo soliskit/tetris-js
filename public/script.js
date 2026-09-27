@@ -286,6 +286,12 @@ document.addEventListener('visibilitychange', () => {
 
 render();
 
+// Safari ignores user-scalable=no in the browser, but still lets pages
+// cancel its pinch gestures.
+for (const type of ['gesturestart', 'gesturechange']) {
+  document.addEventListener(type, event => event.preventDefault());
+}
+
 // Installable app: cache the game so it also works offline.
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
