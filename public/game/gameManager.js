@@ -64,8 +64,14 @@ export class GameManager {
     return Number(this.storage.getItem(HIGH_SCORE_KEY)) || 0;
   }
 
+  // Writes can throw when storage is full or blocked. The game keeps
+  // working; the value just is not remembered.
   set highScore(value) {
-    this.storage.setItem(HIGH_SCORE_KEY, String(value));
+    try {
+      this.storage.setItem(HIGH_SCORE_KEY, String(value));
+    } catch {
+      // Not saved.
+    }
   }
 
   get isSessionSaved() {
@@ -73,7 +79,11 @@ export class GameManager {
   }
 
   set isSessionSaved(value) {
-    this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
+    try {
+      this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
+    } catch {
+      // Not saved.
+    }
   }
 
   get standardDropInterval() {
