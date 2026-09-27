@@ -92,3 +92,5 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | --- | --- |
 | QA-1 | Every requirement is verified by at least one test, every test names the requirements it verifies, and those requirements exist. |
 | QA-2 | The unit tests exercise every line, branch and function of the game logic (`public/game/`). `npm test` fails below 100%. Code that cannot be reached is removed rather than left untested. |
+| QA-3 | The browser tests exercise every line, branch and function of the page script (`public/script.js`), measured in Chromium. `npm run test:e2e` fails below 100%. |
+| QA-4 | The browser tests pass in WebKit (Safari's engine) at iPhone size, as well as in Chromium at iPhone and desktop sizes. |

@@ -46,3 +46,19 @@ test('npm test enforces 100% line, branch and function coverage of the game logi
     assert.ok(script.includes(flag), flag);
   }
 });
+
+test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.ok(pkg.scripts['test:e2e'].endsWith('&& node scripts/browser-coverage.js'));
+  const script = fs.readFileSync(path.join(root, 'scripts/browser-coverage.js'), 'utf8');
+  assert.match(script, /export const THRESHOLD = 100;/);
+  assert.match(script, /\['lines', 'branches', 'functions'\]/);
+});
+
+test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
+  const config = fs.readFileSync(path.join(root, 'playwright.config.js'), 'utf8');
+  assert.match(config, /browserName: 'webkit', viewport: \{ width: 430, height: 932 \}/);
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8');
+  assert.match(workflow, /playwright install --with-deps chromium webkit/);
+  assert.match(workflow, /npm run test:e2e/);
+});
