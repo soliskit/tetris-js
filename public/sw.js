@@ -20,16 +20,19 @@ const APP_SHELL = [
   'game/tetrominoFactory.js'
 ];
 
-self.addEventListener('install', event => {
+// `self` is this service worker; the cast tells the type checker so.
+const worker = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
+
+worker.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  worker.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+worker.addEventListener('activate', event => {
+  event.waitUntil(worker.clients.claim());
 });
 
-self.addEventListener('fetch', event => {
+worker.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
     fetch(event.request)
@@ -40,6 +43,7 @@ self.addEventListener('fetch', event => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request, { ignoreSearch: true }))
+      // Offline: the cached copy, or a plain network error if there is none.
+      .catch(async () => (await caches.match(event.request, { ignoreSearch: true })) ?? Response.error())
   );
 });

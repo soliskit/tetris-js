@@ -12,22 +12,44 @@ import { GameState, PlayerAction, cellAt, createBoard } from './gameState.js';
 import { parseSession, serializeSession } from './session.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
+/** @typedef {import('./gameState.js').Board} Board */
+/** @typedef {import('./gameState.js').GameStateValue} GameStateValue */
+/** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
+/** @typedef {import('./tetromino.js').Tetromino} Tetromino */
+/** @typedef {{ getItem(key: string): string | null, setItem(key: string, value: string): void }} KeyValueStorage */
+/** @typedef {{ setTimeout(callback: () => void, ms: number): unknown, clearTimeout(handle: unknown): void }} Scheduler */
+/** @typedef {{ generate(): Tetromino }} PieceSource */
+/** @typedef {{ reason: string, error?: unknown }} Fault */
+/**
+ * @typedef {object} GameManagerOptions
+ * @property {KeyValueStorage} [storage] Defaults to localStorage, or memory when unavailable.
+ * @property {Scheduler} [scheduler] Defaults to the browser timers.
+ * @property {PieceSource} [factory] Defaults to a 7 bag.
+ * @property {(fault: Fault) => void} [onFault] Defaults to console.error.
+ */
+
 const HIGH_SCORE_KEY = 'highScore';
 const IS_SESSION_SAVED_KEY = 'isSessionSaved';
 const SAVED_SESSION_KEY = 'savedGameSession';
+/** @type {Record<number, number>} */
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
 const UPCOMING_COUNT = 3;
 const MAX_FAULTS_KEPT = 20;
 
 export function createMemoryStorage() {
+  /** @type {Map<string, string>} */
   const values = new Map();
   return {
-    getItem: key => (values.has(key) ? values.get(key) : null),
-    setItem: (key, value) => values.set(key, String(value)),
-    removeItem: key => values.delete(key)
+    /** @param {string} key */
+    getItem: key => values.get(key) ?? null,
+    /** @param {string} key @param {unknown} value */
+    setItem: (key, value) => { values.set(key, String(value)); },
+    /** @param {string} key */
+    removeItem: key => { values.delete(key); }
   };
 }
 
+/** @returns {KeyValueStorage} */
 function defaultStorage() {
   try {
     if (globalThis.localStorage) return globalThis.localStorage;
@@ -37,16 +59,19 @@ function defaultStorage() {
   return createMemoryStorage();
 }
 
+/** @type {Scheduler} */
 const defaultScheduler = {
   setTimeout: (callback, ms) => globalThis.setTimeout(callback, ms),
-  clearTimeout: handle => globalThis.clearTimeout(handle)
+  clearTimeout: handle => globalThis.clearTimeout(/** @type {number} */ (handle))
 };
 
+/** @param {Fault} fault */
 function reportToConsole(fault) {
   console.error('Tetris stopped safely:', fault.reason, fault.error ?? '');
 }
 
 export class GameManager {
+  /** @param {GameManagerOptions} [options] */
   constructor({
     storage = defaultStorage(),
     scheduler = defaultScheduler,
@@ -57,17 +82,22 @@ export class GameManager {
     this.scheduler = scheduler;
     this.factory = factory;
     this.onFault = onFault;
+    /** @type {Fault[]} */
     this.faults = [];
     this.rows = 20;
     this.columns = 10;
+    /** @type {unknown} Timer handle, null when no gravity is scheduled. */
     this.gameLoopTask = null;
+    /** @type {unknown} Timer handle, null when no lock delay is running. */
     this.lockDelayTask = null;
     this.lockDelayResetCount = 0;
     this.lowestRowReached = 0;
     this.maxLockDelayResets = 15;
     this.lockDelayInterval = 0.5;
     this.canHoldTetromino = true;
+    /** @type {Tetromino | null} */
     this.heldTetromino = null;
+    /** @type {GameStateValue} */
     this.state = GameState.gameOver;
     this.score = 0;
     this.currentTetromino = this.factory.generate().spawned(this.columns);
@@ -86,6 +116,10 @@ export class GameManager {
   // Storage (@AppStorage equivalents). Reads and writes can throw when
   // storage is blocked or full; the game keeps working either way.
 
+  /**
+   * @param {string} key
+   * @returns {string | null}
+   */
   readItem(key) {
     try {
       return this.storage.getItem(key);
@@ -99,6 +133,7 @@ export class GameManager {
     return Number.isSafeInteger(value) && value > 0 ? value : 0;
   }
 
+  /** @param {number} value */
   set highScore(value) {
     try {
       this.storage.setItem(HIGH_SCORE_KEY, String(value));
@@ -111,6 +146,7 @@ export class GameManager {
     return this.readItem(IS_SESSION_SAVED_KEY) === 'true';
   }
 
+  /** @param {boolean} value */
   set isSessionSaved(value) {
     try {
       this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
@@ -165,7 +201,9 @@ export class GameManager {
   }
 
   generateNextTetromino() {
-    this.currentTetromino = this.nextTetrominos.shift().spawned(this.columns);
+    // Never undefined: the queue always holds three pieces (checked by SAF-4).
+    const next = /** @type {Tetromino} */ (this.nextTetrominos.shift());
+    this.currentTetromino = next.spawned(this.columns);
     this.nextTetrominos.push(this.factory.generate());
     this.canHoldTetromino = true;
     this.resetLockDelayForNewPiece();
@@ -260,6 +298,7 @@ export class GameManager {
   }
 
   clearFullRows() {
+    /** @type {number[]} */
     const completedLineIndices = [];
     this.gameBoard.forEach((row, index) => {
       if (row.every(cell => cell.isFilled)) completedLineIndices.push(index);
@@ -303,11 +342,17 @@ export class GameManager {
   // Fault containment
 
   // Timers run their callback through the guard, like player actions.
+  /**
+   * @param {() => void} callback
+   * @param {number} ms
+   * @returns {unknown} The timer handle.
+   */
   schedule(callback, ms) {
     return this.scheduler.setTimeout(() => this.guard(callback), ms);
   }
 
   // Runs one operation, catching errors and checking the invariants after it.
+  /** @param {() => void} operation */
   guard(operation) {
     try {
       operation();
@@ -320,6 +365,7 @@ export class GameManager {
   }
 
   // Returns a description of the first broken invariant, or null.
+  /** @returns {string | null} */
   findInvariantViolation() {
     const board = this.gameBoard;
     if (!Array.isArray(board) || board.length !== this.rows || !board.every(row => Array.isArray(row) && row.length === this.columns)) {
@@ -338,6 +384,10 @@ export class GameManager {
 
   // Safe state: game over with every timer stopped. Storage is left alone,
   // so the last good save can still be continued.
+  /**
+   * @param {string} reason
+   * @param {unknown} [error]
+   */
   failSafe(reason, error) {
     this.state = GameState.gameOver;
     this.stopGameLoop();
@@ -354,10 +404,12 @@ export class GameManager {
 
   // Player input
 
+  /** @param {PlayerActionValue} action */
   handleAction(action) {
     this.guard(() => this.performAction(action));
   }
 
+  /** @param {PlayerActionValue} action */
   performAction(action) {
     switch (action) {
       case PlayerAction.newGame:
@@ -421,6 +473,7 @@ export class GameManager {
     }
   }
 
+  /** @param {number} deltaX */
   moveTetromino(deltaX) {
     if (this.state !== GameState.playing) return;
     const newPosition = position(this.currentTetromino.position.row, this.currentTetromino.position.column + deltaX);

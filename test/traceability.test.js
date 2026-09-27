@@ -62,3 +62,15 @@ test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   assert.match(workflow, /playwright install --with-deps chromium webkit/);
   assert.match(workflow, /npm run test:e2e/);
 });
+
+test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.json'), 'utf8'));
+  for (const option of ['checkJs', 'strict', 'noImplicitReturns', 'noUnusedLocals', 'exactOptionalPropertyTypes']) {
+    assert.equal(config.compilerOptions[option], true, option);
+  }
+  assert.deepEqual(config.include, ['public/game/**/*.js', 'public/script.js']);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.sw.json'), 'utf8')).include, ['public/sw.js']);
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts.typecheck, 'tsc -p tsconfig.json && tsc -p tsconfig.sw.json');
+  assert.match(fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8'), /npm run typecheck/);
+});

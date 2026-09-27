@@ -8,7 +8,8 @@
 		"start": "node index.js",
 		"test": "node --test --experimental-test-coverage --test-coverage-include=\"public/game/**\" --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100",
 		"test:e2e": "playwright test && node scripts/browser-coverage.js",
-		"test:all": "npm test && npm run test:e2e"
+		"typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
+		"test:all": "npm run typecheck && npm test && npm run test:e2e"
 	},
 	"author": "David Solis",
 	"license": "ISC",
@@ -20,6 +21,7 @@
 		"istanbul-lib-coverage": "^3.2.2",
 		"istanbul-lib-report": "^3.0.1",
 		"istanbul-reports": "^3.2.0",
+		"typescript": "^7.0.2",
 		"v8-to-istanbul": "^9.3.0"
 	}
 }
