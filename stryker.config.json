@@ -32,7 +32,5 @@
     "high": 100,
     "low": 95,
     "break": 100
-  },
-  "incremental": true,
-  "incrementalFile": "reports/stryker-incremental.json"
+  }
 }
