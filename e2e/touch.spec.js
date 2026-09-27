@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { BOARD_COLOR, PieceColors, boardTouch, canvasHasDrawing, cellsOf, continueSavedGame, rowsExcept, savedGame } from './helpers.js';
+import { BOARD_COLOR, PieceColors, boardTouch, canvasHasDrawing, cellsOf, continueSavedGame, isChromium, rowsExcept, savedGame } from './helpers.js';
 
 test.skip(({ hasTouch }) => !hasTouch, 'touch gestures run on the phone sized project');
 
@@ -115,6 +115,7 @@ test('a drag that outlives its piece leaves the next piece alone [INP-5]', async
 });
 
 test('pinching does not zoom the page [DSP-4]', async ({ page }) => {
+  test.skip(!isChromium(page), 'only Chromium can simulate a pinch; WebKit checks the CSS and gesture blocking instead');
   await page.goto('/');
   await page.keyboard.press('Enter');
   const touch = await boardTouch(page);
