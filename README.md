@@ -87,13 +87,25 @@ public/
     tetromino.js             Piece model, rotation and collision checks
     tetrominoFactory.js      7 bag randomizer, piece shapes and wall kick data
     position.js              Board position helpers
+    session.js               Saving games, and checking saved games before loading them
     inputController.js       Keyboard and gamepad input
 test/                        Unit tests (node:test): engine, pieces, input, server, app files
 e2e/                         Browser tests (Playwright): the real page at iPhone and desktop sizes
 playwright.config.js         Browser test setup
+REQUIREMENTS.md              Every behavior, with an ID that tests trace to
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
+
+## Reliability
+
+The game is built the way safety critical software is:
+
+* **Written requirements.** [REQUIREMENTS.md](REQUIREMENTS.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
+* **Full coverage.** The unit tests run every line, branch and function of the game logic. `npm test` fails below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested.
+* **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built in shapes. A corrupted or edited save is refused whole.
+* **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
+* **Fault injection tests** prove each of these by breaking things on purpose.
 
 ## Tests
 
