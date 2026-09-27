@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "testRunner": "command",
   "commandRunner": {
-    "command": "node --test test/model.test.js test/tetromino.test.js test/factory.test.js test/game.test.js test/gameManager.test.js test/session.test.js test/safety.test.js test/inputController.test.js"
+    "command": "node --test --test-concurrency=1 test/model.test.js test/tetromino.test.js test/factory.test.js test/game.test.js test/gameManager.test.js test/session.test.js test/safety.test.js test/inputController.test.js"
   },
   "mutate": [
     "public/game/**/*.js"
@@ -27,7 +27,7 @@
     "fileName": "reports/mutation/mutation.json"
   },
   "concurrency": 4,
-  "timeoutMS": 3000,
+  "timeoutMS": 5000,
   "thresholds": {
     "high": 100,
     "low": 95,
