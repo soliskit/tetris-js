@@ -95,6 +95,9 @@ const corruptions = {
   'a current piece with rotation 4': data => { data.currentTetromino.rotationState = 4; },
   'a current piece with rotation -1': data => { data.currentTetromino.rotationState = -1; },
   'a current piece with rotation 1.5': data => { data.currentTetromino.rotationState = 1.5; },
+  'a current piece with a rotation one past its last': data => {
+    data.currentTetromino.rotationState = pieceByColor(data.currentTetromino.color).rotations.length;
+  },
   'a current piece outside the board': data => { data.currentTetromino.position = { row: 0, column: -3 }; },
   'a current piece inside locked blocks': data => {
     const { row, column } = data.currentTetromino.position;
