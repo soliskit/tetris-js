@@ -2,7 +2,7 @@
 // TetrominoPreview.swift and ButtonView.swift. All game rules live in ./game.
 
 import { GameManager } from './game/gameManager.js';
-import { GameState, PlayerAction, cellAt } from './game/gameState.js';
+import { GameState, PlayerAction } from './game/gameState.js';
 import { InputController } from './game/inputController.js';
 
 const gameManager = new GameManager();
@@ -23,7 +23,7 @@ const playPauseButton = document.getElementById('playPauseButton');
 const canvasSizes = new Map();
 
 function sizeCanvas(canvas, width, height) {
-  const ratio = window.devicePixelRatio || 1;
+  const ratio = window.devicePixelRatio;
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
   // Resizing resets the context, so the scale is set again here.
@@ -74,8 +74,8 @@ function drawBoard() {
 
   for (let row = 0; row < rows; row++) {
     for (let column = 0; column < columns; column++) {
-      const cell = cellAt(gameManager.gameBoard, row, column);
-      if (cell?.isFilled) drawBlock(context, column, row, blockSize, cell.color ?? 'transparent');
+      const cell = gameManager.gameBoard[row][column];
+      if (cell.isFilled) drawBlock(context, column, row, blockSize, cell.color);
     }
   }
 
