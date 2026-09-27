@@ -74,3 +74,20 @@ test('the code the browser loads is type checked in strict mode, in CI [QA-5]', 
   assert.equal(pkg.scripts.typecheck, 'tsc -p tsconfig.json && tsc -p tsconfig.sw.json');
   assert.match(fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8'), /npm run typecheck/);
 });
+
+test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8'));
+  assert.deepEqual(config.mutate, ['public/game/**/*.js']);
+  assert.equal(config.thresholds.break, 100);
+  assert.match(config.commandRunner.command, /^exec node --test --experimental-test-isolation=none /);
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts['test:mutation'], 'stryker run');
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/mutation.yml'), 'utf8');
+  assert.match(workflow, /schedule:/);
+  assert.match(workflow, /npm run test:mutation/);
+  // Every unit test file that exercises the game logic takes part.
+  for (const file of fs.readdirSync(path.join(root, 'test')).filter(name => name.endsWith('.test.js'))) {
+    const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
+    if (source.includes("from '../public/game/")) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
+  }
+});
