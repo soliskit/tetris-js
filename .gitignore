@@ -4,3 +4,5 @@ playwright-report/
 .npm
 .DS_Store
 coverage/
+reports/
+.stryker-tmp/
