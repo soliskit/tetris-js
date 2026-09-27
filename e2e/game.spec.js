@@ -1,0 +1,196 @@
+import { test, expect } from '@playwright/test';
+import {
+  BOARD_COLOR,
+  PieceColors,
+  boardCells,
+  canvasHasDrawing,
+  cellsOf,
+  continueSavedGame,
+  expectLabel,
+  filledCount,
+  rowsExcept,
+  savedGame
+} from './helpers.js';
+
+// Shape of a set of cells, independent of where it is on the board.
+function shapeOf(cells) {
+  const minRow = Math.min(...cells.map(([r]) => r));
+  const minColumn = Math.min(...cells.map(([, c]) => c));
+  return JSON.stringify(cells.map(([r, c]) => [r - minRow, c - minColumn]).sort());
+}
+const minColumn = cells => Math.min(...cells.map(([, c]) => c));
+const minRow = cells => Math.min(...cells.map(([r]) => r));
+
+test.describe('start and game over', () => {
+  test('the start screen offers New Game and hides the pause button', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#newGameButton')).toBeVisible();
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect(page.locator('#keyHint')).toHaveText('Return: New Game');
+    await expect(page.locator('#playPauseButton')).toBeHidden();
+    await expect(page.locator('#score')).toHaveText('Score: 0');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+  });
+
+  test('the New Game button starts a game with a piece at the top', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('#newGameButton').click();
+    await expect(page.locator('#gameOverControls')).toBeHidden();
+    await expect(page.locator('#playPauseButton')).toBeVisible();
+    await expectLabel(page, 'Pause');
+    const cells = (await boardCells(page)).flatMap((row, r) => row.map((value, c) => value && [r, c]).filter(Boolean));
+    expect(cells).toHaveLength(4);
+    expect(minRow(cells)).toBeLessThanOrEqual(1);
+    await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
+    expect(await canvasHasDrawing(page, 'heldPreview')).toBe(false);
+  });
+
+  test('topping out ends the game and forgets the saved game', async ({ page }) => {
+    await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, board: rowsExcept([...Array(18).keys()].map(i => i + 2), [0]) }));
+    await page.keyboard.press('KeyP');
+    await page.keyboard.press('KeyS'); // locks at the top, the next piece has no room
+    await expect(page.locator('#newGameButton')).toBeVisible();
+    await expect(page.locator('#playPauseButton')).toBeHidden();
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect(page.locator('#keyHint')).toHaveText('Return: New Game');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#playPauseButton')).toBeVisible();
+    await expect.poll(() => filledCount(page)).toBe(4);
+  });
+});
+
+test.describe('playing with the keyboard', () => {
+  test('gravity moves the piece down, and pause stops it', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    const piece = async () => (await boardCells(page)).flatMap((row, r) => row.map((value, c) => value && [r, c]).filter(Boolean));
+    const start = minRow(await piece());
+    await expect.poll(async () => minRow(await piece()), { timeout: 3000 }).toBeGreaterThan(start);
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    const paused = await boardCells(page);
+    await page.waitForTimeout(1500);
+    expect(await boardCells(page)).toEqual(paused);
+    await page.keyboard.press('Escape');
+    await expectLabel(page, 'Pause');
+  });
+
+  test('move, rotate, hard drop and hold keys all work', async ({ page }) => {
+    await continueSavedGame(page, savedGame({ piece: PieceColors.purple }));
+    await page.keyboard.press('KeyP');
+    const t = () => cellsOf(page, PieceColors.purple);
+    expect(minColumn(await t())).toBe(3);
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(async () => minColumn(await t())).toBe(2);
+    await page.keyboard.press('KeyD');
+    await expect.poll(async () => minColumn(await t())).toBe(3);
+    await page.keyboard.press('KeyA');
+    await expect.poll(async () => minColumn(await t())).toBe(2);
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(async () => minColumn(await t())).toBe(3);
+
+    const before = shapeOf(await t());
+    await page.keyboard.press('KeyW');
+    await expect.poll(async () => shapeOf(await t())).not.toBe(before);
+    await page.keyboard.press('ArrowUp');
+
+    await page.keyboard.press('ArrowDown'); // hard drop
+    await expect.poll(async () => (await t()).length).toBe(8);
+    expect((await t()).filter(([r]) => r >= 17)).toHaveLength(4);
+
+    await page.keyboard.press('KeyH');
+    await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
+  });
+
+  test('clearing a line updates the score and high score', async ({ page }) => {
+    await continueSavedGame(page, savedGame({
+      piece: PieceColors.cyan,
+      rotationState: 1,
+      position: { row: 0, column: 7 }, // vertical in column 9
+      board: rowsExcept([19], [9])
+    }));
+    await page.keyboard.press('KeyP');
+    await page.keyboard.press('KeyS');
+    await expect(page.locator('#score')).toHaveText('Score: 100');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 100');
+    expect(await cellsOf(page, BOARD_COLOR)).toHaveLength(0);
+  });
+
+  test('a paused game can be continued after reloading the page', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('KeyS');
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    const board = await boardCells(page);
+    await page.reload();
+    await expect(page.locator('#continueGameButton')).toBeVisible();
+    await expect(page.locator('#keyHint')).toContainText('C: Continue');
+    await page.locator('#continueGameButton').click();
+    await expectLabel(page, 'Resume');
+    await expect.poll(() => boardCells(page)).toEqual(board);
+    await page.locator('#playPauseButton').click();
+    await expectLabel(page, 'Pause');
+  });
+
+  test('hiding the page pauses the game', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expectLabel(page, 'Pause');
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expectLabel(page, 'Resume');
+  });
+});
+
+test.describe('layout', () => {
+  async function checkFits(page) {
+    const layout = await page.evaluate(() => {
+      const board = document.getElementById('tetris').getBoundingClientRect();
+      const pause = document.getElementById('playPauseButton').getBoundingClientRect();
+      const held = document.getElementById('heldPreview').getBoundingClientRect();
+      return {
+        scrollHeight: document.documentElement.scrollHeight,
+        scrollWidth: document.documentElement.scrollWidth,
+        width: innerWidth,
+        height: innerHeight,
+        ratio: board.height / board.width,
+        pauseBottom: pause.bottom,
+        heldTop: held.top,
+        boardWidth: board.width
+      };
+    });
+    expect(layout.scrollHeight).toBeLessThanOrEqual(layout.height);
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.width);
+    expect(layout.pauseBottom).toBeLessThanOrEqual(layout.height);
+    expect(layout.heldTop).toBeGreaterThanOrEqual(0);
+    expect(layout.ratio).toBeCloseTo(2, 1);
+    expect(layout.boardWidth).toBeGreaterThan(150);
+  }
+
+  test('the game fits the screen without scrolling', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await checkFits(page);
+  });
+
+  test('the game fits other portrait phone sizes too', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    for (const size of [{ width: 375, height: 667 }, { width: 390, height: 844 }, { width: 430, height: 839 }]) {
+      await page.setViewportSize(size);
+      await checkFits(page);
+    }
+  });
+
+  test('the board canvas is drawn at full screen resolution', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => page.evaluate(() => {
+      const canvas = document.getElementById('tetris');
+      return canvas.width === Math.round(canvas.getBoundingClientRect().width * devicePixelRatio);
+    })).toBe(true);
+  });
+});

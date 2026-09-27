@@ -1,0 +1,522 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
+import { GameState, PlayerAction } from '../public/game/gameState.js';
+import { position } from '../public/game/position.js';
+import { TetrominoFactory, PieceColors } from '../public/game/tetrominoFactory.js';
+import {
+  createFakeScheduler,
+  dropVerticalIIntoColumn9,
+  fillRows,
+  filled,
+  filledCells,
+  fixedFactory,
+  newGame,
+  seededRandom,
+  sequenceFactory
+} from './helpers.js';
+
+const { cyan, yellow, purple, green, red, orange } = PieceColors;
+
+function snapshot(game) {
+  return JSON.stringify({
+    state: game.state,
+    score: game.score,
+    current: game.currentTetromino,
+    held: game.heldTetromino,
+    next: game.nextTetrominos,
+    board: game.gameBoard
+  });
+}
+
+function landOnSurface(game) {
+  while (!game.isOnSurface) game.softDrop();
+}
+
+// Storage whose writes throw for the listed keys (all keys when omitted).
+function failingStorage(failingKeys) {
+  const storage = createMemoryStorage();
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => {
+    if (!failingKeys || failingKeys.includes(key)) throw new Error('QuotaExceededError');
+    setItem(key, value);
+  };
+  return storage;
+}
+
+// Starting state
+
+test('a new game manager waits at game over with an empty board and three upcoming pieces', () => {
+  const scheduler = createFakeScheduler();
+  const game = new GameManager({ scheduler, storage: createMemoryStorage() });
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.rows, 20);
+  assert.equal(game.columns, 10);
+  assert.equal(filledCells(game), 0);
+  assert.equal(game.nextTetrominos.length, 3);
+  assert.equal(game.heldTetromino, null);
+  assert.equal(game.score, 0);
+  assert.equal(game.level, 1);
+  assert.equal(scheduler.pending, 0, 'no gravity before a game starts');
+});
+
+test('without injected storage it falls back to memory when localStorage is missing', () => {
+  assert.equal(typeof globalThis.localStorage, 'undefined');
+  const game = new GameManager({ scheduler: createFakeScheduler() });
+  game.highScore = 300;
+  assert.equal(game.highScore, 300);
+});
+
+// State guards
+
+test('moves, rotations, holds and drops do nothing at game over', () => {
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
+  const before = snapshot(game);
+  for (const action of [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop]) {
+    game.handleAction(action);
+  }
+  game.softDrop();
+  assert.equal(snapshot(game), before);
+});
+
+test('moves, rotations, holds, drops and gravity do nothing while paused', () => {
+  const { game, scheduler } = newGame();
+  game.handleAction(PlayerAction.pause);
+  const before = snapshot(game);
+  for (const action of [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop]) {
+    game.handleAction(action);
+  }
+  game.softDrop();
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), before);
+});
+
+test('new game is ignored while a game is running', () => {
+  const { game } = newGame();
+  game.score = 500;
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.score, 500);
+});
+
+test('new game after game over resets the board, score, level and held piece', () => {
+  const { game } = newGame();
+  game.handleAction(PlayerAction.hold);
+  game.gameBoard[19][0] = filled();
+  game.score = 2500;
+  game.level = 3;
+  game.state = GameState.gameOver;
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.playing);
+  assert.equal(filledCells(game), 0);
+  assert.equal(game.score, 0);
+  assert.equal(game.level, 1);
+  assert.equal(game.heldTetromino, null);
+  assert.equal(game.canHoldTetromino, true);
+  assert.equal(game.isSessionSaved, false);
+});
+
+// Movement
+
+test('moving left and right stops at the walls', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  for (let i = 0; i < 10; i++) game.handleAction(PlayerAction.moveLeft);
+  assert.equal(game.currentTetromino.position.column, 0);
+  for (let i = 0; i < 10; i++) game.handleAction(PlayerAction.moveRight);
+  assert.equal(game.currentTetromino.position.column, 8);
+});
+
+test('moving is blocked by locked blocks', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  game.gameBoard[1][6] = filled();
+  game.handleAction(PlayerAction.moveRight);
+  assert.equal(game.currentTetromino.position.column, 4);
+  game.handleAction(PlayerAction.moveLeft);
+  assert.equal(game.currentTetromino.position.column, 3);
+});
+
+test('soft drop moves down one row and restarts the gravity timer', () => {
+  const { game, scheduler } = newGame();
+  scheduler.advance(600);
+  game.softDrop();
+  assert.equal(game.currentTetromino.position.row, 1);
+  scheduler.advance(600);
+  assert.equal(game.currentTetromino.position.row, 1, 'gravity waits a full interval after a soft drop');
+  scheduler.advance(100);
+  assert.equal(game.currentTetromino.position.row, 2);
+});
+
+test('gravity uses the current level speed', () => {
+  const { game, scheduler } = newGame();
+  game.level = 11; // 0.5s per row
+  game.softDrop(); // restarts gravity with the new speed
+  scheduler.advance(500);
+  assert.equal(game.currentTetromino.position.row, 2);
+});
+
+test('the ghost piece shows where the piece would land without moving it', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  assert.equal(game.ghostTetromino.position.row, 18);
+  game.gameBoard[15][4] = filled();
+  assert.deepEqual(game.ghostTetromino.position, position(13, 4));
+  assert.equal(game.currentTetromino.position.row, 0);
+  assert.notEqual(game.ghostTetromino, game.currentTetromino);
+});
+
+test('hard drop lands on the stack and brings in the next piece', () => {
+  const { game } = newGame({ factory: sequenceFactory([yellow, purple]) });
+  game.gameBoard[15][4] = filled();
+  const next = game.nextTetrominos[0];
+  game.handleAction(PlayerAction.drop);
+  for (const [row, column] of [[13, 4], [13, 5], [14, 4], [14, 5]]) {
+    assert.ok(game.gameBoard[row][column].isFilled, `${row},${column}`);
+    assert.equal(game.gameBoard[row][column].color, yellow);
+  }
+  assert.equal(game.currentTetromino.color, next.color);
+  assert.deepEqual(game.currentTetromino.position, position(0, 3));
+  assert.equal(game.nextTetrominos.length, 3);
+  assert.equal(game.score, 0);
+});
+
+// Line clears and scoring
+
+for (const [lines, points] of [[1, 100], [2, 300], [3, 500], [4, 800]]) {
+  test(`clearing ${lines} line${lines > 1 ? 's' : ''} at once scores ${points}`, () => {
+    const { game } = newGame({ factory: fixedFactory(cyan) });
+    fillRows(game, Array.from({ length: lines }, (_, i) => 19 - i), [9]);
+    dropVerticalIIntoColumn9(game);
+    assert.equal(game.score, points);
+    assert.equal(filledCells(game), 4 - lines, 'only the unused part of the I piece is left');
+  });
+}
+
+test('rows above a cleared line move down unchanged', () => {
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  game.gameBoard[10][0] = filled(red);
+  game.gameBoard[12][3] = filled(green);
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.gameBoard[11][0].color, red);
+  assert.equal(game.gameBoard[13][3].color, green);
+  assert.ok(!game.gameBoard[10][0].isFilled);
+  assert.ok(!game.gameBoard[12][3].isFilled);
+  assert.ok(game.gameBoard[0].every(cell => !cell.isFilled), 'a new empty row appears at the top');
+  assert.equal(game.gameBoard.length, 20);
+});
+
+test('lines that are not next to each other clear together', () => {
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  fillRows(game, [17, 19], [9]);
+  fillRows(game, [18], [0, 9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.score, 300);
+  const bottom = game.gameBoard[19];
+  assert.ok(!bottom[0].isFilled, 'the row with a gap dropped to the bottom');
+  assert.ok(bottom.slice(1).every(cell => cell.isFilled));
+  assert.ok(game.gameBoard[18][9].isFilled, 'top of the I piece dropped two rows');
+  assert.equal(filledCells(game), 10);
+});
+
+test('the level goes up every 1000 points and speeds up gravity', () => {
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  game.score = 900;
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.score, 1000);
+  assert.equal(game.level, 2);
+  assert.ok(Math.abs(game.standardDropInterval - 0.68) < 1e-9);
+});
+
+test('the high score is saved when beaten and kept when not', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: fixedFactory(cyan) });
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(storage.getItem('highScore'), '100');
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 100);
+
+  const best = createMemoryStorage();
+  best.setItem('highScore', '5000');
+  const { game: second } = newGame({ storage: best, factory: fixedFactory(cyan) });
+  fillRows(second, [19], [9]);
+  dropVerticalIIntoColumn9(second);
+  assert.equal(second.score, 100);
+  assert.equal(second.highScore, 5000);
+});
+
+test('a missing or invalid stored high score reads as 0', () => {
+  const storage = createMemoryStorage();
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+  storage.setItem('highScore', 'not a number');
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+});
+
+test('the session is saved after a line clear but not after a plain lock', () => {
+  const { game, storage } = newGame({ factory: fixedFactory(cyan) });
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.isSessionSaved, false);
+  assert.equal(storage.getItem('savedGameSession'), null);
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.score, 100);
+  assert.equal(game.isSessionSaved, true);
+  assert.ok(JSON.parse(storage.getItem('savedGameSession')).gameBoard);
+});
+
+// Lock delay
+
+test('landing by gravity waits 0.5s before locking', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  while (!game.isOnSurface) scheduler.advance(700);
+  scheduler.advance(700); // gravity tries to move down and lands
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 0);
+  scheduler.advance(1);
+  assert.equal(filledCells(game), 4);
+});
+
+test('moving off a ledge cancels the lock delay and the piece keeps falling', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  game.gameBoard[10][5] = filled();
+  landOnSurface(game);
+  game.softDrop(); // lands on the ledge
+  assert.notEqual(game.lockDelayTask, null);
+  game.handleAction(PlayerAction.moveLeft);
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(game.isOnSurface, false);
+  scheduler.advance(700);
+  assert.equal(game.currentTetromino.position.row, 9);
+});
+
+test('reaching a new lowest row resets the lock delay move count', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  game.gameBoard[10][5] = filled();
+  landOnSurface(game);
+  game.softDrop();
+  game.handleAction(PlayerAction.moveLeft); // off the ledge counts as a reset
+  assert.equal(game.lockDelayResetCount, 1);
+  game.softDrop();
+  assert.equal(game.lockDelayResetCount, 0);
+});
+
+test('rotating on the surface restarts the lock delay', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(purple) });
+  landOnSurface(game);
+  game.softDrop();
+  scheduler.advance(400);
+  game.handleAction(PlayerAction.rotate); // kicks up one row to fit
+  assert.equal(game.currentTetromino.rotationState, 1);
+  assert.equal(game.lockDelayResetCount, 1);
+  scheduler.advance(400);
+  assert.equal(filledCells(game), 0, 'still unlocked 0.8s after landing');
+  scheduler.advance(100);
+  assert.equal(filledCells(game), 4);
+});
+
+test('once the 15 resets are used up, landing locks immediately', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.lockDelayResetCount = 15;
+  game.softDrop();
+  assert.equal(filledCells(game), 4);
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(game.currentTetromino.position.row, 0);
+});
+
+// Hold
+
+test('the first hold stores the piece at its spawn state and brings in the next one', () => {
+  const { game } = newGame({ factory: sequenceFactory([purple, yellow, green, red, orange]) });
+  game.handleAction(PlayerAction.rotate);
+  game.handleAction(PlayerAction.moveLeft);
+  game.softDrop();
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.heldTetromino.color, purple);
+  assert.equal(game.heldTetromino.rotationState, 0);
+  assert.deepEqual(game.heldTetromino.position, position(0, 3));
+  assert.equal(game.currentTetromino.color, yellow);
+  assert.deepEqual(game.nextTetrominos.map(piece => piece.color), [green, red, orange]);
+});
+
+test('hold is available again after the next piece locks, and swaps back', () => {
+  const { game } = newGame({ factory: sequenceFactory([purple, yellow, green, red]) });
+  game.handleAction(PlayerAction.hold); // holds T, plays O
+  assert.equal(game.canHoldTetromino, false);
+  game.handleAction(PlayerAction.drop); // O locks, plays S
+  assert.equal(game.canHoldTetromino, true);
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.heldTetromino.color, green);
+  assert.equal(game.currentTetromino.color, purple);
+  assert.deepEqual(game.currentTetromino.position, position(0, 3));
+});
+
+test('holding when the held piece has no room to spawn ends the game', () => {
+  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]) });
+  game.handleAction(PlayerAction.hold);
+  game.handleAction(PlayerAction.drop);
+  fillRows(game, [1], [0, 1, 2, 6, 7, 8, 9]); // blocks where the held T would appear
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.isSessionSaved, false);
+  assert.equal(scheduler.pending, 0, 'gravity and lock delay stopped');
+});
+
+// Pause and continue
+
+test('pause freezes gravity until resumed', () => {
+  const { game, scheduler } = newGame();
+  game.togglePause();
+  assert.equal(game.state, GameState.paused);
+  scheduler.advance(5000);
+  assert.equal(game.currentTetromino.position.row, 0);
+  game.togglePause();
+  assert.equal(game.state, GameState.playing);
+  scheduler.advance(700);
+  assert.equal(game.currentTetromino.position.row, 1);
+});
+
+test('pausing during the lock delay cancels it and counts as a reset', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.softDrop();
+  game.togglePause();
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(game.lockDelayResetCount, 1);
+  scheduler.advance(5000);
+  assert.equal(filledCells(game), 0);
+  game.togglePause();
+  scheduler.advance(700 + 500); // gravity lands it again, then the lock delay
+  assert.equal(filledCells(game), 4);
+});
+
+test('toggling pause does nothing at game over', () => {
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
+  game.togglePause();
+  assert.equal(game.state, GameState.gameOver);
+});
+
+test('continue restores the board, score, level and every piece', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: sequenceFactory([purple, yellow, green, red, orange, cyan]) });
+  game.handleAction(PlayerAction.hold);
+  game.handleAction(PlayerAction.moveLeft);
+  game.gameBoard[19][2] = filled(red);
+  game.score = 1200;
+  game.level = 2;
+  game.handleAction(PlayerAction.pause);
+
+  const restored = new GameManager({ scheduler: createFakeScheduler(), storage });
+  restored.handleAction(PlayerAction.continueGame);
+  assert.equal(restored.state, GameState.paused);
+  assert.equal(restored.score, 1200);
+  assert.equal(restored.level, 2);
+  assert.equal(restored.gameBoard[19][2].color, red);
+  assert.deepEqual(restored.currentTetromino, game.currentTetromino);
+  assert.deepEqual(restored.heldTetromino, game.heldTetromino);
+  assert.deepEqual(restored.nextTetrominos, game.nextTetrominos);
+  assert.equal(restored.canHoldTetromino, false);
+});
+
+test('continue without a saved game stays at game over', () => {
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.isSessionSaved, false);
+});
+
+test('continue with a corrupted save stays at game over and forgets it', () => {
+  const storage = createMemoryStorage();
+  storage.setItem('isSessionSaved', 'true');
+  storage.setItem('savedGameSession', '{not json');
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage });
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.isSessionSaved, false);
+});
+
+test('continue is ignored while a game is running', () => {
+  const { game } = newGame();
+  game.handleAction(PlayerAction.moveLeft);
+  const before = snapshot(game);
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(snapshot(game), before);
+});
+
+// Game over
+
+test('topping out stops all timers', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  while (game.state === GameState.playing) game.handleAction(PlayerAction.drop);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  const before = snapshot(game);
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), before);
+});
+
+// Storage failures
+
+test('a failing session save does not break pausing', () => {
+  const { game } = newGame({ storage: failingStorage(['savedGameSession']) });
+  game.handleAction(PlayerAction.pause);
+  assert.equal(game.state, GameState.paused);
+  assert.equal(game.isSessionSaved, false);
+});
+
+test('the game keeps working when storage rejects every write', () => {
+  const scheduler = createFakeScheduler();
+  const game = new GameManager({ scheduler, storage: failingStorage(), factory: fixedFactory(cyan) });
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.playing);
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.score, 100);
+  game.togglePause();
+  game.togglePause();
+  scheduler.advance(700);
+  assert.equal(game.state, GameState.playing);
+});
+
+test('memory storage keeps values as strings', () => {
+  const storage = createMemoryStorage();
+  assert.equal(storage.getItem('missing'), null);
+  storage.setItem('n', 42);
+  assert.equal(storage.getItem('n'), '42');
+  storage.removeItem('n');
+  assert.equal(storage.getItem('n'), null);
+});
+
+// Random play
+
+test('in 200 random games the rules always hold', () => {
+  const random = seededRandom(2024);
+  const actions = [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold];
+  const validGains = new Set([0, 100, 300, 500, 800]);
+  let gamesOver = 0;
+  for (let round = 0; round < 200; round++) {
+    const { game, scheduler } = newGame({ factory: new TetrominoFactory(random) });
+    for (let step = 0; step < 2000 && game.state !== GameState.gameOver; step++) {
+      const before = game.score;
+      const roll = random();
+      if (roll < 0.5) game.handleAction(actions[Math.floor(random() * actions.length)]);
+      else if (roll < 0.53) game.handleAction(PlayerAction.drop);
+      else if (roll < 0.6) game.softDrop();
+      else if (roll < 0.61) { game.togglePause(); game.togglePause(); }
+      else scheduler.advance(Math.floor(random() * 400));
+
+      assert.ok(validGains.has(game.score - before), `score went from ${before} to ${game.score}`);
+      assert.equal(game.level, Math.floor(game.score / 1000) + 1);
+      assert.equal(game.gameBoard.length, 20);
+      assert.ok(game.gameBoard.every(row => row.length === 10));
+      assert.equal(game.nextTetrominos.length, 3);
+      if (game.state === GameState.playing) {
+        assert.ok(game.currentTetromino.fits(game.gameBoard), `round ${round} step ${step}: piece overlaps`);
+        assert.ok(game.ghostTetromino.fits(game.gameBoard));
+        assert.ok(game.ghostTetromino.position.row >= game.currentTetromino.position.row);
+      }
+    }
+    if (game.state === GameState.gameOver) gamesOver++;
+  }
+  assert.ok(gamesOver > 100, `most games played to the end (${gamesOver} of 200)`);
+});

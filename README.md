@@ -17,7 +17,7 @@ Then open http://localhost:3000. Set the `PORT` environment variable to use a di
 
 ## Deployment
 
-The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
+The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the unit and browser tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
 
 ## Features
 
@@ -88,8 +88,9 @@ public/
     tetrominoFactory.js      7 bag randomizer, piece shapes and wall kick data
     position.js              Board position helpers
     inputController.js       Keyboard and gamepad input
-test/
-  game.test.js               Engine tests
+test/                        Unit tests (node:test): engine, pieces, input, server, app files
+e2e/                         Browser tests (Playwright): the real page at iPhone and desktop sizes
+playwright.config.js         Browser test setup
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
@@ -97,7 +98,13 @@ The engine takes injectable storage, scheduler and piece factory objects, so it 
 ## Tests
 
 ```sh
-npm test
+npm test            # unit tests, about a second
+npm run test:e2e    # browser tests
+npm run test:all    # both
 ```
 
-Tests use the built in `node:test` runner and need no extra dependencies.
+**Unit tests** use the built in `node:test` runner. They cover every piece and rotation, wall kicks, the 7 bag, all game rules (movement, gravity, lock delay, line clears, scoring, levels, hold, pause, continue, game over, storage failures) with a fake clock, keyboard and gamepad input with mocked timers, the Express server, and the page, manifest, service worker and icons.
+
+**Browser tests** use Playwright with Chromium, sized like an iPhone 14 Pro Max with touch and like a desktop. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browser with `npx playwright install chromium`. Chromium stands in for Safari, so check touch feel on a real iPhone too.
+
+Both suites run on every pull request and before every deploy.
