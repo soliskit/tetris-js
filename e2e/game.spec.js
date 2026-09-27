@@ -22,7 +22,7 @@ const minColumn = cells => Math.min(...cells.map(([, c]) => c));
 const minRow = cells => Math.min(...cells.map(([r]) => r));
 
 test.describe('start and game over', () => {
-  test('the start screen offers New Game and hides the pause button', async ({ page }) => {
+  test('the start screen offers New Game and hides the pause button [STA-1] [DSP-5]', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#newGameButton')).toBeVisible();
     await expect(page.locator('#continueGameButton')).toBeHidden();
@@ -32,12 +32,13 @@ test.describe('start and game over', () => {
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
   });
 
-  test('the New Game button starts a game with a piece at the top', async ({ page }) => {
+  test('the New Game button starts a game with a piece at the top [STA-1] [PCE-3] [PLY-8] [DSP-5]', async ({ page }) => {
     await page.goto('/');
     await page.locator('#newGameButton').click();
     await expect(page.locator('#gameOverControls')).toBeHidden();
     await expect(page.locator('#playPauseButton')).toBeVisible();
     await expectLabel(page, 'Pause');
+    await expect.poll(() => filledCount(page)).toBe(4);
     const cells = (await boardCells(page)).flatMap((row, r) => row.map((value, c) => value && [r, c]).filter(Boolean));
     expect(cells).toHaveLength(4);
     expect(minRow(cells)).toBeLessThanOrEqual(1);
@@ -45,7 +46,7 @@ test.describe('start and game over', () => {
     expect(await canvasHasDrawing(page, 'heldPreview')).toBe(false);
   });
 
-  test('topping out ends the game and forgets the saved game', async ({ page }) => {
+  test('topping out ends the game and forgets the saved game [STA-3] [DSP-5]', async ({ page }) => {
     await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, board: rowsExcept([...Array(18).keys()].map(i => i + 2), [0]) }));
     await page.keyboard.press('KeyP');
     await page.keyboard.press('KeyS'); // locks at the top, the next piece has no room
@@ -60,9 +61,10 @@ test.describe('start and game over', () => {
 });
 
 test.describe('playing with the keyboard', () => {
-  test('gravity moves the piece down, and pause stops it', async ({ page }) => {
+  test('gravity moves the piece down, and pause stops it [PLY-2] [STA-2] [INP-1]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
     const piece = async () => (await boardCells(page)).flatMap((row, r) => row.map((value, c) => value && [r, c]).filter(Boolean));
     const start = minRow(await piece());
     await expect.poll(async () => minRow(await piece()), { timeout: 3000 }).toBeGreaterThan(start);
@@ -75,7 +77,7 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
-  test('move, rotate, hard drop and hold keys all work', async ({ page }) => {
+  test('move, rotate, hard drop and hold keys all work [INP-1] [PLY-1] [PLY-4] [PLY-7]', async ({ page }) => {
     await continueSavedGame(page, savedGame({ piece: PieceColors.purple }));
     await page.keyboard.press('KeyP');
     const t = () => cellsOf(page, PieceColors.purple);
@@ -102,7 +104,7 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
   });
 
-  test('clearing a line updates the score and high score', async ({ page }) => {
+  test('clearing a line updates the score and high score [SCO-1] [SCO-3] [DSP-5]', async ({ page }) => {
     await continueSavedGame(page, savedGame({
       piece: PieceColors.cyan,
       rotationState: 1,
@@ -116,7 +118,7 @@ test.describe('playing with the keyboard', () => {
     expect(await cellsOf(page, BOARD_COLOR)).toHaveLength(0);
   });
 
-  test('a paused game can be continued after reloading the page', async ({ page }) => {
+  test('a paused game can be continued after reloading the page [STA-4] [DSP-5]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     await page.keyboard.press('KeyS');
@@ -133,7 +135,7 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
-  test('hiding the page pauses the game', async ({ page }) => {
+  test('hiding the page pauses the game [STA-5]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     await expectLabel(page, 'Pause');
@@ -170,13 +172,13 @@ test.describe('layout', () => {
     expect(layout.boardWidth).toBeGreaterThan(150);
   }
 
-  test('the game fits the screen without scrolling', async ({ page }) => {
+  test('the game fits the screen without scrolling [DSP-1] [APP-4]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     await checkFits(page);
   });
 
-  test('the game fits other portrait phone sizes too', async ({ page }) => {
+  test('the game fits other portrait phone sizes too [DSP-1]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     for (const size of [{ width: 375, height: 667 }, { width: 390, height: 844 }, { width: 430, height: 839 }]) {
@@ -185,7 +187,7 @@ test.describe('layout', () => {
     }
   });
 
-  test('the board canvas is drawn at full screen resolution', async ({ page }) => {
+  test('the board canvas is drawn at full screen resolution [DSP-2]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     await expect.poll(() => page.evaluate(() => {

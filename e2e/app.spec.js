@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { boardCells, expectLabel, filledCount, trackErrors } from './helpers.js';
 
-test('nothing is redrawn while the game is paused', async ({ page }) => {
+test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => {
   await page.addInitScript(() => {
     window.drawCalls = 0;
     const fill = CanvasRenderingContext2D.prototype.fill;
@@ -19,7 +19,7 @@ test('nothing is redrawn while the game is paused', async ({ page }) => {
   expect(await page.evaluate(() => window.drawCalls)).toBe(before);
 });
 
-test('the board is redrawn at the new size after a resize', async ({ page }) => {
+test('the board is redrawn at the new size after a resize [DSP-2]', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Enter');
   await page.keyboard.press('KeyP');
@@ -32,7 +32,7 @@ test('the board is redrawn at the new size after a resize', async ({ page }) => 
   expect(await filledCount(page)).toBe(4);
 });
 
-test('the page cannot be zoomed, scrolled by touch or text selected', async ({ page }) => {
+test('the page cannot be zoomed, scrolled by touch or text selected [DSP-4]', async ({ page }) => {
   await page.goto('/');
   const styles = await page.evaluate(() => {
     const html = getComputedStyle(document.documentElement);
@@ -43,7 +43,7 @@ test('the page cannot be zoomed, scrolled by touch or text selected', async ({ p
   expect(styles).toEqual({ touchAction: 'none', userSelect: 'none', pinchCancelled: true });
 });
 
-test('the game can be installed as an app', async ({ page }) => {
+test('the game can be installed as an app [APP-1]', async ({ page }) => {
   await page.goto('/');
   const cdp = await page.context().newCDPSession(page);
   const manifest = await cdp.send('Page.getAppManifest');
@@ -52,7 +52,7 @@ test('the game can be installed as an app', async ({ page }) => {
   expect(installabilityErrors).toEqual([]);
 });
 
-test('the game works offline after the first visit', async ({ page, context }) => {
+test('the game works offline after the first visit [APP-2]', async ({ page, context }) => {
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
@@ -66,7 +66,7 @@ test('the game works offline after the first visit', async ({ page, context }) =
   await context.setOffline(false);
 });
 
-test('a whole game runs to the end without errors', async ({ page }) => {
+test('a whole game runs to the end without errors [SAF-6] [STA-3]', async ({ page }) => {
   const errors = trackErrors(page);
   await page.goto('/');
   await page.keyboard.press('Enter');
