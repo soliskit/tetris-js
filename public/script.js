@@ -37,9 +37,9 @@ function roundedRect(context, x, y, size, radius) {
   context.roundRect(x, y, size, size, radius);
 }
 
-function drawBlock(context, column, row, size, color, xOffset = 0) {
+function drawBlock(context, column, row, size, color) {
   context.fillStyle = color;
-  roundedRect(context, size * column + 0.5 + xOffset, size * row + 0.5, size - 1, 3);
+  roundedRect(context, size * column + 0.5, size * row + 0.5, size - 1, 3);
   context.fill();
 }
 
@@ -84,7 +84,7 @@ function drawBoard() {
     drawGhostBlock(context, cell.column, cell.row, blockSize, tetromino.color);
   }
   for (const cell of tetromino.cells) {
-    drawBlock(context, cell.column, cell.row, blockSize, tetromino.color, drag.horizontalOffset);
+    drawBlock(context, cell.column, cell.row, blockSize, tetromino.color);
   }
 }
 
@@ -136,8 +136,7 @@ function boardChanged() {
   return piece !== drawnBoard.piece
     || piece.position !== drawnBoard.position
     || piece.rotationState !== drawnBoard.rotationState
-    || gameManager.gameBoard !== drawnBoard.gameBoard
-    || drag.horizontalOffset !== drawnBoard.horizontalOffset;
+    || gameManager.gameBoard !== drawnBoard.gameBoard;
 }
 
 function drawIfChanged() {
@@ -148,8 +147,7 @@ function drawIfChanged() {
       piece,
       position: piece.position,
       rotationState: piece.rotationState,
-      gameBoard: gameManager.gameBoard,
-      horizontalOffset: drag.horizontalOffset
+      gameBoard: gameManager.gameBoard
     };
   }
   const previews = [[heldCanvas, gameManager.heldTetromino]];
@@ -201,71 +199,101 @@ watchPixelRatio();
 
 // Touch and mouse gestures, ported from the DragGesture in ContentView.swift:
 // drag sideways to move by whole cells, drag down to soft drop, tap to rotate.
+// The piece always stays on the grid and in step with the finger, and a
+// gesture only ever controls the piece that was falling when it started.
+
+// Fingers wobble a few pixels during a tap, so allow that before a touch
+// counts as a drag.
+const TAP_SLOP_PX = 10;
 
 const drag = {
   pointerId: null,
+  piece: null,
   startX: 0,
   startY: 0,
   moved: false,
   cellOffset: 0,
   rowOffset: 0,
-  horizontalOffset: 0
+  blocked: 0
 };
 
 function resetDragState() {
   drag.pointerId = null;
+  drag.piece = null;
   drag.moved = false;
   drag.cellOffset = 0;
   drag.rowOffset = 0;
-  drag.horizontalOffset = 0;
+  drag.blocked = 0;
 }
 
 function cellWidth() {
-  return boardCanvas.getBoundingClientRect().width / gameManager.columns;
+  return canvasSizes.get(boardCanvas).width / gameManager.columns;
+}
+
+// Returns whether the piece actually moved one column in that direction.
+function tryMove(step) {
+  const column = drag.piece.position.column;
+  gameManager.handleAction(step > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft);
+  return drag.piece.position.column !== column;
 }
 
 boardCanvas.addEventListener('pointerdown', event => {
   resetDragState();
   drag.pointerId = event.pointerId;
+  drag.piece = gameManager.currentTetromino;
   drag.startX = event.clientX;
   drag.startY = event.clientY;
   boardCanvas.setPointerCapture(event.pointerId);
 });
 
 boardCanvas.addEventListener('pointermove', event => {
-  if (event.pointerId !== drag.pointerId) return;
+  if (event.pointerId !== drag.pointerId || !canvasSizes.has(boardCanvas)) return;
+  // The piece locked or was held mid gesture: ignore the rest of this drag
+  // rather than moving or dropping the next piece.
+  if (gameManager.currentTetromino !== drag.piece) return;
   const dx = event.clientX - drag.startX;
   const dy = event.clientY - drag.startY;
-  if (!drag.moved && Math.hypot(dx, dy) < 3) return;
+  if (!drag.moved && Math.hypot(dx, dy) < TAP_SLOP_PX) return;
   drag.moved = true;
   const width = cellWidth();
 
-  const newColumnOffset = Math.trunc(dx / width);
-  const columnDelta = newColumnOffset - drag.cellOffset;
-  if (columnDelta !== 0) {
-    const action = columnDelta > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft;
-    for (let i = 0; i < Math.abs(columnDelta); i++) gameManager.handleAction(action);
-    drag.cellOffset = newColumnOffset;
+  let offset = (event.clientX - drag.startX) / width;
+  if (drag.blocked !== 0 && Math.sign(offset - drag.cellOffset) === drag.blocked) {
+    // Still pushing against a wall or block. Slide in if a gap has opened,
+    // and keep the anchor under the finger so pushing does not bank moves
+    // and moving back responds after half a cell.
+    if (tryMove(drag.blocked)) {
+      drag.cellOffset += drag.blocked;
+      drag.blocked = 0;
+    }
+    drag.startX = event.clientX - drag.cellOffset * width;
+    offset = drag.cellOffset;
   }
 
-  const fractional = dx - drag.cellOffset * width;
-  const clamped = Math.max(-width * 0.5, Math.min(width * 0.5, fractional));
-  const pieceColumns = gameManager.currentTetromino.cells.map(cell => cell.column);
-  const leftMargin = Math.min(...pieceColumns) * width;
-  const rightMargin = (gameManager.columns - 1 - Math.max(...pieceColumns)) * width;
-  drag.horizontalOffset = Math.max(-leftMargin, Math.min(rightMargin, clamped));
+  // One cell of movement per cell dragged, starting at half a cell.
+  const targetOffset = Math.round(offset);
+  while (drag.cellOffset !== targetOffset) {
+    const step = Math.sign(targetOffset - drag.cellOffset);
+    if (!tryMove(step)) {
+      drag.blocked = step;
+      drag.startX = event.clientX - drag.cellOffset * width;
+      break;
+    }
+    drag.cellOffset += step;
+    drag.blocked = 0;
+  }
 
   const newRowOffset = Math.max(0, Math.trunc(dy / width));
-  const rowDelta = newRowOffset - drag.rowOffset;
-  if (rowDelta > 0) {
-    for (let i = 0; i < rowDelta; i++) gameManager.softDrop();
-    drag.rowOffset = newRowOffset;
+  while (drag.rowOffset < newRowOffset && gameManager.currentTetromino === drag.piece) {
+    gameManager.softDrop();
+    drag.rowOffset += 1;
   }
 });
 
 function endDrag(event) {
   if (event.pointerId !== drag.pointerId) return;
-  if (!drag.moved && event.type === 'pointerup') gameManager.handleAction(PlayerAction.rotate);
+  const isTap = !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
+  if (isTap) gameManager.handleAction(PlayerAction.rotate);
   resetDragState();
 }
 
