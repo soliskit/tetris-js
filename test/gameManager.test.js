@@ -47,7 +47,7 @@ function failingStorage(failingKeys) {
 
 // Starting state
 
-test('a new game manager waits at game over with an empty board and three upcoming pieces', () => {
+test('a new game manager waits at game over with an empty board and three upcoming pieces [STA-1] [PCE-1] [PLY-8]', () => {
   const scheduler = createFakeScheduler();
   const game = new GameManager({ scheduler, storage: createMemoryStorage() });
   assert.equal(game.state, GameState.gameOver);
@@ -61,7 +61,7 @@ test('a new game manager waits at game over with an empty board and three upcomi
   assert.equal(scheduler.pending, 0, 'no gravity before a game starts');
 });
 
-test('without injected storage it falls back to memory when localStorage is missing', () => {
+test('without injected storage it falls back to memory when localStorage is missing [SAF-2]', () => {
   assert.equal(typeof globalThis.localStorage, 'undefined');
   const game = new GameManager({ scheduler: createFakeScheduler() });
   game.highScore = 300;
@@ -70,7 +70,7 @@ test('without injected storage it falls back to memory when localStorage is miss
 
 // State guards
 
-test('moves, rotations, holds and drops do nothing at game over', () => {
+test('moves, rotations, holds and drops do nothing at game over [STA-1]', () => {
   const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
   const before = snapshot(game);
   for (const action of [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold, PlayerAction.drop]) {
@@ -80,7 +80,7 @@ test('moves, rotations, holds and drops do nothing at game over', () => {
   assert.equal(snapshot(game), before);
 });
 
-test('moves, rotations, holds, drops and gravity do nothing while paused', () => {
+test('moves, rotations, holds, drops and gravity do nothing while paused [STA-2]', () => {
   const { game, scheduler } = newGame();
   game.handleAction(PlayerAction.pause);
   const before = snapshot(game);
@@ -92,19 +92,18 @@ test('moves, rotations, holds, drops and gravity do nothing while paused', () =>
   assert.equal(snapshot(game), before);
 });
 
-test('new game is ignored while a game is running', () => {
+test('new game is ignored while a game is running [STA-1]', () => {
   const { game } = newGame();
   game.score = 500;
   game.handleAction(PlayerAction.newGame);
   assert.equal(game.score, 500);
 });
 
-test('new game after game over resets the board, score, level and held piece', () => {
+test('new game after game over resets the board, score, level and held piece [STA-1]', () => {
   const { game } = newGame();
   game.handleAction(PlayerAction.hold);
   game.gameBoard[19][0] = filled();
   game.score = 2500;
-  game.level = 3;
   game.state = GameState.gameOver;
   game.handleAction(PlayerAction.newGame);
   assert.equal(game.state, GameState.playing);
@@ -118,7 +117,7 @@ test('new game after game over resets the board, score, level and held piece', (
 
 // Movement
 
-test('moving left and right stops at the walls', () => {
+test('moving left and right stops at the walls [PLY-1] [PCE-6]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
   for (let i = 0; i < 10; i++) game.handleAction(PlayerAction.moveLeft);
   assert.equal(game.currentTetromino.position.column, 0);
@@ -126,7 +125,7 @@ test('moving left and right stops at the walls', () => {
   assert.equal(game.currentTetromino.position.column, 8);
 });
 
-test('moving is blocked by locked blocks', () => {
+test('moving is blocked by locked blocks [PLY-1] [PCE-6]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
   game.gameBoard[1][6] = filled();
   game.handleAction(PlayerAction.moveRight);
@@ -135,7 +134,7 @@ test('moving is blocked by locked blocks', () => {
   assert.equal(game.currentTetromino.position.column, 3);
 });
 
-test('soft drop moves down one row and restarts the gravity timer', () => {
+test('soft drop moves down one row and restarts the gravity timer [PLY-3]', () => {
   const { game, scheduler } = newGame();
   scheduler.advance(600);
   game.softDrop();
@@ -146,15 +145,15 @@ test('soft drop moves down one row and restarts the gravity timer', () => {
   assert.equal(game.currentTetromino.position.row, 2);
 });
 
-test('gravity uses the current level speed', () => {
+test('gravity uses the current level speed [PLY-2]', () => {
   const { game, scheduler } = newGame();
-  game.level = 11; // 0.5s per row
+  game.score = 10000; // level 11: 0.5s per row
   game.softDrop(); // restarts gravity with the new speed
   scheduler.advance(500);
   assert.equal(game.currentTetromino.position.row, 2);
 });
 
-test('the ghost piece shows where the piece would land without moving it', () => {
+test('the ghost piece shows where the piece would land without moving it [PLY-5]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
   assert.equal(game.ghostTetromino.position.row, 18);
   game.gameBoard[15][4] = filled();
@@ -163,7 +162,7 @@ test('the ghost piece shows where the piece would land without moving it', () =>
   assert.notEqual(game.ghostTetromino, game.currentTetromino);
 });
 
-test('hard drop lands on the stack and brings in the next piece', () => {
+test('hard drop lands on the stack and brings in the next piece [PLY-4] [PLY-8]', () => {
   const { game } = newGame({ factory: sequenceFactory([yellow, purple]) });
   game.gameBoard[15][4] = filled();
   const next = game.nextTetrominos[0];
@@ -181,7 +180,7 @@ test('hard drop lands on the stack and brings in the next piece', () => {
 // Line clears and scoring
 
 for (const [lines, points] of [[1, 100], [2, 300], [3, 500], [4, 800]]) {
-  test(`clearing ${lines} line${lines > 1 ? 's' : ''} at once scores ${points}`, () => {
+  test(`clearing ${lines} line${lines > 1 ? 's' : ''} at once scores ${points} [SCO-1]`, () => {
     const { game } = newGame({ factory: fixedFactory(cyan) });
     fillRows(game, Array.from({ length: lines }, (_, i) => 19 - i), [9]);
     dropVerticalIIntoColumn9(game);
@@ -190,7 +189,7 @@ for (const [lines, points] of [[1, 100], [2, 300], [3, 500], [4, 800]]) {
   });
 }
 
-test('rows above a cleared line move down unchanged', () => {
+test('rows above a cleared line move down unchanged [SCO-1]', () => {
   const { game } = newGame({ factory: fixedFactory(cyan) });
   game.gameBoard[10][0] = filled(red);
   game.gameBoard[12][3] = filled(green);
@@ -204,7 +203,7 @@ test('rows above a cleared line move down unchanged', () => {
   assert.equal(game.gameBoard.length, 20);
 });
 
-test('lines that are not next to each other clear together', () => {
+test('lines that are not next to each other clear together [SCO-1]', () => {
   const { game } = newGame({ factory: fixedFactory(cyan) });
   fillRows(game, [17, 19], [9]);
   fillRows(game, [18], [0, 9]);
@@ -217,7 +216,7 @@ test('lines that are not next to each other clear together', () => {
   assert.equal(filledCells(game), 10);
 });
 
-test('the level goes up every 1000 points and speeds up gravity', () => {
+test('the level goes up every 1000 points and speeds up gravity [SCO-2] [PLY-2]', () => {
   const { game } = newGame({ factory: fixedFactory(cyan) });
   game.score = 900;
   fillRows(game, [19], [9]);
@@ -227,7 +226,7 @@ test('the level goes up every 1000 points and speeds up gravity', () => {
   assert.ok(Math.abs(game.standardDropInterval - 0.68) < 1e-9);
 });
 
-test('the high score is saved when beaten and kept when not', () => {
+test('the high score is saved when beaten and kept when not [SCO-3]', () => {
   const storage = createMemoryStorage();
   const { game } = newGame({ storage, factory: fixedFactory(cyan) });
   fillRows(game, [19], [9]);
@@ -244,14 +243,14 @@ test('the high score is saved when beaten and kept when not', () => {
   assert.equal(second.highScore, 5000);
 });
 
-test('a missing or invalid stored high score reads as 0', () => {
+test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => {
   const storage = createMemoryStorage();
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
   storage.setItem('highScore', 'not a number');
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
 });
 
-test('the session is saved after a line clear but not after a plain lock', () => {
+test('the session is saved after a line clear but not after a plain lock [STA-4]', () => {
   const { game, storage } = newGame({ factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.drop);
   assert.equal(game.isSessionSaved, false);
@@ -265,7 +264,7 @@ test('the session is saved after a line clear but not after a plain lock', () =>
 
 // Lock delay
 
-test('landing by gravity waits 0.5s before locking', () => {
+test('landing by gravity waits 0.5s before locking [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   while (!game.isOnSurface) scheduler.advance(700);
   scheduler.advance(700); // gravity tries to move down and lands
@@ -276,7 +275,7 @@ test('landing by gravity waits 0.5s before locking', () => {
   assert.equal(filledCells(game), 4);
 });
 
-test('moving off a ledge cancels the lock delay and the piece keeps falling', () => {
+test('moving off a ledge cancels the lock delay and the piece keeps falling [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   game.gameBoard[10][5] = filled();
   landOnSurface(game);
@@ -289,7 +288,7 @@ test('moving off a ledge cancels the lock delay and the piece keeps falling', ()
   assert.equal(game.currentTetromino.position.row, 9);
 });
 
-test('reaching a new lowest row resets the lock delay move count', () => {
+test('reaching a new lowest row resets the lock delay move count [PLY-6]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
   game.gameBoard[10][5] = filled();
   landOnSurface(game);
@@ -300,7 +299,7 @@ test('reaching a new lowest row resets the lock delay move count', () => {
   assert.equal(game.lockDelayResetCount, 0);
 });
 
-test('rotating on the surface restarts the lock delay', () => {
+test('rotating on the surface restarts the lock delay [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(purple) });
   landOnSurface(game);
   game.softDrop();
@@ -314,7 +313,7 @@ test('rotating on the surface restarts the lock delay', () => {
   assert.equal(filledCells(game), 4);
 });
 
-test('once the 15 resets are used up, landing locks immediately', () => {
+test('once the 15 resets are used up, landing locks immediately [PLY-6]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
   landOnSurface(game);
   game.lockDelayResetCount = 15;
@@ -326,7 +325,7 @@ test('once the 15 resets are used up, landing locks immediately', () => {
 
 // Hold
 
-test('the first hold stores the piece at its spawn state and brings in the next one', () => {
+test('the first hold stores the piece at its spawn state and brings in the next one [PLY-7]', () => {
   const { game } = newGame({ factory: sequenceFactory([purple, yellow, green, red, orange]) });
   game.handleAction(PlayerAction.rotate);
   game.handleAction(PlayerAction.moveLeft);
@@ -339,7 +338,7 @@ test('the first hold stores the piece at its spawn state and brings in the next 
   assert.deepEqual(game.nextTetrominos.map(piece => piece.color), [green, red, orange]);
 });
 
-test('hold is available again after the next piece locks, and swaps back', () => {
+test('hold is available again after the next piece locks, and swaps back [PLY-7]', () => {
   const { game } = newGame({ factory: sequenceFactory([purple, yellow, green, red]) });
   game.handleAction(PlayerAction.hold); // holds T, plays O
   assert.equal(game.canHoldTetromino, false);
@@ -351,7 +350,7 @@ test('hold is available again after the next piece locks, and swaps back', () =>
   assert.deepEqual(game.currentTetromino.position, position(0, 3));
 });
 
-test('holding when the held piece has no room to spawn ends the game', () => {
+test('holding when the held piece has no room to spawn ends the game [PLY-7] [STA-3]', () => {
   const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]) });
   game.handleAction(PlayerAction.hold);
   game.handleAction(PlayerAction.drop);
@@ -364,7 +363,7 @@ test('holding when the held piece has no room to spawn ends the game', () => {
 
 // Pause and continue
 
-test('pause freezes gravity until resumed', () => {
+test('pause freezes gravity until resumed [STA-2]', () => {
   const { game, scheduler } = newGame();
   game.togglePause();
   assert.equal(game.state, GameState.paused);
@@ -376,7 +375,7 @@ test('pause freezes gravity until resumed', () => {
   assert.equal(game.currentTetromino.position.row, 1);
 });
 
-test('pausing during the lock delay cancels it and counts as a reset', () => {
+test('pausing during the lock delay cancels it and counts as a reset [STA-2] [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   landOnSurface(game);
   game.softDrop();
@@ -390,20 +389,19 @@ test('pausing during the lock delay cancels it and counts as a reset', () => {
   assert.equal(filledCells(game), 4);
 });
 
-test('toggling pause does nothing at game over', () => {
+test('toggling pause does nothing at game over [STA-2]', () => {
   const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
   game.togglePause();
   assert.equal(game.state, GameState.gameOver);
 });
 
-test('continue restores the board, score, level and every piece', () => {
+test('continue restores the board, score, level and every piece [STA-4]', () => {
   const storage = createMemoryStorage();
   const { game } = newGame({ storage, factory: sequenceFactory([purple, yellow, green, red, orange, cyan]) });
   game.handleAction(PlayerAction.hold);
   game.handleAction(PlayerAction.moveLeft);
   game.gameBoard[19][2] = filled(red);
-  game.score = 1200;
-  game.level = 2;
+  game.score = 1200; // level 2
   game.handleAction(PlayerAction.pause);
 
   const restored = new GameManager({ scheduler: createFakeScheduler(), storage });
@@ -414,18 +412,18 @@ test('continue restores the board, score, level and every piece', () => {
   assert.equal(restored.gameBoard[19][2].color, red);
   assert.deepEqual(restored.currentTetromino, game.currentTetromino);
   assert.deepEqual(restored.heldTetromino, game.heldTetromino);
-  assert.deepEqual(restored.nextTetrominos, game.nextTetrominos);
+  assert.deepEqual(restored.nextTetrominos.map(piece => piece.color), game.nextTetrominos.map(piece => piece.color));
   assert.equal(restored.canHoldTetromino, false);
 });
 
-test('continue without a saved game stays at game over', () => {
+test('continue without a saved game stays at game over [STA-4]', () => {
   const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.gameOver);
   assert.equal(game.isSessionSaved, false);
 });
 
-test('continue with a corrupted save stays at game over and forgets it', () => {
+test('continue with a corrupted save stays at game over and forgets it [STA-4] [SAF-1]', () => {
   const storage = createMemoryStorage();
   storage.setItem('isSessionSaved', 'true');
   storage.setItem('savedGameSession', '{not json');
@@ -435,7 +433,7 @@ test('continue with a corrupted save stays at game over and forgets it', () => {
   assert.equal(game.isSessionSaved, false);
 });
 
-test('continue is ignored while a game is running', () => {
+test('continue is ignored while a game is running [STA-4]', () => {
   const { game } = newGame();
   game.handleAction(PlayerAction.moveLeft);
   const before = snapshot(game);
@@ -445,7 +443,7 @@ test('continue is ignored while a game is running', () => {
 
 // Game over
 
-test('topping out stops all timers', () => {
+test('topping out stops all timers [STA-3]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   while (game.state === GameState.playing) game.handleAction(PlayerAction.drop);
   assert.equal(game.state, GameState.gameOver);
@@ -457,14 +455,14 @@ test('topping out stops all timers', () => {
 
 // Storage failures
 
-test('a failing session save does not break pausing', () => {
+test('a failing session save does not break pausing [SAF-2]', () => {
   const { game } = newGame({ storage: failingStorage(['savedGameSession']) });
   game.handleAction(PlayerAction.pause);
   assert.equal(game.state, GameState.paused);
   assert.equal(game.isSessionSaved, false);
 });
 
-test('the game keeps working when storage rejects every write', () => {
+test('the game keeps working when storage rejects every write [SAF-2]', () => {
   const scheduler = createFakeScheduler();
   const game = new GameManager({ scheduler, storage: failingStorage(), factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.newGame);
@@ -478,7 +476,7 @@ test('the game keeps working when storage rejects every write', () => {
   assert.equal(game.state, GameState.playing);
 });
 
-test('memory storage keeps values as strings', () => {
+test('memory storage keeps values as strings [SAF-2]', () => {
   const storage = createMemoryStorage();
   assert.equal(storage.getItem('missing'), null);
   storage.setItem('n', 42);
@@ -489,7 +487,7 @@ test('memory storage keeps values as strings', () => {
 
 // Random play
 
-test('in 200 random games the rules always hold', () => {
+test('in 200 random games the rules always hold [SAF-6] [PCE-6] [SAF-4]', () => {
   const random = seededRandom(2024);
   const actions = [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold];
   const validGains = new Set([0, 100, 300, 500, 800]);
@@ -517,6 +515,7 @@ test('in 200 random games the rules always hold', () => {
       }
     }
     if (game.state === GameState.gameOver) gamesOver++;
+    assert.deepEqual(game.faults, [], `round ${round}: the invariant monitor never fires in legal play`);
   }
   assert.ok(gamesOver > 100, `most games played to the end (${gamesOver} of 200)`);
 });

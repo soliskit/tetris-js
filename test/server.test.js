@@ -32,7 +32,7 @@ async function startServer(t) {
   return `http://localhost:${port}`;
 }
 
-test('the server serves the game and its files with the right types', async t => {
+test('the server serves the game and its files with the right types [APP-3]', async t => {
   const base = await startServer(t);
   const expectations = [
     ['/', 'text/html'],
@@ -53,7 +53,7 @@ test('the server serves the game and its files with the right types', async t =>
   assert.match(page, /<title>Tetris<\/title>/);
 });
 
-test('the server answers 404 for files that do not exist', async t => {
+test('the server answers 404 for files that do not exist [APP-3]', async t => {
   const base = await startServer(t);
   for (const path of ['/missing.js', '/game/nope.js', '/../package.json']) {
     assert.equal((await fetch(base + path)).status, 404, path);
