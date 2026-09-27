@@ -95,3 +95,4 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | QA-3 | The browser tests exercise every line, branch and function of the page script (`public/script.js`), measured in Chromium. `npm run test:e2e` fails below 100%. |
 | QA-4 | The browser tests pass in WebKit (Safari's engine) at iPhone size, as well as in Chromium at iPhone and desktop sizes. |
 | QA-5 | Everything the browser loads (`public/`) passes TypeScript's strictest type checks, with types written as comments in the JavaScript. `npm run typecheck` runs before the tests in CI. |
+| QA-6 | Mutation testing (Stryker) of the game logic leaves no mutant alive: every small wrong change to `public/game/` is caught by a failing test, or stopped for looping forever. A mutant that cannot change behavior is marked in the code with the reason. `npm run test:mutation` fails if any survive, and runs weekly in CI. |
