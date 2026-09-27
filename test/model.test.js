@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import { below, position } from '../public/game/position.js';
 import { GameState, PlayerAction, cellAt, createBoard } from '../public/game/gameState.js';
 
-test('position creates a row and column pair', () => {
+test('position creates a row and column pair [PCE-1]', () => {
   assert.deepEqual(position(3, 7), { row: 3, column: 7 });
 });
 
-test('below returns a new position one row down without changing the original', () => {
+test('below returns a new position one row down without changing the original [PCE-1]', () => {
   const start = position(2, 5);
   const next = below(start);
   assert.deepEqual(next, position(3, 5));
@@ -16,7 +16,7 @@ test('below returns a new position one row down without changing the original', 
   assert.deepEqual(start, position(2, 5));
 });
 
-test('createBoard makes rows of empty, independent cells', () => {
+test('createBoard makes rows of empty, independent cells [PCE-1]', () => {
   const board = createBoard(20, 10);
   assert.equal(board.length, 20);
   assert.ok(board.every(row => row.length === 10));
@@ -26,7 +26,7 @@ test('createBoard makes rows of empty, independent cells', () => {
   assert.equal(board[1][0].isFilled, false);
 });
 
-test('cellAt returns the cell inside the board and undefined outside it', () => {
+test('cellAt returns the cell inside the board and undefined outside it [PCE-1]', () => {
   const board = createBoard(20, 10);
   assert.equal(cellAt(board, 0, 0), board[0][0]);
   assert.equal(cellAt(board, 19, 9), board[19][9]);
@@ -35,7 +35,7 @@ test('cellAt returns the cell inside the board and undefined outside it', () => 
   }
 });
 
-test('game states and player actions are fixed lists', () => {
+test('game states and player actions are fixed lists [STA-1] [INP-1]', () => {
   assert.deepEqual(Object.values(GameState).sort(), ['gameOver', 'paused', 'playing']);
   assert.deepEqual(
     Object.values(PlayerAction).sort(),

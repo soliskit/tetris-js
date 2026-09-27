@@ -16,7 +16,7 @@ async function playSaved(page, options) {
   await page.keyboard.press('KeyP');
 }
 
-test('tapping the board rotates the piece, even with a little finger wobble', async ({ page }) => {
+test('tapping the board rotates the piece, even with a little finger wobble [INP-5]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple, position: { row: 5, column: 3 } });
   const touch = await boardTouch(page);
   const t = () => cellsOf(page, PieceColors.purple);
@@ -31,13 +31,13 @@ test('tapping the board rotates the piece, even with a little finger wobble', as
   await expect.poll(async () => shapeOf(await t())).not.toBe(second);
 });
 
-test('tapping the hold box holds the piece', async ({ page }) => {
+test('tapping the hold box holds the piece [INP-5] [PLY-7]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple });
   await page.locator('#heldPreview').tap();
   await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
 });
 
-test('dragging sideways moves one column per cell dragged', async ({ page }) => {
+test('dragging sideways moves one column per cell dragged [INP-5]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple, position: { row: 5, column: 3 } });
   const touch = await boardTouch(page);
   await touch.down(4, 12);
@@ -48,7 +48,7 @@ test('dragging sideways moves one column per cell dragged', async ({ page }) => 
   await touch.up();
 });
 
-test('dragging down soft drops one row per cell dragged', async ({ page }) => {
+test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple, position: { row: 2, column: 3 } });
   const touch = await boardTouch(page);
   await touch.down(4, 8);
@@ -57,7 +57,7 @@ test('dragging down soft drops one row per cell dragged', async ({ page }) => {
   await touch.up();
 });
 
-test('a dragged piece is never drawn over locked blocks', async ({ page }) => {
+test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,
     position: { row: 6, column: 4 },
@@ -82,7 +82,7 @@ test('a dragged piece is never drawn over locked blocks', async ({ page }) => {
   await touch.up();
 });
 
-test('after pushing into a wall, dragging back responds within a cell', async ({ page }) => {
+test('after pushing into a wall, dragging back responds within a cell [INP-5]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,
     position: { row: 6, column: 4 },
@@ -97,7 +97,7 @@ test('after pushing into a wall, dragging back responds within a cell', async ({
   await touch.up();
 });
 
-test('a drag that outlives its piece leaves the next piece alone', async ({ page }) => {
+test('a drag that outlives its piece leaves the next piece alone [INP-5]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple, position: { row: 17, column: 3 } });
   const touch = await boardTouch(page);
   await touch.down(4, 10);
@@ -114,7 +114,7 @@ test('a drag that outlives its piece leaves the next piece alone', async ({ page
   await touch.up();
 });
 
-test('pinching does not zoom the page', async ({ page }) => {
+test('pinching does not zoom the page [DSP-4]', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Enter');
   const touch = await boardTouch(page);
