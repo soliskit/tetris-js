@@ -51,9 +51,14 @@ export class InputController {
     window.addEventListener('keyup', event => this.handleKey(event, false));
     window.addEventListener('blur', () => this.releaseAllInput());
     window.addEventListener('gamepaddisconnected', () => this.releaseAllInput());
+    // The next poll is requested first, so an error can never stop polling.
     const poll = () => {
-      this.pollGamepads();
       requestAnimationFrame(poll);
+      try {
+        this.pollGamepads();
+      } catch (error) {
+        globalThis.console?.error('Tetris gamepad error:', error);
+      }
     };
     requestAnimationFrame(poll);
   }

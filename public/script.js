@@ -171,9 +171,26 @@ function redrawAll() {
   drawIfChanged();
 }
 
+// An error while drawing is reported once and everything is redrawn on the
+// next frame, so drawing always recovers.
+let renderErrorReported = false;
+
+function drawSafely(draw) {
+  try {
+    draw();
+  } catch (error) {
+    drawnBoard = {};
+    drawnPreviews.clear();
+    lastSnapshot = '';
+    if (!renderErrorReported) console.error('Tetris drawing error, retrying next frame:', error);
+    renderErrorReported = true;
+  }
+}
+
+// The next frame is requested before drawing, so an error can never stop the loop.
 function render() {
-  drawIfChanged();
   requestAnimationFrame(render);
+  drawSafely(drawIfChanged);
 }
 
 // Resizing a canvas clears it, so redraw in the same frame to avoid a flash.
@@ -182,7 +199,7 @@ const resizeObserver = new ResizeObserver(entries => {
     const { inlineSize, blockSize } = entry.contentBoxSize[0];
     sizeCanvas(entry.target, inlineSize, blockSize);
   }
-  redrawAll();
+  drawSafely(redrawAll);
 });
 [boardCanvas, heldCanvas, ...nextCanvases].forEach(canvas => resizeObserver.observe(canvas));
 
@@ -191,7 +208,7 @@ const resizeObserver = new ResizeObserver(entries => {
 function watchPixelRatio() {
   matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', () => {
     for (const [canvas, { width, height }] of canvasSizes) sizeCanvas(canvas, width, height);
-    redrawAll();
+    drawSafely(redrawAll);
     watchPixelRatio();
   }, { once: true });
 }

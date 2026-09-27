@@ -15,6 +15,7 @@ const APP_SHELL = [
   'game/gameState.js',
   'game/inputController.js',
   'game/position.js',
+  'game/session.js',
   'game/tetromino.js',
   'game/tetrominoFactory.js'
 ];
