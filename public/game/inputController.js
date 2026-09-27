@@ -8,10 +8,15 @@
 
 import { GameState, PlayerAction } from './gameState.js';
 
+/** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
+/** @typedef {import('./gameManager.js').GameManager} GameManager */
+/** @typedef {Pick<GameManager, 'state' | 'handleAction' | 'togglePause' | 'softDrop'>} Controllable */
+
 const DAS_DELAY_MS = 167;
 const ARR_INTERVAL_MS = 33;
 const SOFT_DROP_INTERVAL_MS = 50;
 
+/** @type {Record<string, string>} */
 const KEY_ALIASES = {
   ArrowLeft: 'KeyA',
   ArrowRight: 'KeyD',
@@ -20,6 +25,7 @@ const KEY_ALIASES = {
   NumpadEnter: 'Enter'
 };
 
+/** @type {Record<string, PlayerActionValue>} */
 const KEY_ACTIONS = {
   KeyW: PlayerAction.rotate,
   KeyS: PlayerAction.drop,
@@ -30,6 +36,7 @@ const KEY_ACTIONS = {
 
 // Standard gamepad mapping button indices.
 const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, menu: 9 };
+/** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
   ['b', PlayerAction.rotate],
@@ -38,13 +45,20 @@ const PAD_ACTIONS = [
 ];
 
 export class InputController {
+  /** @param {Controllable} gameManager */
   constructor(gameManager) {
     this.gameManager = gameManager;
+    /** @type {PlayerActionValue | null} The move being auto repeated. */
     this.movement = null;
-    this.movementTimer = null;
-    this.softDropTimer = null;
+    /** @type {number | undefined} */
+    this.movementTimer = undefined;
+    /** @type {number | undefined} */
+    this.softDropTimer = undefined;
+    /** @type {Set<string>} */
     this.heldKeys = new Set();
+    /** @type {Set<string>} */
     this.heldButtons = new Set();
+    /** @type {PlayerActionValue | null} */
     this.stickDirection = null;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
@@ -63,6 +77,10 @@ export class InputController {
     requestAnimationFrame(poll);
   }
 
+  /**
+   * @param {KeyboardEvent} event
+   * @param {boolean} pressed
+   */
   handleKey(event, pressed) {
     const key = KEY_ALIASES[event.code] ?? event.code;
     const modifierHeld = event.metaKey || event.ctrlKey || event.altKey;
@@ -105,6 +123,11 @@ export class InputController {
     this.processInput(pressed, gamepad.axes[0] ?? 0, -(gamepad.axes[1] ?? 0));
   }
 
+  /**
+   * @param {Set<string>} pressed Names of the buttons held down.
+   * @param {number} xAxis Stick, -1 left to 1 right.
+   * @param {number} yAxis Stick, -1 down to 1 up.
+   */
   processInput(pressed, xAxis, yAxis) {
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
@@ -138,6 +161,7 @@ export class InputController {
     }
   }
 
+  /** @param {PlayerActionValue} action */
   startMoving(action) {
     if (this.movement === action) return;
     this.movement = action;
@@ -156,12 +180,12 @@ export class InputController {
 
   stopMoving() {
     clearTimeout(this.movementTimer);
-    this.movementTimer = null;
+    this.movementTimer = undefined;
     this.movement = null;
   }
 
   startSoftDrop() {
-    if (this.softDropTimer !== null) return;
+    if (this.softDropTimer !== undefined) return;
     this.softDropTimer = setInterval(() => {
       if (this.gameManager.state !== GameState.playing) {
         this.stopSoftDrop();
@@ -173,7 +197,7 @@ export class InputController {
 
   stopSoftDrop() {
     clearInterval(this.softDropTimer);
-    this.softDropTimer = null;
+    this.softDropTimer = undefined;
   }
 
   releaseAllInput() {
