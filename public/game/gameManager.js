@@ -1,16 +1,23 @@
 // Port of GameManager.swift. Swift Tasks become setTimeout handles; the
 // scheduler, storage and piece factory are injectable so the engine can run
 // in Node tests without a browser.
+//
+// Fault containment: every way into the engine (player actions, soft drop
+// and timers) runs through guard(). If an operation throws, or leaves the
+// game breaking one of its invariants, the engine stops in a safe state
+// (game over, no timers), reports the fault and keeps the last good save.
 
 import { below, position } from './position.js';
 import { GameState, PlayerAction, cellAt, createBoard } from './gameState.js';
-import { Tetromino } from './tetromino.js';
+import { parseSession, serializeSession } from './session.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
 const HIGH_SCORE_KEY = 'highScore';
 const IS_SESSION_SAVED_KEY = 'isSessionSaved';
 const SAVED_SESSION_KEY = 'savedGameSession';
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
+const UPCOMING_COUNT = 3;
+const MAX_FAULTS_KEPT = 20;
 
 export function createMemoryStorage() {
   const values = new Map();
@@ -35,11 +42,22 @@ const defaultScheduler = {
   clearTimeout: handle => globalThis.clearTimeout(handle)
 };
 
+function reportToConsole(fault) {
+  console.error('Tetris stopped safely:', fault.reason, fault.error ?? '');
+}
+
 export class GameManager {
-  constructor({ storage = defaultStorage(), scheduler = defaultScheduler, factory = new TetrominoFactory() } = {}) {
+  constructor({
+    storage = defaultStorage(),
+    scheduler = defaultScheduler,
+    factory = new TetrominoFactory(),
+    onFault = reportToConsole
+  } = {}) {
     this.storage = storage;
     this.scheduler = scheduler;
     this.factory = factory;
+    this.onFault = onFault;
+    this.faults = [];
     this.rows = 20;
     this.columns = 10;
     this.gameLoopTask = null;
@@ -52,28 +70,53 @@ export class GameManager {
     this.heldTetromino = null;
     this.state = GameState.gameOver;
     this.score = 0;
-    this.level = 1;
     this.currentTetromino = this.factory.generate().spawned(this.columns);
-    this.nextTetrominos = [0, 1, 2].map(() => this.factory.generate());
+    this.nextTetrominos = this.generateUpcoming();
     this.gameBoard = createBoard(this.rows, this.columns);
   }
 
-  // @AppStorage equivalents
+  get level() {
+    return Math.floor(this.score / 1000) + 1;
+  }
+
+  generateUpcoming() {
+    return Array.from({ length: UPCOMING_COUNT }, () => this.factory.generate());
+  }
+
+  // Storage (@AppStorage equivalents). Reads and writes can throw when
+  // storage is blocked or full; the game keeps working either way.
+
+  readItem(key) {
+    try {
+      return this.storage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
 
   get highScore() {
-    return Number(this.storage.getItem(HIGH_SCORE_KEY)) || 0;
+    const value = Number(this.readItem(HIGH_SCORE_KEY));
+    return Number.isSafeInteger(value) && value > 0 ? value : 0;
   }
 
   set highScore(value) {
-    this.storage.setItem(HIGH_SCORE_KEY, String(value));
+    try {
+      this.storage.setItem(HIGH_SCORE_KEY, String(value));
+    } catch {
+      // Not saved.
+    }
   }
 
   get isSessionSaved() {
-    return this.storage.getItem(IS_SESSION_SAVED_KEY) === 'true';
+    return this.readItem(IS_SESSION_SAVED_KEY) === 'true';
   }
 
   set isSessionSaved(value) {
-    this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
+    try {
+      this.storage.setItem(IS_SESSION_SAVED_KEY, value ? 'true' : 'false');
+    } catch {
+      // Not saved.
+    }
   }
 
   get standardDropInterval() {
@@ -84,24 +127,20 @@ export class GameManager {
     this.state = GameState.paused;
     this.gameBoard = createBoard(this.rows, this.columns);
     this.score = 0;
-    this.level = 1;
     this.currentTetromino = this.factory.generate().spawned(this.columns);
-    this.nextTetrominos = [0, 1, 2].map(() => this.factory.generate());
+    this.nextTetrominos = this.generateUpcoming();
     this.heldTetromino = null;
     this.canHoldTetromino = true;
     this.resetLockDelayForNewPiece();
     this.isSessionSaved = false;
   }
 
+  // Loads the saved game only if every part of it is valid; otherwise the
+  // save is forgotten and the game stays at game over.
   loadGameSession() {
-    let session = null;
-    if (this.isSessionSaved) {
-      try {
-        session = JSON.parse(this.storage.getItem(SAVED_SESSION_KEY));
-      } catch {
-        session = null;
-      }
-    }
+    const session = this.isSessionSaved
+      ? parseSession(this.readItem(SAVED_SESSION_KEY), { rows: this.rows, columns: this.columns })
+      : null;
     if (!session) {
       this.isSessionSaved = false;
       return;
@@ -109,26 +148,16 @@ export class GameManager {
     this.state = GameState.paused;
     this.gameBoard = session.gameBoard;
     this.score = session.score;
-    this.level = session.level;
-    this.currentTetromino = Tetromino.fromJSON(session.currentTetromino);
-    this.nextTetrominos = session.nextTetrominos.map(Tetromino.fromJSON);
-    this.heldTetromino = session.heldTetromino ? Tetromino.fromJSON(session.heldTetromino) : null;
+    this.currentTetromino = session.currentTetromino;
+    this.nextTetrominos = session.nextTetrominos;
+    this.heldTetromino = session.heldTetromino;
     this.canHoldTetromino = session.canHoldTetromino;
     this.resetLockDelayForNewPiece();
   }
 
   saveGameSession() {
-    const gameSession = {
-      gameBoard: this.gameBoard,
-      score: this.score,
-      level: this.level,
-      currentTetromino: this.currentTetromino,
-      nextTetrominos: this.nextTetrominos,
-      heldTetromino: this.heldTetromino,
-      canHoldTetromino: this.canHoldTetromino
-    };
     try {
-      this.storage.setItem(SAVED_SESSION_KEY, JSON.stringify(gameSession));
+      this.storage.setItem(SAVED_SESSION_KEY, serializeSession(this));
       this.isSessionSaved = true;
     } catch {
       this.isSessionSaved = false;
@@ -168,8 +197,8 @@ export class GameManager {
 
   startLockDelay() {
     if (this.lockDelayTask !== null) this.scheduler.clearTimeout(this.lockDelayTask);
-    this.lockDelayTask = this.scheduler.setTimeout(() => {
-      if (this.state !== GameState.playing) return;
+    // Only runs while playing: leaving play cancels it (checked by SAF-4).
+    this.lockDelayTask = this.schedule(() => {
       this.lockAndSpawnNext();
       if (this.state === GameState.playing) this.startGameLoop();
     }, this.lockDelayInterval * 1000);
@@ -242,7 +271,6 @@ export class GameManager {
     const newLines = createBoard(completedLineIndices.length, this.columns);
     this.gameBoard.unshift(...newLines);
     this.score += LINE_SCORES[completedLineIndices.length];
-    this.level = Math.floor(this.score / 1000) + 1;
     if (this.score > this.highScore) {
       this.highScore = this.score;
     }
@@ -260,9 +288,9 @@ export class GameManager {
   startGameLoop() {
     this.stopGameLoop();
     const interval = this.standardDropInterval;
-    this.gameLoopTask = this.scheduler.setTimeout(() => {
+    // Only runs while playing: leaving play stops it (checked by SAF-4).
+    this.gameLoopTask = this.schedule(() => {
       this.gameLoopTask = null;
-      if (this.state !== GameState.playing) return;
       this.dropTetromino();
     }, interval * 1000);
   }
@@ -272,7 +300,65 @@ export class GameManager {
     this.gameLoopTask = null;
   }
 
+  // Fault containment
+
+  // Timers run their callback through the guard, like player actions.
+  schedule(callback, ms) {
+    return this.scheduler.setTimeout(() => this.guard(callback), ms);
+  }
+
+  // Runs one operation, catching errors and checking the invariants after it.
+  guard(operation) {
+    try {
+      operation();
+    } catch (error) {
+      this.failSafe('unexpected error', error);
+      return;
+    }
+    const violation = this.findInvariantViolation();
+    if (violation) this.failSafe(violation);
+  }
+
+  // Returns a description of the first broken invariant, or null.
+  findInvariantViolation() {
+    const board = this.gameBoard;
+    if (!Array.isArray(board) || board.length !== this.rows || !board.every(row => Array.isArray(row) && row.length === this.columns)) {
+      return 'board is not 20 by 10';
+    }
+    if (this.nextTetrominos.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
+    if (!Number.isSafeInteger(this.score) || this.score < 0 || this.score % 100 !== 0) return 'score is invalid';
+    if (this.state === GameState.playing) {
+      if (!this.currentTetromino.fits(board)) return 'piece overlaps the board';
+      if (this.gameLoopTask === null) return 'gravity stopped while playing';
+    } else if (this.gameLoopTask !== null || this.lockDelayTask !== null) {
+      return 'timers running while not playing';
+    }
+    return null;
+  }
+
+  // Safe state: game over with every timer stopped. Storage is left alone,
+  // so the last good save can still be continued.
+  failSafe(reason, error) {
+    this.state = GameState.gameOver;
+    this.stopGameLoop();
+    this.cancelLockDelay();
+    const fault = { reason, error };
+    this.faults.push(fault);
+    if (this.faults.length > MAX_FAULTS_KEPT) this.faults.shift();
+    try {
+      this.onFault(fault);
+    } catch {
+      // Reporting must never make things worse.
+    }
+  }
+
+  // Player input
+
   handleAction(action) {
+    this.guard(() => this.performAction(action));
+  }
+
+  performAction(action) {
     switch (action) {
       case PlayerAction.newGame:
         if (this.state !== GameState.gameOver) return;
@@ -285,6 +371,7 @@ export class GameManager {
         this.loadGameSession();
         break;
       case PlayerAction.pause:
+        if (this.state !== GameState.playing) return;
         this.state = GameState.paused;
         this.stopGameLoop();
         if (this.lockDelayTask !== null) {
@@ -294,6 +381,7 @@ export class GameManager {
         this.saveGameSession();
         break;
       case PlayerAction.resume:
+        if (this.state !== GameState.paused) return;
         this.state = GameState.playing;
         this.startGameLoop();
         break;
@@ -316,20 +404,11 @@ export class GameManager {
   }
 
   togglePause() {
-    switch (this.state) {
-      case GameState.playing:
-        this.handleAction(PlayerAction.pause);
-        break;
-      case GameState.paused:
-        this.handleAction(PlayerAction.resume);
-        break;
-      case GameState.gameOver:
-        break;
-    }
+    this.handleAction(this.state === GameState.playing ? PlayerAction.pause : PlayerAction.resume);
   }
 
   softDrop() {
-    this.dropTetromino();
+    this.guard(() => this.dropTetromino());
   }
 
   hardDrop() {
