@@ -3,3 +3,4 @@ test-results/
 playwright-report/
 .npm
 .DS_Store
+coverage/

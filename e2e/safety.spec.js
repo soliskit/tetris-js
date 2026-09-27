@@ -1,7 +1,7 @@
 // Fault injection in the real page: corrupted saves, drawing errors and
 // blocked storage must never crash or freeze the game.
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 import { expectLabel, filledCount, savedGame, PieceColors, trackErrors } from './helpers.js';
 
 const good = savedGame({ piece: PieceColors.purple });

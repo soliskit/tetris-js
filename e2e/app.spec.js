@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { boardCells, expectLabel, filledCount, isChromium, trackErrors } from './helpers.js';
@@ -32,6 +32,20 @@ test('the board is redrawn at the new size after a resize [DSP-2]', async ({ pag
     return canvas.width === Math.round(canvas.getBoundingClientRect().width * devicePixelRatio);
   })).toBe(true);
   expect(await filledCount(page)).toBe(4);
+});
+
+test('the canvases are rebuilt when the screen pixel density changes [DSP-2]', async ({ page }) => {
+  test.skip(!isChromium(page), 'only Chromium can change the pixel density during a test');
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  const size = page.viewportSize();
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Emulation.setDeviceMetricsOverride', { width: size.width, height: size.height, deviceScaleFactor: 2, mobile: false });
+  await expect.poll(() => page.evaluate(() => {
+    const canvas = document.getElementById('tetris');
+    return devicePixelRatio === 2 && canvas.width === Math.round(canvas.getBoundingClientRect().width * 2);
+  })).toBe(true);
+  await expect.poll(() => filledCount(page)).toBe(4);
 });
 
 test('the page cannot be zoomed, scrolled by touch or text selected [DSP-4]', async ({ page }) => {
