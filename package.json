@@ -6,11 +6,16 @@
 	"type": "module",
 	"scripts": {
 		"start": "node index.js",
-		"test": "node --test"
+		"test": "node --test",
+		"test:e2e": "playwright test",
+		"test:all": "npm test && npm run test:e2e"
 	},
 	"author": "David Solis",
 	"license": "ISC",
 	"dependencies": {
 		"express": "^5.2.1"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.56.1"
 	}
 }

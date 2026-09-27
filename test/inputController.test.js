@@ -1,0 +1,280 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+
+import { GameState, PlayerAction } from '../public/game/gameState.js';
+import { InputController } from '../public/game/inputController.js';
+
+// Minimal stand ins for the browser globals InputController uses.
+function setup(t) {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  const listeners = {};
+  const frames = [];
+  const pads = [];
+  globalThis.window = { addEventListener: (type, listener) => (listeners[type] ??= []).push(listener) };
+  globalThis.requestAnimationFrame = callback => frames.push(callback);
+  Object.defineProperty(globalThis, 'navigator', { value: { getGamepads: () => pads }, configurable: true, writable: true });
+  t.after(() => {
+    delete globalThis.window;
+    delete globalThis.requestAnimationFrame;
+  });
+
+  const manager = {
+    state: GameState.playing,
+    actions: [],
+    handleAction(action) { this.actions.push(action); },
+    togglePause() { this.actions.push('togglePause'); },
+    softDrop() { this.actions.push('softDrop'); }
+  };
+  const controller = new InputController(manager);
+  const fire = (type, event = {}) => (listeners[type] ?? []).forEach(listener => listener(event));
+  const key = (code, pressed = true, extra = {}) => {
+    const event = { code, repeat: false, metaKey: false, ctrlKey: false, altKey: false, prevented: false, ...extra };
+    event.preventDefault = () => { event.prevented = true; };
+    fire(pressed ? 'keydown' : 'keyup', event);
+    return event;
+  };
+  const tap = code => { key(code); key(code, false); };
+  // Node's mock clock only runs timers that were scheduled before a tick, so
+  // advance in small steps to let repeating timers chain like they do live.
+  const tick = ms => {
+    for (let left = ms; left > 0; left -= 10) t.mock.timers.tick(Math.min(10, left));
+  };
+  return { manager, controller, fire, key, tap, tick, pads, frames };
+}
+
+function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
+  const index = { a: 0, b: 1, x: 2, y: 3, menu: 9 };
+  const buttons = Array.from({ length: 16 }, () => ({ pressed: false }));
+  for (const name of pressed) buttons[index[name]].pressed = true;
+  return { connected: true, buttons, axes: [x, y] };
+}
+
+const count = (manager, action) => manager.actions.filter(a => a === action).length;
+
+// Keyboard
+
+test('each action key triggers its action once per press', t => {
+  const expected = {
+    KeyW: PlayerAction.rotate,
+    ArrowUp: PlayerAction.rotate,
+    KeyS: PlayerAction.drop,
+    ArrowDown: PlayerAction.drop,
+    KeyH: PlayerAction.hold,
+    Enter: PlayerAction.newGame,
+    NumpadEnter: PlayerAction.newGame,
+    KeyC: PlayerAction.continueGame
+  };
+  const { manager, tap } = setup(t);
+  for (const [code, action] of Object.entries(expected)) {
+    manager.actions = [];
+    tap(code);
+    assert.deepEqual(manager.actions, [action], code);
+  }
+});
+
+test('P and Escape toggle pause', t => {
+  const { manager, tap } = setup(t);
+  tap('KeyP');
+  tap('Escape');
+  assert.deepEqual(manager.actions, ['togglePause', 'togglePause']);
+});
+
+test('game keys stop the browser default, other keys do not', t => {
+  const { manager, key } = setup(t);
+  assert.equal(key('KeyW').prevented, true);
+  assert.equal(key('ArrowDown').prevented, true, 'arrow keys must not scroll the page');
+  assert.equal(key('KeyA').prevented, true);
+  assert.equal(key('KeyZ').prevented, false);
+  assert.equal(key('Tab').prevented, false);
+  assert.equal(count(manager, PlayerAction.rotate), 1);
+});
+
+test('keys held with Cmd, Ctrl or Alt are left to the browser', t => {
+  const { manager, key } = setup(t);
+  for (const modifier of ['metaKey', 'ctrlKey', 'altKey']) {
+    const event = key('KeyW', true, { [modifier]: true });
+    assert.equal(event.prevented, false, modifier);
+    key('KeyW', false);
+  }
+  assert.deepEqual(manager.actions, []);
+});
+
+test('key repeat events from holding a key are ignored', t => {
+  const { manager, key } = setup(t);
+  key('KeyS');
+  const repeat = key('KeyS', true, { repeat: true });
+  assert.equal(repeat.prevented, true);
+  assert.deepEqual(manager.actions, [PlayerAction.drop]);
+});
+
+test('holding a move key moves once, then repeats after 167ms every 33ms', t => {
+  const { manager, key, tick } = setup(t);
+  key('KeyA');
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  tick(166);
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  tick(1);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+  tick(33);
+  assert.equal(count(manager, PlayerAction.moveLeft), 3);
+  for (let i = 0; i < 3; i++) tick(33);
+  assert.equal(count(manager, PlayerAction.moveLeft), 6);
+  key('KeyA', false);
+  tick(1000);
+  assert.equal(count(manager, PlayerAction.moveLeft), 6);
+});
+
+test('arrow keys move like A and D', t => {
+  const { manager, tap } = setup(t);
+  tap('ArrowLeft');
+  tap('ArrowRight');
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight]);
+});
+
+test('the newest direction wins, and releasing it returns to the one still held', t => {
+  const { manager, key, tick } = setup(t);
+  key('KeyA');
+  key('KeyD');
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight]);
+  tick(167);
+  assert.equal(manager.actions.at(-1), PlayerAction.moveRight);
+  key('KeyD', false);
+  assert.equal(manager.actions.at(-1), PlayerAction.moveLeft);
+  key('KeyA', false);
+  const total = manager.actions.length;
+  tick(1000);
+  assert.equal(manager.actions.length, total);
+});
+
+test('auto repeat stops once the game is no longer playing', t => {
+  const { manager, key, tick } = setup(t);
+  key('KeyD');
+  manager.state = GameState.paused;
+  tick(1000);
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+});
+
+test('losing window focus releases every held key', t => {
+  const { manager, key, fire, tick } = setup(t);
+  key('KeyA');
+  fire('blur');
+  tick(1000);
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  key('KeyD');
+  key('KeyD', false);
+  assert.equal(count(manager, PlayerAction.moveLeft), 1, 'A is no longer treated as held');
+});
+
+// Gamepad
+
+test('gamepad buttons trigger their action on press, not while held', t => {
+  const { manager, controller, pads } = setup(t);
+  for (const [button, action] of [['a', PlayerAction.drop], ['b', PlayerAction.rotate], ['x', PlayerAction.hold], ['y', PlayerAction.continueGame]]) {
+    manager.actions = [];
+    pads[0] = gamepad({ pressed: [button] });
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(manager.actions, [action], `${button} held`);
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad({ pressed: [button] });
+    controller.pollGamepads();
+    assert.deepEqual(manager.actions, [action, action], `${button} pressed again`);
+    pads[0] = gamepad();
+    controller.pollGamepads();
+  }
+});
+
+test('the menu button pauses during play and starts a new game at game over', t => {
+  const { manager, controller, pads } = setup(t);
+  pads[0] = gamepad({ pressed: ['menu'] });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, ['togglePause']);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  manager.state = GameState.gameOver;
+  pads[0] = gamepad({ pressed: ['menu'] });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, ['togglePause', PlayerAction.newGame]);
+});
+
+test('the stick moves left and right with the same auto repeat as the keyboard', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  controller.pollGamepads(); // still held: no extra move
+  tick(167);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+  pads[0] = gamepad({ x: 0.2 }); // inside the dead zone
+  controller.pollGamepads();
+  tick(1000);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+  pads[0] = gamepad({ x: 0.9 });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+});
+
+test('pushing the stick down soft drops every 50ms, up does nothing', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ y: -1 }); // browser axes: up is negative
+  controller.pollGamepads();
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 0);
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  assert.equal(count(manager, 'softDrop'), 1);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 3);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 3);
+});
+
+test('soft drop stops once the game is no longer playing', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  manager.state = GameState.paused;
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 1);
+});
+
+test('a resting stick does not cancel keyboard movement', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  pads[0] = gamepad();
+  key('KeyA');
+  for (let i = 0; i < 10; i++) controller.pollGamepads();
+  tick(200);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+});
+
+test('disconnecting the gamepad releases the stick', t => {
+  const { manager, controller, fire, pads, tick } = setup(t);
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  fire('gamepaddisconnected');
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 0);
+});
+
+test('polling with no gamepad, or an empty slot, does nothing', t => {
+  const { manager, controller, pads } = setup(t);
+  controller.pollGamepads();
+  pads[0] = null;
+  pads[1] = { ...gamepad({ pressed: ['a'] }), connected: false };
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, []);
+});
+
+test('gamepads are polled on every animation frame', t => {
+  const { manager, frames, pads } = setup(t);
+  assert.equal(frames.length, 1, 'polling starts right away');
+  pads[0] = gamepad({ pressed: ['b'] });
+  frames.shift()();
+  assert.deepEqual(manager.actions, [PlayerAction.rotate]);
+  assert.equal(frames.length, 1, 'and schedules the next poll');
+});
