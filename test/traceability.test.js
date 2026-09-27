@@ -88,6 +88,6 @@ test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]'
   // Every unit test file that exercises the game logic takes part.
   for (const file of fs.readdirSync(path.join(root, 'test')).filter(name => name.endsWith('.test.js'))) {
     const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
-    if (source.includes("from '../public/game/")) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
+    if (/^import .* from '\.\.\/public\/game\//m.test(source)) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
   }
 });
