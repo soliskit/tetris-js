@@ -17,7 +17,7 @@ Then open http://localhost:3000. Set the `PORT` environment variable to use a di
 
 ## Deployment
 
-The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
+The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the unit and browser tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
 
 ## Features
 
@@ -87,17 +87,36 @@ public/
     tetromino.js             Piece model, rotation and collision checks
     tetrominoFactory.js      7 bag randomizer, piece shapes and wall kick data
     position.js              Board position helpers
+    session.js               Saving games, and checking saved games before loading them
     inputController.js       Keyboard and gamepad input
-test/
-  game.test.js               Engine tests
+test/                        Unit tests (node:test): engine, pieces, input, server, app files
+e2e/                         Browser tests (Playwright): the real page at iPhone and desktop sizes
+playwright.config.js         Browser test setup
+REQUIREMENTS.md              Every behavior, with an ID that tests trace to
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
 
+## Reliability
+
+The game is built the way safety critical software is:
+
+* **Written requirements.** [REQUIREMENTS.md](REQUIREMENTS.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
+* **Full coverage.** The unit tests run every line, branch and function of the game logic. `npm test` fails below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested.
+* **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built in shapes. A corrupted or edited save is refused whole.
+* **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
+* **Fault injection tests** prove each of these by breaking things on purpose.
+
 ## Tests
 
 ```sh
-npm test
+npm test            # unit tests, about a second
+npm run test:e2e    # browser tests
+npm run test:all    # both
 ```
 
-Tests use the built in `node:test` runner and need no extra dependencies.
+**Unit tests** use the built in `node:test` runner. They cover every piece and rotation, wall kicks, the 7 bag, all game rules (movement, gravity, lock delay, line clears, scoring, levels, hold, pause, continue, game over, storage failures) with a fake clock, keyboard and gamepad input with mocked timers, the Express server, and the page, manifest, service worker and icons.
+
+**Browser tests** use Playwright with Chromium, sized like an iPhone 14 Pro Max with touch and like a desktop. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browser with `npx playwright install chromium`. Chromium stands in for Safari, so check touch feel on a real iPhone too.
+
+Both suites run on every pull request and before every deploy.

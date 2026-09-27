@@ -31,7 +31,7 @@ export class Tetromino {
 
   spawned(columns) {
     const piece = this.copy();
-    const width = this.rotations[0][0]?.length ?? 4;
+    const width = this.rotations[0][0].length;
     piece.rotationState = 0;
     piece.position = position(0, Math.max(0, Math.trunc((columns - width) / 2)));
     return piece;
@@ -81,9 +81,5 @@ export class Tetromino {
         }
       }
     }
-  }
-
-  static fromJSON(data) {
-    return new Tetromino(data);
   }
 }
