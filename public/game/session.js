@@ -133,13 +133,13 @@ function parseWaitingPiece(data, columns) {
  * @returns {Session | null}
  */
 export function parseSession(text, { rows, columns }) {
-  if (text === null) return null;
   /** @type {unknown} */
-  let data;
+  let data = null;
   try {
-    data = JSON.parse(text);
+    // A missing save (null) parses as null and is rejected below.
+    data = JSON.parse(/** @type {string} */ (text));
   } catch {
-    return null;
+    // Not JSON: data stays null and is rejected below.
   }
   if (!isObject(data)) return null;
 
