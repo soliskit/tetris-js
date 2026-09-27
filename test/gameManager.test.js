@@ -14,7 +14,8 @@ import {
   fixedFactory,
   newGame,
   seededRandom,
-  sequenceFactory
+  sequenceFactory,
+  repeatUntil
 } from './helpers.js';
 
 const { cyan, yellow, purple, green, red, orange } = PieceColors;
@@ -31,7 +32,7 @@ function snapshot(game) {
 }
 
 function landOnSurface(game) {
-  while (!game.isOnSurface) game.softDrop();
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
 }
 
 // Storage whose writes throw for the listed keys (all keys when omitted).
@@ -271,7 +272,7 @@ test('the session is saved after a line clear but not after a plain lock [STA-4]
 
 test('landing by gravity waits 0.5s before locking [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
-  while (!game.isOnSurface) scheduler.advance(700);
+  repeatUntil(() => game.isOnSurface, () => scheduler.advance(700), 'the piece landing by gravity');
   scheduler.advance(700); // gravity tries to move down and lands
   assert.notEqual(game.lockDelayTask, null);
   scheduler.advance(499);
@@ -450,7 +451,7 @@ test('continue is ignored while a game is running [STA-4]', () => {
 
 test('topping out stops all timers [STA-3]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
-  while (game.state === GameState.playing) game.handleAction(PlayerAction.drop);
+  repeatUntil(() => game.state !== GameState.playing, () => game.handleAction(PlayerAction.drop), 'the game ending');
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
   const before = snapshot(game);
@@ -609,7 +610,7 @@ test('a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]', 
 
 test('after a piece locks, the next piece waits a full gravity interval before falling [PLY-2] [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
-  while (!game.isOnSurface) scheduler.advance(700);
+  repeatUntil(() => game.isOnSurface, () => scheduler.advance(700), 'the piece landing by gravity');
   scheduler.advance(700); // lands; the lock delay starts
   scheduler.advance(500); // locks; the next piece appears
   assert.equal(filledCells(game), 4);
