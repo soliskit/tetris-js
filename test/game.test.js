@@ -4,53 +4,8 @@ import assert from 'node:assert/strict';
 import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
 import { GameState, PlayerAction, createBoard } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
-import { TetrominoFactory, allPieces, PieceColors } from '../public/game/tetrominoFactory.js';
-
-// Manual clock so timer driven behavior (gravity, lock delay) is deterministic.
-function createFakeScheduler() {
-  let now = 0;
-  let nextHandle = 1;
-  const timers = new Map();
-  return {
-    setTimeout(callback, ms) {
-      const handle = nextHandle++;
-      timers.set(handle, { callback, at: now + ms });
-      return handle;
-    },
-    clearTimeout(handle) {
-      timers.delete(handle);
-    },
-    advance(ms) {
-      const end = now + ms;
-      for (;;) {
-        const due = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
-        if (!due) break;
-        const [handle, timer] = due;
-        timers.delete(handle);
-        now = timer.at;
-        timer.callback();
-      }
-      now = end;
-    }
-  };
-}
-
-function pieceByColor(color) {
-  return allPieces().find(piece => piece.color === color);
-}
-
-// Factory that always hands out the same piece type.
-function fixedFactory(color) {
-  return { generate: () => pieceByColor(color) };
-}
-
-function newGame(options = {}) {
-  const scheduler = createFakeScheduler();
-  const storage = createMemoryStorage();
-  const game = new GameManager({ scheduler, storage, ...options });
-  game.handleAction(PlayerAction.newGame);
-  return { game, scheduler, storage };
-}
+import { TetrominoFactory, PieceColors } from '../public/game/tetrominoFactory.js';
+import { createFakeScheduler, fixedFactory, newGame, pieceByColor } from './helpers.js';
 
 test('7-bag hands out every piece exactly once per bag', () => {
   const factory = new TetrominoFactory();
