@@ -18,18 +18,18 @@ const continueButton = document.getElementById('continueGameButton');
 const keyHint = document.getElementById('keyHint');
 const playPauseButton = document.getElementById('playPauseButton');
 
-function fitCanvas(canvas) {
+// Canvas sizes come from a ResizeObserver instead of measuring every frame.
+// Maps each canvas to { context, width, height } in CSS pixels once sized.
+const canvasSizes = new Map();
+
+function sizeCanvas(canvas, width, height) {
   const ratio = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const width = Math.round(rect.width * ratio);
-  const height = Math.round(rect.height * ratio);
-  if (canvas.width !== width || canvas.height !== height) {
-    canvas.width = width;
-    canvas.height = height;
-  }
+  canvas.width = Math.round(width * ratio);
+  canvas.height = Math.round(height * ratio);
+  // Resizing resets the context, so the scale is set again here.
   const context = canvas.getContext('2d');
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  return { context, width: rect.width, height: rect.height };
+  canvasSizes.set(canvas, { context, width, height });
 }
 
 function roundedRect(context, x, y, size, radius) {
@@ -54,7 +54,7 @@ function drawGhostBlock(context, column, row, size, color) {
 }
 
 function drawBoard() {
-  const { context, width, height } = fitCanvas(boardCanvas);
+  const { context, width, height } = canvasSizes.get(boardCanvas);
   const { rows, columns } = gameManager;
   const blockSize = Math.min(width / columns, height / rows);
   context.clearRect(0, 0, width, height);
@@ -89,7 +89,7 @@ function drawBoard() {
 }
 
 function drawPreview(canvas, tetromino) {
-  const { context, width, height } = fitCanvas(canvas);
+  const { context, width, height } = canvasSizes.get(canvas);
   context.clearRect(0, 0, width, height);
   if (!tetromino) return;
   const gridSize = 6;
@@ -124,17 +124,80 @@ function syncControls() {
 
 let lastSnapshot = '';
 
-function render() {
-  drawBoard();
-  drawPreview(heldCanvas, gameManager.heldTetromino);
-  nextCanvases.forEach((canvas, index) => drawPreview(canvas, gameManager.nextTetrominos[index]));
+// What each canvas showed when it was last drawn, so frames where nothing
+// moved skip drawing. The engine replaces the current piece whenever the
+// board changes (lock, line clear, hold, new game, continue) and replaces its
+// position object on every move, so comparing references is enough.
+let drawnBoard = {};
+const drawnPreviews = new Map();
+
+function boardChanged() {
+  const piece = gameManager.currentTetromino;
+  return piece !== drawnBoard.piece
+    || piece.position !== drawnBoard.position
+    || piece.rotationState !== drawnBoard.rotationState
+    || gameManager.gameBoard !== drawnBoard.gameBoard
+    || drag.horizontalOffset !== drawnBoard.horizontalOffset;
+}
+
+function drawIfChanged() {
+  if (canvasSizes.has(boardCanvas) && boardChanged()) {
+    drawBoard();
+    const piece = gameManager.currentTetromino;
+    drawnBoard = {
+      piece,
+      position: piece.position,
+      rotationState: piece.rotationState,
+      gameBoard: gameManager.gameBoard,
+      horizontalOffset: drag.horizontalOffset
+    };
+  }
+  const previews = [[heldCanvas, gameManager.heldTetromino]];
+  nextCanvases.forEach((canvas, index) => previews.push([canvas, gameManager.nextTetrominos[index]]));
+  for (const [canvas, tetromino] of previews) {
+    if (!canvasSizes.has(canvas)) continue;
+    if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino) continue;
+    drawPreview(canvas, tetromino);
+    drawnPreviews.set(canvas, tetromino);
+  }
   const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}`;
   if (snapshot !== lastSnapshot) {
     lastSnapshot = snapshot;
     syncControls();
   }
+}
+
+function redrawAll() {
+  drawnBoard = {};
+  drawnPreviews.clear();
+  drawIfChanged();
+}
+
+function render() {
+  drawIfChanged();
   requestAnimationFrame(render);
 }
+
+// Resizing a canvas clears it, so redraw in the same frame to avoid a flash.
+const resizeObserver = new ResizeObserver(entries => {
+  for (const entry of entries) {
+    const { inlineSize, blockSize } = entry.contentBoxSize[0];
+    sizeCanvas(entry.target, inlineSize, blockSize);
+  }
+  redrawAll();
+});
+[boardCanvas, heldCanvas, ...nextCanvases].forEach(canvas => resizeObserver.observe(canvas));
+
+// Moving the window to a screen with a different pixel density does not
+// resize anything in CSS pixels, so rebuild the canvases for the new density.
+function watchPixelRatio() {
+  matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', () => {
+    for (const [canvas, { width, height }] of canvasSizes) sizeCanvas(canvas, width, height);
+    redrawAll();
+    watchPixelRatio();
+  }, { once: true });
+}
+watchPixelRatio();
 
 // Touch and mouse gestures, ported from the DragGesture in ContentView.swift:
 // drag sideways to move by whole cells, drag down to soft drop, tap to rotate.
