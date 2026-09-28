@@ -2,47 +2,92 @@
 // TetrominoPreview.swift and ButtonView.swift. All game rules live in ./game.
 
 import { GameManager } from './game/gameManager.js';
-import { GameState, PlayerAction, cellAt } from './game/gameState.js';
+import { GameState, PlayerAction } from './game/gameState.js';
 import { InputController } from './game/inputController.js';
+
+/** @typedef {import('./game/tetromino.js').Tetromino} Tetromino */
+/** @typedef {import('./game/position.js').Position} Position */
+/** @typedef {import('./game/gameState.js').Board} Board */
+/** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
 const gameManager = new GameManager();
 new InputController(gameManager);
 
-const boardCanvas = document.getElementById('tetris');
-const heldCanvas = document.getElementById('heldPreview');
-const nextCanvases = ['next0', 'next1', 'next2'].map(id => document.getElementById(id));
-const scoreLabel = document.getElementById('score');
-const highScoreLabel = document.getElementById('highScore');
-const gameOverControls = document.getElementById('gameOverControls');
-const continueButton = document.getElementById('continueGameButton');
-const keyHint = document.getElementById('keyHint');
-const playPauseButton = document.getElementById('playPauseButton');
+// Every id below exists in index.html; test/staticFiles.test.js checks that.
+/** @param {string} id */
+const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
+/** @param {string} id */
+const canvasElement = id => /** @type {HTMLCanvasElement} */ (document.getElementById(id));
+
+const boardCanvas = canvasElement('tetris');
+const heldCanvas = canvasElement('heldPreview');
+const nextCanvases = ['next0', 'next1', 'next2'].map(canvasElement);
+const scoreLabel = element('score');
+const highScoreLabel = element('highScore');
+const gameOverControls = element('gameOverControls');
+const continueButton = element('continueGameButton');
+const keyHint = element('keyHint');
+const playPauseButton = element('playPauseButton');
 
 // Canvas sizes come from a ResizeObserver instead of measuring every frame.
-// Maps each canvas to { context, width, height } in CSS pixels once sized.
+// Maps each canvas to its size in CSS pixels once sized.
+/** @type {Map<HTMLCanvasElement, CanvasSize>} */
 const canvasSizes = new Map();
 
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @returns {CanvasSize} Only called for canvases that have been sized.
+ */
+const sizeOf = canvas => /** @type {CanvasSize} */ (canvasSizes.get(canvas));
+
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @param {number} width
+ * @param {number} height
+ */
 function sizeCanvas(canvas, width, height) {
-  const ratio = window.devicePixelRatio || 1;
+  const ratio = window.devicePixelRatio;
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
-  // Resizing resets the context, so the scale is set again here.
-  const context = canvas.getContext('2d');
+  // Resizing resets the context, so the scale is set again here. A canvas
+  // always has a 2d context unless another kind was requested first.
+  const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   canvasSizes.set(canvas, { context, width, height });
 }
 
+/**
+ * @param {CanvasRenderingContext2D} context
+ * @param {number} x
+ * @param {number} y
+ * @param {number} size
+ * @param {number} radius
+ */
 function roundedRect(context, x, y, size, radius) {
   context.beginPath();
   context.roundRect(x, y, size, size, radius);
 }
 
+/**
+ * @param {CanvasRenderingContext2D} context
+ * @param {number} column
+ * @param {number} row
+ * @param {number} size
+ * @param {string} color
+ */
 function drawBlock(context, column, row, size, color) {
   context.fillStyle = color;
   roundedRect(context, size * column + 0.5, size * row + 0.5, size - 1, 3);
   context.fill();
 }
 
+/**
+ * @param {CanvasRenderingContext2D} context
+ * @param {number} column
+ * @param {number} row
+ * @param {number} size
+ * @param {string} color
+ */
 function drawGhostBlock(context, column, row, size, color) {
   context.save();
   context.globalAlpha = 0.5;
@@ -54,7 +99,7 @@ function drawGhostBlock(context, column, row, size, color) {
 }
 
 function drawBoard() {
-  const { context, width, height } = canvasSizes.get(boardCanvas);
+  const { context, width, height } = sizeOf(boardCanvas);
   const { rows, columns } = gameManager;
   const blockSize = Math.min(width / columns, height / rows);
   context.clearRect(0, 0, width, height);
@@ -74,8 +119,9 @@ function drawBoard() {
 
   for (let row = 0; row < rows; row++) {
     for (let column = 0; column < columns; column++) {
-      const cell = cellAt(gameManager.gameBoard, row, column);
-      if (cell?.isFilled) drawBlock(context, column, row, blockSize, cell.color ?? 'transparent');
+      const cell = gameManager.gameBoard[row][column];
+      // A filled cell always has a piece color.
+      if (cell.isFilled) drawBlock(context, column, row, blockSize, /** @type {string} */ (cell.color));
     }
   }
 
@@ -88,8 +134,12 @@ function drawBoard() {
   }
 }
 
+/**
+ * @param {HTMLCanvasElement} canvas
+ * @param {Tetromino | null} tetromino
+ */
 function drawPreview(canvas, tetromino) {
-  const { context, width, height } = canvasSizes.get(canvas);
+  const { context, width, height } = sizeOf(canvas);
   context.clearRect(0, 0, width, height);
   if (!tetromino) return;
   const gridSize = 6;
@@ -128,7 +178,9 @@ let lastSnapshot = '';
 // moved skip drawing. The engine replaces the current piece whenever the
 // board changes (lock, line clear, hold, new game, continue) and replaces its
 // position object on every move, so comparing references is enough.
+/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, gameBoard?: Board }} */
 let drawnBoard = {};
+/** @type {Map<HTMLCanvasElement, Tetromino | null>} */
 const drawnPreviews = new Map();
 
 function boardChanged() {
@@ -150,6 +202,7 @@ function drawIfChanged() {
       gameBoard: gameManager.gameBoard
     };
   }
+  /** @type {Array<[HTMLCanvasElement, Tetromino | null]>} */
   const previews = [[heldCanvas, gameManager.heldTetromino]];
   nextCanvases.forEach((canvas, index) => previews.push([canvas, gameManager.nextTetrominos[index]]));
   for (const [canvas, tetromino] of previews) {
@@ -175,6 +228,7 @@ function redrawAll() {
 // next frame, so drawing always recovers.
 let renderErrorReported = false;
 
+/** @param {() => void} draw */
 function drawSafely(draw) {
   try {
     draw();
@@ -197,7 +251,7 @@ function render() {
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     const { inlineSize, blockSize } = entry.contentBoxSize[0];
-    sizeCanvas(entry.target, inlineSize, blockSize);
+    sizeCanvas(/** @type {HTMLCanvasElement} */ (entry.target), inlineSize, blockSize);
   }
   drawSafely(redrawAll);
 });
@@ -224,7 +278,9 @@ watchPixelRatio();
 const TAP_SLOP_PX = 10;
 
 const drag = {
+  /** @type {number | null} */
   pointerId: null,
+  /** @type {Tetromino | null} The piece this gesture controls. */
   piece: null,
   startX: 0,
   startY: 0,
@@ -244,14 +300,18 @@ function resetDragState() {
 }
 
 function cellWidth() {
-  return canvasSizes.get(boardCanvas).width / gameManager.columns;
+  return sizeOf(boardCanvas).width / gameManager.columns;
 }
 
 // Returns whether the piece actually moved one column in that direction.
-function tryMove(step) {
-  const column = drag.piece.position.column;
+/**
+ * @param {Tetromino} piece
+ * @param {number} step 1 for right, -1 for left.
+ */
+function tryMove(piece, step) {
+  const column = piece.position.column;
   gameManager.handleAction(step > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft);
-  return drag.piece.position.column !== column;
+  return piece.position.column !== column;
 }
 
 boardCanvas.addEventListener('pointerdown', event => {
@@ -268,6 +328,7 @@ boardCanvas.addEventListener('pointermove', event => {
   // The piece locked or was held mid gesture: ignore the rest of this drag
   // rather than moving or dropping the next piece.
   if (gameManager.currentTetromino !== drag.piece) return;
+  const piece = gameManager.currentTetromino;
   const dx = event.clientX - drag.startX;
   const dy = event.clientY - drag.startY;
   if (!drag.moved && Math.hypot(dx, dy) < TAP_SLOP_PX) return;
@@ -279,7 +340,7 @@ boardCanvas.addEventListener('pointermove', event => {
     // Still pushing against a wall or block. Slide in if a gap has opened,
     // and keep the anchor under the finger so pushing does not bank moves
     // and moving back responds after half a cell.
-    if (tryMove(drag.blocked)) {
+    if (tryMove(piece, drag.blocked)) {
       drag.cellOffset += drag.blocked;
       drag.blocked = 0;
     }
@@ -291,7 +352,7 @@ boardCanvas.addEventListener('pointermove', event => {
   const targetOffset = Math.round(offset);
   while (drag.cellOffset !== targetOffset) {
     const step = Math.sign(targetOffset - drag.cellOffset);
-    if (!tryMove(step)) {
+    if (!tryMove(piece, step)) {
       drag.blocked = step;
       drag.startX = event.clientX - drag.cellOffset * width;
       break;
@@ -307,6 +368,7 @@ boardCanvas.addEventListener('pointermove', event => {
   }
 });
 
+/** @param {PointerEvent} event */
 function endDrag(event) {
   if (event.pointerId !== drag.pointerId) return;
   const isTap = !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
@@ -318,7 +380,7 @@ boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
 heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
-document.getElementById('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());
 
