@@ -5,7 +5,7 @@ import { GameManager, createMemoryStorage } from '../public/game/gameManager.js'
 import { GameState, PlayerAction, createBoard } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
 import { TetrominoFactory, PieceColors } from '../public/game/tetrominoFactory.js';
-import { createFakeScheduler, fixedFactory, newGame, pieceByColor } from './helpers.js';
+import { createFakeScheduler, fixedFactory, newGame, pieceByColor, repeatUntil } from './helpers.js';
 
 test('7-bag hands out every piece exactly once per bag [PCE-5]', () => {
   const factory = new TetrominoFactory();
@@ -82,7 +82,7 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
 
 test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(PieceColors.yellow) });
-  while (!game.isOnSurface) game.softDrop();
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
   game.softDrop(); // lands, starts the lock delay
   assert.ok(game.lockDelayTask !== null);
   scheduler.advance(400);
@@ -93,7 +93,7 @@ test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
 
 test('moving on the surface resets the lock delay, up to 15 times [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(PieceColors.yellow) });
-  while (!game.isOnSurface) game.softDrop();
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
   game.softDrop();
   for (let i = 0; i < 15; i++) {
     scheduler.advance(400);

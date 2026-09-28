@@ -241,6 +241,7 @@ test('soft drop stops once the game is no longer playing [INP-4]', t => {
   manager.state = GameState.paused;
   tick(500);
   assert.equal(count(manager, 'softDrop'), 1);
+  assert.equal(controller.softDropTimer, undefined, 'the timer itself is stopped, not left ticking');
 });
 
 test('a resting stick does not cancel keyboard movement [INP-4]', t => {
@@ -285,6 +286,8 @@ test('an error while reading the gamepad never stops polling [SAF-5]', t => {
   Object.defineProperty(globalThis, 'navigator', { value: { getGamepads: () => { throw new Error('gamepad failure'); } }, configurable: true, writable: true });
   frames.shift()();
   assert.equal(logged.mock.callCount(), 1);
+  assert.equal(logged.mock.calls[0].arguments[0], 'Tetris gamepad error:');
+  assert.equal(logged.mock.calls[0].arguments[1].message, 'gamepad failure');
   assert.equal(frames.length, 1, 'the next poll is still scheduled');
   Object.defineProperty(globalThis, 'navigator', { value: { getGamepads: () => pads }, configurable: true, writable: true });
   pads[0] = gamepad({ pressed: ['a'] });
@@ -323,4 +326,51 @@ test('a browser without gamepad support, or a gamepad without a stick, does noth
   Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true, writable: true });
   controller.pollGamepads();
   assert.deepEqual(manager.actions, []);
+});
+
+test('the first connected gamepad is used, skipping empty and disconnected slots [INP-4]', t => {
+  const { manager, controller, pads } = setup(t);
+  pads[0] = null;
+  pads[1] = { ...gamepad({ pressed: ['a'] }), connected: false };
+  pads[2] = gamepad({ pressed: ['b'] });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.rotate]);
+});
+
+test('a gamepad with fewer buttons than the standard layout still works [INP-4]', t => {
+  const { manager, controller, pads } = setup(t);
+  pads[0] = { connected: true, buttons: [{ pressed: true }, { pressed: false }], axes: [0, 0] };
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.drop]);
+});
+
+test('the stick does nothing until pushed past halfway [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  for (const [x, y] of [[-0.5, 0], [0.5, 0], [0, 0.5]]) {
+    pads[0] = gamepad({ x, y });
+    controller.pollGamepads();
+  }
+  tick(500);
+  assert.deepEqual(manager.actions, []);
+});
+
+test('letting the stick return to the middle stops moving without any other action [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight]);
+});
+
+test('after a pause stops a held key repeating, the stick can move the piece again [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  key('KeyD');
+  manager.state = GameState.paused;
+  tick(200); // the repeat notices the pause and stops
+  manager.state = GameState.playing;
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight, PlayerAction.moveRight]);
 });

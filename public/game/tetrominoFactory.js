@@ -5,6 +5,9 @@
 import { position } from './position.js';
 import { Tetromino } from './tetromino.js';
 
+/** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./tetromino.js').Shape} Shape */
+
 // SwiftUI system colors (iOS light appearance).
 export const PieceColors = Object.freeze({
   cyan: '#00C0E8',
@@ -16,6 +19,10 @@ export const PieceColors = Object.freeze({
   orange: '#FF9500'
 });
 
+/**
+ * @param {number[][][]} rows [row, column] offsets for each rotation state
+ * @returns {Position[][]}
+ */
 const kicks = rows => rows.map(row => row.map(([r, c]) => position(r, c)));
 
 const jlstzWallKicks = kicks([
@@ -34,7 +41,14 @@ const iWallKicks = kicks([
 
 const oWallKicks = kicks([[[0, 0]]]);
 
+/**
+ * @param {string[]} spawn The spawn shape, X for a block.
+ * @param {string} color
+ * @param {Position[][]} wallKickData
+ * @returns {Tetromino}
+ */
 function piece(spawn, color, wallKickData) {
+  /** @type {Shape[]} */
   const rotations = [spawn.map(line => [...line].map(ch => ch === 'X'))];
   while (rotations.length < wallKickData.length) {
     const last = rotations[rotations.length - 1];
@@ -43,6 +57,7 @@ function piece(spawn, color, wallKickData) {
   return new Tetromino({ rotations, color, wallKickData });
 }
 
+/** @returns {Tetromino[]} */
 export function allPieces() {
   return [
     piece(['....', 'XXXX', '....', '....'], PieceColors.cyan, iWallKicks),
@@ -55,25 +70,36 @@ export function allPieces() {
   ];
 }
 
-function shuffled(items, random) {
-  const result = items.slice();
-  for (let i = result.length - 1; i > 0; i--) {
+// Fisher Yates shuffle, in place.
+/**
+ * @template T
+ * @param {T[]} items
+ * @param {() => number} random
+ * @returns {T[]} The same array.
+ */
+function shuffle(items, random) {
+  // Stryker disable next-line EqualityOperator: also running i = 0 would swap the first item with itself.
+  for (let i = items.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
+    [items[i], items[j]] = [items[j], items[i]];
   }
-  return result;
+  return items;
 }
 
 export class TetrominoFactory {
+  /** @param {() => number} [random] Returns numbers in [0, 1). */
   constructor(random = Math.random) {
     this.random = random;
+    /** @type {Tetromino[]} */
     this.bag = [];
   }
 
+  /** @returns {Tetromino} */
   generate() {
     if (this.bag.length === 0) {
-      this.bag = shuffled(allPieces(), this.random);
+      this.bag = shuffle(allPieces(), this.random);
     }
-    return this.bag.shift();
+    // Never undefined: the bag was just refilled if it was empty.
+    return /** @type {Tetromino} */ (this.bag.shift());
   }
 }

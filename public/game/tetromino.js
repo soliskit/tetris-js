@@ -6,7 +6,20 @@
 import { position } from './position.js';
 import { cellAt } from './gameState.js';
 
+/** @typedef {import('./position.js').Position} Position */
+/** @typedef {import('./gameState.js').Board} Board */
+/** @typedef {boolean[][]} Shape */
+/**
+ * @typedef {object} TetrominoData
+ * @property {Shape[]} rotations Every rotation state, clockwise from spawn.
+ * @property {string} color
+ * @property {Position[][]} wallKickData Kicks to try when turning clockwise from each state.
+ * @property {Position} [position]
+ * @property {number} [rotationState]
+ */
+
 export class Tetromino {
+  /** @param {TetrominoData} data */
   constructor({ rotations, color, wallKickData, position: pos = position(0, 0), rotationState = 0 }) {
     this.color = color;
     this.position = pos;
@@ -29,6 +42,10 @@ export class Tetromino {
     });
   }
 
+  /**
+   * @param {number} columns
+   * @returns {Tetromino}
+   */
   spawned(columns) {
     const piece = this.copy();
     const width = this.rotations[0][0].length;
@@ -37,7 +54,13 @@ export class Tetromino {
     return piece;
   }
 
+  /**
+   * @param {Shape} shape
+   * @param {Position} pos
+   * @returns {Position[]}
+   */
   static cells(shape, pos) {
+    /** @type {Position[]} */
     const result = [];
     shape.forEach((blocks, row) => {
       blocks.forEach((filled, column) => {
@@ -53,20 +76,33 @@ export class Tetromino {
     return Tetromino.cells(this.shape, this.position);
   }
 
+  /**
+   * @param {Shape} shape
+   * @param {Position} pos
+   * @param {Board} gameBoard
+   * @returns {boolean}
+   */
   static fits(shape, pos, gameBoard) {
     return Tetromino.cells(shape, pos).every(cell => cellAt(gameBoard, cell.row, cell.column)?.isFilled === false);
   }
 
+  /**
+   * @param {Board} gameBoard
+   * @param {Position} [pos]
+   * @returns {boolean}
+   */
   fits(gameBoard, pos = this.position) {
     return Tetromino.fits(this.shape, pos, gameBoard);
   }
 
   // Mutating, like the Swift `mutating func rotate`. Tries clockwise with SRS
   // kicks first, then counterclockwise with the inverted kicks.
+  /** @param {Board} gameBoard */
   rotate(gameBoard) {
     const count = this.rotations.length;
     const clockwise = (this.rotationState + 1) % count;
     const counterClockwise = (this.rotationState + count - 1) % count;
+    /** @type {Array<[number, Position[]]>} */
     const attempts = [
       [clockwise, this.wallKickData[this.rotationState]],
       [counterClockwise, this.wallKickData[counterClockwise].map(kick => position(-kick.row, -kick.column))]

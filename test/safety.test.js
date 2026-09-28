@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
 import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
-import { createFakeScheduler, dropVerticalIIntoColumn9, fillRows, filled, fixedFactory, newGame, pieceByColor } from './helpers.js';
+import { createFakeScheduler, dropVerticalIIntoColumn9, fillRows, filled, fixedFactory, newGame, pieceByColor, repeatUntil } from './helpers.js';
 
 // A factory that works until told to fail.
 function breakableFactory(color = PieceColors.yellow) {
@@ -47,7 +47,7 @@ test('an error during a player action stops the game safely and is reported [SAF
 test('an error inside a timer stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
-  while (!game.isOnSurface) game.softDrop();
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
   game.softDrop(); // lock delay running
   factory.broken = true;
   assert.doesNotThrow(() => scheduler.advance(500));
@@ -57,7 +57,7 @@ test('an error inside a timer stops the game safely and is reported [SAF-3]', ()
 test('an error during a soft drop is contained [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
-  while (!game.isOnSurface) game.softDrop();
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
   game.lockDelayResetCount = 15; // the next landing locks at once
   factory.broken = true;
   assert.doesNotThrow(() => game.softDrop());
@@ -103,7 +103,9 @@ const violations = [
   ['the score turning negative', game => { game.score = -100; }, 'score is invalid'],
   ['the score becoming a fraction', game => { game.score = 12.5; }, 'score is invalid'],
   ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece overlaps the board'],
-  ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing']
+  ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing'],
+  ['the score not being a multiple of 100', game => { game.score = 150; }, 'score is invalid'],
+  ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface']
 ];
 
 for (const [name, corrupt, reason] of violations) {
@@ -114,6 +116,14 @@ for (const [name, corrupt, reason] of violations) {
     assertSafeStop(game, scheduler, reported, reason);
   });
 }
+
+test('the invariant monitor catches a lock delay running while paused [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame();
+  game.togglePause();
+  game.startLockDelay();
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, 'timers running while not playing');
+});
 
 test('the invariant monitor catches timers running while paused [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame();
@@ -131,7 +141,7 @@ test('normal play never trips the invariant monitor [SAF-4] [SAF-6]', () => {
   game.togglePause();
   game.togglePause();
   scheduler.advance(20000);
-  while (game.state === GameState.playing) game.handleAction(PlayerAction.drop);
+  repeatUntil(() => game.state !== GameState.playing, () => game.handleAction(PlayerAction.drop), 'the game ending');
   game.handleAction(PlayerAction.newGame);
   game.handleAction(PlayerAction.pause);
   game.handleAction(PlayerAction.continueGame);
