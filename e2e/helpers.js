@@ -106,14 +106,29 @@ export function canvasHasDrawing(page, id) {
   }, id);
 }
 
-// Touch input through the Chrome DevTools Protocol, in board cell units.
+export const isChromium = page => page.context().browser().browserType().name() === 'chromium';
+
+// Finger input on the board, in board cell units. Chromium gets real touch
+// events through the DevTools Protocol. Playwright cannot drag a finger in
+// WebKit, so there the same gestures use the mouse; the game reads both
+// through the same pointer events.
 export async function boardTouch(page) {
-  const cdp = await page.context().newCDPSession(page);
   const box = await page.locator('#tetris').boundingBox();
   const cell = box.width / 10;
   let last = null;
   const point = (column, row) => ({ x: box.x + cell * column, y: box.y + cell * row });
-  const send = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
+  let send;
+  let cdp = null;
+  if (isChromium(page)) {
+    cdp = await page.context().newCDPSession(page);
+    send = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
+  } else {
+    send = async (type, p) => {
+      if (type === 'touchStart') { await page.mouse.move(p.x, p.y); await page.mouse.down(); }
+      else if (type === 'touchMove') await page.mouse.move(p.x, p.y);
+      else await page.mouse.up();
+    };
+  }
   return {
     cell,
     async down(column, row) { last = point(column, row); await send('touchStart', last); },
@@ -126,6 +141,7 @@ export async function boardTouch(page) {
       }
     },
     async up() { await send('touchEnd'); },
+    // Chromium only: WebKit cannot simulate a pinch.
     async pinch(scaleFactor) {
       await cdp.send('Input.synthesizePinchGesture', { x: box.x + box.width / 2, y: box.y + cell * 2, scaleFactor });
     }

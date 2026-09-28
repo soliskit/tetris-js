@@ -46,3 +46,48 @@ test('npm test enforces 100% line, branch and function coverage of the game logi
     assert.ok(script.includes(flag), flag);
   }
 });
+
+test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.ok(pkg.scripts['test:e2e'].endsWith('&& node scripts/browser-coverage.js'));
+  const script = fs.readFileSync(path.join(root, 'scripts/browser-coverage.js'), 'utf8');
+  assert.match(script, /export const THRESHOLD = 100;/);
+  assert.match(script, /\['lines', 'branches', 'functions'\]/);
+});
+
+test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
+  const config = fs.readFileSync(path.join(root, 'playwright.config.js'), 'utf8');
+  assert.match(config, /browserName: 'webkit', viewport: \{ width: 430, height: 932 \}/);
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8');
+  assert.match(workflow, /playwright install --with-deps chromium webkit/);
+  assert.match(workflow, /npm run test:e2e/);
+});
+
+test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.json'), 'utf8'));
+  for (const option of ['checkJs', 'strict', 'noImplicitReturns', 'noUnusedLocals', 'exactOptionalPropertyTypes']) {
+    assert.equal(config.compilerOptions[option], true, option);
+  }
+  assert.deepEqual(config.include, ['public/game/**/*.js', 'public/script.js']);
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.sw.json'), 'utf8')).include, ['public/sw.js']);
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts.typecheck, 'tsc -p tsconfig.json && tsc -p tsconfig.sw.json');
+  assert.match(fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8'), /npm run typecheck/);
+});
+
+test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8'));
+  assert.deepEqual(config.mutate, ['public/game/**/*.js']);
+  assert.equal(config.thresholds.break, 100);
+  assert.match(config.commandRunner.command, /^exec node --test --experimental-test-isolation=none /);
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  assert.equal(pkg.scripts['test:mutation'], 'stryker run');
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/mutation.yml'), 'utf8');
+  assert.match(workflow, /schedule:/);
+  assert.match(workflow, /npm run test:mutation/);
+  // Every unit test file that exercises the game logic takes part.
+  for (const file of fs.readdirSync(path.join(root, 'test')).filter(name => name.endsWith('.test.js'))) {
+    const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
+    if (/^import .* from '\.\.\/public\/game\//m.test(source)) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
+  }
+});

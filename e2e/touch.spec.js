@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { BOARD_COLOR, PieceColors, boardTouch, canvasHasDrawing, cellsOf, continueSavedGame, rowsExcept, savedGame } from './helpers.js';
+import { test, expect } from './fixtures.js';
+import { BOARD_COLOR, PieceColors, boardTouch, canvasHasDrawing, cellsOf, continueSavedGame, isChromium, rowsExcept, savedGame } from './helpers.js';
 
 test.skip(({ hasTouch }) => !hasTouch, 'touch gestures run on the phone sized project');
 
@@ -115,9 +115,26 @@ test('a drag that outlives its piece leaves the next piece alone [INP-5]', async
 });
 
 test('pinching does not zoom the page [DSP-4]', async ({ page }) => {
+  test.skip(!isChromium(page), 'only Chromium can simulate a pinch; WebKit checks the CSS and gesture blocking instead');
   await page.goto('/');
   await page.keyboard.press('Enter');
   const touch = await boardTouch(page);
   await touch.pinch(2.5);
   expect(await page.evaluate(() => visualViewport.scale)).toBe(1);
+});
+
+test('a piece pushed against a ledge slides in once it drops below it [INP-5]', async ({ page }) => {
+  await playSaved(page, {
+    piece: PieceColors.yellow,
+    position: { row: 2, column: 4 },
+    board: rowsExcept([0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]) // a ledge in columns 6 to 9
+  });
+  const touch = await boardTouch(page);
+  await touch.down(5, 4);
+  await touch.moveBy(1.4, 0, 7); // pushes into the ledge: blocked
+  expect(minColumn(await cellsOf(page, PieceColors.yellow))).toBe(4);
+  await touch.moveBy(0, 5, 10); // soft drop below the ledge
+  await touch.moveBy(0.2, 0, 1); // still pushing right
+  await expect.poll(async () => minColumn(await cellsOf(page, PieceColors.yellow))).toBe(5);
+  await touch.up();
 });

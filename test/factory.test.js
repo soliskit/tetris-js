@@ -46,3 +46,9 @@ test('the default factory uses Math.random [PCE-5]', () => {
   assert.equal(factory.random, Math.random);
   assert.equal(new Set(colorsOf(factory, 7)).size, 7);
 });
+
+test('the shuffle can leave every piece where it is [PCE-5]', () => {
+  // With random just below 1, each step picks its own position.
+  const factory = new TetrominoFactory(() => 0.999);
+  assert.deepEqual(colorsOf(factory, 7), allPieces().map(piece => piece.color));
+});

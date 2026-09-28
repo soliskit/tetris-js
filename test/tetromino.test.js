@@ -158,3 +158,48 @@ test('a piece that cannot rotate anywhere stays exactly as it was [PCE-4]', () =
   assert.equal(i.rotationState, 0);
   assert.deepEqual(i.position, position(10, 3));
 });
+
+// The standard SRS wall kick tables, as (x, y) offsets with y pointing up,
+// for turning clockwise from each state (0 to R, R to 2, 2 to L, L to 0).
+const SRS_KICKS_JLSTZ = [
+  [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+  [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+  [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+  [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]]
+];
+const SRS_KICKS_I = [
+  [[0, 0], [-2, 0], [1, 0], [-2, -1], [1, 2]],
+  [[0, 0], [-1, 0], [2, 0], [-1, 2], [2, -1]],
+  [[0, 0], [2, 0], [-1, 0], [2, 1], [-1, -2]],
+  [[0, 0], [1, 0], [-2, 0], [1, -2], [-2, 1]]
+];
+// The game uses rows that count down the screen, so y flips sign.
+const asPositions = table => table.map(kicks => kicks.map(([x, y]) => position(0 - y, x)));
+
+test('wall kicks match the standard SRS tables for every piece [PCE-4]', () => {
+  for (const name of ['purple', 'green', 'red', 'blue', 'orange']) {
+    assert.deepEqual(pieceByColor(PieceColors[name]).wallKickData, asPositions(SRS_KICKS_JLSTZ), name);
+  }
+  assert.deepEqual(pieceByColor(PieceColors.cyan).wallKickData, asPositions(SRS_KICKS_I));
+  assert.deepEqual(pieceByColor(PieceColors.yellow).wallKickData, [[position(0, 0)]]);
+});
+
+test('each piece has its fixed color [PCE-2]', () => {
+  assert.deepEqual({ ...PieceColors }, {
+    cyan: '#00C0E8', yellow: '#FFCC00', purple: '#AF52DE', green: '#34C759', red: '#FF3B30', blue: '#007AFF', orange: '#FF9500'
+  });
+  const shapes = { cyan: 'I', yellow: 'O', purple: 'T', green: 'S', red: 'Z', blue: 'J', orange: 'L' };
+  for (const [name, letter] of Object.entries(shapes)) {
+    assert.deepEqual(shapeStrings(pieceByColor(PieceColors[name]).shape), SRS_SHAPES[name][0], `${letter} is ${name}`);
+  }
+});
+
+test('the counterclockwise fallback uses the inverted kicks, including their rows [PCE-4]', () => {
+  const board = createBoard(20, 10);
+  for (const [row, column] of [[12, 5], [13, 6], [9, 4], [12, 4]]) board[row][column] = filled();
+  const j = pieceByColor(PieceColors.blue);
+  j.position = position(10, 4);
+  j.rotate(board);
+  assert.equal(j.rotationState, 3);
+  assert.deepEqual(j.position, position(9, 5), 'kicked one column right and one row up');
+});

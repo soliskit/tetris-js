@@ -92,6 +92,10 @@ public/
 test/                        Unit tests (node:test): engine, pieces, input, server, app files
 e2e/                         Browser tests (Playwright): the real page at iPhone and desktop sizes
 playwright.config.js         Browser test setup
+tsconfig.json                Type checking for the game and page script
+tsconfig.sw.json             Type checking for the service worker
+stryker.config.json          Mutation testing setup
+scripts/browser-coverage.js  Browser coverage report and 100% check for the page script
 REQUIREMENTS.md              Every behavior, with an ID that tests trace to
 ```
 
@@ -102,7 +106,9 @@ The engine takes injectable storage, scheduler and piece factory objects, so it 
 The game is built the way safety critical software is:
 
 * **Written requirements.** [REQUIREMENTS.md](REQUIREMENTS.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
-* **Full coverage.** The unit tests run every line, branch and function of the game logic. `npm test` fails below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested.
+* **Full coverage.** The unit tests run every line, branch and function of the game logic, and the browser tests do the same for the page script (`public/script.js`, measured in Chromium). `npm test` and `npm run test:e2e` fail below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested. After a browser test run, `coverage/browser-report/index.html` shows the page script line by line.
+* **Type checking.** TypeScript's strictest checks run over everything the browser loads, with the types written as comments in the JavaScript, so there is no build step. `npm run typecheck` catches misspelled properties, wrong argument types and values that might be missing before any code runs.
+* **Mutation testing.** Stryker makes about a thousand small wrong changes to the game logic, one at a time (turning `<` into `<=`, deleting a line, flipping a condition), and runs the tests against each. Every one must make a test fail. Coverage shows the tests run every line; this shows they would notice if a line were wrong. It takes about 40 minutes, so it runs weekly and on demand (`npm run test:mutation`, report in `reports/mutation/index.html`) rather than on every pull request.
 * **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built in shapes. A corrupted or edited save is refused whole.
 * **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
 * **Fault injection tests** prove each of these by breaking things on purpose.
@@ -110,13 +116,15 @@ The game is built the way safety critical software is:
 ## Tests
 
 ```sh
+npm run typecheck   # type checks, a few seconds
 npm test            # unit tests, about a second
 npm run test:e2e    # browser tests
-npm run test:all    # both
+npm run test:all    # all three
+npm run test:mutation  # mutation testing, about 40 minutes
 ```
 
 **Unit tests** use the built in `node:test` runner. They cover every piece and rotation, wall kicks, the 7 bag, all game rules (movement, gravity, lock delay, line clears, scoring, levels, hold, pause, continue, game over, storage failures) with a fake clock, keyboard and gamepad input with mocked timers, the Express server, and the page, manifest, service worker and icons.
 
-**Browser tests** use Playwright with Chromium, sized like an iPhone 14 Pro Max with touch and like a desktop. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browser with `npx playwright install chromium`. Chromium stands in for Safari, so check touch feel on a real iPhone too.
+**Browser tests** use Playwright. They run three times: in WebKit (Safari's engine) and Chromium sized like an iPhone 14 Pro Max with touch, and in Chromium at desktop size. In WebKit, finger drags are driven with the mouse, since the game reads both through the same pointer events, and the pinch and install checks run in Chromium only. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browsers with `npx playwright install --with-deps chromium webkit`. Playwright's WebKit is close to Safari but is not a real iPhone, so check touch feel on a device too.
 
 Both suites run on every pull request and before every deploy.

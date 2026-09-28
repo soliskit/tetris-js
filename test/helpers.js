@@ -1,4 +1,9 @@
 // Shared test helpers. node --test also loads this file, which has no tests.
+//
+// Loops in tests are always bounded: a broken game must make a test fail,
+// never hang it.
+
+import assert from 'node:assert/strict';
 
 import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
@@ -20,7 +25,8 @@ export function createFakeScheduler() {
     },
     advance(ms) {
       const end = now + ms;
-      for (;;) {
+      for (let fired = 0; ; fired++) {
+        assert.ok(fired < 10000, 'timers keep firing without time passing');
         const due = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
         if (!due) break;
         const [handle, timer] = due;
@@ -34,6 +40,15 @@ export function createFakeScheduler() {
       return timers.size;
     }
   };
+}
+
+// Calls step until done() is true, failing after limit steps.
+export function repeatUntil(done, step, what, limit = 100) {
+  for (let i = 0; i < limit; i++) {
+    if (done()) return;
+    step();
+  }
+  assert.fail(`${what} did not happen within ${limit} steps`);
 }
 
 export function pieceByColor(color) {
