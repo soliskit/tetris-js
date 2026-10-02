@@ -26,6 +26,7 @@ import { TetrominoFactory } from './tetrominoFactory.js';
  * @property {Scheduler} [scheduler] Defaults to the browser timers.
  * @property {PieceSource} [factory] Defaults to a 7 bag.
  * @property {(fault: Fault) => void} [onFault] Defaults to console.error.
+ * @property {() => void} [onChange] Called after every action and timer, so the page knows to draw.
  */
 
 const HIGH_SCORE_KEY = 'highScore';
@@ -76,12 +77,14 @@ export class GameManager {
     storage = defaultStorage(),
     scheduler = defaultScheduler,
     factory = new TetrominoFactory(),
-    onFault = reportToConsole
+    onFault = reportToConsole,
+    onChange = () => {}
   } = {}) {
     this.storage = storage;
     this.scheduler = scheduler;
     this.factory = factory;
     this.onFault = onFault;
+    this.onChange = onChange;
     /** @type {boolean | undefined} The saved game flag as last read from storage, until it may have changed. */
     this.storedIsSessionSaved = undefined;
     /** @type {Fault[]} */
@@ -360,9 +363,16 @@ export class GameManager {
     return this.scheduler.setTimeout(() => this.guard(callback), ms);
   }
 
-  // Runs one operation, catching errors and checking the invariants after it.
+  // Runs one operation, catching errors and checking the invariants after
+  // it, then reports that the game may have changed.
   /** @param {() => void} operation */
   guard(operation) {
+    this.runChecked(operation);
+    this.onChange();
+  }
+
+  /** @param {() => void} operation */
+  runChecked(operation) {
     try {
       operation();
     } catch (error) {

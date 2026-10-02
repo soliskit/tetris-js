@@ -73,7 +73,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | --- | --- |
 | DSP-1 | In portrait on a phone the whole game fits the screen with no scrolling, and the board keeps a 1:2 shape. |
 | DSP-2 | Canvases draw at the screen's full pixel resolution and redraw correctly after the window changes size. |
-| DSP-3 | Nothing is redrawn, and storage is not read again, while nothing changes, to save battery. |
+| DSP-3 | While nothing changes, nothing is redrawn, storage is not read again, and the page does not wake up every frame, to save battery. |
 | DSP-4 | The page cannot be zoomed, scrolled by touch, or have its text selected. |
 | DSP-5 | The score, high score, buttons and hints always match the game state. |
 
