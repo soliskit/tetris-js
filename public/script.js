@@ -391,6 +391,9 @@ document.addEventListener('visibilitychange', () => {
   if (gameManager.state === GameState.playing) gameManager.handleAction(PlayerAction.pause);
 });
 
+// Another tab saving or ending a game changes whether this one can continue.
+window.addEventListener('storage', () => gameManager.storageChanged());
+
 render();
 
 // Safari ignores user-scalable=no in the browser, but still lets pages
