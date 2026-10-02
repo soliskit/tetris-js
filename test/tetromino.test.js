@@ -89,6 +89,18 @@ test('fits uses the current position by default [PCE-6]', () => {
   assert.ok(!o.fits(board));
 });
 
+test('drop distance is how many rows the piece falls before it lands [PLY-5]', () => {
+  const board = createBoard(20, 10);
+  const o = pieceByColor(PieceColors.yellow);
+  o.position = position(0, 4);
+  assert.equal(o.dropDistance(board), 18);
+  board[15][5] = filled();
+  assert.equal(o.dropDistance(board), 13);
+  o.position = position(13, 4);
+  assert.equal(o.dropDistance(board), 0);
+  assert.deepEqual(o.position, position(13, 4), 'the piece itself does not move');
+});
+
 test('rotating in open space turns clockwise through all four states and back [PCE-4]', () => {
   const board = createBoard(20, 10);
   const t = pieceByColor(PieceColors.purple);
