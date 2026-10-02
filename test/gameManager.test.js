@@ -256,6 +256,37 @@ test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => 
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
 });
 
+test('checking for a saved game reads storage once, not on every frame [DSP-3]', () => {
+  const storage = createMemoryStorage();
+  const getItem = storage.getItem;
+  let reads = 0;
+  storage.getItem = key => {
+    if (key === 'isSessionSaved') reads += 1;
+    return getItem(key);
+  };
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage, factory: fixedFactory(yellow) });
+  for (let frame = 0; frame < 60; frame++) assert.equal(game.isSessionSaved, false);
+  assert.equal(reads, 1);
+  game.handleAction(PlayerAction.newGame);
+  game.togglePause();
+  for (let frame = 0; frame < 60; frame++) assert.equal(game.isSessionSaved, true);
+  assert.equal(reads, 2, 'read again once after the save');
+});
+
+test('a game saved in another tab can be continued once storage reports the change [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const game = new GameManager({ scheduler: createFakeScheduler(), storage });
+  assert.equal(game.isSessionSaved, false);
+  const otherTab = new GameManager({ scheduler: createFakeScheduler(), storage, factory: fixedFactory(yellow) });
+  otherTab.handleAction(PlayerAction.newGame);
+  otherTab.togglePause();
+  game.storageChanged();
+  assert.equal(game.isSessionSaved, true);
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.paused);
+  assert.equal(game.currentTetromino.color, yellow);
+});
+
 test('the session is saved after a line clear but not after a plain lock [STA-4]', () => {
   const { game, storage } = newGame({ factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.drop);

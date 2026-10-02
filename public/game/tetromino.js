@@ -18,6 +18,16 @@ import { cellAt } from './gameState.js';
  * @property {number} [rotationState]
  */
 
+/**
+ * @param {Board} gameBoard
+ * @param {number} row
+ * @param {number} column
+ * @returns {boolean} Whether the cell is on the board and empty.
+ */
+function isFree(gameBoard, row, column) {
+  return cellAt(gameBoard, row, column)?.isFilled === false;
+}
+
 export class Tetromino {
   /** @param {TetrominoData} data */
   constructor({ rotations, color, wallKickData, position: pos = position(0, 0), rotationState = 0 }) {
@@ -83,7 +93,7 @@ export class Tetromino {
    * @returns {boolean}
    */
   static fits(shape, pos, gameBoard) {
-    return Tetromino.cells(shape, pos).every(cell => cellAt(gameBoard, cell.row, cell.column)?.isFilled === false);
+    return Tetromino.cells(shape, pos).every(cell => isFree(gameBoard, cell.row, cell.column));
   }
 
   /**
@@ -93,6 +103,22 @@ export class Tetromino {
    */
   fits(gameBoard, pos = this.position) {
     return Tetromino.fits(this.shape, pos, gameBoard);
+  }
+
+  // How many rows the piece can fall before it lands. Finds the cells once
+  // instead of building new ones for every row checked, since the ghost
+  // piece needs this on every redraw.
+  /**
+   * @param {Board} gameBoard
+   * @returns {number}
+   */
+  dropDistance(gameBoard) {
+    const cells = this.cells;
+    let rows = 0;
+    while (cells.every(cell => isFree(gameBoard, cell.row + rows + 1, cell.column))) {
+      rows += 1;
+    }
+    return rows;
   }
 
   // Mutating, like the Swift `mutating func rotate`. Tries clockwise with SRS
