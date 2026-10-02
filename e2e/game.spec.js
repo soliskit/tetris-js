@@ -135,6 +135,23 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
+  test('a game paused in another tab can be continued here [STA-4] [DSP-5]', async ({ page, context }) => {
+    await page.goto('/');
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    await otherTab.keyboard.press('Enter');
+    await otherTab.keyboard.press('KeyS');
+    await otherTab.keyboard.press('KeyP');
+    await expectLabel(otherTab, 'Resume');
+    const board = await boardCells(otherTab);
+    await expect(page.locator('#continueGameButton')).toBeVisible();
+    await expect(page.locator('#keyHint')).toContainText('C: Continue');
+    await page.locator('#continueGameButton').click();
+    await expectLabel(page, 'Resume');
+    await expect.poll(() => boardCells(page)).toEqual(board);
+  });
+
   test('hiding the page pauses the game [STA-5]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
