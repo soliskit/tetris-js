@@ -18,6 +18,8 @@ const PINS = 'tetris-pins';
 // How long a page keeps the version it opened with. Pages ask for all their
 // files as they start, so this only needs to outlast loading.
 const PIN_MS = 10 * 60 * 1000;
+// The caches earlier workers kept, cleared out when this one takes over.
+const OLD_CACHES = ['tetris', 'tetris-2'];
 const APP_SHELL = [
   './',
   'index.html',
@@ -151,11 +153,11 @@ worker.addEventListener('install', event => {
   worker.skipWaiting();
 });
 
-// Clears out caches from earlier workers, which kept a single cache that each
-// download changed in place.
+// Clears out the caches of earlier workers, which kept a single cache that
+// each download changed in place. Only those, by name: GitHub Pages serves
+// every project of an account from one origin, and they all share its caches.
 worker.addEventListener('activate', event => {
-  event.waitUntil(caches.keys()
-    .then(names => Promise.all(names.filter(name => !name.startsWith(VERSION_PREFIX) && name !== PINS).map(name => caches.delete(name))))
+  event.waitUntil(Promise.all(OLD_CACHES.map(name => caches.delete(name)))
     .then(() => worker.clients.claim()));
 });
 
