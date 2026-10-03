@@ -32,6 +32,23 @@ test('every file the page references exists and uses a relative path [APP-3]', (
   }
 });
 
+test('the page preloads exactly the modules script.js imports, directly or not [APP-5]', () => {
+  const imported = new Set();
+  const visit = file => {
+    for (const [, specifier] of read(file).matchAll(/^import .* from '(\.[^']+)';$/gm)) {
+      const target = path.posix.join(path.posix.dirname(file), specifier);
+      if (!imported.has(target)) {
+        imported.add(target);
+        visit(target);
+      }
+    }
+  };
+  visit('script.js');
+  assert.ok(imported.size >= 7, `${imported.size} modules`);
+  const preloaded = [...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)].map(match => match[1]);
+  assert.deepEqual([...preloaded].sort(), [...imported].sort());
+});
+
 test('the page ids used by script.js all exist, and canvases are canvases [APP-3]', () => {
   const script = read('script.js');
   const ids = [...script.matchAll(/\belement\('([^']+)'\)/g)].map(match => match[1]);
