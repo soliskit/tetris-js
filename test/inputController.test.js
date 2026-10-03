@@ -20,10 +20,12 @@ function setup(t) {
 
   const manager = {
     state: GameState.playing,
+    isConfirmingNewGame: false,
     actions: [],
     handleAction(action) { this.actions.push(action); },
     togglePause() { this.actions.push('togglePause'); },
-    softDrop() { this.actions.push('softDrop'); }
+    softDrop() { this.actions.push('softDrop'); },
+    cancelNewGame() { this.actions.push('cancelNewGame'); }
   };
   const controller = new InputController(manager);
   const fire = (type, event = {}) => (listeners[type] ?? []).forEach(listener => listener(event));
@@ -117,6 +119,24 @@ test('key repeat events from holding a key are ignored [INP-3]', t => {
   const repeat = key('Space', true, { repeat: true });
   assert.equal(repeat.prevented, true);
   assert.deepEqual(manager.actions, [PlayerAction.drop]);
+});
+
+test('while the pause screen asks to confirm New Game, keys are left to its dialog, except a held key repeating [STA-1] [INP-3]', t => {
+  const { manager, key, tap } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  for (const code of ['Enter', 'Space', 'Escape', 'KeyP', 'KeyC', 'Tab']) {
+    assert.equal(key(code).prevented, false, `${code} reaches the dialog's button`);
+    key(code, false);
+  }
+  assert.equal(key('Enter', true, { repeat: true }).prevented, true, 'the Enter that asked, still held, must not answer');
+  assert.deepEqual(manager.actions, []);
+  // A key pressed meanwhile still counts as held once the dialog closes.
+  key('KeyD');
+  manager.isConfirmingNewGame = false;
+  manager.state = GameState.playing;
+  tap('KeyA');
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight]);
 });
 
 test('holding S or Down soft drops a row at once, then every 50ms until released [INP-1] [INP-2]', t => {
@@ -263,6 +283,28 @@ test('the menu button pauses during play and starts a new game at game over [INP
   pads[0] = gamepad({ pressed: ['menu'] });
   controller.pollGamepads();
   assert.deepEqual(manager.actions, ['togglePause', PlayerAction.newGame]);
+});
+
+test('while the pause screen asks to confirm New Game, A confirms, B cancels, and nothing else on the gamepad acts [STA-1] [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  const poll = state => {
+    pads[0] = gamepad(state);
+    controller.pollGamepads();
+  };
+  for (const button of ['x', 'y', 'view', 'menu', 'lb', 'rb', 'up', 'down', 'left', 'right']) {
+    poll({ pressed: [button] });
+    poll();
+  }
+  poll({ x: -1, y: -1 });
+  tick(500);
+  poll();
+  assert.deepEqual(manager.actions, [], 'nothing else acts');
+  poll({ pressed: ['b'] });
+  assert.deepEqual(manager.actions, ['cancelNewGame']);
+  poll({ pressed: ['b', 'a'] });
+  assert.deepEqual(manager.actions, ['cancelNewGame', PlayerAction.newGame], 'A confirms, and B held from before does not cancel again');
 });
 
 test('the stick moves left and right with the same auto repeat as the keyboard [INP-4]', t => {
