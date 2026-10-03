@@ -50,7 +50,7 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 | New game | Enter (twice on the pause screen) |
 | Continue saved game | C |
 
-Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft drop drops a row at once, then every 50ms.
+Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft drop drops a row at once, then every 50ms. The hold box can also be reached with Tab, then pressed with Enter or Space.
 
 ### Gamepad
 
