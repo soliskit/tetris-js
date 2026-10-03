@@ -1,8 +1,9 @@
 // Port of Support/GameControllerManager.swift using browser keyboard events
 // and the Gamepad API. Keeps the same bindings and DAS/ARR timings.
 //
-// Keyboard: A/D move, W rotate, S hard drop, H hold, P or Esc pause,
-// Enter new game, C continue. Arrow keys are aliases for WASD.
+// Keyboard: A/D move, W rotate, Z rotate counterclockwise, S soft drop,
+// Space hard drop, H hold, P or Esc pause, Enter new game, C continue. Arrow
+// keys are aliases for WASD.
 // Gamepad (standard mapping): stick moves and soft drops, A drop, B rotate,
 // X hold, Y continue, Menu/Start pause or new game.
 
@@ -28,7 +29,8 @@ const KEY_ALIASES = {
 /** @type {Record<string, PlayerActionValue>} */
 const KEY_ACTIONS = {
   KeyW: PlayerAction.rotate,
-  KeyS: PlayerAction.drop,
+  KeyZ: PlayerAction.rotateCounterclockwise,
+  Space: PlayerAction.drop,
   KeyH: PlayerAction.hold,
   Enter: PlayerAction.newGame,
   KeyC: PlayerAction.continueGame
@@ -60,6 +62,7 @@ export class InputController {
     this.heldButtons = new Set();
     /** @type {PlayerActionValue | null} */
     this.stickDirection = null;
+    this.stickDown = false;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
     window.addEventListener('keyup', event => this.handleKey(event, false));
@@ -105,7 +108,7 @@ export class InputController {
     if (pressed) this.heldKeys.add(key);
     else this.heldKeys.delete(key);
 
-    const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
+    const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyS' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
     if (!handled) return;
     event.preventDefault();
     if (pressed && event.repeat) return;
@@ -116,6 +119,10 @@ export class InputController {
       } else {
         this.resumeHeldMovement();
       }
+    } else if (key === 'KeyS') {
+      // One row at once, then the steady soft drop while held.
+      if (pressed) this.gameManager.softDrop();
+      this.updateSoftDrop();
     } else if (pressed && (key === 'KeyP' || key === 'Escape')) {
       this.gameManager.togglePause();
     } else if (pressed) {
@@ -158,11 +165,8 @@ export class InputController {
       if (newPresses.has(button)) this.gameManager.handleAction(action);
     }
 
-    if (yAxis < -0.5) {
-      this.startSoftDrop();
-    } else {
-      this.stopSoftDrop();
-    }
+    this.stickDown = yAxis < -0.5;
+    this.updateSoftDrop();
 
     // Polling runs every frame, so only react to stick changes; otherwise a
     // centered stick would cancel keyboard movement.
@@ -212,6 +216,16 @@ export class InputController {
     this.movement = null;
   }
 
+  // Soft drops while the soft drop key or the stick is held down, so a
+  // resting stick does not cancel the key.
+  updateSoftDrop() {
+    if (this.heldKeys.has('KeyS') || this.stickDown) {
+      this.startSoftDrop();
+    } else {
+      this.stopSoftDrop();
+    }
+  }
+
   startSoftDrop() {
     if (this.softDropTimer !== undefined) return;
     this.softDropTimer = setInterval(() => {
@@ -233,6 +247,7 @@ export class InputController {
     this.stopSoftDrop();
     this.heldButtons = new Set();
     this.stickDirection = null;
+    this.stickDown = false;
     this.heldKeys.clear();
   }
 }

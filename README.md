@@ -25,7 +25,7 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 * 7 bag randomizer so every piece appears once per bag
 * Super Rotation System wall kicks
 * Hold piece (once per drop) and a preview of the next three pieces
-* Lock delay of 0.5 seconds, reset by moving on the surface up to 15 times
+* Lock delay of 0.5 seconds from the moment a piece comes to rest, reset by moving on the surface up to 15 times
 * Scoring of 100, 300, 500 and 800 points for 1 to 4 lines
 * Level rises every 1000 points, speeding up gravity from 0.7s down to 0.25s per row
 * High score and paused games are saved in `localStorage`, so you can continue later
@@ -39,14 +39,16 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 | Action | Keys |
 | --- | --- |
 | Move left / right | A / D or Left / Right arrows |
-| Rotate | W or Up arrow |
-| Hard drop | S or Down arrow |
+| Rotate clockwise | W or Up arrow |
+| Rotate counterclockwise | Z |
+| Soft drop | S or Down arrow |
+| Hard drop | Space |
 | Hold | H |
 | Pause | P or Esc |
 | New game | Enter |
 | Continue saved game | C |
 
-Holding a move key repeats the move (167ms delay, then every 33ms).
+Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft drop drops a row at once, then every 50ms.
 
 ### Gamepad
 
@@ -77,7 +79,7 @@ index.js                     Express server for the public folder
 public/
   index.html                 Page layout
   manifest.webmanifest       App name, icons and display mode for installing
-  sw.js                      Service worker: opens the game from its cache, online or offline, and updates it whole
+  sw.js                      Service worker: opens the game from its cache, online or offline, and keeps each page on one whole version
   icons/                     App icons (icon.svg is the source for the PNGs)
   style.css                  Styles
   script.js                  Canvas rendering, touch input and UI wiring
