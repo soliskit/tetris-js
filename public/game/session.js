@@ -3,6 +3,7 @@
 // checked, pieces are rebuilt from the built in definitions rather than
 // from stored shapes, and anything invalid rejects the whole save.
 
+import { UPCOMING_COUNT } from './gameState.js';
 import { position } from './position.js';
 import { allPieces } from './tetrominoFactory.js';
 
@@ -20,8 +21,6 @@ import { allPieces } from './tetrominoFactory.js';
  * @property {boolean} canHoldTetromino
  * @property {Tetromino[]} bag The pieces left in the shuffled bag, dealt next.
  */
-
-const UPCOMING_COUNT = 3;
 
 /**
  * @param {GameManager} game

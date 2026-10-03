@@ -7,7 +7,6 @@ import { InputController } from './game/inputController.js';
 
 /** @typedef {import('./game/tetromino.js').Tetromino} Tetromino */
 /** @typedef {import('./game/position.js').Position} Position */
-/** @typedef {import('./game/gameState.js').Board} Board */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
 const gameManager = new GameManager({ onChange: requestDraw });
@@ -274,11 +273,11 @@ function requestWakeLock() {
 let lastSnapshot = '';
 
 // What each canvas showed when it was last drawn, so frames where nothing
-// moved skip drawing. The engine replaces the current piece whenever the
-// board changes (lock, line clear, hold, new game, continue) and replaces its
-// position object on every move, so comparing references is enough. Game
-// over hides the pieces without changing them, so that is noted too.
-/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, gameBoard?: Board, showsPieces?: boolean }} */
+// moved skip drawing. The engine counts every change to the locked blocks in
+// boardVersion, and makes a new position object whenever the piece moves, so
+// comparing these is enough. Game over hides the pieces without changing
+// them, so that is noted too.
+/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, boardVersion?: number, showsPieces?: boolean }} */
 let drawnBoard = {};
 /** @type {Map<HTMLCanvasElement, Tetromino | null>} */
 const drawnPreviews = new Map();
@@ -288,7 +287,7 @@ function boardChanged() {
   return piece !== drawnBoard.piece
     || piece.position !== drawnBoard.position
     || piece.rotationState !== drawnBoard.rotationState
-    || gameManager.gameBoard !== drawnBoard.gameBoard
+    || gameManager.boardVersion !== drawnBoard.boardVersion
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
@@ -300,7 +299,7 @@ function drawIfChanged() {
       piece,
       position: piece.position,
       rotationState: piece.rotationState,
-      gameBoard: gameManager.gameBoard,
+      boardVersion: gameManager.boardVersion,
       showsPieces: showsPieces()
     };
   }
