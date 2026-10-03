@@ -43,7 +43,7 @@ function setup(t) {
 }
 
 function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
-  const index = { a: 0, b: 1, x: 2, y: 3, menu: 9 };
+  const index = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, menu: 9, up: 12, down: 13, left: 14, right: 15 };
   const buttons = Array.from({ length: 16 }, () => ({ pressed: false }));
   for (const name of pressed) buttons[index[name]].pressed = true;
   return { connected: true, buttons, axes: [x, y] };
@@ -219,7 +219,16 @@ test('losing window focus releases every held key [INP-2]', t => {
 
 test('gamepad buttons trigger their action on press, not while held [INP-4]', t => {
   const { manager, controller, pads } = setup(t);
-  for (const [button, action] of [['a', PlayerAction.drop], ['b', PlayerAction.rotate], ['x', PlayerAction.hold], ['y', PlayerAction.continueGame]]) {
+  const buttons = [
+    ['a', PlayerAction.drop],
+    ['up', PlayerAction.drop],
+    ['b', PlayerAction.rotate],
+    ['rb', PlayerAction.rotate],
+    ['lb', PlayerAction.rotateCounterclockwise],
+    ['x', PlayerAction.hold],
+    ['y', PlayerAction.continueGame]
+  ];
+  for (const [button, action] of buttons) {
     manager.actions = [];
     pads[0] = gamepad({ pressed: [button] });
     controller.pollGamepads();
@@ -233,6 +242,13 @@ test('gamepad buttons trigger their action on press, not while held [INP-4]', t 
     pads[0] = gamepad();
     controller.pollGamepads();
   }
+});
+
+test('two buttons for the same action pressed together act once [INP-4]', t => {
+  const { manager, controller, pads } = setup(t);
+  pads[0] = gamepad({ pressed: ['a', 'up', 'b', 'rb', 'lb'] });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.rotate, PlayerAction.rotateCounterclockwise, PlayerAction.drop]);
 });
 
 test('the menu button pauses during play and starts a new game at game over [INP-4]', t => {
@@ -263,6 +279,48 @@ test('the stick moves left and right with the same auto repeat as the keyboard [
   pads[0] = gamepad({ x: 0.9 });
   controller.pollGamepads();
   assert.equal(count(manager, PlayerAction.moveRight), 1);
+});
+
+test('the directional pad moves left and right with the same auto repeat as the stick [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['left'] });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  controller.pollGamepads(); // still held: no extra move
+  tick(167);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+  pads[0] = gamepad({ pressed: ['right'] });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveLeft, PlayerAction.moveRight]);
+});
+
+test('letting go of the directional pad goes back to a move key still held [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads } = setup(t);
+  key('KeyA');
+  pads[0] = gamepad({ pressed: ['right'] });
+  controller.pollGamepads();
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.moveLeft]);
+});
+
+test('holding down on the directional pad soft drops every 50ms [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['down'] });
+  controller.pollGamepads();
+  tick(50);
+  assert.equal(count(manager, 'softDrop'), 1);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 3);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 3);
+  assert.deepEqual(manager.actions.filter(action => action !== 'softDrop'), [], 'down on the pad does nothing else');
 });
 
 test('pushing the stick down soft drops every 50ms, up does nothing [INP-4]', t => {
