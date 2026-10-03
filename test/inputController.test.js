@@ -43,7 +43,7 @@ function setup(t) {
 }
 
 function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
-  const index = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, menu: 9, up: 12, down: 13, left: 14, right: 15 };
+  const index = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, view: 8, menu: 9, up: 12, down: 13, left: 14, right: 15 };
   const buttons = Array.from({ length: 16 }, () => ({ pressed: false }));
   for (const name of pressed) buttons[index[name]].pressed = true;
   return { connected: true, buttons, axes: [x, y] };
@@ -226,7 +226,8 @@ test('gamepad buttons trigger their action on press, not while held [INP-4]', t 
     ['rb', PlayerAction.rotate],
     ['lb', PlayerAction.rotateCounterclockwise],
     ['x', PlayerAction.hold],
-    ['y', PlayerAction.continueGame]
+    ['y', PlayerAction.continueGame],
+    ['view', PlayerAction.newGame]
   ];
   for (const [button, action] of buttons) {
     manager.actions = [];
