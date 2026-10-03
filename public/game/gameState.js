@@ -1,5 +1,8 @@
 // Port of Model/GameState.swift, Model/PlayerAction.swift and Model/GameCell.swift.
 
+// How many upcoming pieces are known and shown.
+export const UPCOMING_COUNT = 3;
+
 export const GameState = Object.freeze(/** @type {const} */ ({
   playing: 'playing',
   paused: 'paused',
