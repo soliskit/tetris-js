@@ -58,17 +58,34 @@ test('the board is redrawn at the new size after a resize [DSP-2]', async ({ pag
 });
 
 test('the canvases are rebuilt when the screen pixel density changes [DSP-2]', async ({ page }) => {
-  test.skip(!isChromium(page), 'only Chromium can change the pixel density during a test');
+  // The page watches the density with a resolution media query. Chromium 153
+  // no longer fires its change event when DevTools emulation changes the
+  // density, so the change is stood in for: the density reads 2, and the
+  // page's own query reports the change, as a browser does when the window
+  // moves to another screen.
+  await page.addInitScript(() => {
+    const matchMedia = window.matchMedia.bind(window);
+    window.resolutionQueries = [];
+    window.matchMedia = query => {
+      const list = matchMedia(query);
+      if (query.startsWith('(resolution')) window.resolutionQueries.push(list);
+      return list;
+    };
+  });
   await page.goto('/');
   await page.keyboard.press('Enter');
-  const size = page.viewportSize();
-  const cdp = await page.context().newCDPSession(page);
-  await cdp.send('Emulation.setDeviceMetricsOverride', { width: size.width, height: size.height, deviceScaleFactor: 2, mobile: false });
+  await expect.poll(() => filledCount(page)).toBe(4);
+  await page.evaluate(() => {
+    window.devicePixelRatio = 2;
+    window.resolutionQueries.at(-1).dispatchEvent(new Event('change'));
+  });
   await expect.poll(() => page.evaluate(() => {
     const canvas = document.getElementById('tetris');
-    return devicePixelRatio === 2 && canvas.width === Math.round(canvas.getBoundingClientRect().width * 2);
+    return canvas.width === Math.round(canvas.getBoundingClientRect().width * 2);
   })).toBe(true);
   await expect.poll(() => filledCount(page)).toBe(4);
+  // It keeps watching, now for a change away from the new density.
+  expect(await page.evaluate(() => window.resolutionQueries.at(-1).media)).toBe('(resolution: 2dppx)');
 });
 
 test('the page cannot be zoomed, scrolled by touch or text selected [DSP-4]', async ({ page }) => {

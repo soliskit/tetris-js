@@ -79,7 +79,7 @@ test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]'
   const config = JSON.parse(fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8'));
   assert.deepEqual(config.mutate, ['public/game/**/*.js']);
   assert.equal(config.thresholds.break, 100);
-  assert.match(config.commandRunner.command, /^exec node --test --experimental-test-isolation=none /);
+  assert.match(config.commandRunner.command, /^exec node --test --test-isolation=none /);
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
   assert.equal(pkg.scripts['test:mutation'], 'stryker run');
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/mutation.yml'), 'utf8');
