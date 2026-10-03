@@ -26,7 +26,7 @@ const highScoreLabel = element('highScore');
 const menuControls = element('menuControls');
 const gameOverMessage = element('gameOverMessage');
 const announcer = element('announcer');
-const newGameButton = element('newGameButton');
+const newGameDialog = /** @type {HTMLDialogElement} */ (element('newGameDialog'));
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
@@ -216,14 +216,18 @@ function syncControls() {
   gameOverMessage.hidden = !gameEnded;
   // Screen readers hear it from a status message, which reads out changes.
   announcer.textContent = gameEnded ? 'Game Over' : '';
-  // New Game also gives up a paused game, after a second press to confirm;
-  // Continue only follows game over.
+  // New Game also gives up a paused game, once confirmed; Continue only
+  // follows game over.
   menuControls.hidden = !isGameOver && !paused;
-  const newGameLabel = gameManager.isNewGamePending ? 'Confirm New Game' : 'New Game';
-  newGameButton.textContent = newGameLabel;
   const canContinue = isGameOver && isSessionSaved;
   continueButton.hidden = !canContinue;
-  keyHint.textContent = paused ? `Return: ${newGameLabel}    P: Resume` : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  keyHint.textContent = paused ? 'Return: New Game    P: Resume' : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  // The engine asks before New Game gives up a paused game, and this dialog
+  // shows the question.
+  if (gameManager.isConfirmingNewGame !== newGameDialog.open) {
+    if (gameManager.isConfirmingNewGame) newGameDialog.showModal();
+    else newGameDialog.close();
+  }
   playPauseButton.hidden = isGameOver;
   playPauseButton.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;';
   playPauseButton.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
@@ -313,7 +317,7 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drawnPreviews.set(canvas, tetromino);
   }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isNewGamePending}`;
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}`;
   if (snapshot !== lastSnapshot) {
     lastSnapshot = snapshot;
     syncControls();
@@ -503,7 +507,16 @@ heldCanvas.addEventListener('keydown', event => {
   event.stopPropagation();
   gameManager.handleAction(PlayerAction.hold);
 });
-newGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+// The New Game question. Cancel closes the dialog by itself, as do Escape and
+// a tap on the dimmed page around it, and closing it any way answers no,
+// unless New Game answered first. Listening for clicks on the dialog also
+// keeps Safari from taking quick taps there as a double tap to zoom.
+element('confirmNewGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+newGameDialog.addEventListener('click', event => {
+  if (event.target === newGameDialog) newGameDialog.close();
+});
+newGameDialog.addEventListener('close', () => gameManager.cancelNewGame());
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());
 

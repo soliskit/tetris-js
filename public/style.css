@@ -195,6 +195,33 @@ button.round {
   opacity: 0.8;
 }
 
+/* Asks before New Game gives up a paused game. Its content fills it, so a
+   click on the dialog itself is on the dimmed page around it. */
+#newGameDialog {
+  padding: 0;
+  border-radius: 24px;
+  color: inherit;
+  text-align: center;
+}
+
+#newGameDialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.dialog-content {
+  padding: 20px 24px;
+}
+
+.dialog-content p {
+  margin: 0 0 16px;
+}
+
+.dialog-content .dialog-title {
+  margin-bottom: 4px;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
 /* Read by screen readers, but not shown. */
 .visually-hidden {
   position: absolute;
