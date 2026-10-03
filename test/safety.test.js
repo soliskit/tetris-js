@@ -242,7 +242,7 @@ test('continue with unreadable storage stays at game over [SAF-2]', () => {
 test('a stored high score that is negative or fractional reads as 0 [SAF-2]', () => {
   for (const value of ['-50', '12.5', 'Infinity', '1e400']) {
     const storage = createMemoryStorage();
-    storage.setItem('highScore', value);
+    storage.setItem('tetris.highScore', value);
     assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0, value);
   }
 });
@@ -253,7 +253,7 @@ test('localStorage is used when the browser provides it [SAF-2]', t => {
   t.after(() => delete globalThis.localStorage);
   const game = new GameManager({ scheduler: createFakeScheduler() });
   game.highScore = 700;
-  assert.equal(storage.getItem('highScore'), '700');
+  assert.equal(storage.getItem('tetris.highScore'), '700');
 });
 
 test('if touching localStorage throws, memory storage is used instead [SAF-2]', t => {

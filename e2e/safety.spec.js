@@ -7,9 +7,9 @@ import { expectLabel, filledCount, savedGame, PieceColors, trackErrors } from '.
 const good = savedGame({ piece: PieceColors.purple });
 const broken = {
   'text that is not JSON': '{"gameBoard": [',
-  'a save missing its upcoming pieces': JSON.stringify({ ...JSON.parse(good.savedGameSession), nextTetrominos: undefined }),
+  'a save missing its upcoming pieces': JSON.stringify({ ...JSON.parse(good['tetris.savedGameSession']), nextTetrominos: undefined }),
   'a save with the piece inside locked blocks': (() => {
-    const data = JSON.parse(good.savedGameSession);
+    const data = JSON.parse(good['tetris.savedGameSession']);
     data.gameBoard[1][4] = { isFilled: true, color: PieceColors.red };
     return JSON.stringify(data);
   })()
@@ -21,8 +21,8 @@ for (const [name, text] of Object.entries(broken)) {
     await page.addInitScript(value => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
-      localStorage.setItem('isSessionSaved', 'true');
-      localStorage.setItem('savedGameSession', value);
+      localStorage.setItem('tetris.isSessionSaved', 'true');
+      localStorage.setItem('tetris.savedGameSession', value);
     }, text);
     await page.goto('/');
     await expect(page.locator('#continueGameButton')).toBeVisible();
