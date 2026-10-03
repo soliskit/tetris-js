@@ -62,9 +62,9 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | ID | Requirement |
 | --- | --- |
 | INP-1 | Keys: A or Left moves left, D or Right moves right, W or Up rotates, S or Down hard drops, H holds, P or Escape pauses and resumes, Enter starts a new game, C continues. |
-| INP-2 | Holding a move key moves once, then again after 167 ms, then every 33 ms. The newest direction wins; releasing it goes back to the one still held. Repeating stops when the game stops playing or the window loses focus. |
-| INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. Game keys do not trigger the browser's default action (such as scrolling). |
-| INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over. Buttons act once per press. The stick moves with the same repeat timing as keys; stick down soft drops every 50 ms. A resting stick does not cancel keyboard moves. Disconnecting releases everything. |
+| INP-2 | Holding a move key moves once, then again after 167 ms, then every 33 ms. The newest direction wins; releasing it goes back to one still held, on the keyboard or the stick. Repeating stops when the game stops playing or the window loses focus. |
+| INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. A key pressed with Cmd, Ctrl or Alt never counts as held, because macOS may not report its release. Game keys do not trigger the browser's default action (such as scrolling). |
+| INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over. Buttons act once per press. The stick moves with the same repeat timing as keys; stick down soft drops every 50 ms. A resting stick does not cancel keyboard moves, and letting the stick return to the middle goes back to a move key still held. Disconnecting releases everything. |
 | INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. Tapping the hold box holds. |
 
 ## Display
