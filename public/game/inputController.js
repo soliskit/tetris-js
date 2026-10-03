@@ -6,14 +6,15 @@
 // keys are aliases for WASD.
 // Gamepad (standard mapping): stick or directional pad moves and soft drops,
 // A or pad up drop, B or right shoulder rotate, left shoulder rotate
-// counterclockwise, X hold, Y continue, Menu/Start pause or new game, View/Select
-// new game (pressed twice on the pause screen).
+// counterclockwise, X hold, Y continue, Menu/Start pause or new game,
+// View/Select new game. While the pause screen asks to confirm New Game, A
+// confirms and B cancels.
 
 import { GameState, PlayerAction } from './gameState.js';
 
 /** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
 /** @typedef {import('./gameManager.js').GameManager} GameManager */
-/** @typedef {Pick<GameManager, 'state' | 'handleAction' | 'togglePause' | 'softDrop'>} Controllable */
+/** @typedef {Pick<GameManager, 'state' | 'isConfirmingNewGame' | 'handleAction' | 'togglePause' | 'softDrop' | 'cancelNewGame'>} Controllable */
 
 const DAS_DELAY_MS = 167;
 const ARR_INTERVAL_MS = 33;
@@ -115,6 +116,14 @@ export class InputController {
     if (pressed) this.heldKeys.add(key);
     else this.heldKeys.delete(key);
 
+    // While the pause screen asks to confirm New Game, keys belong to its
+    // dialog and press its buttons, except a held key repeating: the Enter
+    // that asked must not go on to answer.
+    if (this.gameManager.isConfirmingNewGame) {
+      if (event.repeat) event.preventDefault();
+      return;
+    }
+
     const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyS' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
     if (!handled) return;
     event.preventDefault();
@@ -160,6 +169,14 @@ export class InputController {
   processInput(pressed, xAxis, yAxis) {
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
+
+    // While the pause screen asks to confirm New Game, A confirms and B
+    // cancels; nothing else acts, so steering the stick cannot answer.
+    if (this.gameManager.isConfirmingNewGame) {
+      if (newPresses.has('a')) this.gameManager.handleAction(PlayerAction.newGame);
+      else if (newPresses.has('b')) this.gameManager.cancelNewGame();
+      return;
+    }
 
     if (newPresses.has('menu')) {
       if (this.gameManager.state === GameState.gameOver) {

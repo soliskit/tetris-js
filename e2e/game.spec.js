@@ -89,36 +89,55 @@ test.describe('start and game over', () => {
     await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
   });
 
-  test('New Game on the pause screen, pressed twice, gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({ page }) => {
+  test('New Game on the pause screen asks first, then gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({ page }) => {
+    const dialog = page.locator('#newGameDialog');
+    const cancel = page.locator('#cancelNewGameButton');
+    const confirm = page.locator('#confirmNewGameButton');
     await continueSavedGame(page, savedGame({ piece: PieceColors.purple, score: 300 }));
     await expect(page.locator('#score')).toHaveText('Score: 300');
     await expect(page.locator('#newGameButton')).toBeVisible();
     await expect(page.locator('#continueGameButton')).toBeHidden();
     await expect(page.locator('#keyHint')).toHaveText('Return: New Game    P: Resume');
     await expect(page.locator('#gameOverMessage')).toBeHidden();
+    await expect(dialog).toBeHidden();
     await page.locator('#newGameButton').click();
-    // The first press only asks.
-    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
-    await expect(page.locator('#keyHint')).toHaveText('Return: Confirm New Game    P: Resume');
+    // It asks first, with Cancel focused, so a second Enter keeps the game.
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('role', 'alertdialog');
+    await expect(dialog).toHaveAccessibleName('Start a new game?');
+    await expect(dialog).toHaveAccessibleDescription('This game will be lost.');
+    await expect(cancel).toBeFocused();
     await expect(page.locator('#score')).toHaveText('Score: 300');
-    await expectLabel(page, 'Resume');
-    await page.locator('#newGameButton').click();
+    await confirm.click();
+    await expect(dialog).toBeHidden();
     await expectLabel(page, 'Pause');
     await expect(page.locator('#score')).toHaveText('Score: 0');
     await expect(page.locator('#menuControls')).toBeHidden();
     await expect.poll(() => filledCount(page)).toBe(4);
-    // Enter does the same from the keyboard, and resuming in between cancels it.
+    // Enter asks too, and every way of closing the question but New Game keeps the game.
     await page.keyboard.press('KeyP');
     await expectLabel(page, 'Resume');
+    const kept = await boardCells(page);
+    for (const [how, answer] of [
+      ['Enter on Cancel', () => page.keyboard.press('Enter')],
+      ['Cancel', () => cancel.click()],
+      ['Escape', () => page.keyboard.press('Escape')],
+      ['a click outside it', () => page.mouse.click(5, 5)]
+    ]) {
+      await page.keyboard.press('Enter');
+      await expect(dialog, how).toBeVisible();
+      await expect(cancel, how).toBeFocused();
+      await answer();
+      await expect(dialog, how).toBeHidden();
+      await expectLabel(page, 'Resume');
+      expect(await boardCells(page), how).toEqual(kept);
+    }
+    // Enter on New Game gives the game up.
     await page.keyboard.press('Enter');
-    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
-    await page.keyboard.press('KeyP');
-    await expectLabel(page, 'Pause');
-    await page.keyboard.press('KeyP');
-    await expectLabel(page, 'Resume');
-    await expect(page.locator('#newGameButton')).toHaveText('New Game');
+    await expect(dialog).toBeVisible();
+    await confirm.focus();
     await page.keyboard.press('Enter');
-    await page.keyboard.press('Enter');
+    await expect(dialog).toBeHidden();
     await expectLabel(page, 'Pause');
   });
 });
@@ -150,7 +169,7 @@ test.describe('playing with the keyboard', () => {
     await page.keyboard.press('KeyP');
     await expect(hold).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
+    await expect(page.locator('#newGameDialog')).toBeVisible();
   });
 
   test('clicked with a mouse, the hold box holds and Space still hard drops [INP-6] [INP-3] [PLY-7]', async ({ page }) => {

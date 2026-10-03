@@ -121,7 +121,7 @@ test('new game after game over resets the board, score, level and held piece [ST
   assert.equal(game.isSessionSaved, false);
 });
 
-test('new game pressed twice while paused gives up that game and starts afresh, forgetting its save [STA-1]', () => {
+test('new game while paused asks first, and once confirmed gives up that game and starts afresh, forgetting its save [STA-1]', () => {
   const { game } = newGame({ factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.hold);
   fillRows(game, [19], [9]);
@@ -129,13 +129,13 @@ test('new game pressed twice while paused gives up that game and starts afresh, 
   game.togglePause();
   assert.equal(game.isSessionSaved, true);
   game.handleAction(PlayerAction.newGame);
-  assert.equal(game.state, GameState.paused, 'the first press only asks');
-  assert.equal(game.isNewGamePending, true);
+  assert.equal(game.state, GameState.paused, 'it only asks');
+  assert.equal(game.isConfirmingNewGame, true);
   assert.equal(game.score, 100);
   assert.equal(game.isSessionSaved, true);
-  game.handleAction(PlayerAction.newGame);
+  game.handleAction(PlayerAction.newGame); // confirms
   assert.equal(game.state, GameState.playing);
-  assert.equal(game.isNewGamePending, false);
+  assert.equal(game.isConfirmingNewGame, false);
   assert.equal(filledCells(game), 0);
   assert.equal(game.score, 0);
   assert.equal(game.heldTetromino, null);
@@ -143,7 +143,22 @@ test('new game pressed twice while paused gives up that game and starts afresh, 
   assert.notEqual(game.gameLoopTask, null, 'gravity runs');
 });
 
-test('anything else between the two New Game presses on the pause screen cancels the first [STA-1]', () => {
+test('cancelling the New Game question keeps the paused game, and so does anything else before it is answered [STA-1]', () => {
+  let changes = 0;
+  const { game } = newGame({ factory: fixedFactory(cyan), onChange: () => { changes += 1; } });
+  game.handleAction(PlayerAction.hold);
+  game.togglePause();
+  game.handleAction(PlayerAction.newGame);
+  const before = changes;
+  game.cancelNewGame();
+  assert.equal(game.isConfirmingNewGame, false);
+  assert.equal(changes, before + 1, 'the page hears of it, to close the question');
+  assert.equal(game.state, GameState.paused);
+  assert.notEqual(game.heldTetromino, null, 'the game is kept');
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.paused, 'the next New Game asks again');
+  assert.equal(game.isConfirmingNewGame, true);
+
   for (const [what, between] of [
     ['an ignored move', game => game.handleAction(PlayerAction.moveLeft)],
     ['a soft drop', game => game.softDrop()],
@@ -153,24 +168,25 @@ test('anything else between the two New Game presses on the pause screen cancels
     game.togglePause();
     game.handleAction(PlayerAction.newGame);
     between(game);
-    assert.equal(game.isNewGamePending, false, what);
+    assert.equal(game.isConfirmingNewGame, false, what);
     game.handleAction(PlayerAction.newGame);
-    assert.equal(game.state, GameState.paused, `${what}: the next press asks again`);
-    assert.equal(game.isNewGamePending, true, what);
+    assert.equal(game.state, GameState.paused, `${what}: the next New Game asks again`);
+    assert.equal(game.isConfirmingNewGame, true, what);
   }
-  const { game } = newGame({ factory: fixedFactory(cyan) });
-  game.togglePause();
-  game.handleAction(PlayerAction.newGame);
-  game.togglePause();
-  assert.equal(game.state, GameState.playing, 'resuming plays on');
-  assert.equal(game.isNewGamePending, false);
+  const { game: resumed } = newGame({ factory: fixedFactory(cyan) });
+  resumed.togglePause();
+  resumed.handleAction(PlayerAction.newGame);
+  resumed.togglePause();
+  assert.equal(resumed.state, GameState.playing, 'resuming plays on');
+  assert.equal(resumed.isConfirmingNewGame, false);
 });
 
-test('new game at game over starts at once, with no second press [STA-1]', () => {
+test('new game at game over starts at once, without asking [STA-1]', () => {
   const game = new GameManager({ scheduler: createFakeScheduler(), factory: fixedFactory(cyan) });
+  assert.equal(game.isConfirmingNewGame, false, 'nothing is asked as the game opens');
   game.handleAction(PlayerAction.newGame);
   assert.equal(game.state, GameState.playing);
-  assert.equal(game.isNewGamePending, false);
+  assert.equal(game.isConfirmingNewGame, false);
 });
 
 test('the board version counts every change to the locked blocks, and nothing else [DSP-3]', () => {
