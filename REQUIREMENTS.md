@@ -76,15 +76,17 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | DSP-3 | While nothing changes, nothing is redrawn, storage is not read again, and the page does not wake up every frame, to save battery. |
 | DSP-4 | The page cannot be zoomed, scrolled by touch, or have its text selected. |
 | DSP-5 | The score, high score, buttons and hints always match the game state. |
+| DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Saved games keep the usual colors. |
+| DSP-7 | The screen stays on while playing. Pausing or game over lets it sleep again. If the wake lock is unsupported or refused, the game plays normally. |
 
 ## App
 
 | ID | Requirement |
 | --- | --- |
 | APP-1 | The game can be installed to the home screen and opens full screen with its own icon. |
-| APP-2 | After the first visit the game works offline. |
+| APP-2 | After the first visit the game opens from its cached copy straight away, online or offline. A new version is downloaded in the background and used from the next launch. |
 | APP-3 | Every file the page uses exists and is referenced by a relative path, so the game works from any folder (GitHub Pages serves it from /tetris-js/). The local server serves each file with the right type. |
-| APP-4 | The oldest supported device is the iPhone 14 Pro Max (Safari 16), in portrait. |
+| APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait. |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |
 
 ## Process
