@@ -39,14 +39,16 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 | Action | Keys |
 | --- | --- |
 | Move left / right | A / D or Left / Right arrows |
-| Rotate | W or Up arrow |
-| Hard drop | S or Down arrow |
+| Rotate clockwise | W or Up arrow |
+| Rotate counterclockwise | Z |
+| Soft drop | S or Down arrow |
+| Hard drop | Space |
 | Hold | H |
 | Pause | P or Esc |
 | New game | Enter |
 | Continue saved game | C |
 
-Holding a move key repeats the move (167ms delay, then every 33ms).
+Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft drop drops a row at once, then every 50ms.
 
 ### Gamepad
 

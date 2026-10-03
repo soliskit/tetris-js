@@ -343,7 +343,7 @@ test('the screen stays on while playing, and may sleep when paused or after game
   await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 1, held: 0 });
   await page.keyboard.press('KeyP');
   await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 1 });
-  for (let i = 0; i < 30 && !(await page.locator('#newGameButton').isVisible()); i++) await page.keyboard.press('KeyS');
+  for (let i = 0; i < 30 && !(await page.locator('#newGameButton').isVisible()); i++) await page.keyboard.press('Space');
   await expect(page.locator('#newGameButton')).toBeVisible();
   await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 0 });
 });
@@ -404,7 +404,7 @@ test('a whole game runs to the end without errors [SAF-6] [STA-3]', async ({ pag
   await expect(page.locator('#newGameButton')).toBeHidden();
   for (let i = 0; i < 60; i++) {
     if (await page.locator('#newGameButton').isVisible()) break;
-    for (const key of ['KeyW', 'KeyA', 'KeyD', 'KeyH', 'KeyS']) await page.keyboard.press(key);
+    for (const key of ['KeyW', 'KeyZ', 'KeyA', 'KeyD', 'KeyH', 'ArrowDown', 'Space']) await page.keyboard.press(key);
   }
   await expect(page.locator('#newGameButton')).toBeVisible();
   expect((await boardCells(page)).flat().filter(Boolean).length).toBeGreaterThan(0);
