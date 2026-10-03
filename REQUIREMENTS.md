@@ -4,6 +4,25 @@ Every behavior of the game is written down here with an ID. Every test names the
 
 Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a requirement, search for its ID, for example `grep -rn "SCO-1" test e2e`.
 
+## Rules for changes
+
+1. **No unrecorded observable behavior change.** What the player sees, does, saves or can load changes only with this file in the same commit.
+2. **No weakened protection.** A runtime check, or the test that proves it works, is loosened only when a requirement changes, and then is replaced by the protection the new rule calls for, if any. Otherwise, a test must prove the same input still gets the same outcome at the same boundary. Types don't count.
+3. **Only the described is protected.** Behavior the requirements and tests don't describe has no guarantee.
+
+### Classifying changes
+
+Each change to game code (everything under `public/`) or to requirement entries (the rows of the tables below) is classified as a Refactor, Bug fix, Intentional change and/or Clarification, and each class needs its own evidence.
+
+| Class | What changes | Evidence |
+| --- | --- | --- |
+| Refactor | Game code, but not behavior | Requirement entries are unchanged and the tests pass. Tests change only to follow renamed or moved code, never to expect different behavior. |
+| Bug fix | Game code, brought back in line with an existing requirement | A test for that requirement that failed before the fix |
+| Intentional change | Game code and requirement entries | The requirement entries edited in the same commit, and their tests updated to match |
+| Clarification | Requirement entries, describing behavior the game already has | The new requirement entries and their tests |
+
+A change with no game code and no requirement entries needs no class. It still follows the three rules: weakening a test falls under rule 2, and the gates in QA-1 to QA-6 may not be lowered or removed.
+
 ## Pieces and board
 
 | ID | Requirement |
