@@ -24,7 +24,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | PLY-3 | Soft drop moves the piece down one row and restarts the gravity timer. |
 | PLY-4 | Hard drop moves the piece straight to where it would land and locks it at once. |
 | PLY-5 | The ghost piece shows where the current piece would land. |
-| PLY-6 | A piece that lands locks after 0.5 seconds. Moving or rotating it while it rests restarts that delay, at most 15 times; reaching a lower row than before resets the count; moving off a ledge cancels the delay; once the 15 are used, landing locks at once. |
+| PLY-6 | A piece locks 0.5 seconds after it comes to rest on the floor or a block, however it got there: falling, moving, turning, appearing, or play resuming. Moving or rotating it while it rests restarts that delay, at most 15 times; reaching a lower row than before resets the count; moving off a ledge cancels the delay; once the 15 are used, landing locks at once. |
 | PLY-7 | Hold puts the current piece aside in its starting state and brings in the held piece, or the next piece if none is held. Hold works once per piece. |
 | PLY-8 | The next three pieces are always known and shown. |
 
@@ -41,7 +41,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | ID | Requirement |
 | --- | --- |
 | STA-1 | The game opens at game over. New Game works only from game over and resets the board, score, level, held piece, queue and bag. |
-| STA-2 | Pause works only while playing and resume only while paused. While paused nothing moves: no gravity, no lock delay, no input. Pausing during the lock delay cancels it and counts as one reset. |
+| STA-2 | Pause works only while playing and resume only while paused. While paused nothing moves: no gravity, no lock delay, no input. Pausing during the lock delay cancels it and counts as one reset, and resuming starts it again. |
 | STA-3 | The game ends when a new or held piece has no room to appear. All timers stop and the saved game is forgotten. |
 | STA-4 | Pausing saves the game, and so does clearing lines. Continue, from game over only, restores exactly what was saved, paused, including the pieces left in the bag. A save from before the bag was saved continues with a fresh bag. |
 | STA-5 | The game pauses when the page is hidden, for example when switching apps. |
@@ -53,7 +53,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | SAF-1 | A saved game is untrusted input. Every field is checked and pieces are rebuilt from the built in definitions. Any invalid save is rejected whole and forgotten, never partly loaded. |
 | SAF-2 | Storage that is missing, blocked, full, or throws on reads or writes never stops the game. Invalid stored values are ignored. |
 | SAF-3 | If anything in the engine throws, the game stops in a safe state (game over, no timers running), the fault is reported, and the last good save is kept. |
-| SAF-4 | After every action and every timer the engine checks its invariants: board 20 by 10, three pieces queued, a valid score, and while playing the piece fits and gravity is running, otherwise no timers run. A broken invariant is handled like SAF-3. Legal play never breaks one. |
+| SAF-4 | After every action and every timer the engine checks its invariants: board 20 by 10, three pieces queued, a valid score, and while playing the piece fits, gravity is running and the lock delay runs exactly while the piece rests, otherwise no timers run. A broken invariant is handled like SAF-3. Legal play never breaks one. |
 | SAF-5 | An error while drawing or reading a gamepad is reported and the drawing and polling loops keep running. |
 | SAF-6 | The rules hold throughout long random play: no overlaps, valid scores and levels, no faults. |
 

@@ -58,8 +58,7 @@ test('the page is told about a fault too, so it shows the stopped game [SAF-3] [
 test('an error inside a timer stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
-  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
-  game.softDrop(); // lock delay running
+  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing'); // lock delay running
   factory.broken = true;
   assert.doesNotThrow(() => scheduler.advance(500));
   assertSafeStop(game, scheduler, reported, 'unexpected error');
@@ -68,8 +67,9 @@ test('an error inside a timer stops the game safely and is reported [SAF-3]', ()
 test('an error during a soft drop is contained [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
-  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
-  game.lockDelayResetCount = 15; // the next landing locks at once
+  repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
+  game.lockDelayResetCount = 15; // the landing locks at once
+  game.lowestRowReached = game.currentTetromino.position.row + 1;
   factory.broken = true;
   assert.doesNotThrow(() => game.softDrop());
   assertSafeStop(game, scheduler, reported, 'unexpected error');
@@ -116,7 +116,8 @@ const violations = [
   ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece overlaps the board'],
   ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing'],
   ['the score not being a multiple of 100', game => { game.score = 150; }, 'score is invalid'],
-  ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface']
+  ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface'],
+  ['the piece resting with no lock delay', game => { game.gameBoard[2][4] = filled(); }, 'piece resting with no lock delay']
 ];
 
 for (const [name, corrupt, reason] of violations) {

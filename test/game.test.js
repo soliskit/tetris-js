@@ -83,8 +83,7 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
 test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(PieceColors.yellow) });
   repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
-  game.softDrop(); // lands, starts the lock delay
-  assert.ok(game.lockDelayTask !== null);
+  assert.ok(game.lockDelayTask !== null, 'the soft drop that lands it starts the lock delay');
   scheduler.advance(400);
   assert.ok(!game.gameBoard[19][4].isFilled);
   scheduler.advance(100);
