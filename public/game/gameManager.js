@@ -482,6 +482,9 @@ export class GameManager {
       case PlayerAction.rotate:
         this.rotateTetromino();
         break;
+      case PlayerAction.rotateCounterclockwise:
+        this.rotateTetromino(true);
+        break;
       case PlayerAction.drop:
         this.hardDrop();
         break;
@@ -539,10 +542,11 @@ export class GameManager {
     if (this.state === GameState.playing) this.startGameLoop();
   }
 
-  rotateTetromino() {
+  /** @param {boolean} [counterclockwise] */
+  rotateTetromino(counterclockwise = false) {
     if (this.state !== GameState.playing) return;
     const previousState = this.currentTetromino.rotationState;
-    this.currentTetromino.rotate(this.gameBoard);
+    this.currentTetromino.rotate(this.gameBoard, counterclockwise);
     if (this.currentTetromino.rotationState !== previousState) {
       this.resetLockDelay();
     }

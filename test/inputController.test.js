@@ -57,8 +57,8 @@ test('each action key triggers its action once per press [INP-1]', t => {
   const expected = {
     KeyW: PlayerAction.rotate,
     ArrowUp: PlayerAction.rotate,
-    KeyS: PlayerAction.drop,
-    ArrowDown: PlayerAction.drop,
+    KeyZ: PlayerAction.rotateCounterclockwise,
+    Space: PlayerAction.drop,
     KeyH: PlayerAction.hold,
     Enter: PlayerAction.newGame,
     NumpadEnter: PlayerAction.newGame,
@@ -83,8 +83,10 @@ test('game keys stop the browser default, other keys do not [INP-3]', t => {
   const { manager, key } = setup(t);
   assert.equal(key('KeyW').prevented, true);
   assert.equal(key('ArrowDown').prevented, true, 'arrow keys must not scroll the page');
+  assert.equal(key('Space').prevented, true, 'space must not scroll the page');
+  assert.equal(key('Space', false).prevented, true, 'or press an on screen button that has focus');
   assert.equal(key('KeyA').prevented, true);
-  assert.equal(key('KeyZ').prevented, false);
+  assert.equal(key('KeyQ').prevented, false);
   assert.equal(key('Tab').prevented, false);
   assert.equal(count(manager, PlayerAction.rotate), 1);
 });
@@ -111,10 +113,48 @@ test('a key pressed with Cmd, Ctrl or Alt never counts as held, so a lost key re
 
 test('key repeat events from holding a key are ignored [INP-3]', t => {
   const { manager, key } = setup(t);
-  key('KeyS');
-  const repeat = key('KeyS', true, { repeat: true });
+  key('Space');
+  const repeat = key('Space', true, { repeat: true });
   assert.equal(repeat.prevented, true);
   assert.deepEqual(manager.actions, [PlayerAction.drop]);
+});
+
+test('holding S or Down soft drops a row at once, then every 50ms until released [INP-1] [INP-2]', t => {
+  const { manager, key, tick } = setup(t);
+  key('ArrowDown');
+  assert.equal(count(manager, 'softDrop'), 1);
+  key('ArrowDown', true, { repeat: true });
+  tick(49);
+  assert.equal(count(manager, 'softDrop'), 1, 'key repeats add nothing');
+  tick(1);
+  assert.equal(count(manager, 'softDrop'), 2);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 4);
+  key('ArrowDown', false);
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 4);
+  key('KeyS');
+  key('KeyS', false);
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 5);
+  assert.deepEqual(manager.actions.filter(action => action !== 'softDrop'), [], 'a soft drop is never a hard drop');
+});
+
+test('the soft drop key stops once the game is no longer playing [INP-2]', t => {
+  const { manager, controller, key, tick } = setup(t);
+  key('KeyS');
+  manager.state = GameState.paused;
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 1);
+  assert.equal(controller.softDropTimer, undefined);
+});
+
+test('losing window focus stops the soft drop key [INP-2]', t => {
+  const { manager, key, fire, tick } = setup(t);
+  key('KeyS');
+  fire('blur');
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 1);
 });
 
 test('holding a move key moves once, then repeats after 167ms every 33ms [INP-2]', t => {
@@ -261,6 +301,35 @@ test('a resting stick does not cancel keyboard movement [INP-4]', t => {
   for (let i = 0; i < 10; i++) controller.pollGamepads();
   tick(200);
   assert.equal(count(manager, PlayerAction.moveLeft), 2);
+});
+
+test('a resting stick does not cancel the soft drop key, and the stick keeps it going after the key is let go [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  pads[0] = gamepad();
+  key('KeyS');
+  for (let i = 0; i < 5; i++) controller.pollGamepads();
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 3);
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  key('KeyS', false);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 5);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 5);
+});
+
+test('after disconnecting with the stick down, the soft drop key works on its own [INP-4]', t => {
+  const { manager, controller, fire, key, pads, tick } = setup(t);
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  fire('gamepaddisconnected');
+  key('KeyS');
+  key('KeyS', false);
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 1);
 });
 
 test('disconnecting the gamepad releases the stick [INP-4]', t => {

@@ -121,10 +121,14 @@ export class Tetromino {
     return rows;
   }
 
-  // Mutating, like the Swift `mutating func rotate`. Tries clockwise with SRS
-  // kicks first, then counterclockwise with the inverted kicks.
-  /** @param {Board} gameBoard */
-  rotate(gameBoard) {
+  // Mutating, like the Swift `mutating func rotate`. Tries the asked for
+  // direction with its SRS kicks first, then the other direction with its
+  // own. Turning counterclockwise uses the clockwise kicks inverted.
+  /**
+   * @param {Board} gameBoard
+   * @param {boolean} [counterclockwise] Turn counterclockwise first.
+   */
+  rotate(gameBoard, counterclockwise = false) {
     const count = this.rotations.length;
     const clockwise = (this.rotationState + 1) % count;
     const counterClockwise = (this.rotationState + count - 1) % count;
@@ -133,6 +137,7 @@ export class Tetromino {
       [clockwise, this.wallKickData[this.rotationState]],
       [counterClockwise, this.wallKickData[counterClockwise].map(kick => position(-kick.row, -kick.column))]
     ];
+    if (counterclockwise) attempts.reverse();
     for (const [state, kicks] of attempts) {
       for (const kick of kicks) {
         const candidate = position(this.position.row + kick.row, this.position.column + kick.column);
