@@ -77,7 +77,7 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
   assert.equal(game.highScore, 800);
   assert.ok(game.gameBoard.every(row => row.every(cell => !cell.isFilled)));
   assert.equal(game.isSessionSaved, true);
-  assert.ok(storage.getItem('savedGameSession'));
+  assert.ok(storage.getItem('tetris.savedGameSession'));
 });
 
 test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {

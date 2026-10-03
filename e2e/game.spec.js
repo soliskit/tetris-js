@@ -179,7 +179,7 @@ test.describe('playing with the keyboard', () => {
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
     await otherTab.goto('/');
-    await otherTab.evaluate(() => localStorage.setItem('highScore', '4200'));
+    await otherTab.evaluate(() => localStorage.setItem('tetris.highScore', '4200'));
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
   });
 

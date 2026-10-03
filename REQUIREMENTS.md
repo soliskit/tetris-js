@@ -62,9 +62,9 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | ID | Requirement |
 | --- | --- |
 | INP-1 | Keys: A or Left moves left, D or Right moves right, W or Up rotates clockwise, Z rotates counterclockwise, S or Down soft drops, Space hard drops, H holds, P or Escape pauses and resumes, Enter starts a new game, C continues. |
-| INP-2 | Holding a move key moves once, then again after 167 ms, then every 33 ms. The newest direction wins; releasing it goes back to one still held, on the keyboard or the stick. Holding S or Down soft drops a row at once, then every 50 ms, and a resting stick does not cancel it. Repeating stops when the game stops playing or the window loses focus. |
+| INP-2 | Holding a move key moves once, then again after 167 ms, then every 33 ms. The newest direction wins; releasing it goes back to one still held, on the keyboard, the stick or the directional pad. Holding S or Down soft drops a row at once, then every 50 ms, and a resting stick does not cancel it. Repeating stops when the game stops playing or the window loses focus. |
 | INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. A key pressed with Cmd, Ctrl or Alt never counts as held, because macOS may not report its release. Game keys do not trigger the browser's default action (such as scrolling). |
-| INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over. Buttons act once per press. The stick moves with the same repeat timing as keys; stick down soft drops every 50 ms. A resting stick does not cancel keyboard moves, and letting the stick return to the middle goes back to a move key still held. Disconnecting releases everything. |
+| INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over. The right shoulder button also rotates and the left one rotates counterclockwise. Buttons act once per press, and two buttons for the same action pressed together act once. The stick and the directional pad move with the same repeat timing as keys; holding either down soft drops every 50 ms, and up on the directional pad hard drops. A resting stick or pad does not cancel keyboard moves, and letting either go back to the middle returns to a move key still held. Disconnecting releases everything. |
 | INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. Tapping the hold box holds. |
 
 ## Display
@@ -88,6 +88,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | APP-3 | Every file the page uses exists and is referenced by a relative path, so the game works from any folder (GitHub Pages serves it from /tetris-js/). The local server serves each file with the right type. |
 | APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait. |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |
+| APP-6 | GitHub Pages serves every project of an account from one origin, which they all share storage and caches with, so the game touches only its own: it stores the high score and saved game under names of its own, and deletes only caches it made. |
 
 ## Process
 
