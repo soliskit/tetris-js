@@ -1,15 +1,19 @@
 // Offline support and instant launches. Cache first: every request is
-// answered from the cache straight away, even on a weak connection, while
-// the network copy refreshes the cache in the background. A new deploy
-// therefore shows up on the launch after the one that fetched it.
+// answered from the cache straight away, even on a weak connection. Each
+// launch downloads the whole game again in the background, so a new deploy
+// shows up on the launch after the one that fetched it.
 
-const CACHE = 'tetris';
+// Renamed whenever what the cache holds changes, so activating clears out
+// the old one. Earlier versions stored every address visited, query strings
+// included, and a lookup that ignores the query could find a stale page.
+const CACHE = 'tetris-2';
 const APP_SHELL = [
   './',
   'index.html',
   'style.css',
   'script.js',
   'manifest.webmanifest',
+  'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
@@ -25,30 +29,33 @@ const APP_SHELL = [
 // `self` is this service worker; the cast tells the type checker so.
 const worker = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
+// Downloads every file of the game and stores them in one step. If any file
+// fails, nothing is stored, so the cache always holds one whole version and
+// never old and new files mixed. 'no-cache' checks each file with the server
+// instead of reusing the browser's own copy, which may be minutes old.
+function refreshAppShell() {
+  return caches.open(CACHE).then(cache => cache.addAll(APP_SHELL.map(file => new Request(file, { cache: 'no-cache' }))));
+}
+
 worker.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil(refreshAppShell());
   worker.skipWaiting();
 });
 
 worker.addEventListener('activate', event => {
-  event.waitUntil(worker.clients.claim());
+  event.waitUntil(caches.keys()
+    .then(names => Promise.all(names.filter(name => name !== CACHE).map(name => caches.delete(name))))
+    .then(() => worker.clients.claim()));
 });
 
 worker.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  const refresh = fetch(event.request).then(async response => {
-    if (response.ok) {
-      const cache = await caches.open(CACHE);
-      await cache.put(event.request, response.clone());
-    }
-    return response;
-  });
-  // Keep the worker alive until the refresh is stored, and ignore a failed
-  // one (offline): the cached copy is already on its way.
-  event.waitUntil(refresh.catch(() => {}));
+  // Opening the game refreshes the cache for the next launch. A failed
+  // refresh (offline) leaves the cached version as it was.
+  if (event.request.mode === 'navigate') event.waitUntil(refreshAppShell().catch(() => {}));
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true })
-      // Not cached yet: wait for the network, or a plain network error if offline.
-      .then(cached => cached ?? refresh.catch(() => Response.error()))
+      // Not cached: ask the network, or a plain network error if offline.
+      .then(cached => cached ?? fetch(event.request).catch(() => Response.error()))
   );
 });

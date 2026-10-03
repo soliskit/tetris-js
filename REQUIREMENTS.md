@@ -84,7 +84,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | ID | Requirement |
 | --- | --- |
 | APP-1 | The game can be installed to the home screen and opens full screen with its own icon. |
-| APP-2 | After the first visit the game opens from its cached copy straight away, online or offline. A new version is downloaded in the background and used from the next launch. |
+| APP-2 | After the first visit the game opens from its cached copy straight away, online or offline. A new version is downloaded in the background and used from the next launch, and only once every file of it has downloaded, so the game never runs a mix of two versions. |
 | APP-3 | Every file the page uses exists and is referenced by a relative path, so the game works from any folder (GitHub Pages serves it from /tetris-js/). The local server serves each file with the right type. |
 | APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait. |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |

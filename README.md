@@ -77,7 +77,7 @@ index.js                     Express server for the public folder
 public/
   index.html                 Page layout
   manifest.webmanifest       App name, icons and display mode for installing
-  sw.js                      Service worker: opens the game from its cache, online or offline
+  sw.js                      Service worker: opens the game from its cache, online or offline, and updates it whole
   icons/                     App icons (icon.svg is the source for the PNGs)
   style.css                  Styles
   script.js                  Canvas rendering, touch input and UI wiring
