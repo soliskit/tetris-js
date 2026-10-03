@@ -25,7 +25,7 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 * 7 bag randomizer so every piece appears once per bag
 * Super Rotation System wall kicks
 * Hold piece (once per drop) and a preview of the next three pieces
-* Lock delay of 0.5 seconds, reset by moving on the surface up to 15 times
+* Lock delay of 0.5 seconds from the moment a piece comes to rest, reset by moving on the surface up to 15 times
 * Scoring of 100, 300, 500 and 800 points for 1 to 4 lines
 * Level rises every 1000 points, speeding up gravity from 0.7s down to 0.25s per row
 * High score and paused games are saved in `localStorage`, so you can continue later
