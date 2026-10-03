@@ -56,10 +56,11 @@ Any controller with the standard mapping works through the Gamepad API.
 
 | Action | Input |
 | --- | --- |
-| Move left / right | Left stick |
-| Soft drop | Left stick down |
-| Hard drop | A |
-| Rotate | B |
+| Move left / right | Left stick or directional pad |
+| Soft drop | Left stick or directional pad down |
+| Hard drop | A or directional pad up |
+| Rotate clockwise | B or right shoulder (RB) |
+| Rotate counterclockwise | Left shoulder (LB) |
 | Hold | X |
 | Continue saved game | Y |
 | Pause or new game | Menu / Start |
