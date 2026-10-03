@@ -21,6 +21,25 @@ test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => 
   expect(await page.evaluate(() => window.drawCalls)).toBe(before);
 });
 
+test('the page does not wake up every frame while nothing changes [DSP-3]', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.frameRequests = 0;
+    const request = window.requestAnimationFrame;
+    window.requestAnimationFrame = callback => {
+      window.frameRequests++;
+      return request(callback);
+    };
+  });
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await page.waitForTimeout(100);
+  const before = await page.evaluate(() => window.frameRequests);
+  await page.waitForTimeout(1000);
+  expect(await page.evaluate(() => window.frameRequests)).toBe(before);
+});
+
 test('the board is redrawn at the new size after a resize [DSP-2]', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Enter');
