@@ -106,6 +106,8 @@ export class GameManager {
     this.heldTetromino = null;
     /** @type {GameStateValue} */
     this.state = GameState.gameOver;
+    /** Whether New Game was pressed once on the pause screen, waiting for a second press. */
+    this.isNewGamePending = false;
     this.score = 0;
     this.currentTetromino = this.factory.generate().spawned(this.columns);
     this.nextTetrominos = this.generateUpcoming();
@@ -445,10 +447,19 @@ export class GameManager {
 
   /** @param {PlayerActionValue} action */
   performAction(action) {
+    // A second New Game press on the pause screen confirms the first; any
+    // other action in between cancels it.
+    const newGameConfirmed = this.isNewGamePending;
+    this.isNewGamePending = false;
     switch (action) {
       case PlayerAction.newGame:
-        // From game over, or while paused to give up that game.
+        // From game over, or while paused to give up that game. That takes
+        // a second press, so one stray press cannot end a game.
         if (this.state === GameState.playing) return;
+        if (this.state === GameState.paused && !newGameConfirmed) {
+          this.isNewGamePending = true;
+          return;
+        }
         this.resetGameSession();
         this.state = GameState.playing;
         this.startGameLoop();
@@ -499,6 +510,7 @@ export class GameManager {
   }
 
   softDrop() {
+    this.isNewGamePending = false;
     this.guard(() => this.dropTetromino());
   }
 

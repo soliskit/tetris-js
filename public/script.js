@@ -26,6 +26,7 @@ const scoreLabel = element('score');
 const highScoreLabel = element('highScore');
 const menuControls = element('menuControls');
 const gameOverMessage = element('gameOverMessage');
+const newGameButton = element('newGameButton');
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
@@ -213,11 +214,14 @@ function syncControls() {
   scoreLabel.textContent = `Score: ${gameManager.score}`;
   highScoreLabel.textContent = `High Score: ${highScore}`;
   gameOverMessage.hidden = !gameEnded;
-  // New Game also gives up a paused game; Continue only follows game over.
+  // New Game also gives up a paused game, after a second press to confirm;
+  // Continue only follows game over.
   menuControls.hidden = !isGameOver && !paused;
+  const newGameLabel = gameManager.isNewGamePending ? 'Confirm New Game' : 'New Game';
+  newGameButton.textContent = newGameLabel;
   const canContinue = isGameOver && isSessionSaved;
   continueButton.hidden = !canContinue;
-  keyHint.textContent = paused ? 'Return: New Game    P: Resume' : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  keyHint.textContent = paused ? `Return: ${newGameLabel}    P: Resume` : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
   playPauseButton.hidden = isGameOver;
   playPauseButton.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;';
   playPauseButton.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
@@ -307,7 +311,7 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drawnPreviews.set(canvas, tetromino);
   }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}`;
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isNewGamePending}`;
   if (snapshot !== lastSnapshot) {
     lastSnapshot = snapshot;
     syncControls();
@@ -485,7 +489,7 @@ boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
 heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
-element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+newGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());
 
