@@ -74,7 +74,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | --- | --- |
 | DSP-1 | In portrait on a phone the whole game fits the screen with no scrolling, and the board keeps a 1:2 shape. The board keeps one size whether the game is starting, playing, paused or over. |
 | DSP-2 | Canvases draw at the screen's full pixel resolution and redraw correctly after the window changes size. |
-| DSP-3 | While nothing changes, nothing is redrawn, storage is not read again, and the page does not wake up every frame, to save battery. |
+| DSP-3 | While nothing changes, nothing is redrawn (the engine counts changes to the locked blocks, so the page knows when they need drawing), storage is not read again, and the page does not wake up every frame, to save battery. |
 | DSP-4 | The page cannot be zoomed, scrolled by touch, or have its text selected. Quick taps never zoom it in Safari, and the second of two quick taps still works. If Safari zooms in anyway, or opens the page still zoomed after a reload, its pinch and double tap work again, so the player can zoom back out. |
 | DSP-5 | The score, high score, buttons and hints always match the game state, including changes made in another tab. |
 | DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Each canvas gets its drawing context as the page starts, so nothing else can change its color space first, and draws vivid colors only if it really is Display P3. Saved games keep the usual colors. |
