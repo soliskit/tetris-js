@@ -28,6 +28,20 @@ const gameOverControls = element('gameOverControls');
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
+const canvases = [boardCanvas, heldCanvas, ...nextCanvases];
+
+// Each canvas gets its context as soon as the page starts. The first request
+// fixes a canvas's color space, so nothing else can get in first and make it
+// sRGB. A canvas always has a 2d context unless another kind was requested
+// first.
+/** @type {Map<HTMLCanvasElement, CanvasRenderingContext2D>} */
+const contexts = new Map(canvases.map(canvas => [canvas, /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { colorSpace: 'display-p3' }))]));
+
+// The contexts that really draw in Display P3. A browser without Display P3
+// canvases gives sRGB ones, where P3 colors would be clipped, so pieces keep
+// their usual colors there.
+/** @type {WeakSet<CanvasRenderingContext2D>} */
+const p3Contexts = new WeakSet([...contexts.values()].filter(context => context.getImageData(0, 0, 1, 1).colorSpace === 'display-p3'));
 
 // Canvas sizes come from a ResizeObserver instead of measuring every frame.
 // Maps each canvas to its size in CSS pixels once sized.
@@ -49,12 +63,8 @@ function sizeCanvas(canvas, width, height) {
   const ratio = window.devicePixelRatio;
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
-  // Resizing resets the context, so the scale is set again here. A canvas
-  // always has a 2d context unless another kind was requested first.
-  const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { colorSpace: 'display-p3' }));
-  // A browser without Display P3 canvases gives an sRGB one, where P3
-  // colors would be clipped, so pieces keep their usual colors there.
-  drawsInP3 = context.getImageData(0, 0, 1, 1).colorSpace === 'display-p3';
+  // Resizing resets the context, so the scale is set again here.
+  const context = /** @type {CanvasRenderingContext2D} */ (contexts.get(canvas));
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   canvasSizes.set(canvas, { context, width, height });
 }
@@ -64,11 +74,13 @@ function sizeCanvas(canvas, width, height) {
 // gamut makes them more vivid on iPhone screens. Maps hex to P3 color.
 /** @type {Map<string, string>} */
 const vividColors = new Map();
-let drawsInP3 = false;
 
-/** @param {string} hex A piece color, #RRGGBB. */
-function vivid(hex) {
-  if (!drawsInP3) return hex;
+/**
+ * @param {CanvasRenderingContext2D} context The context the color is for.
+ * @param {string} hex A piece color, #RRGGBB.
+ */
+function vivid(context, hex) {
+  if (!p3Contexts.has(context)) return hex;
   let color = vividColors.get(hex);
   if (!color) {
     const [red, green, blue] = [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16) / 255);
@@ -98,7 +110,7 @@ function roundedRect(context, x, y, size, radius) {
  * @param {string} color
  */
 function drawBlock(context, column, row, size, color) {
-  context.fillStyle = vivid(color);
+  context.fillStyle = vivid(context, color);
   roundedRect(context, size * column + 0.5, size * row + 0.5, size - 1, 3);
   context.fill();
 }
@@ -113,7 +125,7 @@ function drawBlock(context, column, row, size, color) {
 function drawGhostBlock(context, column, row, size, color) {
   context.save();
   context.globalAlpha = 0.5;
-  context.strokeStyle = vivid(color);
+  context.strokeStyle = vivid(context, color);
   context.lineWidth = 1.5;
   roundedRect(context, size * column + 1, size * row + 1, size - 2, 3);
   context.stroke();
@@ -207,15 +219,31 @@ let wakeLock = null;
 function setWakeLock(wanted) {
   if (wanted === wakeLockWanted || !('wakeLock' in navigator)) return;
   wakeLockWanted = wanted;
-  if (!wanted) {
-    wakeLock?.release();
-    wakeLock = null;
+  if (wanted) {
+    requestWakeLock();
     return;
   }
+  // Forgotten before it is let go, so its release does not ask again.
+  const lock = wakeLock;
+  wakeLock = null;
+  lock?.release();
+}
+
+function requestWakeLock() {
   navigator.wakeLock.request('screen').then(sentinel => {
     // Play may have stopped, or a newer request won, while this one waited.
-    if (wakeLockWanted && !wakeLock) wakeLock = sentinel;
-    else sentinel.release();
+    if (!wakeLockWanted || wakeLock) {
+      sentinel.release();
+      return;
+    }
+    wakeLock = sentinel;
+    // The system can take the lock back during play (when the battery runs
+    // low, for example), so ask for it again.
+    sentinel.addEventListener('release', () => {
+      if (wakeLock !== sentinel) return;
+      wakeLock = null;
+      requestWakeLock();
+    });
   }, () => {});
 }
 
@@ -311,7 +339,7 @@ const resizeObserver = new ResizeObserver(entries => {
   }
   drawSafely(redrawAll);
 });
-[boardCanvas, heldCanvas, ...nextCanvases].forEach(canvas => resizeObserver.observe(canvas));
+canvases.forEach(canvas => resizeObserver.observe(canvas));
 
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
@@ -447,9 +475,11 @@ document.addEventListener('visibilitychange', () => {
   if (gameManager.state === GameState.playing) gameManager.handleAction(PlayerAction.pause);
 });
 
-// Another tab saving or ending a game changes whether this one can continue.
+// Another tab saving or ending a game changes whether this one can continue,
+// and a high score set there changes the one shown here.
 window.addEventListener('storage', () => {
   gameManager.storageChanged();
+  lastSnapshot = '';
   requestDraw();
 });
 
