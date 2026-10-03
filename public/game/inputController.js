@@ -98,10 +98,13 @@ export class InputController {
   handleKey(event, pressed) {
     const key = KEY_ALIASES[event.code] ?? event.code;
     const modifierHeld = event.metaKey || event.ctrlKey || event.altKey;
+    // A key pressed with a modifier is left to the browser and never counts
+    // as held: macOS sends no keyup for a key let go while Cmd is down, so
+    // it would stay held forever.
+    if (pressed && modifierHeld) return;
     if (pressed) this.heldKeys.add(key);
     else this.heldKeys.delete(key);
 
-    if (pressed && modifierHeld) return;
     const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
     if (!handled) return;
     event.preventDefault();
@@ -110,12 +113,8 @@ export class InputController {
     if (key === 'KeyA' || key === 'KeyD') {
       if (pressed) {
         this.startMoving(key === 'KeyA' ? PlayerAction.moveLeft : PlayerAction.moveRight);
-      } else if (this.heldKeys.has('KeyA')) {
-        this.startMoving(PlayerAction.moveLeft);
-      } else if (this.heldKeys.has('KeyD')) {
-        this.startMoving(PlayerAction.moveRight);
       } else {
-        this.stopMoving();
+        this.resumeHeldMovement();
       }
     } else if (pressed && (key === 'KeyP' || key === 'Escape')) {
       this.gameManager.togglePause();
@@ -172,6 +171,19 @@ export class InputController {
     this.stickDirection = direction;
     if (direction) {
       this.startMoving(direction);
+    } else {
+      this.resumeHeldMovement();
+    }
+  }
+
+  // After a direction is let go, keeps moving in a direction still held on
+  // the keyboard or the stick, or stops.
+  resumeHeldMovement() {
+    const held = this.heldKeys.has('KeyA') ? PlayerAction.moveLeft
+      : this.heldKeys.has('KeyD') ? PlayerAction.moveRight
+        : this.stickDirection;
+    if (held) {
+      this.startMoving(held);
     } else {
       this.stopMoving();
     }
