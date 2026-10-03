@@ -29,9 +29,11 @@ import { TetrominoFactory } from './tetrominoFactory.js';
  * @property {() => void} [onChange] Called after every action and timer, so the page knows to draw.
  */
 
-const HIGH_SCORE_KEY = 'highScore';
-const IS_SESSION_SAVED_KEY = 'isSessionSaved';
-const SAVED_SESSION_KEY = 'savedGameSession';
+// Stored under names of the game's own: GitHub Pages serves every project of
+// an account from one origin, and they all share its localStorage.
+const HIGH_SCORE_KEY = 'tetris.highScore';
+const IS_SESSION_SAVED_KEY = 'tetris.isSessionSaved';
+const SAVED_SESSION_KEY = 'tetris.savedGameSession';
 /** @type {Record<number, number>} */
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
 const UPCOMING_COUNT = 3;
