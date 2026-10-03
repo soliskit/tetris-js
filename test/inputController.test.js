@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 
 import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { InputController } from '../public/game/inputController.js';
+import { fixedFactory, newGame } from './helpers.js';
+import { PieceColors } from '../public/game/tetrominoFactory.js';
 
 // Minimal stand ins for the browser globals InputController uses.
 function setup(t) {
@@ -274,6 +276,39 @@ test('two buttons for the same action pressed together act once [INP-4]', t => {
   pads[0] = gamepad({ pressed: ['a', 'up', 'b', 'rb', 'lb'] });
   controller.pollGamepads();
   assert.deepEqual(manager.actions, [PlayerAction.rotate, PlayerAction.rotateCounterclockwise, PlayerAction.drop]);
+});
+
+test('Menu and View act alone: other buttons pressed at the same moment do nothing, and Menu wins over View [INP-4]', t => {
+  const { manager, controller, pads } = setup(t);
+  const press = (state, buttons) => {
+    manager.state = state;
+    manager.actions = [];
+    pads[0] = gamepad({ pressed: buttons });
+    controller.pollGamepads();
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    controller.stopMoving();
+    return manager.actions;
+  };
+  const others = ['a', 'b', 'x', 'y', 'lb', 'rb', 'up'];
+  assert.deepEqual(press(GameState.gameOver, ['menu', ...others]), [PlayerAction.newGame], 'A cannot hard drop the new game\'s first piece');
+  assert.deepEqual(press(GameState.playing, ['menu', ...others]), ['togglePause']);
+  assert.deepEqual(press(GameState.paused, ['view', ...others]), [PlayerAction.newGame], 'nothing cancels the question just asked');
+  assert.deepEqual(press(GameState.paused, ['menu', 'view']), ['togglePause']);
+  assert.deepEqual(press(GameState.gameOver, ['menu', 'view']), [PlayerAction.newGame], 'one new game, not two');
+  // Moving carries on as held.
+  assert.deepEqual(press(GameState.gameOver, ['menu', 'left']), [PlayerAction.newGame, PlayerAction.moveLeft]);
+});
+
+test('View and A pressed together on the pause screen leave the New Game question open [INP-4] [STA-1]', t => {
+  const { pads } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game);
+  game.togglePause();
+  pads[0] = gamepad({ pressed: ['view', 'a'] });
+  controller.pollGamepads();
+  assert.equal(game.state, GameState.paused);
+  assert.equal(game.isConfirmingNewGame, true);
 });
 
 test('the menu button pauses during play and starts a new game at game over [INP-4]', t => {
