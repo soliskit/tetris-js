@@ -66,6 +66,7 @@ Any controller with the standard mapping works through the Gamepad API.
 
 * Drag sideways on the board to move the piece
 * Drag down to soft drop
+* Flick down to hard drop
 * Tap the board to rotate
 * Tap the hold preview to hold
 * Use the on screen buttons for new game, continue and pause
