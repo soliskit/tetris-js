@@ -8,7 +8,7 @@
 // (game over, no timers), reports the fault and keeps the last good save.
 
 import { below, position } from './position.js';
-import { GameState, PlayerAction, createBoard } from './gameState.js';
+import { GameState, PlayerAction, UPCOMING_COUNT, createBoard } from './gameState.js';
 import { parseSession, serializeSession } from './session.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
@@ -36,7 +36,6 @@ const IS_SESSION_SAVED_KEY = 'tetris.isSessionSaved';
 const SAVED_SESSION_KEY = 'tetris.savedGameSession';
 /** @type {Record<number, number>} */
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
-const UPCOMING_COUNT = 3;
 const MAX_FAULTS_KEPT = 20;
 
 export function createMemoryStorage() {
@@ -106,6 +105,10 @@ export class GameManager {
     this.heldTetromino = null;
     /** @type {GameStateValue} */
     this.state = GameState.gameOver;
+    /** Whether the pause screen is asking the player to confirm New Game, which gives up the game. */
+    this.isConfirmingNewGame = false;
+    /** Counts every change to the locked blocks, so the page knows when to redraw them. */
+    this.boardVersion = 0;
     this.score = 0;
     this.currentTetromino = this.factory.generate().spawned(this.columns);
     this.nextTetrominos = this.generateUpcoming();
@@ -179,6 +182,7 @@ export class GameManager {
   resetGameSession() {
     this.state = GameState.paused;
     this.gameBoard = createBoard(this.rows, this.columns);
+    this.boardVersion += 1;
     this.score = 0;
     // A full bag, so the game's first seven pieces are all different.
     this.factory.resetBag?.();
@@ -202,6 +206,7 @@ export class GameManager {
     }
     this.state = GameState.paused;
     this.gameBoard = session.gameBoard;
+    this.boardVersion += 1;
     this.score = session.score;
     this.currentTetromino = session.currentTetromino;
     this.nextTetrominos = session.nextTetrominos;
@@ -323,6 +328,7 @@ export class GameManager {
     for (const cell of this.currentTetromino.cells) {
       this.gameBoard[cell.row][cell.column] = { isFilled: true, color: this.currentTetromino.color };
     }
+    this.boardVersion += 1;
   }
 
   clearFullRows() {
@@ -338,6 +344,7 @@ export class GameManager {
     }
     const newLines = createBoard(completedLineIndices.length, this.columns);
     this.gameBoard.unshift(...newLines);
+    this.boardVersion += 1;
     this.score += LINE_SCORES[completedLineIndices.length];
     this.highScore = Math.max(this.highScore, this.score);
     return true;
@@ -445,10 +452,19 @@ export class GameManager {
 
   /** @param {PlayerActionValue} action */
   performAction(action) {
+    // New Game on the pause screen asks first, and a second New Game
+    // confirms; any other action in between cancels the question.
+    const newGameConfirmed = this.isConfirmingNewGame;
+    this.isConfirmingNewGame = false;
     switch (action) {
       case PlayerAction.newGame:
-        // From game over, or while paused to give up that game.
+        // From game over, or while paused to give up that game, once the
+        // player confirms, so one stray press cannot end a game.
         if (this.state === GameState.playing) return;
+        if (this.state === GameState.paused && !newGameConfirmed) {
+          this.isConfirmingNewGame = true;
+          return;
+        }
         this.resetGameSession();
         this.state = GameState.playing;
         this.startGameLoop();
@@ -499,7 +515,15 @@ export class GameManager {
   }
 
   softDrop() {
+    this.isConfirmingNewGame = false;
     this.guard(() => this.dropTetromino());
+  }
+
+  // Answers no to the pause screen's New Game question: the game stays paused.
+  cancelNewGame() {
+    this.guard(() => {
+      this.isConfirmingNewGame = false;
+    });
   }
 
   hardDrop() {
