@@ -526,18 +526,13 @@ for (const type of ['gesturestart', 'gesturechange']) {
   });
 }
 
-// Cancelling every tap that ends soon after another stops double tap zoom.
-// That also cancels the tap's click, so a button or the hold box is clicked
-// here instead. The board reads taps as pointer events, which still arrive.
-const DOUBLE_TAP_MS = 500;
-let lastTapEnd = -Infinity;
-document.addEventListener('touchend', event => {
-  if (event.timeStamp - lastTapEnd < DOUBLE_TAP_MS && !zoomedIn()) {
-    event.preventDefault();
-    /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('button, #heldPreview'))?.click();
-  }
-  lastTapEnd = event.timeStamp;
-}, { passive: false });
+// Safari also zooms on a double tap that lands on something it does not take
+// to be clickable, and touch-action cannot stop that. Only click and mouse
+// button listeners count, not the pointer listeners the board reads taps
+// with, so the board listens for clicks too: Safari then handles quick taps
+// there as clicks, which never zoom. The click does nothing. Safari sends no
+// pointer events with it, so a tap still turns the piece only once.
+boardCanvas.addEventListener('click', () => {});
 
 // Installable app: cache the game so it also works offline.
 if ('serviceWorker' in navigator) {

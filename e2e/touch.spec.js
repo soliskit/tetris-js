@@ -139,49 +139,55 @@ test('a piece pushed against a ledge slides in once it drops below it [INP-5]', 
   await touch.up();
 });
 
-// Safari zooms in on two quick taps. Records whether each tap's end was
-// cancelled, which is what stops it.
-async function recordTapEnds(page) {
-  await page.evaluate(() => {
-    window.tapEndsCancelled = [];
-    document.addEventListener('touchend', event => window.tapEndsCancelled.push(event.defaultPrevented));
-  });
-  return () => page.evaluate(() => window.tapEndsCancelled);
-}
-
 async function centerOf(page, selector) {
   const box = await page.locator(selector).boundingBox();
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test('two quick taps turn the piece twice, and the second cannot zoom the page [DSP-4] [INP-5]', async ({ page }) => {
+// Safari zooms on a double tap that lands on something it does not take to be
+// clickable, which only click and mouse button listeners make an element.
+test('the board listens for clicks, so Safari takes quick taps there as clicks rather than a double tap to zoom [DSP-4]', async ({ page }) => {
+  test.skip(!isChromium(page), 'only Chromium can send real touch events');
+  await page.addInitScript(() => {
+    window.listenedFor = [];
+    const addEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function (type, ...rest) {
+      window.listenedFor.push(`${this.id ?? ''} ${type}`);
+      return addEventListener.call(this, type, ...rest);
+    };
+  });
+  await page.goto('/');
+  expect(await page.evaluate(() => window.listenedFor)).toContain('tetris click');
+  // Clickable, it would otherwise flash on every tap.
+  expect(await page.evaluate(() => getComputedStyle(document.getElementById('tetris')).webkitTapHighlightColor)).toBe('rgba(0, 0, 0, 0)');
+});
+
+test('two quick taps turn the piece twice, and no more [INP-5] [DSP-4]', async ({ page }) => {
   test.skip(!isChromium(page), 'only Chromium can send real touch events');
   await playSaved(page, { piece: PieceColors.purple, position: { row: 5, column: 3 } });
-  const tapEnds = await recordTapEnds(page);
   const board = await centerOf(page, '#tetris');
   await page.touchscreen.tap(board.x, board.y);
   await page.touchscreen.tap(board.x, board.y);
-  expect(await tapEnds()).toEqual([false, true]);
   // Turned twice, the T points down.
-  await expect.poll(async () => shapeOf(await cellsOf(page, PieceColors.purple))).toBe(shapeOf([[0, 0], [0, 1], [0, 2], [1, 1]]));
+  const pointingDown = shapeOf([[0, 0], [0, 1], [0, 2], [1, 1]]);
+  await expect.poll(async () => shapeOf(await cellsOf(page, PieceColors.purple))).toBe(pointingDown);
+  // The click that follows each tap, a moment later, turns it no further.
+  await page.waitForTimeout(500);
+  expect(shapeOf(await cellsOf(page, PieceColors.purple))).toBe(pointingDown);
 });
 
-test('a quick tap on the hold box right after one on the board still holds [DSP-4] [INP-5] [PLY-7]', async ({ page }) => {
+test('a quick tap on the hold box right after one on the board still holds [INP-5] [PLY-7]', async ({ page }) => {
   test.skip(!isChromium(page), 'only Chromium can send real touch events');
   await playSaved(page, { piece: PieceColors.purple });
-  const tapEnds = await recordTapEnds(page);
   const board = await centerOf(page, '#tetris');
   const held = await centerOf(page, '#heldPreview');
   await page.touchscreen.tap(board.x, board.y);
   await page.touchscreen.tap(held.x, held.y);
-  expect(await tapEnds()).toEqual([false, true]);
   await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
 });
 
 test('if Safari zooms in anyway, its gestures are let through so the player can zoom back out [DSP-4]', async ({ page }) => {
-  test.skip(!isChromium(page), 'only Chromium can send real touch events');
-  await playSaved(page, { piece: PieceColors.purple });
-  const tapEnds = await recordTapEnds(page);
+  await page.goto('/');
   // No test browser here really zooms (Chromium ignores a simulated pinch or
   // double tap), so Safari zooming in is stood in for by the scale the page reads.
   await page.evaluate(() => {
@@ -203,17 +209,9 @@ test('if Safari zooms in anyway, its gestures are let through so the player can 
   });
   await page.evaluate(() => window.zoomTo(2));
   expect(await zoomState()).toEqual({ htmlTouchAction: 'auto', boardTouchAction: 'auto', pinchCancelled: false });
-  const board = await centerOf(page, '#tetris');
-  await page.touchscreen.tap(board.x, board.y);
-  await page.touchscreen.tap(board.x, board.y);
-  expect(await tapEnds()).toEqual([false, false]);
-  // Zoomed back out, zooming is blocked again: these taps follow the last
-  // ones quickly, so both are cancelled.
+  // Zoomed back out, zooming is blocked again.
   await page.evaluate(() => window.zoomTo(1));
   expect(await zoomState()).toEqual({ htmlTouchAction: 'none', boardTouchAction: 'none', pinchCancelled: true });
-  await page.touchscreen.tap(board.x, board.y);
-  await page.touchscreen.tap(board.x, board.y);
-  expect(await tapEnds()).toEqual([false, false, true, true]);
 });
 
 test('a page that opens already zoomed in, as Safari keeps the zoom on reload, lets the player zoom back out [DSP-4]', async ({ page }) => {
