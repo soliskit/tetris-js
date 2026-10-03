@@ -181,6 +181,23 @@ test('pieces are drawn in the Display P3 color space where the browser has it, s
   if (supported) expect(srgb).not.toEqual(own);
 });
 
+// The test helpers read the board's pixels through a context of their own.
+// Asking for one before the page did would once have made the board sRGB.
+test('another script asking for a canvas context first cannot change its color space [DSP-6]', async ({ page }) => {
+  await page.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      for (const canvas of document.querySelectorAll('canvas')) canvas.getContext('2d');
+    });
+  });
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  const { canvases, supported } = await colorSpaces(page);
+  expect(canvases).toEqual(Array(5).fill(supported ? 'display-p3' : 'srgb'));
+  const { own } = await firstPiecePixel(page);
+  expect(Object.values(PieceColors)).toContain(hex(own));
+});
+
 test('without Display P3 canvases, pieces keep their usual colors [DSP-6]', async ({ page }) => {
   await page.addInitScript(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
@@ -234,6 +251,19 @@ test('a wake lock granted after play stopped, or after a newer request, is let g
   await expectLabel(page, 'Resume');
   await page.evaluate(() => window.grantWakeLocks());
   await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 3, held: 0 });
+});
+
+test('if the system takes the wake lock back during play, the game asks for it again [DSP-7]', async ({ page }) => {
+  await fakeWakeLock(page, 'grant');
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 1, held: 1 });
+  await page.evaluate(() => window.revokeWakeLocks());
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 1 });
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 0 });
+  expect(await wakeLockRequests(page)).toBe(2);
 });
 
 for (const mode of ['refuse', 'missing']) {
