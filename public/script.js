@@ -51,9 +51,26 @@ function sizeCanvas(canvas, width, height) {
   canvas.height = Math.round(height * ratio);
   // Resizing resets the context, so the scale is set again here. A canvas
   // always has a 2d context unless another kind was requested first.
-  const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { colorSpace: 'display-p3' }));
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   canvasSizes.set(canvas, { context, width, height });
+}
+
+// The piece colors stay as sRGB hex in the engine, because saved games
+// identify pieces by them. Drawing the same values in the wider Display P3
+// gamut makes them more vivid on iPhone screens. Maps hex to P3 color.
+/** @type {Map<string, string>} */
+const vividColors = new Map();
+
+/** @param {string} hex A piece color, #RRGGBB. */
+function vivid(hex) {
+  let color = vividColors.get(hex);
+  if (!color) {
+    const [red, green, blue] = [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16) / 255);
+    color = `color(display-p3 ${red} ${green} ${blue})`;
+    vividColors.set(hex, color);
+  }
+  return color;
 }
 
 /**
@@ -76,7 +93,7 @@ function roundedRect(context, x, y, size, radius) {
  * @param {string} color
  */
 function drawBlock(context, column, row, size, color) {
-  context.fillStyle = color;
+  context.fillStyle = vivid(color);
   roundedRect(context, size * column + 0.5, size * row + 0.5, size - 1, 3);
   context.fill();
 }
@@ -91,7 +108,7 @@ function drawBlock(context, column, row, size, color) {
 function drawGhostBlock(context, column, row, size, color) {
   context.save();
   context.globalAlpha = 0.5;
-  context.strokeStyle = color;
+  context.strokeStyle = vivid(color);
   context.lineWidth = 1.5;
   roundedRect(context, size * column + 1, size * row + 1, size - 2, 3);
   context.stroke();
@@ -170,6 +187,31 @@ function syncControls() {
   const paused = gameManager.state === GameState.paused;
   playPauseButton.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;';
   playPauseButton.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
+  setWakeLock(gameManager.state === GameState.playing);
+}
+
+// Keeps the screen on while playing, so iOS does not dim and lock it while
+// the player thinks. Released at pause and game over, so an idle game never
+// keeps the screen awake. If the lock is unsupported or refused (Low Power
+// Mode, for example), the game plays on without it.
+let wakeLockWanted = false;
+/** @type {WakeLockSentinel | null} */
+let wakeLock = null;
+
+/** @param {boolean} wanted */
+function setWakeLock(wanted) {
+  if (wanted === wakeLockWanted || !('wakeLock' in navigator)) return;
+  wakeLockWanted = wanted;
+  if (!wanted) {
+    wakeLock?.release();
+    wakeLock = null;
+    return;
+  }
+  navigator.wakeLock.request('screen').then(sentinel => {
+    // Play may have stopped, or a newer request won, while this one waited.
+    if (wakeLockWanted && !wakeLock) wakeLock = sentinel;
+    else sentinel.release();
+  }, () => {});
 }
 
 let lastSnapshot = '';
