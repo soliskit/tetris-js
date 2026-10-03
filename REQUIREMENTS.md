@@ -88,6 +88,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | APP-3 | Every file the page uses exists and is referenced by a relative path, so the game works from any folder (GitHub Pages serves it from /tetris-js/). The local server serves each file with the right type. |
 | APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait. |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |
+| APP-6 | GitHub Pages serves every project of an account from one origin, which they all share storage and caches with, so the game touches only its own: it stores the high score and saved game under names of its own, and deletes only caches it made. |
 
 ## Process
 

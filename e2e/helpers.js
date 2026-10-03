@@ -30,9 +30,9 @@ export function savedGame({ piece, board = [], position, rotationState = 0, scor
   game.score = score;
   game.handleAction(PlayerAction.pause);
   return {
-    isSessionSaved: 'true',
-    savedGameSession: storage.getItem('savedGameSession'),
-    highScore: '0'
+    'tetris.isSessionSaved': 'true',
+    'tetris.savedGameSession': storage.getItem('tetris.savedGameSession'),
+    'tetris.highScore': '0'
   };
 }
 
