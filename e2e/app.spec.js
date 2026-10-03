@@ -115,6 +115,20 @@ test('the game works offline after the first visit [APP-2]', async ({ page }, te
   await expect.poll(() => filledCount(page)).toBe(4);
 });
 
+// The page in the newest version the service worker has downloaded in full.
+function newestCachedPage(page) {
+  return page.evaluate(async () => {
+    const prefix = 'tetris-version-';
+    const number = name => parseInt(name.slice(prefix.length), 10);
+    const names = (await caches.keys()).filter(name => name.startsWith(prefix)).sort((a, b) => number(b) - number(a));
+    for (const name of names) {
+      const cached = await (await caches.open(name)).match('./');
+      if (cached) return cached.text();
+    }
+    return '';
+  });
+}
+
 // Serves a copy of the game the test can change, like a new deploy.
 test('after the first visit the game opens from the cache, and a new version arrives on the next launch [APP-2]', async ({ page }) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
@@ -130,7 +144,7 @@ test('after the first visit the game opens from the cache, and a new version arr
     fs.writeFileSync(index, fs.readFileSync(index, 'utf8').replace('<title>Tetris</title>', '<title>Tetris Deploy 2</title>'));
     await page.reload();
     await expect(page).toHaveTitle('Tetris');
-    await expect.poll(() => page.evaluate(async () => (await (await caches.match('./')).text()).includes('Deploy 2'))).toBe(true);
+    await expect.poll(() => newestCachedPage(page)).toContain('Deploy 2');
     await page.reload();
     await expect(page).toHaveTitle('Tetris Deploy 2');
   } finally {
@@ -139,17 +153,21 @@ test('after the first visit the game opens from the cache, and a new version arr
   }
 });
 
-// Earlier versions stored every address visited, query strings included.
-test('a cache left by an earlier version of the game is cleared out [APP-2]', async ({ page }) => {
+// Earlier versions stored every address visited, query strings included,
+// and later ones kept a single cache that each download changed in place.
+test('caches left by earlier versions of the game are cleared out [APP-2]', async ({ page }) => {
   // Set up from a page that does not start the service worker.
   await page.goto('/icons/icon.svg');
   await page.evaluate(async () => {
-    const old = await caches.open('tetris');
-    await old.put('/?from=link', new Response('<title>Stale</title>', { headers: { 'Content-Type': 'text/html' } }));
+    for (const name of ['tetris', 'tetris-2']) {
+      const old = await caches.open(name);
+      await old.put('/?from=link', new Response('<title>Stale</title>', { headers: { 'Content-Type': 'text/html' } }));
+    }
   });
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready);
-  await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(['tetris-2']);
+  // Besides the new version, only the record of which version each page opened with.
+  await expect.poll(() => page.evaluate(async () => (await caches.keys()).filter(name => name !== 'tetris-pins'))).toEqual([expect.stringMatching(/^tetris-version-1-/)]);
   await page.reload();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await expect(page).toHaveTitle('Tetris');
@@ -163,7 +181,7 @@ test('a new version that cannot be downloaded in full leaves the cached game who
   const requested = [];
   const server = express().use((request, response, next) => { requested.push(request.path); next(); }).use(express.static(dir)).listen(0);
   await new Promise(resolve => server.once('listening', resolve));
-  const cachedPage = () => page.evaluate(async () => (await caches.match('./')).text());
+  const cachedPage = () => newestCachedPage(page);
   try {
     await page.goto(`http://localhost:${server.address().port}/`);
     await page.evaluate(() => navigator.serviceWorker.ready);
@@ -188,6 +206,50 @@ test('a new version that cannot be downloaded in full leaves the cached game who
     await expect(page).toHaveTitle('Tetris Deploy 2');
     await page.keyboard.press('Enter');
     await expect.poll(() => filledCount(page)).toBe(4);
+  } finally {
+    server.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// The page here asks for its scripts only when the test says so, so a newer
+// version can finish downloading while the page is still loading. The
+// version number is in the page title and in one of the game modules.
+test('a page loads every file from the version it opened with, even if a newer one finishes downloading meanwhile [APP-2]', async ({ page }) => {
+  const publicDir = fileURLToPath(new URL('../public', import.meta.url));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
+  fs.cpSync(publicDir, dir, { recursive: true });
+  const loader = `<script>
+    window.loadScripts = () => new Promise((resolve, reject) => {
+      const script = Object.assign(document.createElement('script'), { type: 'module', src: 'script.js', onload: resolve, onerror: reject });
+      document.body.append(script);
+    });
+  </script>`;
+  const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf8')
+    .replace(/ *<link rel="modulepreload"[^>]*>\n/g, '')
+    .replace('<script type="module" src="script.js"></script>', loader);
+  const moduleSource = fs.readFileSync(path.join(publicDir, 'game/position.js'), 'utf8');
+  const deploy = version => {
+    fs.writeFileSync(path.join(dir, 'index.html'), html.replace('<title>Tetris</title>', `<title>Tetris ${version}</title>`));
+    fs.writeFileSync(path.join(dir, 'game/position.js'), `${moduleSource}\nglobalThis.moduleVersion = ${version};\n`);
+  };
+  deploy(1);
+  const server = express().use(express.static(dir)).listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  try {
+    await page.goto(`http://localhost:${server.address().port}/`);
+    await page.evaluate(() => window.loadScripts());
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    deploy(2);
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris 1');
+    await expect.poll(() => newestCachedPage(page)).toContain('Tetris 2');
+    await page.evaluate(() => window.loadScripts());
+    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(1);
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris 2');
+    await page.evaluate(() => window.loadScripts());
+    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(2);
   } finally {
     server.close();
     fs.rmSync(dir, { recursive: true, force: true });
