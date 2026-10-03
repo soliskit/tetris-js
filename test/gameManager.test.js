@@ -256,6 +256,19 @@ test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => 
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
 });
 
+test('the engine reports every action and timer, so the page draws only then [DSP-3]', () => {
+  let changes = 0;
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onChange: () => { changes += 1; } });
+  assert.equal(changes, 1, 'new game');
+  game.handleAction(PlayerAction.moveLeft);
+  game.softDrop();
+  game.togglePause();
+  game.togglePause();
+  assert.equal(changes, 5);
+  scheduler.advance(700);
+  assert.equal(changes, 6, 'gravity');
+});
+
 test('checking for a saved game reads storage once, not on every frame [DSP-3]', () => {
   const storage = createMemoryStorage();
   const getItem = storage.getItem;
