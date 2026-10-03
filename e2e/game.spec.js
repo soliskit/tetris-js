@@ -98,12 +98,13 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(async () => shapeOf(await t())).toBe(before);
     await page.keyboard.press('ArrowUp');
 
-    // Held down, the piece falls far faster than gravity's row every 0.7s.
+    // Held down, the piece falls five rows within 1.4s, where gravity's row
+    // every 0.7s manages three at most. Checked often, so the key is let go
+    // long before the piece reaches the floor, however slow the browser.
     const top = minRow(await t());
     await page.keyboard.down('ArrowDown');
-    await page.waitForTimeout(400);
+    await expect.poll(async () => minRow(await t()), { timeout: 1400, intervals: [25] }).toBeGreaterThanOrEqual(top + 5);
     await page.keyboard.up('ArrowDown');
-    await expect.poll(async () => minRow(await t()), { timeout: 400 }).toBeGreaterThanOrEqual(top + 5);
     expect(await t()).toHaveLength(4);
 
     await page.keyboard.press('Space'); // hard drop
