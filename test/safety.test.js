@@ -44,6 +44,17 @@ test('an error during a player action stops the game safely and is reported [SAF
   assert.equal(reported[0].error.message, 'factory failure');
 });
 
+test('the page is told about a fault too, so it shows the stopped game [SAF-3] [DSP-5]', () => {
+  const factory = breakableFactory();
+  let changes = 0;
+  const { game } = recordingGame({ factory, onChange: () => { changes += 1; } });
+  changes = 0;
+  factory.broken = true;
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(changes, 1);
+});
+
 test('an error inside a timer stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
