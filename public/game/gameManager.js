@@ -18,7 +18,7 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 /** @typedef {import('./tetromino.js').Tetromino} Tetromino */
 /** @typedef {{ getItem(key: string): string | null, setItem(key: string, value: string): void }} KeyValueStorage */
 /** @typedef {{ setTimeout(callback: () => void, ms: number): unknown, clearTimeout(handle: unknown): void }} Scheduler */
-/** @typedef {{ generate(): Tetromino }} PieceSource */
+/** @typedef {{ generate(): Tetromino, bag?: Tetromino[], resetBag?(pieces?: Tetromino[]): void }} PieceSource */
 /** @typedef {{ reason: string, error?: unknown }} Fault */
 /**
  * @typedef {object} GameManagerOptions
@@ -178,6 +178,8 @@ export class GameManager {
     this.state = GameState.paused;
     this.gameBoard = createBoard(this.rows, this.columns);
     this.score = 0;
+    // A full bag, so the game's first seven pieces are all different.
+    this.factory.resetBag?.();
     this.currentTetromino = this.factory.generate().spawned(this.columns);
     this.nextTetrominos = this.generateUpcoming();
     this.heldTetromino = null;
@@ -203,6 +205,7 @@ export class GameManager {
     this.nextTetrominos = session.nextTetrominos;
     this.heldTetromino = session.heldTetromino;
     this.canHoldTetromino = session.canHoldTetromino;
+    this.factory.resetBag?.(session.bag);
     this.resetLockDelayForNewPiece();
   }
 
