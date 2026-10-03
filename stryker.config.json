@@ -27,7 +27,7 @@
     "fileName": "reports/mutation/mutation.json"
   },
   "concurrency": 4,
-  "timeoutMS": 5000,
+  "timeoutMS": 20000,
   "thresholds": {
     "high": 100,
     "low": 95,
