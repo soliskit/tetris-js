@@ -466,6 +466,54 @@ test('continue restores the board, score, level and every piece [STA-4]', () => 
   assert.equal(restored.canHoldTetromino, false);
 });
 
+test('every game starts with a full bag, so its first seven pieces are all different [PCE-5] [STA-1]', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { game } = newGame({ factory: new TetrominoFactory(seededRandom(seed)) });
+    for (let round = 1; round <= 2; round++) {
+      const colors = [game.currentTetromino.color];
+      for (let i = 0; i < 6; i++) {
+        game.handleAction(PlayerAction.drop);
+        colors.push(game.currentTetromino.color);
+      }
+      assert.equal(new Set(colors).size, 7, `seed ${seed}, game ${round}`);
+      repeatUntil(() => game.state === GameState.gameOver, () => game.handleAction(PlayerAction.drop), 'the game ending');
+      game.handleAction(PlayerAction.newGame);
+    }
+  }
+});
+
+test('continue carries on with the saved bag, so each piece still comes once per seven [PCE-5] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: new TetrominoFactory(seededRandom(5)) });
+  game.handleAction(PlayerAction.drop);
+  game.handleAction(PlayerAction.pause);
+  const saved = game.factory.bag.map(piece => piece.color);
+  assert.equal(saved.length, 2);
+
+  const restored = new GameManager({ scheduler: createFakeScheduler(), storage, factory: new TetrominoFactory(seededRandom(99)) });
+  restored.handleAction(PlayerAction.continueGame);
+  restored.togglePause();
+  for (const color of saved) {
+    restored.handleAction(PlayerAction.drop);
+    assert.equal(restored.nextTetrominos.at(-1).color, color);
+  }
+});
+
+test('continuing a save from before the bag was saved starts a fresh bag [PCE-5] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: new TetrominoFactory(seededRandom(5)) });
+  game.handleAction(PlayerAction.pause);
+  const data = JSON.parse(storage.getItem('savedGameSession'));
+  delete data.bag;
+  storage.setItem('savedGameSession', JSON.stringify(data));
+
+  // Its constructor has already dealt from this bag.
+  const restored = new GameManager({ scheduler: createFakeScheduler(), storage, factory: new TetrominoFactory(seededRandom(6)) });
+  restored.handleAction(PlayerAction.continueGame);
+  assert.equal(restored.state, GameState.paused);
+  assert.deepEqual(restored.factory.bag, []);
+});
+
 test('continue without a saved game stays at game over [STA-4]', () => {
   const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
   game.handleAction(PlayerAction.continueGame);
