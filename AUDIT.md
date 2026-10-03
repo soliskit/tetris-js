@@ -20,6 +20,7 @@ Pull requests that confirm, fix or reject a finding, or make a verification deci
 | F10 | 2026-10-03 | The documented Stryker exclusion on the bag shuffle covers more than its stated reason | Resolved, no change | Run with the exclusion removed: `i <= 0` is caught by the tests; `i >= 0` survives and is the harmless swap of the first piece with itself the comment describes. Stryker can only exclude both together |
 | F11 | 2026-10-03 | STA-4 describes a save without a bag, a format no release stored under the current storage names | Open, low | The bag was added (PR #22) before saves moved to the current names (PR #26), and the old names are not read. Harmless and tested. Removing the sentence would be an Intentional change |
 | F12 | 2026-10-03 | Stryker passes when it mutates nothing (a score of NaN meets the threshold) | Rejected, not reachable | The pull request mutation workflow only runs a targeted run when the change includes engine files that still exist, so the list is never empty |
+| F16 | 2026-10-03 | With a controller, the New Game dialog's selection could not be moved, and A always started a new game, even while Cancel, focused as the dialog opened, looked selected | Fixed | Reported by the owner playing with a controller; confirmed in the code, where INP-4 made A always confirm and the pad do nothing. Now left and right move the selection, A presses the selected button and B cancels; the arrow keys move it too, and the selection is always highlighted (INP-4, STA-1). PR #37, an Intentional change |
 
 ## Decisions
 
