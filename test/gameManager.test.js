@@ -173,6 +173,31 @@ test('new game at game over starts at once, with no second press [STA-1]', () =>
   assert.equal(game.isNewGamePending, false);
 });
 
+test('the board version counts every change to the locked blocks, and nothing else [DSP-3]', () => {
+  const { game, storage } = newGame({ factory: fixedFactory(cyan) });
+  const version = () => game.boardVersion;
+  const start = version();
+  game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.rotate);
+  game.softDrop();
+  game.handleAction(PlayerAction.hold);
+  assert.equal(version(), start, 'moving, turning, dropping and holding change no locked blocks');
+  game.handleAction(PlayerAction.drop);
+  assert.equal(version(), start + 1, 'a lock');
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(version(), start + 3, 'a lock, then a line clear');
+  game.togglePause();
+  game.handleAction(PlayerAction.newGame);
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(version(), start + 4, 'a new game');
+  game.togglePause();
+  const restored = new GameManager({ scheduler: createFakeScheduler(), storage });
+  const before = restored.boardVersion;
+  restored.handleAction(PlayerAction.continueGame);
+  assert.equal(restored.boardVersion, before + 1, 'continuing a saved game');
+});
+
 // Movement
 
 test('moving left and right stops at the walls [PLY-1] [PCE-6]', () => {
