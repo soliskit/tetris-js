@@ -314,11 +314,10 @@ test('the session is saved after a line clear but not after a plain lock [STA-4]
 
 // Lock delay
 
-test('landing by gravity waits 0.5s before locking [PLY-6]', () => {
+test('a piece brought to rest by gravity locks 0.5s after touching down [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   repeatUntil(() => game.isOnSurface, () => scheduler.advance(700), 'the piece landing by gravity');
-  scheduler.advance(700); // gravity tries to move down and lands
-  assert.notEqual(game.lockDelayTask, null);
+  assert.notEqual(game.lockDelayTask, null, 'the lock delay starts on touchdown');
   scheduler.advance(499);
   assert.equal(filledCells(game), 0);
   scheduler.advance(1);
@@ -365,12 +364,74 @@ test('rotating on the surface restarts the lock delay [PLY-6]', () => {
 
 test('once the 15 resets are used up, landing locks immediately [PLY-6]', () => {
   const { game } = newGame({ factory: fixedFactory(yellow) });
-  landOnSurface(game);
+  repeatUntil(() => game.currentTetromino.position.row === 17, () => game.softDrop(), 'the piece one row above the floor');
   game.lockDelayResetCount = 15;
+  game.lowestRowReached = 18; // as if a turn had lifted it off the floor
   game.softDrop();
   assert.equal(filledCells(game), 4);
   assert.equal(game.lockDelayTask, null);
   assert.equal(game.currentTetromino.position.row, 0);
+});
+
+test('moving onto a ledge starts the lock delay at once, without using a reset [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  game.gameBoard[7][3] = filled();
+  for (let i = 0; i < 5; i++) game.softDrop(); // rows 5 and 6, just above the ledge's row
+  assert.equal(game.lockDelayTask, null);
+  game.handleAction(PlayerAction.moveLeft);
+  assert.notEqual(game.lockDelayTask, null);
+  assert.equal(game.lockDelayResetCount, 0);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 1);
+  scheduler.advance(1);
+  assert.equal(filledCells(game), 5);
+  assert.deepEqual(faults, []);
+});
+
+test('turning onto a ledge starts the lock delay at once [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(purple), onFault: fault => faults.push(fault) });
+  game.gameBoard[8][4] = filled();
+  for (let i = 0; i < 5; i++) game.softDrop();
+  assert.equal(game.lockDelayTask, null);
+  game.handleAction(PlayerAction.rotate); // the stem now points down at the ledge
+  assert.equal(game.currentTetromino.rotationState, 1);
+  assert.equal(game.isOnSurface, true);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 5);
+  assert.deepEqual(faults, []);
+});
+
+test('a new piece that appears resting on the stack starts its lock delay at once [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
+  game.gameBoard[2][4] = filled(); // under where the next piece appears
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.currentTetromino.position.row, 0);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 5);
+  scheduler.advance(1);
+  assert.equal(filledCells(game), 9);
+  assert.deepEqual(faults, []);
+});
+
+test('a held piece swapped in resting on the stack starts its lock delay at once [PLY-6] [PLY-7]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]), onFault: fault => faults.push(fault) });
+  game.handleAction(PlayerAction.hold); // holds T, plays O
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.drop); // O locks, plays S
+  game.gameBoard[2][4] = filled(); // under where the T appears
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.currentTetromino.color, purple);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 9);
+  assert.deepEqual(faults, []);
 });
 
 // Hold
@@ -425,18 +486,43 @@ test('pause freezes gravity until resumed [STA-2]', () => {
   assert.equal(game.currentTetromino.position.row, 1);
 });
 
-test('pausing during the lock delay cancels it and counts as a reset [STA-2] [PLY-6]', () => {
+test('pausing during the lock delay cancels it and counts as a reset, and resuming starts it again [STA-2] [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   landOnSurface(game);
-  game.softDrop();
   game.togglePause();
   assert.equal(game.lockDelayTask, null);
   assert.equal(game.lockDelayResetCount, 1);
   scheduler.advance(5000);
   assert.equal(filledCells(game), 0);
   game.togglePause();
-  scheduler.advance(700 + 500); // gravity lands it again, then the lock delay
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 0);
+  scheduler.advance(1);
   assert.equal(filledCells(game), 4);
+});
+
+test('resuming a resting piece whose resets are used up locks it at once [STA-2] [PLY-6]', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.lockDelayResetCount = 15;
+  game.togglePause();
+  game.togglePause();
+  assert.equal(filledCells(game), 4);
+  assert.equal(game.state, GameState.playing);
+  assert.notEqual(game.gameLoopTask, null, 'the next piece falls');
+});
+
+test('resuming into a lock that ends the game leaves no timers running [STA-2] [STA-3] [SAF-4]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  game.togglePause();
+  fillRows(game, [...Array(18).keys()].map(row => row + 2), [0]); // the piece rests at the top
+  game.lockDelayResetCount = 15;
+  game.togglePause();
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
 });
 
 test('toggling pause does nothing at game over [STA-2]', () => {
@@ -703,7 +789,6 @@ test('a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]', 
 test('after a piece locks, the next piece waits a full gravity interval before falling [PLY-2] [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   repeatUntil(() => game.isOnSurface, () => scheduler.advance(700), 'the piece landing by gravity');
-  scheduler.advance(700); // lands; the lock delay starts
   scheduler.advance(500); // locks; the next piece appears
   assert.equal(filledCells(game), 4);
   assert.equal(game.currentTetromino.position.row, 0);
