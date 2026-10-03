@@ -18,3 +18,4 @@
 * **Protection:** does this loosen, remove or move a runtime check, or a test that proves one works? If so, which requirement change allows it and what replaces it, or which test proves the same input still gets the same outcome at the same boundary? Types don't count.
 * **Gates:** does this lower or remove a gate in QA-1 to QA-6? That is not allowed.
 * **Description:** is any new behavior described by a requirement entry and a test? Behavior that isn't has no guarantee.
+* **Audit:** does this confirm, fix or reject a finding, or make a verification decision? If so, record it in AUDIT.md in the same pull request.
