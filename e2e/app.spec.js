@@ -1,7 +1,11 @@
 import { test, expect } from './fixtures.js';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { boardCells, expectLabel, filledCount, isChromium, trackErrors } from './helpers.js';
+import express from 'express';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { boardCells, expectLabel, fakeWakeLock, filledCount, isChromium, trackErrors, wakeLockCounts } from './helpers.js';
 
 test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => {
   await page.addInitScript(() => {
@@ -110,6 +114,104 @@ test('the game works offline after the first visit [APP-2]', async ({ page }, te
   await expectLabel(page, 'Pause');
   await expect.poll(() => filledCount(page)).toBe(4);
 });
+
+// Serves a copy of the game the test can change, like a new deploy.
+test('after the first visit the game opens from the cache, and a new version arrives on the next launch [APP-2]', async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
+  fs.cpSync(fileURLToPath(new URL('../public', import.meta.url)), dir, { recursive: true });
+  const server = express().use(express.static(dir)).listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  try {
+    await page.goto(`http://localhost:${server.address().port}/`);
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    const index = path.join(dir, 'index.html');
+    fs.writeFileSync(index, fs.readFileSync(index, 'utf8').replace('<title>Tetris</title>', '<title>Tetris Deploy 2</title>'));
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris');
+    await expect.poll(() => page.evaluate(async () => (await (await caches.match('./')).text()).includes('Deploy 2'))).toBe(true);
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris Deploy 2');
+  } finally {
+    server.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('pieces are drawn in the Display P3 color space, so they look more vivid [DSP-6]', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  const colorSpaces = await page.evaluate(() => [...document.querySelectorAll('canvas')].map(canvas => canvas.getContext('2d').getContextAttributes().colorSpace));
+  expect(colorSpaces).toEqual(Array(5).fill('display-p3'));
+  // The same pixel read in sRGB differs: the color lies outside sRGB.
+  const [p3, srgb] = await page.evaluate(() => {
+    const canvas = document.getElementById('tetris');
+    const context = canvas.getContext('2d');
+    const size = canvas.width / 10;
+    for (let row = 0; row < 20; row++) for (let column = 0; column < 10; column++) {
+      const x = Math.floor((column + 0.5) * size);
+      const y = Math.floor((row + 0.5) * size);
+      const p3 = [...context.getImageData(x, y, 1, 1).data];
+      if (p3[3] > 200) return [p3, [...context.getImageData(x, y, 1, 1, { colorSpace: 'srgb' }).data]];
+    }
+    return [];
+  });
+  expect(srgb).not.toEqual(p3);
+});
+
+test('the screen stays on while playing, and may sleep when paused or after game over [DSP-7]', async ({ page }) => {
+  await fakeWakeLock(page, 'grant');
+  await page.goto('/');
+  await expect(page.locator('#newGameButton')).toBeVisible();
+  expect(await wakeLockCounts(page)).toEqual({ granted: 0, held: 0 });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 1, held: 1 });
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 1, held: 0 });
+  await page.keyboard.press('KeyP');
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 1 });
+  for (let i = 0; i < 30 && !(await page.locator('#newGameButton').isVisible()); i++) await page.keyboard.press('KeyS');
+  await expect(page.locator('#newGameButton')).toBeVisible();
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 0 });
+});
+
+test('a wake lock granted after play stopped, or after a newer request, is let go [DSP-7]', async ({ page }) => {
+  await fakeWakeLock(page, 'hold');
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expectLabel(page, 'Pause');
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Pause');
+  await page.evaluate(() => window.grantWakeLocks());
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 1 });
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Pause');
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Resume');
+  await page.evaluate(() => window.grantWakeLocks());
+  await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 3, held: 0 });
+});
+
+for (const mode of ['refuse', 'missing']) {
+  test(`the game plays normally when the wake lock is ${mode === 'refuse' ? 'refused' : 'unsupported'} [DSP-7]`, async ({ page }) => {
+    const errors = trackErrors(page);
+    await fakeWakeLock(page, mode);
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expectLabel(page, 'Pause');
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    expect(errors).toEqual([]);
+  });
+}
 
 test('a whole game runs to the end without errors [SAF-6] [STA-3]', async ({ page }) => {
   const errors = trackErrors(page);
