@@ -4,8 +4,9 @@
 // Keyboard: A/D move, W rotate, Z rotate counterclockwise, S soft drop,
 // Space hard drop, H hold, P or Esc pause, Enter new game, C continue. Arrow
 // keys are aliases for WASD.
-// Gamepad (standard mapping): stick moves and soft drops, A drop, B rotate,
-// X hold, Y continue, Menu/Start pause or new game.
+// Gamepad (standard mapping): stick or directional pad moves and soft drops,
+// A or pad up drop, B or right shoulder rotate, left shoulder rotate
+// counterclockwise, X hold, Y continue, Menu/Start pause or new game.
 
 import { GameState, PlayerAction } from './gameState.js';
 
@@ -37,13 +38,16 @@ const KEY_ACTIONS = {
 };
 
 // Standard gamepad mapping button indices.
-const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, menu: 9 };
+const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, menu: 9, up: 12, down: 13, left: 14, right: 15 };
 /** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
   ['b', PlayerAction.rotate],
+  ['rb', PlayerAction.rotate],
+  ['lb', PlayerAction.rotateCounterclockwise],
   ['x', PlayerAction.hold],
-  ['a', PlayerAction.drop]
+  ['a', PlayerAction.drop],
+  ['up', PlayerAction.drop]
 ];
 
 export class InputController {
@@ -60,9 +64,10 @@ export class InputController {
     this.heldKeys = new Set();
     /** @type {Set<string>} */
     this.heldButtons = new Set();
-    /** @type {PlayerActionValue | null} */
-    this.stickDirection = null;
-    this.stickDown = false;
+    /** @type {PlayerActionValue | null} Held on the stick or directional pad. */
+    this.padDirection = null;
+    /** Whether the stick or directional pad is held down. */
+    this.padDown = false;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
     window.addEventListener('keyup', event => this.handleKey(event, false));
@@ -161,18 +166,21 @@ export class InputController {
         this.gameManager.togglePause();
       }
     }
-    for (const [button, action] of PAD_ACTIONS) {
-      if (newPresses.has(button)) this.gameManager.handleAction(action);
-    }
+    // Each action once, even when two of its buttons are pressed together:
+    // A and pad up at once must not hard drop two pieces.
+    const actions = new Set(PAD_ACTIONS.filter(([button]) => newPresses.has(button)).map(([, action]) => action));
+    for (const action of actions) this.gameManager.handleAction(action);
 
-    this.stickDown = yAxis < -0.5;
+    this.padDown = yAxis < -0.5 || pressed.has('down');
     this.updateSoftDrop();
 
-    // Polling runs every frame, so only react to stick changes; otherwise a
-    // centered stick would cancel keyboard movement.
-    const direction = xAxis < -0.5 ? PlayerAction.moveLeft : xAxis > 0.5 ? PlayerAction.moveRight : null;
-    if (direction === this.stickDirection) return;
-    this.stickDirection = direction;
+    // Polling runs every frame, so only react to stick and pad changes;
+    // otherwise a centered stick would cancel keyboard movement.
+    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
+      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight
+        : null;
+    if (direction === this.padDirection) return;
+    this.padDirection = direction;
     if (direction) {
       this.startMoving(direction);
     } else {
@@ -181,11 +189,11 @@ export class InputController {
   }
 
   // After a direction is let go, keeps moving in a direction still held on
-  // the keyboard or the stick, or stops.
+  // the keyboard, the stick or the directional pad, or stops.
   resumeHeldMovement() {
     const held = this.heldKeys.has('KeyA') ? PlayerAction.moveLeft
       : this.heldKeys.has('KeyD') ? PlayerAction.moveRight
-        : this.stickDirection;
+        : this.padDirection;
     if (held) {
       this.startMoving(held);
     } else {
@@ -216,10 +224,10 @@ export class InputController {
     this.movement = null;
   }
 
-  // Soft drops while the soft drop key or the stick is held down, so a
-  // resting stick does not cancel the key.
+  // Soft drops while the soft drop key, the stick or the directional pad is
+  // held down, so a resting stick does not cancel the key.
   updateSoftDrop() {
-    if (this.heldKeys.has('KeyS') || this.stickDown) {
+    if (this.heldKeys.has('KeyS') || this.padDown) {
       this.startSoftDrop();
     } else {
       this.stopSoftDrop();
@@ -246,8 +254,8 @@ export class InputController {
     this.stopMoving();
     this.stopSoftDrop();
     this.heldButtons = new Set();
-    this.stickDirection = null;
-    this.stickDown = false;
+    this.padDirection = null;
+    this.padDown = false;
     this.heldKeys.clear();
   }
 }
