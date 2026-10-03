@@ -506,11 +506,38 @@ window.addEventListener('storage', () => {
 
 requestDraw();
 
-// Safari ignores user-scalable=no in the browser, but still lets pages
-// cancel its pinch gestures.
+// Safari ignores user-scalable=no in the browser, and zooms in on two quick
+// taps even with touch-action none, which players do to turn pieces. Zoomed
+// in, the board fills the screen and the rest of the game is cut off. So the
+// page blocks Safari's zoom gestures itself, unless Safari has zoomed in
+// anyway: then they are let through, so the player can always zoom back out.
+// Safari keeps the zoom when the page reloads, so it is checked at the start
+// too. Every supported browser has a visual viewport.
+const viewport = /** @type {VisualViewport} */ (window.visualViewport);
+const zoomedIn = () => viewport.scale > 1;
+const watchZoom = () => document.documentElement.classList.toggle('zoomed', zoomedIn());
+viewport.addEventListener('resize', watchZoom);
+watchZoom();
+
+// Cancelling Safari's pinch gestures stops pinch zoom.
 for (const type of ['gesturestart', 'gesturechange']) {
-  document.addEventListener(type, event => event.preventDefault());
+  document.addEventListener(type, event => {
+    if (!zoomedIn()) event.preventDefault();
+  });
 }
+
+// Cancelling every tap that ends soon after another stops double tap zoom.
+// That also cancels the tap's click, so a button or the hold box is clicked
+// here instead. The board reads taps as pointer events, which still arrive.
+const DOUBLE_TAP_MS = 500;
+let lastTapEnd = -Infinity;
+document.addEventListener('touchend', event => {
+  if (event.timeStamp - lastTapEnd < DOUBLE_TAP_MS && !zoomedIn()) {
+    event.preventDefault();
+    /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('button, #heldPreview'))?.click();
+  }
+  lastTapEnd = event.timeStamp;
+}, { passive: false });
 
 // Installable app: cache the game so it also works offline.
 if ('serviceWorker' in navigator) {
