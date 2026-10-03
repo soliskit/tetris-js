@@ -152,6 +152,15 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => boardCells(page)).toEqual(board);
   });
 
+  test('a high score set in another tab shows here too [DSP-5] [SCO-3]', async ({ page, context }) => {
+    await page.goto('/');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    await otherTab.evaluate(() => localStorage.setItem('highScore', '4200'));
+    await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
+  });
+
   test('hiding the page pauses the game [STA-5]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
