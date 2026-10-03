@@ -142,7 +142,8 @@ test('after the first visit the game opens from the cache, and a new version arr
 // The color space each canvas draws in, and whether this browser has Display P3 canvases at all.
 function colorSpaces(page) {
   return page.evaluate(() => {
-    const space = context => context.getImageData(0, 0, 1, 1).colorSpace;
+    // Browsers with only sRGB canvases may not report a color space at all.
+    const space = context => context.getImageData(0, 0, 1, 1).colorSpace ?? 'srgb';
     return {
       canvases: [...document.querySelectorAll('canvas')].map(canvas => space(canvas.getContext('2d'))),
       supported: space(document.createElement('canvas').getContext('2d', { colorSpace: 'display-p3' })) === 'display-p3'
