@@ -1,5 +1,7 @@
-// Offline support. Network first, so players always get the latest deploy
-// when online, falling back to the cached copy when offline.
+// Offline support and instant launches. Cache first: every request is
+// answered from the cache straight away, even on a weak connection, while
+// the network copy refreshes the cache in the background. A new deploy
+// therefore shows up on the launch after the one that fetched it.
 
 const CACHE = 'tetris';
 const APP_SHELL = [
@@ -34,16 +36,19 @@ worker.addEventListener('activate', event => {
 
 worker.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  const refresh = fetch(event.request).then(async response => {
+    if (response.ok) {
+      const cache = await caches.open(CACHE);
+      await cache.put(event.request, response.clone());
+    }
+    return response;
+  });
+  // Keep the worker alive until the refresh is stored, and ignore a failed
+  // one (offline): the cached copy is already on its way.
+  event.waitUntil(refresh.catch(() => {}));
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      })
-      // Offline: the cached copy, or a plain network error if there is none.
-      .catch(async () => (await caches.match(event.request, { ignoreSearch: true })) ?? Response.error())
+    caches.match(event.request, { ignoreSearch: true })
+      // Not cached yet: wait for the network, or a plain network error if offline.
+      .then(cached => cached ?? refresh.catch(() => Response.error()))
   );
 });
