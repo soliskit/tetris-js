@@ -118,9 +118,8 @@ export async function boardTouch(page) {
   let last = null;
   const point = (column, row) => ({ x: box.x + cell * column, y: box.y + cell * row });
   let send;
-  let cdp = null;
   if (isChromium(page)) {
-    cdp = await page.context().newCDPSession(page);
+    const cdp = await page.context().newCDPSession(page);
     send = (type, p) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: p ? [p] : [] });
   } else {
     send = async (type, p) => {
@@ -140,11 +139,7 @@ export async function boardTouch(page) {
         await send('touchMove', last);
       }
     },
-    async up() { await send('touchEnd'); },
-    // Chromium only: WebKit cannot simulate a pinch.
-    async pinch(scaleFactor) {
-      await cdp.send('Input.synthesizePinchGesture', { x: box.x + box.width / 2, y: box.y + cell * 2, scaleFactor });
-    }
+    async up() { await send('touchEnd'); }
   };
 }
 
