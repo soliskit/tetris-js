@@ -7,7 +7,6 @@ import { InputController } from './game/inputController.js';
 
 /** @typedef {import('./game/tetromino.js').Tetromino} Tetromino */
 /** @typedef {import('./game/position.js').Position} Position */
-/** @typedef {import('./game/gameState.js').Board} Board */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
 const gameManager = new GameManager({ onChange: requestDraw });
@@ -26,6 +25,8 @@ const scoreLabel = element('score');
 const highScoreLabel = element('highScore');
 const menuControls = element('menuControls');
 const gameOverMessage = element('gameOverMessage');
+const announcer = element('announcer');
+const newGameDialog = /** @type {HTMLDialogElement} */ (element('newGameDialog'));
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
@@ -213,11 +214,20 @@ function syncControls() {
   scoreLabel.textContent = `Score: ${gameManager.score}`;
   highScoreLabel.textContent = `High Score: ${highScore}`;
   gameOverMessage.hidden = !gameEnded;
-  // New Game also gives up a paused game; Continue only follows game over.
+  // Screen readers hear it from a status message, which reads out changes.
+  announcer.textContent = gameEnded ? 'Game Over' : '';
+  // New Game also gives up a paused game, once confirmed; Continue only
+  // follows game over.
   menuControls.hidden = !isGameOver && !paused;
   const canContinue = isGameOver && isSessionSaved;
   continueButton.hidden = !canContinue;
   keyHint.textContent = paused ? 'Return: New Game    P: Resume' : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  // The engine asks before New Game gives up a paused game, and this dialog
+  // shows the question.
+  if (gameManager.isConfirmingNewGame !== newGameDialog.open) {
+    if (gameManager.isConfirmingNewGame) newGameDialog.showModal();
+    else newGameDialog.close();
+  }
   playPauseButton.hidden = isGameOver;
   playPauseButton.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;';
   playPauseButton.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
@@ -267,11 +277,11 @@ function requestWakeLock() {
 let lastSnapshot = '';
 
 // What each canvas showed when it was last drawn, so frames where nothing
-// moved skip drawing. The engine replaces the current piece whenever the
-// board changes (lock, line clear, hold, new game, continue) and replaces its
-// position object on every move, so comparing references is enough. Game
-// over hides the pieces without changing them, so that is noted too.
-/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, gameBoard?: Board, showsPieces?: boolean }} */
+// moved skip drawing. The engine counts every change to the locked blocks in
+// boardVersion, and makes a new position object whenever the piece moves, so
+// comparing these is enough. Game over hides the pieces without changing
+// them, so that is noted too.
+/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, boardVersion?: number, showsPieces?: boolean }} */
 let drawnBoard = {};
 /** @type {Map<HTMLCanvasElement, Tetromino | null>} */
 const drawnPreviews = new Map();
@@ -281,7 +291,7 @@ function boardChanged() {
   return piece !== drawnBoard.piece
     || piece.position !== drawnBoard.position
     || piece.rotationState !== drawnBoard.rotationState
-    || gameManager.gameBoard !== drawnBoard.gameBoard
+    || gameManager.boardVersion !== drawnBoard.boardVersion
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
@@ -293,7 +303,7 @@ function drawIfChanged() {
       piece,
       position: piece.position,
       rotationState: piece.rotationState,
-      gameBoard: gameManager.gameBoard,
+      boardVersion: gameManager.boardVersion,
       showsPieces: showsPieces()
     };
   }
@@ -307,7 +317,7 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drawnPreviews.set(canvas, tetromino);
   }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}`;
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}`;
   if (snapshot !== lastSnapshot) {
     lastSnapshot = snapshot;
     syncControls();
@@ -485,7 +495,35 @@ boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
 heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
+// The hold box is a button to keyboards and screen readers too. A click
+// leaves focus where it was, so only the keyboard gives the hold box focus,
+// and only then do Enter and Space hold instead of their game actions.
+// (Checking :focus-visible would not do: any key press makes it match.)
+// Hold only works while playing, so otherwise they keep their game actions.
+heldCanvas.addEventListener('mousedown', event => event.preventDefault());
+heldCanvas.addEventListener('keydown', event => {
+  if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
+  event.preventDefault();
+  event.stopPropagation();
+  gameManager.handleAction(PlayerAction.hold);
+});
 element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+// The New Game question. Every answer goes straight to the engine, and the
+// dialog closes once the engine stops asking, so the very next key already
+// finds the question answered; the dialog's close event comes too late for
+// that. Cancel, a tap on the dimmed page around the dialog, and the browser's
+// close requests (such as Android's back gesture) answer no, and so does
+// Escape, through the input controller. Listening for clicks on the dialog
+// also keeps Safari from taking quick taps there as a double tap to zoom.
+element('confirmNewGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('cancelNewGameButton').addEventListener('click', () => gameManager.cancelNewGame());
+newGameDialog.addEventListener('click', event => {
+  if (event.target === newGameDialog) gameManager.cancelNewGame();
+});
+newGameDialog.addEventListener('cancel', event => {
+  event.preventDefault();
+  gameManager.cancelNewGame();
+});
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());
 

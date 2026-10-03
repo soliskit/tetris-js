@@ -6,13 +6,15 @@
 // keys are aliases for WASD.
 // Gamepad (standard mapping): stick or directional pad moves and soft drops,
 // A or pad up drop, B or right shoulder rotate, left shoulder rotate
-// counterclockwise, X hold, Y continue, Menu/Start pause or new game.
+// counterclockwise, X hold, Y continue, Menu/Start pause or new game,
+// View/Select new game. While the pause screen asks to confirm New Game, A
+// confirms and B cancels.
 
 import { GameState, PlayerAction } from './gameState.js';
 
 /** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
 /** @typedef {import('./gameManager.js').GameManager} GameManager */
-/** @typedef {Pick<GameManager, 'state' | 'handleAction' | 'togglePause' | 'softDrop'>} Controllable */
+/** @typedef {Pick<GameManager, 'state' | 'isConfirmingNewGame' | 'handleAction' | 'togglePause' | 'softDrop' | 'cancelNewGame'>} Controllable */
 
 const DAS_DELAY_MS = 167;
 const ARR_INTERVAL_MS = 33;
@@ -38,10 +40,11 @@ const KEY_ACTIONS = {
 };
 
 // Standard gamepad mapping button indices.
-const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, menu: 9, up: 12, down: 13, left: 14, right: 15 };
+const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, view: 8, menu: 9, up: 12, down: 13, left: 14, right: 15 };
 /** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
+  ['view', PlayerAction.newGame],
   ['b', PlayerAction.rotate],
   ['rb', PlayerAction.rotate],
   ['lb', PlayerAction.rotateCounterclockwise],
@@ -113,6 +116,20 @@ export class InputController {
     if (pressed) this.heldKeys.add(key);
     else this.heldKeys.delete(key);
 
+    // While the pause screen asks to confirm New Game, keys belong to its
+    // dialog and press its buttons, except a held key repeating: the Enter
+    // that asked must not go on to answer. Escape answers no here rather
+    // than leaving the dialog to the browser, so the game hears of it at once.
+    if (this.gameManager.isConfirmingNewGame) {
+      if (event.repeat) {
+        event.preventDefault();
+      } else if (pressed && key === 'Escape') {
+        event.preventDefault();
+        this.gameManager.cancelNewGame();
+      }
+      return;
+    }
+
     const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyS' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
     if (!handled) return;
     event.preventDefault();
@@ -158,6 +175,14 @@ export class InputController {
   processInput(pressed, xAxis, yAxis) {
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
+
+    // While the pause screen asks to confirm New Game, A confirms and B
+    // cancels; nothing else acts, so steering the stick cannot answer.
+    if (this.gameManager.isConfirmingNewGame) {
+      if (newPresses.has('a')) this.gameManager.handleAction(PlayerAction.newGame);
+      else if (newPresses.has('b')) this.gameManager.cancelNewGame();
+      return;
+    }
 
     if (newPresses.has('menu')) {
       if (this.gameManager.state === GameState.gameOver) {

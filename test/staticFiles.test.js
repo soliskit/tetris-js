@@ -49,7 +49,7 @@ test('the page preloads exactly the modules script.js imports, directly or not [
   assert.deepEqual([...preloaded].sort(), [...imported].sort());
 });
 
-test('the page ids used by script.js all exist, and canvases are canvases [APP-3]', () => {
+test('the page ids used by script.js all exist, canvases are canvases, and the dialog is a dialog [APP-3]', () => {
   const script = read('script.js');
   const ids = [...script.matchAll(/\belement\('([^']+)'\)/g)].map(match => match[1]);
   const canvasIds = [...script.matchAll(/\bcanvasElement\('([^']+)'\)/g)].map(match => match[1]);
@@ -57,6 +57,7 @@ test('the page ids used by script.js all exist, and canvases are canvases [APP-3
   assert.ok(ids.length >= 7 && canvasIds.length === 5, `${ids.length} elements, ${canvasIds.length} canvases`);
   for (const id of ids) assert.match(html, new RegExp(`id="${id}"`), id);
   for (const id of canvasIds) assert.match(html, new RegExp(`<canvas id="${id}"`), `${id} is a canvas`);
+  assert.match(html, /<dialog id="newGameDialog"/, 'newGameDialog is a dialog');
   assert.doesNotMatch(script, /getElementById\('/, 'elements are looked up through element() or canvasElement()');
 });
 
