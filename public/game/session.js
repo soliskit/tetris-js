@@ -19,6 +19,7 @@ import { allPieces } from './tetrominoFactory.js';
  * @property {Tetromino[]} nextTetrominos
  * @property {Tetromino | null} heldTetromino
  * @property {boolean} canHoldTetromino
+ * @property {Tetromino[]} bag The pieces left in the shuffled bag, dealt next.
  */
 
 const UPCOMING_COUNT = 3;
@@ -35,7 +36,9 @@ export function serializeSession(game) {
     currentTetromino: game.currentTetromino,
     nextTetrominos: game.nextTetrominos,
     heldTetromino: game.heldTetromino,
-    canHoldTetromino: game.canHoldTetromino
+    canHoldTetromino: game.canHoldTetromino,
+    // By color: the type is all a piece in the bag needs.
+    bag: (game.factory.bag ?? []).map(piece => piece.color)
   });
 }
 
@@ -125,6 +128,17 @@ function parseWaitingPiece(data, columns) {
   return pieceWithColor(data.color)?.spawned(columns) ?? null;
 }
 
+// The pieces left in the bag, by color. A bag holds each piece at most once.
+/**
+ * @param {unknown} colors
+ * @returns {Tetromino[] | null}
+ */
+function parseBag(colors) {
+  if (!Array.isArray(colors) || new Set(colors).size !== colors.length) return null;
+  const pieces = colors.map(pieceWithColor);
+  return pieces.every(piece => piece !== null) ? pieces : null;
+}
+
 // Returns the saved game as validated game state, or null when the text is
 // missing or anything in it is invalid.
 /**
@@ -162,6 +176,9 @@ export function parseSession(text, { rows, columns }) {
     if (!heldTetromino) return null;
   }
   if (typeof data.canHoldTetromino !== 'boolean') return null;
+  // Saves from before the bag was saved carry on with a fresh one.
+  const bag = data.bag === undefined ? [] : parseBag(data.bag);
+  if (!bag) return null;
 
   return {
     gameBoard,
@@ -170,6 +187,7 @@ export function parseSession(text, { rows, columns }) {
     currentTetromino,
     nextTetrominos,
     heldTetromino,
-    canHoldTetromino: data.canHoldTetromino
+    canHoldTetromino: data.canHoldTetromino,
+    bag
   };
 }
