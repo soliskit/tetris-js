@@ -237,11 +237,11 @@ test('the high score is saved when beaten and kept when not [SCO-3]', () => {
   const { game } = newGame({ storage, factory: fixedFactory(cyan) });
   fillRows(game, [19], [9]);
   dropVerticalIIntoColumn9(game);
-  assert.equal(storage.getItem('highScore'), '100');
+  assert.equal(storage.getItem('tetris.highScore'), '100');
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 100);
 
   const best = createMemoryStorage();
-  best.setItem('highScore', '5000');
+  best.setItem('tetris.highScore', '5000');
   const { game: second } = newGame({ storage: best, factory: fixedFactory(cyan) });
   fillRows(second, [19], [9]);
   dropVerticalIIntoColumn9(second);
@@ -252,8 +252,20 @@ test('the high score is saved when beaten and kept when not [SCO-3]', () => {
 test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => {
   const storage = createMemoryStorage();
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
-  storage.setItem('highScore', 'not a number');
+  storage.setItem('tetris.highScore', 'not a number');
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+});
+
+test('the game stores everything under names of its own [APP-6]', () => {
+  const storage = createMemoryStorage();
+  const written = new Set();
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => { written.add(key); setItem(key, value); };
+  const { game } = newGame({ storage, factory: fixedFactory(cyan) });
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  game.togglePause();
+  assert.deepEqual([...written].sort(), ['tetris.highScore', 'tetris.isSessionSaved', 'tetris.savedGameSession']);
 });
 
 test('the engine reports every action and timer, so the page draws only then [DSP-3]', () => {
@@ -274,7 +286,7 @@ test('checking for a saved game reads storage once, not on every frame [DSP-3]',
   const getItem = storage.getItem;
   let reads = 0;
   storage.getItem = key => {
-    if (key === 'isSessionSaved') reads += 1;
+    if (key === 'tetris.isSessionSaved') reads += 1;
     return getItem(key);
   };
   const game = new GameManager({ scheduler: createFakeScheduler(), storage, factory: fixedFactory(yellow) });
@@ -304,12 +316,12 @@ test('the session is saved after a line clear but not after a plain lock [STA-4]
   const { game, storage } = newGame({ factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.drop);
   assert.equal(game.isSessionSaved, false);
-  assert.equal(storage.getItem('savedGameSession'), null);
+  assert.equal(storage.getItem('tetris.savedGameSession'), null);
   fillRows(game, [19], [9]);
   dropVerticalIIntoColumn9(game);
   assert.equal(game.score, 100);
   assert.equal(game.isSessionSaved, true);
-  assert.ok(JSON.parse(storage.getItem('savedGameSession')).gameBoard);
+  assert.ok(JSON.parse(storage.getItem('tetris.savedGameSession')).gameBoard);
 });
 
 // Lock delay
@@ -610,9 +622,9 @@ test('continuing a save from before the bag was saved starts a fresh bag [PCE-5]
   const storage = createMemoryStorage();
   const { game } = newGame({ storage, factory: new TetrominoFactory(seededRandom(5)) });
   game.handleAction(PlayerAction.pause);
-  const data = JSON.parse(storage.getItem('savedGameSession'));
+  const data = JSON.parse(storage.getItem('tetris.savedGameSession'));
   delete data.bag;
-  storage.setItem('savedGameSession', JSON.stringify(data));
+  storage.setItem('tetris.savedGameSession', JSON.stringify(data));
 
   // Its constructor has already dealt from this bag.
   const restored = new GameManager({ scheduler: createFakeScheduler(), storage, factory: new TetrominoFactory(seededRandom(6)) });
@@ -630,8 +642,8 @@ test('continue without a saved game stays at game over [STA-4]', () => {
 
 test('continue with a corrupted save stays at game over and forgets it [STA-4] [SAF-1]', () => {
   const storage = createMemoryStorage();
-  storage.setItem('isSessionSaved', 'true');
-  storage.setItem('savedGameSession', '{not json');
+  storage.setItem('tetris.isSessionSaved', 'true');
+  storage.setItem('tetris.savedGameSession', '{not json');
   const game = new GameManager({ scheduler: createFakeScheduler(), storage });
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.gameOver);
@@ -661,7 +673,7 @@ test('topping out stops all timers [STA-3]', () => {
 // Storage failures
 
 test('a failing session save does not break pausing [SAF-2]', () => {
-  const { game } = newGame({ storage: failingStorage(['savedGameSession']) });
+  const { game } = newGame({ storage: failingStorage(['tetris.savedGameSession']) });
   game.handleAction(PlayerAction.pause);
   assert.equal(game.state, GameState.paused);
   assert.equal(game.isSessionSaved, false);
@@ -732,9 +744,9 @@ test('saves use the storage keys of earlier versions, so saves on devices keep w
   const { game, storage } = newGame({ factory: fixedFactory(cyan) });
   fillRows(game, [19], [9]);
   dropVerticalIIntoColumn9(game);
-  assert.equal(storage.getItem('highScore'), '100');
-  assert.equal(storage.getItem('isSessionSaved'), 'true');
-  assert.ok(storage.getItem('savedGameSession'));
+  assert.equal(storage.getItem('tetris.highScore'), '100');
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true');
+  assert.ok(storage.getItem('tetris.savedGameSession'));
 });
 
 test('by default gravity runs on the browser timers, and a soft drop replaces the pending tick [PLY-2] [PLY-3]', t => {
@@ -784,7 +796,7 @@ test('if a save fails after an earlier one worked, the old save is no longer off
   const setItem = storage.setItem;
   let savesFail = false;
   storage.setItem = (key, value) => {
-    if (savesFail && key === 'savedGameSession') throw new Error('QuotaExceededError');
+    if (savesFail && key === 'tetris.savedGameSession') throw new Error('QuotaExceededError');
     setItem(key, value);
   };
   const { game } = newGame({ storage });
