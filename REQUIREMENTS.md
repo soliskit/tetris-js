@@ -75,9 +75,9 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | DSP-2 | Canvases draw at the screen's full pixel resolution and redraw correctly after the window changes size. |
 | DSP-3 | While nothing changes, nothing is redrawn, storage is not read again, and the page does not wake up every frame, to save battery. |
 | DSP-4 | The page cannot be zoomed, scrolled by touch, or have its text selected. |
-| DSP-5 | The score, high score, buttons and hints always match the game state. |
-| DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Saved games keep the usual colors. |
-| DSP-7 | The screen stays on while playing. Pausing or game over lets it sleep again. If the wake lock is unsupported or refused, the game plays normally. |
+| DSP-5 | The score, high score, buttons and hints always match the game state, including changes made in another tab. |
+| DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Each canvas gets its drawing context as the page starts, so nothing else can change its color space first, and draws vivid colors only if it really is Display P3. Saved games keep the usual colors. |
+| DSP-7 | The screen stays on while playing. Pausing or game over lets it sleep again. If the system takes the wake lock back during play, the game asks for it again. If the wake lock is unsupported or refused, the game plays normally. |
 
 ## App
 
