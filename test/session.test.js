@@ -1,10 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
-import { PlayerAction } from '../public/game/gameState.js';
+import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
+import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { parseSession, serializeSession } from '../public/game/session.js';
 import { PieceColors, TetrominoFactory } from '../public/game/tetrominoFactory.js';
-import { newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
+import { createFakeScheduler, newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
 
 const SIZE = { rows: 20, columns: 10 };
 
@@ -149,3 +151,46 @@ for (const [name, corrupt] of Object.entries(corruptions)) {
     assert.equal(parseSession(text, SIZE), null);
   });
 }
+
+// Saved games exactly as released versions stored them, one per supported
+// format (see test/fixtures/README.md). Each is put where the game keeps its
+// save and continued, as a player would, so the storage names are part of
+// what is checked.
+const savedGameFormats = [
+  ['the current format', 'saved-game-current.json', saved => !('level' in saved)],
+  ['the earlier format that also stored the level', 'saved-game-with-level.json', saved => saved.level === 1]
+];
+
+for (const [format, file, isThatFormat] of savedGameFormats) {
+  test(`a saved game in ${format}, as a released version stored it, still continues [STA-6] [STA-4]`, () => {
+    const text = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
+    const saved = JSON.parse(text);
+    assert.ok(isThatFormat(saved), `${file} is in ${format}`);
+    const storage = createMemoryStorage();
+    storage.setItem('tetris.savedGameSession', text);
+    storage.setItem('tetris.isSessionSaved', 'true');
+    const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+    assert.equal(game.isSessionSaved, true, 'Continue is offered');
+    game.handleAction(PlayerAction.continueGame);
+    assert.equal(game.state, GameState.paused);
+    assert.equal(game.score, saved.score);
+    assert.deepEqual(game.gameBoard, saved.gameBoard);
+    assert.equal(game.currentTetromino.color, saved.currentTetromino.color);
+    assert.equal(game.currentTetromino.rotationState, saved.currentTetromino.rotationState);
+    assert.deepEqual({ ...game.currentTetromino.position }, saved.currentTetromino.position);
+    assert.deepEqual(game.nextTetrominos.map(piece => piece.color), saved.nextTetrominos.map(piece => piece.color));
+    assert.equal(game.heldTetromino?.color, saved.heldTetromino.color);
+    assert.equal(game.canHoldTetromino, saved.canHoldTetromino);
+    assert.deepEqual(game.factory.bag.map(piece => piece.color), saved.bag);
+  });
+}
+
+test('a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]', () => {
+  const storage = createMemoryStorage();
+  storage.setItem('savedGameSession', fs.readFileSync(new URL('./fixtures/saved-game-current.json', import.meta.url), 'utf8'));
+  storage.setItem('isSessionSaved', 'true');
+  const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+  assert.equal(game.isSessionSaved, false, 'Continue is not offered');
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+});
