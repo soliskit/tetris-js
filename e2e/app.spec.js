@@ -5,7 +5,7 @@ import express from 'express';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { boardCells, expectLabel, fakeWakeLock, filledCount, isChromium, trackErrors, wakeLockCounts } from './helpers.js';
+import { PieceColors, boardCells, expectLabel, fakeWakeLock, filledCount, isChromium, trackErrors, wakeLockCounts, wakeLockRequests } from './helpers.js';
 
 test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => {
   await page.addInitScript(() => {
@@ -139,26 +139,61 @@ test('after the first visit the game opens from the cache, and a new version arr
   }
 });
 
-test('pieces are drawn in the Display P3 color space, so they look more vivid [DSP-6]', async ({ page }) => {
-  await page.goto('/');
-  await page.keyboard.press('Enter');
-  await expect.poll(() => filledCount(page)).toBe(4);
-  const colorSpaces = await page.evaluate(() => [...document.querySelectorAll('canvas')].map(canvas => canvas.getContext('2d').getContextAttributes().colorSpace));
-  expect(colorSpaces).toEqual(Array(5).fill('display-p3'));
-  // The same pixel read in sRGB differs: the color lies outside sRGB.
-  const [p3, srgb] = await page.evaluate(() => {
+// The color space each canvas draws in, and whether this browser has Display P3 canvases at all.
+function colorSpaces(page) {
+  return page.evaluate(() => {
+    const space = context => context.getImageData(0, 0, 1, 1).colorSpace;
+    return {
+      canvases: [...document.querySelectorAll('canvas')].map(canvas => space(canvas.getContext('2d'))),
+      supported: space(document.createElement('canvas').getContext('2d', { colorSpace: 'display-p3' })) === 'display-p3'
+    };
+  });
+}
+
+// The first piece pixel on the board, read in the canvas color space and in sRGB.
+function firstPiecePixel(page) {
+  return page.evaluate(() => {
     const canvas = document.getElementById('tetris');
     const context = canvas.getContext('2d');
     const size = canvas.width / 10;
     for (let row = 0; row < 20; row++) for (let column = 0; column < 10; column++) {
       const x = Math.floor((column + 0.5) * size);
       const y = Math.floor((row + 0.5) * size);
-      const p3 = [...context.getImageData(x, y, 1, 1).data];
-      if (p3[3] > 200) return [p3, [...context.getImageData(x, y, 1, 1, { colorSpace: 'srgb' }).data]];
+      const own = [...context.getImageData(x, y, 1, 1).data];
+      if (own[3] > 200) return { own, srgb: [...context.getImageData(x, y, 1, 1, { colorSpace: 'srgb' }).data] };
     }
-    return [];
+    return null;
   });
-  expect(srgb).not.toEqual(p3);
+}
+
+const hex = ([red, green, blue]) => '#' + [red, green, blue].map(value => value.toString(16).padStart(2, '0')).join('').toUpperCase();
+
+test('pieces are drawn in the Display P3 color space where the browser has it, so they look more vivid [DSP-6]', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  const { canvases, supported } = await colorSpaces(page);
+  expect(canvases).toEqual(Array(5).fill(supported ? 'display-p3' : 'srgb'));
+  const { own, srgb } = await firstPiecePixel(page);
+  expect(Object.values(PieceColors)).toContain(hex(own));
+  // In P3 the same values lie outside sRGB, so reading them as sRGB differs.
+  if (supported) expect(srgb).not.toEqual(own);
+});
+
+test('without Display P3 canvases, pieces keep their usual colors [DSP-6]', async ({ page }) => {
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (type, options) {
+      return getContext.call(this, type, { ...options, colorSpace: 'srgb' });
+    };
+  });
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  expect((await colorSpaces(page)).canvases).toEqual(Array(5).fill('srgb'));
+  const { own, srgb } = await firstPiecePixel(page);
+  expect(Object.values(PieceColors)).toContain(hex(own));
+  expect(srgb).toEqual(own);
 });
 
 test('the screen stays on while playing, and may sleep when paused or after game over [DSP-7]', async ({ page }) => {
@@ -181,18 +216,19 @@ test('the screen stays on while playing, and may sleep when paused or after game
 test('a wake lock granted after play stopped, or after a newer request, is let go [DSP-7]', async ({ page }) => {
   await fakeWakeLock(page, 'hold');
   await page.goto('/');
+  // Each step waits for the page to act on it, so no two land in one frame.
   await page.keyboard.press('Enter');
-  await expectLabel(page, 'Pause');
+  await expect.poll(() => wakeLockRequests(page)).toBe(1);
   await page.keyboard.press('KeyP');
   await expectLabel(page, 'Resume');
   await page.keyboard.press('KeyP');
-  await expectLabel(page, 'Pause');
+  await expect.poll(() => wakeLockRequests(page)).toBe(2);
   await page.evaluate(() => window.grantWakeLocks());
   await expect.poll(() => wakeLockCounts(page)).toEqual({ granted: 2, held: 1 });
   await page.keyboard.press('KeyP');
   await expectLabel(page, 'Resume');
   await page.keyboard.press('KeyP');
-  await expectLabel(page, 'Pause');
+  await expect.poll(() => wakeLockRequests(page)).toBe(3);
   await page.keyboard.press('KeyP');
   await expectLabel(page, 'Resume');
   await page.evaluate(() => window.grantWakeLocks());

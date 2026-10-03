@@ -52,6 +52,9 @@ function sizeCanvas(canvas, width, height) {
   // Resizing resets the context, so the scale is set again here. A canvas
   // always has a 2d context unless another kind was requested first.
   const context = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { colorSpace: 'display-p3' }));
+  // A browser without Display P3 canvases gives an sRGB one, where P3
+  // colors would be clipped, so pieces keep their usual colors there.
+  drawsInP3 = context.getImageData(0, 0, 1, 1).colorSpace === 'display-p3';
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   canvasSizes.set(canvas, { context, width, height });
 }
@@ -61,9 +64,11 @@ function sizeCanvas(canvas, width, height) {
 // gamut makes them more vivid on iPhone screens. Maps hex to P3 color.
 /** @type {Map<string, string>} */
 const vividColors = new Map();
+let drawsInP3 = false;
 
 /** @param {string} hex A piece color, #RRGGBB. */
 function vivid(hex) {
+  if (!drawsInP3) return hex;
   let color = vividColors.get(hex);
   if (!color) {
     const [red, green, blue] = [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16) / 255);

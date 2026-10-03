@@ -167,9 +167,11 @@ export async function fakeWakeLock(page, mode) {
       return;
     }
     window.wakeLocks = [];
+    window.wakeLockRequests = 0;
     const pending = [];
     window.grantWakeLocks = () => pending.splice(0).forEach(grant => grant());
     const request = type => new Promise((resolve, reject) => {
+      window.wakeLockRequests++;
       if (mode === 'refuse') {
         reject(new DOMException('Wake lock refused', 'NotAllowedError'));
         return;
@@ -181,6 +183,11 @@ export async function fakeWakeLock(page, mode) {
     });
     Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true });
   }, mode);
+}
+
+// How many wake locks the fake was asked for.
+export function wakeLockRequests(page) {
+  return page.evaluate(() => window.wakeLockRequests);
 }
 
 // How many wake locks the fake has granted, and how many are still held.
