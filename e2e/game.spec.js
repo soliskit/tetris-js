@@ -122,7 +122,8 @@ test.describe('start and game over', () => {
       ['Enter on Cancel', () => page.keyboard.press('Enter')],
       ['Cancel', () => cancel.click()],
       ['Escape', () => page.keyboard.press('Escape')],
-      ['a click outside it', () => page.mouse.click(5, 5)]
+      ['a click outside it', () => page.mouse.click(5, 5)],
+      ['a close request from the browser, such as the back gesture', () => dialog.evaluate(element => element.dispatchEvent(new Event('cancel', { cancelable: true })))]
     ]) {
       await page.keyboard.press('Enter');
       await expect(dialog, how).toBeVisible();

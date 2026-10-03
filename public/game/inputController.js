@@ -118,9 +118,15 @@ export class InputController {
 
     // While the pause screen asks to confirm New Game, keys belong to its
     // dialog and press its buttons, except a held key repeating: the Enter
-    // that asked must not go on to answer.
+    // that asked must not go on to answer. Escape answers no here rather
+    // than leaving the dialog to the browser, so the game hears of it at once.
     if (this.gameManager.isConfirmingNewGame) {
-      if (event.repeat) event.preventDefault();
+      if (event.repeat) {
+        event.preventDefault();
+      } else if (pressed && key === 'Escape') {
+        event.preventDefault();
+        this.gameManager.cancelNewGame();
+      }
       return;
     }
 
