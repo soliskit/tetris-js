@@ -57,6 +57,53 @@ test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async 
   await touch.up();
 });
 
+// Purple cells in the bottom two rows, where a hard dropped T lands on an empty board.
+const landed = async page => (await cellsOf(page, PieceColors.purple)).filter(([r]) => r >= 18);
+
+test('a quick flick down hard drops the piece at once [INP-6] [PLY-4]', async ({ page }) => {
+  await playSaved(page, { piece: PieceColors.purple, position: { row: 2, column: 3 } });
+  const touch = await boardTouch(page);
+  await touch.down(4, 6);
+  await touch.flick(0, 4);
+  await expect.poll(() => landed(page)).toHaveLength(4);
+  await expect.poll(async () => (await cellsOf(page, PieceColors.purple)).length).toBe(8); // and the next piece is in
+});
+
+test('a drag down that comes to rest before lifting only soft drops [INP-6] [INP-5]', async ({ page }) => {
+  await playSaved(page, { piece: PieceColors.purple, position: { row: 2, column: 3 } });
+  const touch = await boardTouch(page);
+  await touch.down(4, 6);
+  await touch.moveBy(0, 3.2, 12);
+  await touch.up();
+  await page.waitForTimeout(150);
+  expect(await landed(page)).toHaveLength(0);
+  expect(minRow(await cellsOf(page, PieceColors.purple))).toBeLessThan(10);
+});
+
+test('a flick shorter than a cell, or more sideways than down, does not hard drop [INP-6]', async ({ page }) => {
+  await playSaved(page, { piece: PieceColors.purple, position: { row: 2, column: 3 } });
+  const touch = await boardTouch(page);
+  await touch.down(4, 6);
+  await touch.flick(0, 0.6);
+  await touch.down(4, 6);
+  await touch.flick(2.4, 1.2);
+  await page.waitForTimeout(150);
+  expect(await landed(page)).toHaveLength(0);
+  expect(await cellsOf(page, PieceColors.purple)).toHaveLength(4);
+});
+
+test('a flick only hard drops the piece that was falling when it began [INP-6]', async ({ page }) => {
+  await playSaved(page, { piece: PieceColors.purple, position: { row: 17, column: 3 } });
+  const touch = await boardTouch(page);
+  await touch.down(4, 10);
+  await touch.moveBy(0, 1.2, 3); // onto the floor, where it locks
+  await expect.poll(async () => (await cellsOf(page, PieceColors.purple)).filter(([r]) => r < 4).length, { timeout: 3000 }).toBe(4);
+  await touch.flick(0, 4);
+  await page.waitForTimeout(150);
+  expect(await cellsOf(page, PieceColors.purple)).toHaveLength(8);
+  expect((await cellsOf(page, PieceColors.purple)).filter(([r]) => r < 6)).toHaveLength(4);
+});
+
 test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,

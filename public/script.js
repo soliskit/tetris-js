@@ -4,11 +4,13 @@
 import { GameManager } from './game/gameManager.js';
 import { GameState, PlayerAction } from './game/gameState.js';
 import { InputController } from './game/inputController.js';
+import { FLICK_WINDOW_MS, isFlickDown } from './game/gestures.js';
 
 /** @typedef {import('./game/tetromino.js').Tetromino} Tetromino */
 /** @typedef {import('./game/position.js').Position} Position */
 /** @typedef {import('./game/gameState.js').Board} Board */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
+/** @typedef {import('./game/gestures.js').PointerSample} PointerSample */
 
 const gameManager = new GameManager({ onChange: requestDraw });
 new InputController(gameManager);
@@ -325,9 +327,10 @@ function watchPixelRatio() {
 watchPixelRatio();
 
 // Touch and mouse gestures, ported from the DragGesture in ContentView.swift:
-// drag sideways to move by whole cells, drag down to soft drop, tap to rotate.
-// The piece always stays on the grid and in step with the finger, and a
-// gesture only ever controls the piece that was falling when it started.
+// drag sideways to move by whole cells, drag down to soft drop, tap to rotate,
+// and flick down to hard drop. The piece always stays on the grid and in step
+// with the finger, and a gesture only ever controls the piece that was falling
+// when it started.
 
 // Fingers wobble a few pixels during a tap, so allow that before a touch
 // counts as a drag.
@@ -343,8 +346,13 @@ const drag = {
   moved: false,
   cellOffset: 0,
   rowOffset: 0,
-  blocked: 0
+  blocked: 0,
+  /** @type {PointerSample[]} Where the finger has been lately, for spotting a flick. */
+  samples: []
 };
+
+/** @param {PointerEvent} event */
+const sampleOf = event => ({ time: event.timeStamp, x: event.clientX, y: event.clientY });
 
 function resetDragState() {
   drag.pointerId = null;
@@ -353,6 +361,7 @@ function resetDragState() {
   drag.cellOffset = 0;
   drag.rowOffset = 0;
   drag.blocked = 0;
+  drag.samples = [];
 }
 
 function cellWidth() {
@@ -376,11 +385,14 @@ boardCanvas.addEventListener('pointerdown', event => {
   drag.piece = gameManager.currentTetromino;
   drag.startX = event.clientX;
   drag.startY = event.clientY;
+  drag.samples = [sampleOf(event)];
   boardCanvas.setPointerCapture(event.pointerId);
 });
 
 boardCanvas.addEventListener('pointermove', event => {
   if (event.pointerId !== drag.pointerId || !canvasSizes.has(boardCanvas)) return;
+  drag.samples = drag.samples.filter(sample => sample.time >= event.timeStamp - FLICK_WINDOW_MS);
+  drag.samples.push(sampleOf(event));
   // The piece locked or was held mid gesture: ignore the rest of this drag
   // rather than moving or dropping the next piece.
   if (gameManager.currentTetromino !== drag.piece) return;
@@ -427,8 +439,12 @@ boardCanvas.addEventListener('pointermove', event => {
 /** @param {PointerEvent} event */
 function endDrag(event) {
   if (event.pointerId !== drag.pointerId) return;
-  const isTap = !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
-  if (isTap) gameManager.handleAction(PlayerAction.rotate);
+  const ownPiece = event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
+  if (ownPiece && !drag.moved) {
+    gameManager.handleAction(PlayerAction.rotate);
+  } else if (ownPiece && isFlickDown(drag.samples, sampleOf(event), cellWidth())) {
+    gameManager.handleAction(PlayerAction.drop);
+  }
   resetDragState();
 }
 

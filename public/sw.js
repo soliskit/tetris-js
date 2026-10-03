@@ -15,6 +15,7 @@ const APP_SHELL = [
   'icons/apple-touch-icon.png',
   'game/gameManager.js',
   'game/gameState.js',
+  'game/gestures.js',
   'game/inputController.js',
   'game/position.js',
   'game/session.js',

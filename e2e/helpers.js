@@ -4,6 +4,7 @@
 import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
 import { allPieces } from '../public/game/tetrominoFactory.js';
+import { FLICK_WINDOW_MS } from '../public/game/gestures.js';
 
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 
@@ -140,7 +141,17 @@ export async function boardTouch(page) {
         await send('touchMove', last);
       }
     },
-    async up() { await send('touchEnd'); },
+    // Comes to rest before lifting, like a finger ending a drag, so the
+    // release never counts as a flick.
+    async up() {
+      await page.waitForTimeout(FLICK_WINDOW_MS + 50);
+      await send('touchEnd');
+    },
+    // A quick flick: a fast move, lifting while still moving.
+    async flick(columns, rows) {
+      await this.moveBy(columns, rows, 2);
+      await send('touchEnd');
+    },
     // Chromium only: WebKit cannot simulate a pinch.
     async pinch(scaleFactor) {
       await cdp.send('Input.synthesizePinchGesture', { x: box.x + box.width / 2, y: box.y + cell * 2, scaleFactor });

@@ -66,6 +66,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. Game keys do not trigger the browser's default action (such as scrolling). |
 | INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over. Buttons act once per press. The stick moves with the same repeat timing as keys; stick down soft drops every 50 ms. A resting stick does not cancel keyboard moves. Disconnecting releases everything. |
 | INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. Tapping the hold box holds. |
+| INP-6 | Touch: a quick flick down on the board hard drops the piece. In the last 100 ms before the finger lifts it must cover at least one cell, more down than sideways, at 1 px per ms or faster. A drag that is slower, or comes to rest before lifting, only soft drops. A flick only drops the piece that was falling when the gesture began. |
 
 ## Display
 
