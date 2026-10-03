@@ -1,0 +1,39 @@
+# Audit ledger
+
+Every finding raised against the game, and every decision about how it is verified, with the evidence behind it and where it was resolved. A finding is only closed by evidence: a reproduction, a test, a measurement, or a requirement it does or does not break. Rejected findings stay here, so the same question is not investigated twice.
+
+Pull requests that confirm, fix or reject a finding, or make a verification decision, update this file in the same pull request (see the review questions in `.github/pull_request_template.md`). Requirement IDs refer to [REQUIREMENTS.md](REQUIREMENTS.md).
+
+## Findings
+
+| ID | Raised | Finding | Status | Evidence and resolution |
+| --- | --- | --- | --- | --- |
+| F1 | 2026-10-03 | New Game dialog answers raced the dialog's close event: a key pressed right after cancelling still went to the question | Fixed | CI failed on it in WebKit and in Chromium at iPhone size; reproduced locally under load (1 run in 30). Answers now reach the engine at once. Fixed before merge in PR #32 |
+| F2 | 2026-10-03 | Gamepad: Menu or View pressed in the same frame as another button let both act (Menu and A at game over hard dropped the new game's first piece; View and A on the pause screen cancelled the question it had just asked) | Fixed | Reproduced against the real input controller. Menu and View now act alone (INP-4). PR #34, an Intentional change |
+| F3 | 2026-10-03 | The O piece has four rotation states | Rejected | It has one: its wall kick table has one row, so one state is built. `test/game.test.js` checks it |
+| F4 | 2026-10-03 | Rotating a resting O piece resets the lock delay | Rejected | Its rotation state never changes, so no reset happens. Tested by "pressing rotate when the piece cannot turn does not extend the lock delay [PLY-6]" |
+| F5 | 2026-10-03 | A cancelled lock delay timer can still fire and lock the piece | Rejected | The browser's `clearTimeout` never runs a cleared timer (HTML standard), the test scheduler deletes cleared timers, and SAF-4 checks that timers run only while playing. The scheduler and random source are trusted test controls, not untrusted input |
+| F6 | 2026-10-03 | A cancelled gravity timer can still fire and double the gravity | Rejected | As F5; also, starting gravity stops the previous timer first |
+| F7 | 2026-10-03 | A key let go while Ctrl is held stays held | Rejected | Only key presses with a modifier are ignored; releases still clear the key. Reproduced the reported sequence: the key is released |
+| F8 | 2026-10-03 | On a Mac, a key let go while Cmd is held may stay held, because macOS sends no release | Unconfirmed | Cannot be reproduced off a Mac. INP-3 only covers keys pressed with a modifier. If confirmed, fixing it is an Intentional change to INP-3. Low relevance: the supported platform is the iPhone (APP-4) |
+| F9 | 2026-10-03 | A saved game can hold all seven pieces in its bag | Rejected | True but not a bug: normal play never saves more than six (largest in 28,356 saves of seeded play), a seven piece bag loads and breaks nothing, and no requirement makes it invalid. STA-4 accepts an empty bag, which has the same effect. The proposed cross field checks would have rejected 42.9% of real saves. A correct check exists (at most six pieces, none among the upcoming pieces dealt from the bag; rejects none of the 28,356) but is not required |
+| F10 | 2026-10-03 | The documented Stryker exclusion on the bag shuffle covers more than its stated reason | Resolved, no change | Run with the exclusion removed: `i <= 0` is caught by the tests; `i >= 0` survives and is the harmless swap of the first piece with itself the comment describes. Stryker can only exclude both together |
+| F11 | 2026-10-03 | STA-4 describes a save without a bag, a format no release stored under the current storage names | Open, low | The bag was added (PR #22) before saves moved to the current names (PR #26), and the old names are not read. Harmless and tested. Removing the sentence would be an Intentional change |
+| F12 | 2026-10-03 | Stryker passes when it mutates nothing (a score of NaN meets the threshold) | Rejected, not reachable | The pull request mutation workflow only runs a targeted run when the change includes engine files that still exist, so the list is never empty |
+
+## Decisions
+
+| ID | Date | Decision | Reason and evidence |
+| --- | --- | --- | --- |
+| D1 | 2026-10-03 | Changes follow three rules: no unrecorded observable behavior change, no weakened protection, only the described is protected. Changes to game code or requirement entries are classified as Refactor, Bug fix, Intentional change and/or Clarification | PR #33. Intent is recorded in REQUIREMENTS.md rather than inferred from the code |
+| D2 | 2026-10-03 | No generation tokens for the lock delay and gravity timers | No demonstrated bug under the scheduler contract (F5, F6); protection without a contract |
+| D3 | 2026-10-03 | Supported save formats: the current one (bag, no level) and the one stored from PR #26 to PR #27 (bag and level, the level ignored). Saves under the names used before PR #26 are not read | Established from the save code and its history; each format has a fixture stored by that release's own code (STA-6, on branch `claude/save-fixtures`, not yet merged) |
+| D4 | 2026-10-03 | Pull requests that change the game logic or its tests run mutation testing: the changed engine files alone, or the full suite when tests change. About 30 minutes per pull request that touches the tests is accepted | Safety over speed. Measured: the full suite takes 18 minutes on 4 local cores and 30 minutes 26 seconds in CI, and scored 100%. PR #35, not yet merged |
+| D5 | 2026-10-03 | Whether the page script (`public/script.js`) gets mutation testing | Pending: a pilot on the hold box and dialog handlers (45 mutants) is measuring the kill rate and cost |
+
+## Baselines
+
+| Date | Measure | Result |
+| --- | --- | --- |
+| 2026-10-03 | Full engine mutation run, 4 workers on 4 cores | 1,126 mutants: 1,100 killed, 24 timed out (counted as caught), 0 survived, 2 excluded by the documented shuffle exclusion. 18 minutes |
+| 2026-10-03 | Full engine mutation run in CI (PR #35) | 100%, 30 minutes 26 seconds |
