@@ -13,6 +13,14 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="style.css">
+  <!-- Fetch every module at once instead of one import level at a time. -->
+  <link rel="modulepreload" href="game/gameManager.js">
+  <link rel="modulepreload" href="game/gameState.js">
+  <link rel="modulepreload" href="game/inputController.js">
+  <link rel="modulepreload" href="game/position.js">
+  <link rel="modulepreload" href="game/session.js">
+  <link rel="modulepreload" href="game/tetromino.js">
+  <link rel="modulepreload" href="game/tetrominoFactory.js">
 </head>
 <body>
   <main class="app">
