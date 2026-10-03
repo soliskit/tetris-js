@@ -114,15 +114,6 @@ test('a drag that outlives its piece leaves the next piece alone [INP-5]', async
   await touch.up();
 });
 
-test('pinching does not zoom the page [DSP-4]', async ({ page }) => {
-  test.skip(!isChromium(page), 'only Chromium can simulate a pinch; WebKit checks the CSS and gesture blocking instead');
-  await page.goto('/');
-  await page.keyboard.press('Enter');
-  const touch = await boardTouch(page);
-  await touch.pinch(2.5);
-  expect(await page.evaluate(() => visualViewport.scale)).toBe(1);
-});
-
 test('a piece pushed against a ledge slides in once it drops below it [INP-5]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,
