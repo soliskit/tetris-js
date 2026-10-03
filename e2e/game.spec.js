@@ -8,6 +8,7 @@ import {
   continueSavedGame,
   expectLabel,
   filledCount,
+  isChromium,
   rowsExcept,
   savedGame
 } from './helpers.js';
@@ -29,6 +30,8 @@ test.describe('start and game over', () => {
     await expect(page.locator('#keyHint')).toHaveText('Return: New Game');
     await expect(page.locator('#playPauseButton')).toBeHidden();
     await expect(page.locator('#gameOverMessage')).toBeHidden();
+    await expect(page.locator('#announcer')).toHaveAttribute('role', 'status');
+    await expect(page.locator('#announcer')).toHaveText('');
     await expect(page.locator('#score')).toHaveText('Score: 0');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     expect(await canvasHasDrawing(page, 'tetris')).toBe(false);
@@ -73,11 +76,15 @@ test.describe('start and game over', () => {
     await page.keyboard.press('Space');
     await expect(page.locator('#gameOverMessage')).toBeVisible();
     await expect(page.locator('#gameOverMessage')).toHaveText('Game Over');
+    // Screen readers hear it from the status message, not the overlay.
+    await expect(page.locator('#announcer')).toHaveText('Game Over');
+    await expect(page.locator('#gameOverMessage')).toHaveAttribute('aria-hidden', 'true');
     // 18 rows of 9, the block at (1, 4) and the locked O: the piece with no room is not drawn over them.
     await expect.poll(() => filledCount(page)).toBe(18 * 9 + 1 + 4);
     for (const id of ['heldPreview', 'next0', 'next1', 'next2']) expect(await canvasHasDrawing(page, id), id).toBe(false);
     await page.keyboard.press('Enter');
     await expect(page.locator('#gameOverMessage')).toBeHidden();
+    await expect(page.locator('#announcer')).toHaveText('');
     await expect.poll(() => filledCount(page)).toBe(4);
     await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
   });
@@ -117,6 +124,46 @@ test.describe('start and game over', () => {
 });
 
 test.describe('playing with the keyboard', () => {
+  test('the hold box is a button that Tab reaches, and with keyboard focus Enter or Space hold while playing [INP-6] [PLY-7]', async ({ page }) => {
+    test.skip(!isChromium(page), 'Safari only moves focus to buttons with Tab when its settings ask it to');
+    const hold = page.locator('#heldPreview');
+    const leftmostColumn = async () => Math.min(...(await boardCells(page)).flatMap(row => row.flatMap((value, column) => (value ? [column] : []))));
+    await page.goto('/');
+    await expect(hold).toHaveAttribute('role', 'button');
+    await expect(hold).toHaveAttribute('aria-label', 'Hold');
+    await expect(hold).toHaveAttribute('aria-keyshortcuts', 'H');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await page.keyboard.press('Tab');
+    await expect(hold).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
+    // Space holds too, here a second hold that does nothing, rather than a hard drop that would lock a piece.
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(300);
+    expect(await filledCount(page)).toBe(4);
+    // Other keys keep their game actions.
+    const column = await leftmostColumn();
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(leftmostColumn).toBe(column - 1);
+    // Hold only works while playing, so on the pause screen Enter still asks for a new game.
+    await page.keyboard.press('KeyP');
+    await expect(hold).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
+  });
+
+  test('clicked with a mouse, the hold box holds and Space still hard drops [INP-6] [INP-3] [PLY-7]', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await page.locator('#heldPreview').click();
+    await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
+    await expect(page.locator('#heldPreview')).not.toBeFocused();
+    await page.keyboard.press('Space');
+    await expect.poll(() => filledCount(page)).toBe(8);
+  });
+
   test('gravity moves the piece down, and pause stops it [PLY-2] [STA-2] [INP-1]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
