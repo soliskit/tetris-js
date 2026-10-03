@@ -85,6 +85,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | APP-2 | After the first visit the game works offline. |
 | APP-3 | Every file the page uses exists and is referenced by a relative path, so the game works from any folder (GitHub Pages serves it from /tetris-js/). The local server serves each file with the right type. |
 | APP-4 | The oldest supported device is the iPhone 14 Pro Max (Safari 16), in portrait. |
+| APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |
 
 ## Process
 
