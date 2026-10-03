@@ -75,7 +75,7 @@ test('the code the browser loads is type checked in strict mode, in CI [QA-5]', 
   assert.match(fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8'), /npm run typecheck/);
 });
 
-test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]', () => {
+test('mutation testing must leave no mutant alive, and runs weekly and on pull requests in CI [QA-6]', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8'));
   assert.deepEqual(config.mutate, ['public/game/**/*.js']);
   assert.equal(config.thresholds.break, 100);
@@ -85,6 +85,13 @@ test('mutation testing must leave no mutant alive, and runs weekly in CI [QA-6]'
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/mutation.yml'), 'utf8');
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /npm run test:mutation/);
+  // Pull requests that change the game logic or its tests: the changed game
+  // logic alone, or the full suite when the tests change.
+  const pullRequests = fs.readFileSync(path.join(root, '.github/workflows/mutation-pr.yml'), 'utf8');
+  assert.match(pullRequests, /pull_request:/);
+  for (const changed of ["'public/game/**'", "'test/**'"]) assert.ok(pullRequests.includes(changed), changed);
+  assert.match(pullRequests, /npx stryker run --mutate "\$engine"/, 'changed game logic is mutated');
+  assert.match(pullRequests, /npm run test:mutation/, 'changed tests run the full suite');
   // Every unit test file that exercises the game logic takes part.
   for (const file of fs.readdirSync(path.join(root, 'test')).filter(name => name.endsWith('.test.js'))) {
     const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
