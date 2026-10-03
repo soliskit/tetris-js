@@ -230,19 +230,20 @@ export class GameManager {
       this.state = GameState.gameOver;
       this.isSessionSaved = false;
       this.stopGameLoop();
+    } else {
+      this.landIfResting();
     }
   }
 
   dropTetromino() {
     if (this.state !== GameState.playing) return;
-    if (this.currentTetromino.fits(this.gameBoard, below(this.currentTetromino.position))) {
+    if (!this.isOnSurface) {
       // No lock delay can be running: it only runs while the piece rests on
       // something (checked by the invariant monitor).
       this.currentTetromino.position = below(this.currentTetromino.position);
       this.noteLowestRow();
-    } else {
-      this.pieceLanded();
     }
+    this.landIfResting();
     if (this.state === GameState.playing) {
       this.startGameLoop();
     }
@@ -261,6 +262,12 @@ export class GameManager {
     }, this.lockDelayInterval * 1000);
   }
 
+  // The lock delay runs from the moment the piece comes to rest, however it
+  // got there: falling, moving, turning, appearing, or play resuming.
+  landIfResting() {
+    if (this.isOnSurface) this.pieceLanded();
+  }
+
   pieceLanded() {
     if (this.lockDelayTask !== null) return;
     if (this.lockDelayResetCount >= this.maxLockDelayResets) {
@@ -272,8 +279,9 @@ export class GameManager {
 
   resetLockDelay() {
     this.noteLowestRow();
-    if (this.lockDelayTask === null) return;
-    if (!this.isOnSurface) {
+    if (this.lockDelayTask === null) {
+      this.landIfResting();
+    } else if (!this.isOnSurface) {
       this.cancelLockDelay();
       this.lockDelayResetCount += 1;
     } else if (this.lockDelayResetCount < this.maxLockDelayResets) {
@@ -399,6 +407,7 @@ export class GameManager {
       if (!this.currentTetromino.fits(board)) return 'piece overlaps the board';
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
       if (this.lockDelayTask !== null && !this.isOnSurface) return 'lock delay running off the surface';
+      if (this.lockDelayTask === null && this.isOnSurface) return 'piece resting with no lock delay';
     } else if (this.gameLoopTask !== null || this.lockDelayTask !== null) {
       return 'timers running while not playing';
     }
@@ -458,7 +467,8 @@ export class GameManager {
       case PlayerAction.resume:
         if (this.state !== GameState.paused) return;
         this.state = GameState.playing;
-        this.startGameLoop();
+        this.landIfResting();
+        if (this.state === GameState.playing) this.startGameLoop();
         break;
       case PlayerAction.moveLeft:
         this.moveTetromino(-1);
@@ -520,6 +530,7 @@ export class GameManager {
       }
       this.currentTetromino = incoming;
       this.resetLockDelayForNewPiece();
+      this.landIfResting();
     } else {
       this.generateNextTetromino();
     }
