@@ -24,7 +24,8 @@ const heldCanvas = canvasElement('heldPreview');
 const nextCanvases = ['next0', 'next1', 'next2'].map(canvasElement);
 const scoreLabel = element('score');
 const highScoreLabel = element('highScore');
-const gameOverControls = element('gameOverControls');
+const menuControls = element('menuControls');
+const gameOverMessage = element('gameOverMessage');
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
@@ -132,6 +133,10 @@ function drawGhostBlock(context, column, row, size, color) {
   context.restore();
 }
 
+// At game over only the locked blocks show: a new game deals pieces of its
+// own, and a piece that had no room to appear would cover the stack.
+const showsPieces = () => gameManager.state !== GameState.gameOver;
+
 function drawBoard() {
   const { context, width, height } = sizeOf(boardCanvas);
   const { rows, columns } = gameManager;
@@ -159,6 +164,7 @@ function drawBoard() {
     }
   }
 
+  if (!showsPieces()) return;
   const tetromino = gameManager.currentTetromino;
   for (const cell of gameManager.ghostTetromino.cells) {
     drawGhostBlock(context, cell.column, cell.row, blockSize, tetromino.color);
@@ -191,17 +197,28 @@ function drawPreview(canvas, tetromino) {
   context.restore();
 }
 
+// Game Over shows once a game ends, until the next one starts. Not when the
+// page opens, where no game has been played yet.
+let lastState = gameManager.state;
+let gameEnded = false;
+
 function syncControls() {
   const highScore = gameManager.highScore;
   const isSessionSaved = gameManager.isSessionSaved;
-  const isGameOver = gameManager.state === GameState.gameOver;
+  const state = gameManager.state;
+  const isGameOver = state === GameState.gameOver;
+  const paused = state === GameState.paused;
+  if (state !== lastState) gameEnded = isGameOver;
+  lastState = state;
   scoreLabel.textContent = `Score: ${gameManager.score}`;
   highScoreLabel.textContent = `High Score: ${highScore}`;
-  gameOverControls.hidden = !isGameOver;
-  continueButton.hidden = !isSessionSaved;
-  keyHint.textContent = isSessionSaved ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  gameOverMessage.hidden = !gameEnded;
+  // New Game also gives up a paused game; Continue only follows game over.
+  menuControls.hidden = !isGameOver && !paused;
+  const canContinue = isGameOver && isSessionSaved;
+  continueButton.hidden = !canContinue;
+  keyHint.textContent = paused ? 'Return: New Game    P: Resume' : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
   playPauseButton.hidden = isGameOver;
-  const paused = gameManager.state === GameState.paused;
   playPauseButton.innerHTML = paused ? '&#9654;' : '&#10074;&#10074;';
   playPauseButton.setAttribute('aria-label', paused ? 'Resume' : 'Pause');
   setWakeLock(gameManager.state === GameState.playing);
@@ -252,8 +269,9 @@ let lastSnapshot = '';
 // What each canvas showed when it was last drawn, so frames where nothing
 // moved skip drawing. The engine replaces the current piece whenever the
 // board changes (lock, line clear, hold, new game, continue) and replaces its
-// position object on every move, so comparing references is enough.
-/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, gameBoard?: Board }} */
+// position object on every move, so comparing references is enough. Game
+// over hides the pieces without changing them, so that is noted too.
+/** @type {{ piece?: Tetromino, position?: Position, rotationState?: number, gameBoard?: Board, showsPieces?: boolean }} */
 let drawnBoard = {};
 /** @type {Map<HTMLCanvasElement, Tetromino | null>} */
 const drawnPreviews = new Map();
@@ -263,7 +281,8 @@ function boardChanged() {
   return piece !== drawnBoard.piece
     || piece.position !== drawnBoard.position
     || piece.rotationState !== drawnBoard.rotationState
-    || gameManager.gameBoard !== drawnBoard.gameBoard;
+    || gameManager.gameBoard !== drawnBoard.gameBoard
+    || showsPieces() !== drawnBoard.showsPieces;
 }
 
 function drawIfChanged() {
@@ -274,12 +293,14 @@ function drawIfChanged() {
       piece,
       position: piece.position,
       rotationState: piece.rotationState,
-      gameBoard: gameManager.gameBoard
+      gameBoard: gameManager.gameBoard,
+      showsPieces: showsPieces()
     };
   }
+  const pieces = showsPieces();
   /** @type {Array<[HTMLCanvasElement, Tetromino | null]>} */
-  const previews = [[heldCanvas, gameManager.heldTetromino]];
-  nextCanvases.forEach((canvas, index) => previews.push([canvas, gameManager.nextTetrominos[index]]));
+  const previews = [[heldCanvas, pieces ? gameManager.heldTetromino : null]];
+  nextCanvases.forEach((canvas, index) => previews.push([canvas, pieces ? gameManager.nextTetrominos[index] : null]));
   for (const [canvas, tetromino] of previews) {
     if (!canvasSizes.has(canvas)) continue;
     if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino) continue;
