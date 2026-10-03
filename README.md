@@ -6,7 +6,7 @@ Tetris for your web browser. Built with plain JavaScript and served as static fi
 
 ## Getting started
 
-Requires Node.js 22.8 or newer, which the test runner needs.
+Requires Node.js 26 or newer.
 
 ```sh
 npm install
