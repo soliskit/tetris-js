@@ -139,6 +139,61 @@ test('after the first visit the game opens from the cache, and a new version arr
   }
 });
 
+// Earlier versions stored every address visited, query strings included.
+test('a cache left by an earlier version of the game is cleared out [APP-2]', async ({ page }) => {
+  // Set up from a page that does not start the service worker.
+  await page.goto('/icons/icon.svg');
+  await page.evaluate(async () => {
+    const old = await caches.open('tetris');
+    await old.put('/?from=link', new Response('<title>Stale</title>', { headers: { 'Content-Type': 'text/html' } }));
+  });
+  await page.goto('/');
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(['tetris-2']);
+  await page.reload();
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  await expect(page).toHaveTitle('Tetris');
+});
+
+// A deploy caught half uploaded, or a connection lost partway through the
+// download: the cache must keep the old version whole, never a mix.
+test('a new version that cannot be downloaded in full leaves the cached game whole [APP-2]', async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
+  fs.cpSync(fileURLToPath(new URL('../public', import.meta.url)), dir, { recursive: true });
+  const requested = [];
+  const server = express().use((request, response, next) => { requested.push(request.path); next(); }).use(express.static(dir)).listen(0);
+  await new Promise(resolve => server.once('listening', resolve));
+  const cachedPage = () => page.evaluate(async () => (await caches.match('./')).text());
+  try {
+    await page.goto(`http://localhost:${server.address().port}/`);
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await page.reload();
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    const index = path.join(dir, 'index.html');
+    fs.writeFileSync(index, fs.readFileSync(index, 'utf8').replace('<title>Tetris</title>', '<title>Tetris Deploy 2</title>'));
+    const module = path.join(dir, 'game/position.js');
+    const moduleSource = fs.readFileSync(module);
+    fs.rmSync(module);
+    requested.length = 0;
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris');
+    await expect.poll(() => requested.includes('/game/position.js')).toBe(true);
+    await page.waitForTimeout(500);
+    expect(await cachedPage()).not.toContain('Deploy 2');
+    // Once every file downloads again, the new version arrives whole.
+    fs.writeFileSync(module, moduleSource);
+    await page.reload();
+    await expect.poll(cachedPage).toContain('Deploy 2');
+    await page.reload();
+    await expect(page).toHaveTitle('Tetris Deploy 2');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
+  } finally {
+    server.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // The color space each canvas draws in, and whether this browser has Display P3 canvases at all.
 function colorSpaces(page) {
   return page.evaluate(() => {
