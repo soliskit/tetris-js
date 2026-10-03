@@ -99,6 +99,16 @@ test('keys held with Cmd, Ctrl or Alt are left to the browser [INP-3]', t => {
   assert.deepEqual(manager.actions, []);
 });
 
+test('a key pressed with Cmd, Ctrl or Alt never counts as held, so a lost key release cannot leave it stuck [INP-3]', t => {
+  const { manager, key, tick } = setup(t);
+  // macOS sends no keyup for a key let go while Cmd is down.
+  for (const modifier of ['metaKey', 'ctrlKey', 'altKey']) key('KeyA', true, { [modifier]: true });
+  key('KeyD');
+  key('KeyD', false);
+  tick(1000);
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight]);
+});
+
 test('key repeat events from holding a key are ignored [INP-3]', t => {
   const { manager, key } = setup(t);
   key('KeyS');
@@ -380,6 +390,41 @@ test('letting the stick return to the middle stops moving without any other acti
   controller.pollGamepads();
   tick(500);
   assert.deepEqual(manager.actions, [PlayerAction.moveRight]);
+});
+
+test('letting the stick return to the middle goes back to a move key still held [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  key('KeyA');
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.moveLeft]);
+  tick(167);
+  assert.equal(count(manager, PlayerAction.moveLeft), 3, 'still repeating left');
+});
+
+test('polling a resting stick never starts a move on its own, even with a key still held [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  pads[0] = gamepad();
+  key('KeyA');
+  manager.state = GameState.paused;
+  tick(200); // the repeat notices the pause and stops
+  manager.state = GameState.playing;
+  for (let i = 0; i < 10; i++) controller.pollGamepads();
+  tick(200);
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+});
+
+test('releasing a move key goes back to the stick while it is still pushed [INP-2] [INP-4]', t => {
+  const { manager, controller, key, pads, tick } = setup(t);
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  key('KeyD');
+  key('KeyD', false);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.moveLeft]);
+  tick(167);
+  assert.equal(count(manager, PlayerAction.moveLeft), 3, 'still repeating left');
 });
 
 test('after a pause stops a held key repeating, the stick can move the piece again [INP-2] [INP-4]', t => {
