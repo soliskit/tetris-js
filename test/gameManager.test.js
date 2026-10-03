@@ -98,7 +98,7 @@ test('moves, rotations, holds, drops and gravity do nothing while paused [STA-2]
   }
 });
 
-test('new game is ignored while a game is running [STA-1]', () => {
+test('new game is ignored while playing [STA-1]', () => {
   const { game } = newGame();
   game.score = 500;
   game.handleAction(PlayerAction.newGame);
@@ -119,6 +119,22 @@ test('new game after game over resets the board, score, level and held piece [ST
   assert.equal(game.heldTetromino, null);
   assert.equal(game.canHoldTetromino, true);
   assert.equal(game.isSessionSaved, false);
+});
+
+test('new game while paused gives up that game and starts afresh, forgetting its save [STA-1]', () => {
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  game.handleAction(PlayerAction.hold);
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  game.togglePause();
+  assert.equal(game.isSessionSaved, true);
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.playing);
+  assert.equal(filledCells(game), 0);
+  assert.equal(game.score, 0);
+  assert.equal(game.heldTetromino, null);
+  assert.equal(game.isSessionSaved, false);
+  assert.notEqual(game.gameLoopTask, null, 'gravity runs');
 });
 
 // Movement

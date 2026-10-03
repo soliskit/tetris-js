@@ -26,7 +26,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | PLY-5 | The ghost piece shows where the current piece would land. |
 | PLY-6 | A piece locks 0.5 seconds after it comes to rest on the floor or a block, however it got there: falling, moving, turning, appearing, or play resuming. Moving or rotating it while it rests restarts that delay, at most 15 times; reaching a lower row than before resets the count; moving off a ledge cancels the delay; once the 15 are used, landing locks at once. |
 | PLY-7 | Hold puts the current piece aside in its starting state and brings in the held piece, or the next piece if none is held. Hold works once per piece. |
-| PLY-8 | The next three pieces are always known and shown. |
+| PLY-8 | The next three pieces are always known, and shown while a game is in play or paused. |
 
 ## Scoring
 
@@ -40,7 +40,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 
 | ID | Requirement |
 | --- | --- |
-| STA-1 | The game opens at game over. New Game works only from game over and resets the board, score, level, held piece, queue and bag. |
+| STA-1 | The game opens at game over. New Game works from game over, or while paused to give up that game, never while playing. It resets the board, score, level, held piece, queue and bag, and forgets the saved game. |
 | STA-2 | Pause works only while playing and resume only while paused. While paused nothing moves: no gravity, no lock delay, no input. Pausing during the lock delay cancels it and counts as one reset, and resuming starts it again. |
 | STA-3 | The game ends when a new or held piece has no room to appear. All timers stop and the saved game is forgotten. |
 | STA-4 | Pausing saves the game, and so does clearing lines. Continue, from game over only, restores exactly what was saved, paused, including the pieces left in the bag. A save from before the bag was saved continues with a fresh bag. |
@@ -71,13 +71,14 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 
 | ID | Requirement |
 | --- | --- |
-| DSP-1 | In portrait on a phone the whole game fits the screen with no scrolling, and the board keeps a 1:2 shape. |
+| DSP-1 | In portrait on a phone the whole game fits the screen with no scrolling, and the board keeps a 1:2 shape. The board keeps one size whether the game is starting, playing, paused or over. |
 | DSP-2 | Canvases draw at the screen's full pixel resolution and redraw correctly after the window changes size. |
 | DSP-3 | While nothing changes, nothing is redrawn, storage is not read again, and the page does not wake up every frame, to save battery. |
 | DSP-4 | The page cannot be zoomed, scrolled by touch, or have its text selected. |
 | DSP-5 | The score, high score, buttons and hints always match the game state, including changes made in another tab. |
 | DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Each canvas gets its drawing context as the page starts, so nothing else can change its color space first, and draws vivid colors only if it really is Display P3. Saved games keep the usual colors. |
 | DSP-7 | The screen stays on while playing. Pausing or game over lets it sleep again. If the system takes the wake lock back during play, the game asks for it again. If the wake lock is unsupported or refused, the game plays normally. |
+| DSP-8 | At game over the board shows only the locked blocks, with no falling piece, ghost, held or upcoming pieces, since a new game deals its own. So the page opens to an empty board. Once a game ends, Game Over shows over the board until a new game starts or a saved one is continued. |
 
 ## App
 
