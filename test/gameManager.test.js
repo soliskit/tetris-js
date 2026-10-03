@@ -348,6 +348,27 @@ test('reaching a new lowest row resets the lock delay move count [PLY-6]', () =>
   assert.equal(game.lockDelayResetCount, 0);
 });
 
+test('the counterclockwise action turns the piece the other way [PCE-4] [INP-1]', () => {
+  const { game } = newGame({ factory: fixedFactory(purple) });
+  game.handleAction(PlayerAction.rotateCounterclockwise);
+  assert.equal(game.currentTetromino.rotationState, 3);
+  game.handleAction(PlayerAction.rotate);
+  assert.equal(game.currentTetromino.rotationState, 0);
+});
+
+test('turning counterclockwise on the surface restarts the lock delay too [PLY-6]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(purple) });
+  landOnSurface(game);
+  scheduler.advance(400);
+  game.handleAction(PlayerAction.rotateCounterclockwise);
+  assert.equal(game.currentTetromino.rotationState, 3);
+  assert.equal(game.lockDelayResetCount, 1);
+  scheduler.advance(400);
+  assert.equal(filledCells(game), 0);
+  scheduler.advance(100);
+  assert.equal(filledCells(game), 4);
+});
+
 test('rotating on the surface restarts the lock delay [PLY-6]', () => {
   const { game, scheduler } = newGame({ factory: fixedFactory(purple) });
   landOnSurface(game);

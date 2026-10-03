@@ -112,11 +112,23 @@ test('rotating in open space turns clockwise through all four states and back [P
   }
 });
 
+test('rotating counterclockwise in open space turns through all four states the other way [PCE-4]', () => {
+  const board = createBoard(20, 10);
+  const t = pieceByColor(PieceColors.purple);
+  t.position = position(8, 4);
+  for (const expected of [3, 2, 1, 0]) {
+    t.rotate(board, true);
+    assert.equal(t.rotationState, expected);
+    assert.deepEqual(t.position, position(8, 4), 'no kick needed');
+  }
+});
+
 test('the O piece never changes when rotated [PCE-4]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   o.position = position(8, 4);
   o.rotate(board);
+  o.rotate(board, true);
   assert.equal(o.rotationState, 0);
   assert.deepEqual(o.position, position(8, 4));
 });
@@ -155,6 +167,29 @@ test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]
   assert.ok(t.fits(board));
 });
 
+test('turning counterclockwise, a J piece kicks right off the left wall [PCE-4]', () => {
+  const board = createBoard(20, 10);
+  const j = pieceByColor(PieceColors.blue);
+  j.rotationState = 1;
+  j.position = position(10, -1); // vertical, flush against the left wall
+  assert.ok(j.cells.some(cell => cell.column === 0) && j.fits(board));
+  j.rotate(board, true);
+  assert.equal(j.rotationState, 0, 'turned counterclockwise, not clockwise');
+  assert.deepEqual(j.position, position(10, 0));
+  assert.ok(j.fits(board));
+});
+
+test('when counterclockwise is blocked, rotation falls back to clockwise [PCE-4]', () => {
+  const board = createBoard(20, 10);
+  for (const [row, column] of [[9, 6], [12, 6], [12, 5]]) board[row][column] = filled();
+  const t = pieceByColor(PieceColors.purple);
+  t.position = position(10, 4);
+  t.rotate(board, true);
+  assert.equal(t.rotationState, 1);
+  assert.deepEqual(t.position, position(10, 3));
+  assert.ok(t.fits(board));
+});
+
 test('a piece that cannot rotate anywhere stays exactly as it was [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (let row = 0; row < 20; row++) {
@@ -167,6 +202,7 @@ test('a piece that cannot rotate anywhere stays exactly as it was [PCE-4]', () =
   i.position = position(10, 3);
   assert.ok(i.fits(board));
   i.rotate(board);
+  i.rotate(board, true);
   assert.equal(i.rotationState, 0);
   assert.deepEqual(i.position, position(10, 3));
 });
