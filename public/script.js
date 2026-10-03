@@ -26,6 +26,7 @@ const scoreLabel = element('score');
 const highScoreLabel = element('highScore');
 const menuControls = element('menuControls');
 const gameOverMessage = element('gameOverMessage');
+const announcer = element('announcer');
 const newGameButton = element('newGameButton');
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
@@ -214,6 +215,8 @@ function syncControls() {
   scoreLabel.textContent = `Score: ${gameManager.score}`;
   highScoreLabel.textContent = `High Score: ${highScore}`;
   gameOverMessage.hidden = !gameEnded;
+  // Screen readers hear it from a status message, which reads out changes.
+  announcer.textContent = gameEnded ? 'Game Over' : '';
   // New Game also gives up a paused game, after a second press to confirm;
   // Continue only follows game over.
   menuControls.hidden = !isGameOver && !paused;
@@ -489,6 +492,18 @@ boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
 heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
+// The hold box is a button to keyboards and screen readers too. A click
+// leaves focus where it was, so only the keyboard gives the hold box focus,
+// and only then do Enter and Space hold instead of their game actions.
+// (Checking :focus-visible would not do: any key press makes it match.)
+// Hold only works while playing, so otherwise they keep their game actions.
+heldCanvas.addEventListener('mousedown', event => event.preventDefault());
+heldCanvas.addEventListener('keydown', event => {
+  if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
+  event.preventDefault();
+  event.stopPropagation();
+  gameManager.handleAction(PlayerAction.hold);
+});
 newGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());

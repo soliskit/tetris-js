@@ -66,6 +66,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. A key pressed with Cmd, Ctrl or Alt never counts as held, because macOS may not report its release. Game keys do not trigger the browser's default action (such as scrolling). |
 | INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over, and View starts a new game (twice on the pause screen). The right shoulder button also rotates and the left one rotates counterclockwise. Buttons act once per press, and two buttons for the same action pressed together act once. The stick and the directional pad move with the same repeat timing as keys; holding either down soft drops every 50 ms, and up on the directional pad hard drops. A resting stick or pad does not cancel keyboard moves, and letting either go back to the middle returns to a move key still held. Disconnecting releases everything. |
 | INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. Tapping the hold box holds. |
+| INP-6 | The hold box is a button to keyboards and screen readers: Tab reaches it, it is named Hold with H as its shortcut, and with keyboard focus Enter or Space hold while playing. Clicking it does not take focus, so those keys keep their game actions. |
 
 ## Display
 
@@ -78,7 +79,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | DSP-5 | The score, high score, buttons and hints always match the game state, including changes made in another tab. |
 | DSP-6 | Pieces are drawn in the Display P3 color space using their usual color values, so they look more vivid on iPhone screens. Each canvas gets its drawing context as the page starts, so nothing else can change its color space first, and draws vivid colors only if it really is Display P3. Saved games keep the usual colors. |
 | DSP-7 | The screen stays on while playing. Pausing or game over lets it sleep again. If the system takes the wake lock back during play, the game asks for it again. If the wake lock is unsupported or refused, the game plays normally. |
-| DSP-8 | At game over the board shows only the locked blocks, with no falling piece, ghost, held or upcoming pieces, since a new game deals its own. So the page opens to an empty board. Once a game ends, Game Over shows over the board until a new game starts or a saved one is continued. |
+| DSP-8 | At game over the board shows only the locked blocks, with no falling piece, ghost, held or upcoming pieces, since a new game deals its own. So the page opens to an empty board. Once a game ends, Game Over shows over the board until a new game starts or a saved one is continued, and screen readers announce it. |
 
 ## App
 
