@@ -82,7 +82,7 @@ test.describe('start and game over', () => {
     await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
   });
 
-  test('New Game on the pause screen gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({ page }) => {
+  test('New Game on the pause screen, pressed twice, gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({ page }) => {
     await continueSavedGame(page, savedGame({ piece: PieceColors.purple, score: 300 }));
     await expect(page.locator('#score')).toHaveText('Score: 300');
     await expect(page.locator('#newGameButton')).toBeVisible();
@@ -90,13 +90,27 @@ test.describe('start and game over', () => {
     await expect(page.locator('#keyHint')).toHaveText('Return: New Game    P: Resume');
     await expect(page.locator('#gameOverMessage')).toBeHidden();
     await page.locator('#newGameButton').click();
+    // The first press only asks.
+    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
+    await expect(page.locator('#keyHint')).toHaveText('Return: Confirm New Game    P: Resume');
+    await expect(page.locator('#score')).toHaveText('Score: 300');
+    await expectLabel(page, 'Resume');
+    await page.locator('#newGameButton').click();
     await expectLabel(page, 'Pause');
     await expect(page.locator('#score')).toHaveText('Score: 0');
     await expect(page.locator('#menuControls')).toBeHidden();
     await expect.poll(() => filledCount(page)).toBe(4);
-    // Enter does the same from the keyboard.
+    // Enter does the same from the keyboard, and resuming in between cancels it.
     await page.keyboard.press('KeyP');
     await expectLabel(page, 'Resume');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#newGameButton')).toHaveText('Confirm New Game');
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Pause');
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    await expect(page.locator('#newGameButton')).toHaveText('New Game');
+    await page.keyboard.press('Enter');
     await page.keyboard.press('Enter');
     await expectLabel(page, 'Pause');
   });

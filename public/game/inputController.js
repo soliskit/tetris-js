@@ -6,7 +6,8 @@
 // keys are aliases for WASD.
 // Gamepad (standard mapping): stick or directional pad moves and soft drops,
 // A or pad up drop, B or right shoulder rotate, left shoulder rotate
-// counterclockwise, X hold, Y continue, Menu/Start pause or new game.
+// counterclockwise, X hold, Y continue, Menu/Start pause or new game, View/Select
+// new game (pressed twice on the pause screen).
 
 import { GameState, PlayerAction } from './gameState.js';
 
@@ -38,10 +39,11 @@ const KEY_ACTIONS = {
 };
 
 // Standard gamepad mapping button indices.
-const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, menu: 9, up: 12, down: 13, left: 14, right: 15 };
+const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, view: 8, menu: 9, up: 12, down: 13, left: 14, right: 15 };
 /** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
+  ['view', PlayerAction.newGame],
   ['b', PlayerAction.rotate],
   ['rb', PlayerAction.rotate],
   ['lb', PlayerAction.rotateCounterclockwise],

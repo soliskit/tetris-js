@@ -228,7 +228,8 @@ test('storage whose reads throw still gives a playable game [SAF-2]', () => {
   dropVerticalIIntoColumn9(game);
   assert.equal(game.score, 100);
   game.togglePause();
-  game.handleAction(PlayerAction.newGame); // gives up the paused game
+  game.handleAction(PlayerAction.newGame); // asks to give up the paused game
+  game.handleAction(PlayerAction.newGame); // and confirms
   assert.equal(game.state, GameState.playing);
   assert.equal(game.score, 0);
   assert.deepEqual(reported, []);
