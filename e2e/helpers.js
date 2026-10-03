@@ -155,3 +155,42 @@ export function trackErrors(page) {
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   return errors;
 }
+
+// Replaces the Screen Wake Lock API with a fake the test controls. mode:
+// 'grant' grants requests at once, 'refuse' rejects them, 'hold' waits for
+// window.grantWakeLocks(), 'missing' removes the API.
+export async function fakeWakeLock(page, mode) {
+  await page.addInitScript(mode => {
+    if (mode === 'missing') {
+      delete Navigator.prototype.wakeLock;
+      delete navigator.wakeLock;
+      return;
+    }
+    window.wakeLocks = [];
+    window.wakeLockRequests = 0;
+    const pending = [];
+    window.grantWakeLocks = () => pending.splice(0).forEach(grant => grant());
+    const request = type => new Promise((resolve, reject) => {
+      window.wakeLockRequests++;
+      if (mode === 'refuse') {
+        reject(new DOMException('Wake lock refused', 'NotAllowedError'));
+        return;
+      }
+      const sentinel = { type, released: false, release() { this.released = true; return Promise.resolve(); } };
+      const grant = () => { window.wakeLocks.push(sentinel); resolve(sentinel); };
+      if (mode === 'hold') pending.push(grant);
+      else grant();
+    });
+    Object.defineProperty(navigator, 'wakeLock', { value: { request }, configurable: true });
+  }, mode);
+}
+
+// How many wake locks the fake was asked for.
+export function wakeLockRequests(page) {
+  return page.evaluate(() => window.wakeLockRequests);
+}
+
+// How many wake locks the fake has granted, and how many are still held.
+export function wakeLockCounts(page) {
+  return page.evaluate(() => ({ granted: window.wakeLocks.length, held: window.wakeLocks.filter(lock => !lock.released).length }));
+}
