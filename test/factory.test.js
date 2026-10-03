@@ -47,6 +47,17 @@ test('the default factory uses Math.random [PCE-5]', () => {
   assert.equal(new Set(colorsOf(factory, 7)).size, 7);
 });
 
+test('resetting the bag starts a full one, or carries on with the pieces given [PCE-5]', () => {
+  const factory = new TetrominoFactory(seededRandom(4));
+  colorsOf(factory, 3);
+  factory.resetBag();
+  assert.equal(new Set(colorsOf(factory, 7)).size, 7, 'a full bag');
+  const pieces = allPieces();
+  factory.resetBag([pieces[0], pieces[4]]);
+  assert.deepEqual(colorsOf(factory, 2), [pieces[0].color, pieces[4].color]);
+  assert.equal(new Set(colorsOf(factory, 7)).size, 7, 'then a full bag again');
+});
+
 test('the shuffle can leave every piece where it is [PCE-5]', () => {
   // With random just below 1, each step picks its own position.
   const factory = new TetrominoFactory(() => 0.999);

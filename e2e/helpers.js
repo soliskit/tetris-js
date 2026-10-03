@@ -158,7 +158,9 @@ export function trackErrors(page) {
 
 // Replaces the Screen Wake Lock API with a fake the test controls. mode:
 // 'grant' grants requests at once, 'refuse' rejects them, 'hold' waits for
-// window.grantWakeLocks(), 'missing' removes the API.
+// window.grantWakeLocks(), 'missing' removes the API. Like the real one, a
+// lock fires 'release' when let go; window.revokeWakeLocks() lets every
+// lock go the way the system does when the battery runs low.
 export async function fakeWakeLock(page, mode) {
   await page.addInitScript(mode => {
     if (mode === 'missing') {
@@ -170,13 +172,24 @@ export async function fakeWakeLock(page, mode) {
     window.wakeLockRequests = 0;
     const pending = [];
     window.grantWakeLocks = () => pending.splice(0).forEach(grant => grant());
+    window.revokeWakeLocks = () => window.wakeLocks.forEach(lock => lock.release());
     const request = type => new Promise((resolve, reject) => {
       window.wakeLockRequests++;
       if (mode === 'refuse') {
         reject(new DOMException('Wake lock refused', 'NotAllowedError'));
         return;
       }
-      const sentinel = { type, released: false, release() { this.released = true; return Promise.resolve(); } };
+      const sentinel = Object.assign(new EventTarget(), {
+        type,
+        released: false,
+        release() {
+          if (!this.released) {
+            this.released = true;
+            this.dispatchEvent(new Event('release'));
+          }
+          return Promise.resolve();
+        }
+      });
       const grant = () => { window.wakeLocks.push(sentinel); resolve(sentinel); };
       if (mode === 'hold') pending.push(grant);
       else grant();
