@@ -819,3 +819,18 @@ test('a first hold that brings in a piece with no room ends the game with no tim
   assert.equal(scheduler.pending, 0);
   assert.deepEqual(faults, []);
 });
+
+test('holding during the lock delay when the held piece has no room ends the game with no timers [PLY-6] [PLY-7] [STA-3]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]), onFault: fault => faults.push(fault) });
+  game.handleAction(PlayerAction.hold);
+  game.handleAction(PlayerAction.drop);
+  landOnSurface(game);
+  game.softDrop(); // starts the lock delay
+  assert.notEqual(game.lockDelayTask, null);
+  fillRows(game, [1], [0, 1, 2, 6, 7, 8, 9]); // blocks where the held T would appear
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
+});
