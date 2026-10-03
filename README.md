@@ -6,9 +6,10 @@ Tetris for your web browser. Built with plain JavaScript and served as static fi
 
 ## Getting started
 
-Requires Node.js 26 or newer.
+Requires Node.js 26 and npm 12.2 or newer. Node 26 comes with npm 11, so the first command updates npm.
 
 ```sh
+npm install --global npm@12.2.0
 npm install
 npm start
 ```
