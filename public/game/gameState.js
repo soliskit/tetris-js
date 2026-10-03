@@ -17,6 +17,7 @@ export const PlayerAction = Object.freeze(/** @type {const} */ ({
   moveRight: 'moveRight',
   hold: 'hold',
   rotate: 'rotate',
+  rotateCounterclockwise: 'rotateCounterclockwise',
   drop: 'drop'
 }));
 

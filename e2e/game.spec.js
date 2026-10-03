@@ -49,7 +49,7 @@ test.describe('start and game over', () => {
   test('topping out ends the game and forgets the saved game [STA-3] [DSP-5]', async ({ page }) => {
     await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, board: rowsExcept([...Array(18).keys()].map(i => i + 2), [0]) }));
     await page.keyboard.press('KeyP');
-    await page.keyboard.press('KeyS'); // locks at the top, the next piece has no room
+    await page.keyboard.press('Space'); // locks at the top, the next piece has no room
     await expect(page.locator('#newGameButton')).toBeVisible();
     await expect(page.locator('#playPauseButton')).toBeHidden();
     await expect(page.locator('#continueGameButton')).toBeHidden();
@@ -77,7 +77,7 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
-  test('move, rotate, hard drop and hold keys all work [INP-1] [PLY-1] [PLY-4] [PLY-7]', async ({ page }) => {
+  test('move, rotate, soft drop, hard drop and hold keys all work [INP-1] [PLY-1] [PLY-3] [PLY-4] [PLY-7]', async ({ page }) => {
     await continueSavedGame(page, savedGame({ piece: PieceColors.purple }));
     await page.keyboard.press('KeyP');
     const t = () => cellsOf(page, PieceColors.purple);
@@ -94,14 +94,35 @@ test.describe('playing with the keyboard', () => {
     const before = shapeOf(await t());
     await page.keyboard.press('KeyW');
     await expect.poll(async () => shapeOf(await t())).not.toBe(before);
+    await page.keyboard.press('KeyZ'); // back the other way
+    await expect.poll(async () => shapeOf(await t())).toBe(before);
     await page.keyboard.press('ArrowUp');
 
-    await page.keyboard.press('ArrowDown'); // hard drop
+    // Held down, the piece falls far faster than gravity's row every 0.7s.
+    const top = minRow(await t());
+    await page.keyboard.down('ArrowDown');
+    await page.waitForTimeout(400);
+    await page.keyboard.up('ArrowDown');
+    await expect.poll(async () => minRow(await t()), { timeout: 400 }).toBeGreaterThanOrEqual(top + 5);
+    expect(await t()).toHaveLength(4);
+
+    await page.keyboard.press('Space'); // hard drop
     await expect.poll(async () => (await t()).length).toBe(8);
     expect((await t()).filter(([r]) => r >= 17)).toHaveLength(4);
 
     await page.keyboard.press('KeyH');
     await expect.poll(() => canvasHasDrawing(page, 'heldPreview')).toBe(true);
+  });
+
+  test('Space hard drops even when an on screen button has focus, and does not press it [INP-1] [INP-3]', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await page.locator('#playPauseButton').focus();
+    await page.keyboard.press('Space');
+    await expect.poll(() => filledCount(page)).toBe(8);
+    await page.waitForTimeout(300);
+    expect(await page.locator('#playPauseButton').getAttribute('aria-label')).toBe('Pause');
   });
 
   test('clearing a line updates the score and high score [SCO-1] [SCO-3] [DSP-5]', async ({ page }) => {
@@ -112,7 +133,7 @@ test.describe('playing with the keyboard', () => {
       board: rowsExcept([19], [9])
     }));
     await page.keyboard.press('KeyP');
-    await page.keyboard.press('KeyS');
+    await page.keyboard.press('Space');
     await expect(page.locator('#score')).toHaveText('Score: 100');
     await expect(page.locator('#highScore')).toHaveText('High Score: 100');
     expect(await cellsOf(page, BOARD_COLOR)).toHaveLength(0);
@@ -121,7 +142,7 @@ test.describe('playing with the keyboard', () => {
   test('a paused game can be continued after reloading the page [STA-4] [DSP-5]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
-    await page.keyboard.press('KeyS');
+    await page.keyboard.press('Space');
     await page.keyboard.press('KeyP');
     await expectLabel(page, 'Resume');
     const board = await boardCells(page);
@@ -141,7 +162,7 @@ test.describe('playing with the keyboard', () => {
     const otherTab = await context.newPage();
     await otherTab.goto('/');
     await otherTab.keyboard.press('Enter');
-    await otherTab.keyboard.press('KeyS');
+    await otherTab.keyboard.press('Space');
     await otherTab.keyboard.press('KeyP');
     await expectLabel(otherTab, 'Resume');
     const board = await boardCells(otherTab);

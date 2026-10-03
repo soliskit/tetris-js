@@ -54,7 +54,7 @@ test('an error while drawing does not stop the game from drawing [SAF-5]', async
   await page.keyboard.press('Enter');
   await expect.poll(() => filledCount(page)).toBe(4);
   await page.evaluate(() => { window.failNextDraw = true; });
-  await page.keyboard.press('KeyS');
+  await page.keyboard.press('Space');
   await expect.poll(() => filledCount(page)).toBe(8);
   expect(logged.filter(text => text.includes('Tetris drawing error'))).toHaveLength(1);
 });
@@ -68,7 +68,7 @@ test('the game plays normally when storage is blocked [SAF-2]', async ({ page })
   await page.goto('/');
   await page.keyboard.press('Enter');
   await expectLabel(page, 'Pause');
-  for (let i = 0; i < 3; i++) await page.keyboard.press('KeyS');
+  for (let i = 0; i < 3; i++) await page.keyboard.press('Space');
   await expect.poll(() => filledCount(page)).toBe(16);
   await page.keyboard.press('KeyP');
   await expectLabel(page, 'Resume');
