@@ -44,7 +44,6 @@ const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, view: 8, menu: 9, up
 /** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
-  ['view', PlayerAction.newGame],
   ['b', PlayerAction.rotate],
   ['rb', PlayerAction.rotate],
   ['lb', PlayerAction.rotateCounterclockwise],
@@ -184,17 +183,24 @@ export class InputController {
       return;
     }
 
+    // Menu and View change what the game is doing, so they act alone: a
+    // button pressed at the same moment would act on the new state, such as
+    // A hard dropping the first piece of the game Menu just started. Moving
+    // and soft dropping follow what is held, so they carry on below.
     if (newPresses.has('menu')) {
       if (this.gameManager.state === GameState.gameOver) {
         this.gameManager.handleAction(PlayerAction.newGame);
       } else {
         this.gameManager.togglePause();
       }
+    } else if (newPresses.has('view')) {
+      this.gameManager.handleAction(PlayerAction.newGame);
+    } else {
+      // Each action once, even when two of its buttons are pressed together:
+      // A and pad up at once must not hard drop two pieces.
+      const actions = new Set(PAD_ACTIONS.filter(([button]) => newPresses.has(button)).map(([, action]) => action));
+      for (const action of actions) this.gameManager.handleAction(action);
     }
-    // Each action once, even when two of its buttons are pressed together:
-    // A and pad up at once must not hard drop two pieces.
-    const actions = new Set(PAD_ACTIONS.filter(([button]) => newPresses.has(button)).map(([, action]) => action));
-    for (const action of actions) this.gameManager.handleAction(action);
 
     this.padDown = yAxis < -0.5 || pressed.has('down');
     this.updateSoftDrop();
