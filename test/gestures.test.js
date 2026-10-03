@@ -27,6 +27,7 @@ test('a flick must go more down than sideways, either way [INP-6]', () => {
   assert.equal(isFlickDown([at(0, 0, 0)], at(50, 60, 60), CELL), false, 'as far sideways as down');
   assert.equal(isFlickDown([at(0, 0, 0)], at(50, -60, 50), CELL), false, 'more to the left than down');
   assert.equal(isFlickDown([at(0, 0, 0)], at(50, 0, -100), CELL), false, 'upward');
+  assert.equal(isFlickDown([at(0, 200, 300)], at(50, 210, 360), CELL), true, 'measured from where the finger was, not the screen edge');
 });
 
 test('only the last 100 ms before lifting count, so a finger at rest does not flick [INP-6]', () => {
