@@ -24,7 +24,6 @@ test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   const session = parseSession(JSON.stringify(data), SIZE);
   assert.deepEqual(session.gameBoard, game.gameBoard);
   assert.equal(session.score, 1300);
-  assert.equal(session.level, 2);
   assert.deepEqual(session.currentTetromino, game.currentTetromino);
   assert.deepEqual(session.nextTetrominos.map(piece => piece.color), game.nextTetrominos.map(piece => piece.color));
   assert.deepEqual(session.heldTetromino, game.heldTetromino);
@@ -58,12 +57,13 @@ test('a save without a held piece is valid [SAF-1]', () => {
   assert.equal(parseSession(JSON.stringify(data), SIZE).heldTetromino, null);
 });
 
-test('the level is worked out from the score, never read from the save [SAF-1] [SCO-2]', () => {
+test('saves leave out the level, which comes from the score, and ignore one an older save stored [SAF-1] [SCO-2]', () => {
   const { data } = validSave();
+  assert.equal('level' in data, false);
   data.level = 99;
-  assert.equal(parseSession(JSON.stringify(data), SIZE).level, 2);
-  delete data.level;
-  assert.equal(parseSession(JSON.stringify(data), SIZE).level, 2);
+  const session = parseSession(JSON.stringify(data), SIZE);
+  assert.equal(session.score, 1300);
+  assert.equal('level' in session, false);
 });
 
 test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {

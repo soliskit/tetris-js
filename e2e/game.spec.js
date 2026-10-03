@@ -22,20 +22,23 @@ const minColumn = cells => Math.min(...cells.map(([, c]) => c));
 const minRow = cells => Math.min(...cells.map(([r]) => r));
 
 test.describe('start and game over', () => {
-  test('the start screen offers New Game and hides the pause button [STA-1] [DSP-5]', async ({ page }) => {
+  test('the start screen offers New Game on an empty board, with no pieces and no Game Over [STA-1] [DSP-5] [DSP-8]', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#newGameButton')).toBeVisible();
     await expect(page.locator('#continueGameButton')).toBeHidden();
     await expect(page.locator('#keyHint')).toHaveText('Return: New Game');
     await expect(page.locator('#playPauseButton')).toBeHidden();
+    await expect(page.locator('#gameOverMessage')).toBeHidden();
     await expect(page.locator('#score')).toHaveText('Score: 0');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    expect(await canvasHasDrawing(page, 'tetris')).toBe(false);
+    for (const id of ['heldPreview', 'next0', 'next1', 'next2']) expect(await canvasHasDrawing(page, id), id).toBe(false);
   });
 
   test('the New Game button starts a game with a piece at the top [STA-1] [PCE-3] [PLY-8] [DSP-5]', async ({ page }) => {
     await page.goto('/');
     await page.locator('#newGameButton').click();
-    await expect(page.locator('#gameOverControls')).toBeHidden();
+    await expect(page.locator('#menuControls')).toBeHidden();
     await expect(page.locator('#playPauseButton')).toBeVisible();
     await expectLabel(page, 'Pause');
     await expect.poll(() => filledCount(page)).toBe(4);
@@ -57,6 +60,45 @@ test.describe('start and game over', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('#playPauseButton')).toBeVisible();
     await expect.poll(() => filledCount(page)).toBe(4);
+  });
+
+  test('at game over only the locked blocks show, under Game Over, until a new game starts [DSP-8] [STA-3]', async ({ page }) => {
+    // The O piece locks at the top left; the next one has no room, as (1, 4) is taken.
+    await continueSavedGame(page, savedGame({
+      piece: PieceColors.yellow,
+      board: [[1, 4], ...rowsExcept([...Array(18).keys()].map(i => i + 2), [9])],
+      position: { row: 0, column: 0 }
+    }));
+    await page.keyboard.press('KeyP');
+    await page.keyboard.press('Space');
+    await expect(page.locator('#gameOverMessage')).toBeVisible();
+    await expect(page.locator('#gameOverMessage')).toHaveText('Game Over');
+    // 18 rows of 9, the block at (1, 4) and the locked O: the piece with no room is not drawn over them.
+    await expect.poll(() => filledCount(page)).toBe(18 * 9 + 1 + 4);
+    for (const id of ['heldPreview', 'next0', 'next1', 'next2']) expect(await canvasHasDrawing(page, id), id).toBe(false);
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#gameOverMessage')).toBeHidden();
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
+  });
+
+  test('New Game on the pause screen gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({ page }) => {
+    await continueSavedGame(page, savedGame({ piece: PieceColors.purple, score: 300 }));
+    await expect(page.locator('#score')).toHaveText('Score: 300');
+    await expect(page.locator('#newGameButton')).toBeVisible();
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect(page.locator('#keyHint')).toHaveText('Return: New Game    P: Resume');
+    await expect(page.locator('#gameOverMessage')).toBeHidden();
+    await page.locator('#newGameButton').click();
+    await expectLabel(page, 'Pause');
+    await expect(page.locator('#score')).toHaveText('Score: 0');
+    await expect(page.locator('#menuControls')).toBeHidden();
+    await expect.poll(() => filledCount(page)).toBe(4);
+    // Enter does the same from the keyboard.
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    await page.keyboard.press('Enter');
+    await expectLabel(page, 'Pause');
   });
 });
 
@@ -233,6 +275,25 @@ test.describe('layout', () => {
       await page.setViewportSize(size);
       await checkFits(page);
     }
+  });
+
+  test('the board keeps one size at the start, while playing, paused and at game over [DSP-1]', async ({ page }) => {
+    const boardSize = () => page.evaluate(() => {
+      const { width, height } = document.getElementById('tetris').getBoundingClientRect();
+      return { width, height };
+    });
+    await page.goto('/');
+    const start = await boardSize();
+    await page.keyboard.press('Enter');
+    await expectLabel(page, 'Pause');
+    expect(await boardSize()).toEqual(start);
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    expect(await boardSize()).toEqual(start);
+    await page.keyboard.press('KeyP');
+    for (let i = 0; i < 30 && !(await page.locator('#gameOverMessage').isVisible()); i++) await page.keyboard.press('Space');
+    await expect(page.locator('#gameOverMessage')).toBeVisible();
+    expect(await boardSize()).toEqual(start);
   });
 
   test('the board canvas is drawn at full screen resolution [DSP-2]', async ({ page }) => {
