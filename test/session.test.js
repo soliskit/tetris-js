@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 
 import { PlayerAction } from '../public/game/gameState.js';
 import { parseSession, serializeSession } from '../public/game/session.js';
-import { PieceColors } from '../public/game/tetrominoFactory.js';
-import { newGame, pieceByColor, sequenceFactory } from './helpers.js';
+import { PieceColors, TetrominoFactory } from '../public/game/tetrominoFactory.js';
+import { newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
 
 const SIZE = { rows: 20, columns: 10 };
 
@@ -29,6 +29,27 @@ test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   assert.deepEqual(session.nextTetrominos.map(piece => piece.color), game.nextTetrominos.map(piece => piece.color));
   assert.deepEqual(session.heldTetromino, game.heldTetromino);
   assert.equal(session.canHoldTetromino, false);
+});
+
+test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]', () => {
+  const { game } = newGame({ factory: new TetrominoFactory(seededRandom(3)) });
+  const data = JSON.parse(serializeSession(game));
+  // A new game deals the current piece and three upcoming ones from a full bag.
+  assert.equal(data.bag.length, 3);
+  assert.deepEqual(data.bag, game.factory.bag.map(piece => piece.color));
+  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, game.factory.bag);
+});
+
+test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
+  const { data } = validSave();
+  assert.deepEqual(data.bag, []);
+  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
+});
+
+test('a save from before the bag was saved is valid and carries on with a fresh bag [SAF-1] [STA-4]', () => {
+  const { data } = validSave();
+  delete data.bag;
+  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
 });
 
 test('a save without a held piece is valid [SAF-1]', () => {
@@ -112,7 +133,12 @@ const corruptions = {
   'a held piece of an unknown type': data => { data.heldTetromino.color = '#ffffff'; },
   'a held piece that is a string': data => { data.heldTetromino = 'T'; },
   'a missing held piece field': data => { delete data.heldTetromino; },
-  'can hold stored as text': data => { data.canHoldTetromino = 'false'; }
+  'can hold stored as text': data => { data.canHoldTetromino = 'false'; },
+  'a bag that is text': data => { data.bag = 'IOT'; },
+  'a bag that is null': data => { data.bag = null; },
+  'a bag with an unknown piece': data => { data.bag = [PieceColors.cyan, '#123456']; },
+  'a bag with a piece stored as an object': data => { data.bag = [{ color: PieceColors.cyan }]; },
+  'a bag with the same piece twice': data => { data.bag = [PieceColors.red, PieceColors.cyan, PieceColors.red]; }
 };
 
 for (const [name, corrupt] of Object.entries(corruptions)) {
