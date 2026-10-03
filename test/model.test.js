@@ -39,7 +39,7 @@ test('game states and player actions are fixed lists [STA-1] [INP-1]', () => {
   assert.deepEqual(Object.values(GameState).sort(), ['gameOver', 'paused', 'playing']);
   assert.deepEqual(
     Object.values(PlayerAction).sort(),
-    ['continueGame', 'drop', 'hold', 'moveLeft', 'moveRight', 'newGame', 'pause', 'resume', 'rotate']
+    ['continueGame', 'drop', 'hold', 'moveLeft', 'moveRight', 'newGame', 'pause', 'resume', 'rotate', 'rotateCounterclockwise']
   );
   assert.ok(Object.isFrozen(GameState));
   assert.ok(Object.isFrozen(PlayerAction));
