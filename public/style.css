@@ -141,6 +141,8 @@ body {
   width: min(100cqw - 16px, (100cqh - 16px) / 2);
   aspect-ratio: 1 / 2;
   touch-action: none;
+  /* It listens for clicks, so Safari would flash it gray on every tap. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* The menu stays centered while the round pause button sits at the right. */
