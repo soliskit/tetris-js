@@ -508,15 +508,22 @@ heldCanvas.addEventListener('keydown', event => {
   gameManager.handleAction(PlayerAction.hold);
 });
 element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
-// The New Game question. Cancel closes the dialog by itself, as do Escape and
-// a tap on the dimmed page around it, and closing it any way answers no,
-// unless New Game answered first. Listening for clicks on the dialog also
-// keeps Safari from taking quick taps there as a double tap to zoom.
+// The New Game question. Every answer goes straight to the engine, and the
+// dialog closes once the engine stops asking, so the very next key already
+// finds the question answered; the dialog's close event comes too late for
+// that. Cancel, a tap on the dimmed page around the dialog, and the browser's
+// close requests (such as Android's back gesture) answer no, and so does
+// Escape, through the input controller. Listening for clicks on the dialog
+// also keeps Safari from taking quick taps there as a double tap to zoom.
 element('confirmNewGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('cancelNewGameButton').addEventListener('click', () => gameManager.cancelNewGame());
 newGameDialog.addEventListener('click', event => {
-  if (event.target === newGameDialog) newGameDialog.close();
+  if (event.target === newGameDialog) gameManager.cancelNewGame();
 });
-newGameDialog.addEventListener('close', () => gameManager.cancelNewGame());
+newGameDialog.addEventListener('cancel', event => {
+  event.preventDefault();
+  gameManager.cancelNewGame();
+});
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
 playPauseButton.addEventListener('click', () => gameManager.togglePause());
 

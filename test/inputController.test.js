@@ -121,22 +121,26 @@ test('key repeat events from holding a key are ignored [INP-3]', t => {
   assert.deepEqual(manager.actions, [PlayerAction.drop]);
 });
 
-test('while the pause screen asks to confirm New Game, keys are left to its dialog, except a held key repeating [STA-1] [INP-3]', t => {
+test('while the pause screen asks to confirm New Game, keys are left to its dialog, except a held key repeating and Escape, which answers no [STA-1] [INP-3]', t => {
   const { manager, key, tap } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
-  for (const code of ['Enter', 'Space', 'Escape', 'KeyP', 'KeyC', 'Tab']) {
+  for (const code of ['Enter', 'Space', 'KeyP', 'KeyC', 'Tab']) {
     assert.equal(key(code).prevented, false, `${code} reaches the dialog's button`);
     key(code, false);
   }
   assert.equal(key('Enter', true, { repeat: true }).prevented, true, 'the Enter that asked, still held, must not answer');
   assert.deepEqual(manager.actions, []);
+  assert.equal(key('Escape').prevented, true, 'Escape answers no itself, rather than leaving the dialog to the browser');
+  key('Escape', true, { repeat: true });
+  key('Escape', false);
+  assert.deepEqual(manager.actions, ['cancelNewGame'], 'once per press');
   // A key pressed meanwhile still counts as held once the dialog closes.
   key('KeyD');
   manager.isConfirmingNewGame = false;
   manager.state = GameState.playing;
   tap('KeyA');
-  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight]);
+  assert.deepEqual(manager.actions, ['cancelNewGame', PlayerAction.moveLeft, PlayerAction.moveRight]);
 });
 
 test('holding S or Down soft drops a row at once, then every 50ms until released [INP-1] [INP-2]', t => {
