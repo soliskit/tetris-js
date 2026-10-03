@@ -12,7 +12,7 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 | PCE-2 | There are seven pieces (I, O, T, S, Z, J, L), each made of four blocks, with the standard Super Rotation System (SRS) rotation states and fixed colors. |
 | PCE-3 | A new piece appears in its first rotation, horizontally centered, in the top two rows. |
 | PCE-4 | Rotation is clockwise, trying the SRS wall kicks in order. If every clockwise kick is blocked, counterclockwise is tried the same way. If nothing fits, the piece is unchanged. The O piece does not rotate. |
-| PCE-5 | Pieces are dealt from a shuffled bag of all seven, so each appears once per seven. The random source can be replaced (for tests). |
+| PCE-5 | Pieces are dealt from a shuffled bag of all seven, so each appears once per seven. Every new game starts with a full bag, so its first seven pieces are all different. The random source can be replaced (for tests). |
 | PCE-6 | A piece can never be outside the board or overlap a locked block. |
 
 ## Play
@@ -40,10 +40,10 @@ Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a req
 
 | ID | Requirement |
 | --- | --- |
-| STA-1 | The game opens at game over. New Game works only from game over and resets the board, score, level, held piece and queue. |
+| STA-1 | The game opens at game over. New Game works only from game over and resets the board, score, level, held piece, queue and bag. |
 | STA-2 | Pause works only while playing and resume only while paused. While paused nothing moves: no gravity, no lock delay, no input. Pausing during the lock delay cancels it and counts as one reset. |
 | STA-3 | The game ends when a new or held piece has no room to appear. All timers stop and the saved game is forgotten. |
-| STA-4 | Pausing saves the game, and so does clearing lines. Continue, from game over only, restores exactly what was saved, paused. |
+| STA-4 | Pausing saves the game, and so does clearing lines. Continue, from game over only, restores exactly what was saved, paused, including the pieces left in the bag. A save from before the bag was saved continues with a fresh bag. |
 | STA-5 | The game pauses when the page is hidden, for example when switching apps. |
 
 ## Safety

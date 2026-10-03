@@ -102,4 +102,10 @@ export class TetrominoFactory {
     // Never undefined: the bag was just refilled if it was empty.
     return /** @type {Tetromino} */ (this.bag.shift());
   }
+
+  // Starts a full bag, or carries on with the pieces left in a saved one.
+  /** @param {Tetromino[]} [pieces] */
+  resetBag(pieces = []) {
+    this.bag = pieces;
+  }
 }
