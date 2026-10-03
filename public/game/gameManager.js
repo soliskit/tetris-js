@@ -447,7 +447,8 @@ export class GameManager {
   performAction(action) {
     switch (action) {
       case PlayerAction.newGame:
-        if (this.state !== GameState.gameOver) return;
+        // From game over, or while paused to give up that game.
+        if (this.state === GameState.playing) return;
         this.resetGameSession();
         this.state = GameState.playing;
         this.startGameLoop();
