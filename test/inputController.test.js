@@ -280,6 +280,24 @@ test('gamepads are polled on every animation frame [INP-4]', t => {
   assert.equal(frames.length, 1, 'and schedules the next poll');
 });
 
+test('polling stops while no gamepad is connected and starts again when one connects [INP-4] [DSP-3]', t => {
+  const { manager, fire, frames, pads } = setup(t);
+  frames.shift()();
+  assert.equal(frames.length, 0, 'no gamepad: no more polls');
+  fire('gamepadconnected');
+  fire('gamepadconnected');
+  assert.equal(frames.length, 1, 'one polling loop however many connect');
+  pads[0] = gamepad({ pressed: ['b'] });
+  frames.shift()();
+  assert.deepEqual(manager.actions, [PlayerAction.rotate]);
+  assert.equal(frames.length, 1, 'keeps polling while connected');
+  pads[0] = { ...gamepad(), connected: false };
+  frames.shift()();
+  assert.equal(frames.length, 0, 'stops after the last one disconnects');
+  fire('gamepadconnected');
+  assert.equal(frames.length, 1, 'and can start again');
+});
+
 test('an error while reading the gamepad never stops polling [SAF-5]', t => {
   const { manager, frames, pads } = setup(t);
   const logged = t.mock.method(console, 'error', () => {});
@@ -322,9 +340,9 @@ test('holding the stick down keeps one steady soft drop [INP-4]', t => {
 test('a browser without gamepad support, or a gamepad without a stick, does nothing [INP-4]', t => {
   const { manager, controller, pads } = setup(t);
   pads[0] = { ...gamepad(), axes: [] };
-  controller.pollGamepads();
+  assert.equal(controller.pollGamepads(), true);
   Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true, writable: true });
-  controller.pollGamepads();
+  assert.equal(controller.pollGamepads(), false);
   assert.deepEqual(manager.actions, []);
 });
 

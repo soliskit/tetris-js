@@ -10,7 +10,7 @@ import { InputController } from './game/inputController.js';
 /** @typedef {import('./game/gameState.js').Board} Board */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
-const gameManager = new GameManager();
+const gameManager = new GameManager({ onChange: requestDraw });
 new InputController(gameManager);
 
 // Every id below exists in index.html; test/staticFiles.test.js checks that.
@@ -238,13 +238,22 @@ function drawSafely(draw) {
     lastSnapshot = '';
     if (!renderErrorReported) console.error('Tetris drawing error, retrying next frame:', error);
     renderErrorReported = true;
+    requestDraw();
   }
 }
 
-// The next frame is requested before drawing, so an error can never stop the loop.
-function render() {
-  requestAnimationFrame(render);
-  drawSafely(drawIfChanged);
+// Draws only when something may have changed: the engine reports every
+// action and timer, and the page asks after storage changes and drawing
+// errors. In between the page sleeps instead of waking up every frame.
+let drawRequested = false;
+
+function requestDraw() {
+  if (drawRequested) return;
+  drawRequested = true;
+  requestAnimationFrame(() => {
+    drawRequested = false;
+    drawSafely(drawIfChanged);
+  });
 }
 
 // Resizing a canvas clears it, so redraw in the same frame to avoid a flash.
@@ -392,9 +401,12 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Another tab saving or ending a game changes whether this one can continue.
-window.addEventListener('storage', () => gameManager.storageChanged());
+window.addEventListener('storage', () => {
+  gameManager.storageChanged();
+  requestDraw();
+});
 
-render();
+requestDraw();
 
 // Safari ignores user-scalable=no in the browser, but still lets pages
 // cancel its pinch gestures.

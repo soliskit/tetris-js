@@ -65,14 +65,28 @@ export class InputController {
     window.addEventListener('keyup', event => this.handleKey(event, false));
     window.addEventListener('blur', () => this.releaseAllInput());
     window.addEventListener('gamepaddisconnected', () => this.releaseAllInput());
-    // The next poll is requested first, so an error can never stop polling.
+    window.addEventListener('gamepadconnected', () => this.startPolling());
+    /** Whether a poll is scheduled for the next animation frame. */
+    this.polling = false;
+    // Browsers usually report a gamepad only once a button is pressed, but
+    // check once in case one is already available.
+    this.startPolling();
+  }
+
+  // Polls every frame while a gamepad is connected, then stops, so the page
+  // does not wake up every frame for nothing. An error keeps polling.
+  startPolling() {
+    if (this.polling) return;
+    this.polling = true;
     const poll = () => {
-      requestAnimationFrame(poll);
+      let connected = true;
       try {
-        this.pollGamepads();
+        connected = this.pollGamepads();
       } catch (error) {
         console.error('Tetris gamepad error:', error);
       }
+      if (connected) requestAnimationFrame(poll);
+      else this.polling = false;
     };
     requestAnimationFrame(poll);
   }
@@ -110,10 +124,11 @@ export class InputController {
     }
   }
 
+  /** @returns {boolean} Whether a gamepad is connected. */
   pollGamepads() {
-    if (!navigator.getGamepads) return; // no gamepad support in this browser
+    if (!navigator.getGamepads) return false; // no gamepad support in this browser
     const gamepad = navigator.getGamepads().find(pad => pad?.connected);
-    if (!gamepad) return;
+    if (!gamepad) return false;
     const pressed = new Set(
       Object.entries(PAD_BUTTONS)
         .filter(([, index]) => gamepad.buttons[index]?.pressed)
@@ -121,6 +136,7 @@ export class InputController {
     );
     // Browser axes are +1 down, GameController's are +1 up, so flip y.
     this.processInput(pressed, gamepad.axes[0] ?? 0, -(gamepad.axes[1] ?? 0));
+    return true;
   }
 
   /**
