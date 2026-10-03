@@ -121,7 +121,7 @@ test('new game after game over resets the board, score, level and held piece [ST
   assert.equal(game.isSessionSaved, false);
 });
 
-test('new game while paused gives up that game and starts afresh, forgetting its save [STA-1]', () => {
+test('new game pressed twice while paused gives up that game and starts afresh, forgetting its save [STA-1]', () => {
   const { game } = newGame({ factory: fixedFactory(cyan) });
   game.handleAction(PlayerAction.hold);
   fillRows(game, [19], [9]);
@@ -129,12 +129,48 @@ test('new game while paused gives up that game and starts afresh, forgetting its
   game.togglePause();
   assert.equal(game.isSessionSaved, true);
   game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.paused, 'the first press only asks');
+  assert.equal(game.isNewGamePending, true);
+  assert.equal(game.score, 100);
+  assert.equal(game.isSessionSaved, true);
+  game.handleAction(PlayerAction.newGame);
   assert.equal(game.state, GameState.playing);
+  assert.equal(game.isNewGamePending, false);
   assert.equal(filledCells(game), 0);
   assert.equal(game.score, 0);
   assert.equal(game.heldTetromino, null);
   assert.equal(game.isSessionSaved, false);
   assert.notEqual(game.gameLoopTask, null, 'gravity runs');
+});
+
+test('anything else between the two New Game presses on the pause screen cancels the first [STA-1]', () => {
+  for (const [what, between] of [
+    ['an ignored move', game => game.handleAction(PlayerAction.moveLeft)],
+    ['a soft drop', game => game.softDrop()],
+    ['a continue', game => game.handleAction(PlayerAction.continueGame)]
+  ]) {
+    const { game } = newGame({ factory: fixedFactory(cyan) });
+    game.togglePause();
+    game.handleAction(PlayerAction.newGame);
+    between(game);
+    assert.equal(game.isNewGamePending, false, what);
+    game.handleAction(PlayerAction.newGame);
+    assert.equal(game.state, GameState.paused, `${what}: the next press asks again`);
+    assert.equal(game.isNewGamePending, true, what);
+  }
+  const { game } = newGame({ factory: fixedFactory(cyan) });
+  game.togglePause();
+  game.handleAction(PlayerAction.newGame);
+  game.togglePause();
+  assert.equal(game.state, GameState.playing, 'resuming plays on');
+  assert.equal(game.isNewGamePending, false);
+});
+
+test('new game at game over starts at once, with no second press [STA-1]', () => {
+  const game = new GameManager({ scheduler: createFakeScheduler(), factory: fixedFactory(cyan) });
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.state, GameState.playing);
+  assert.equal(game.isNewGamePending, false);
 });
 
 // Movement
