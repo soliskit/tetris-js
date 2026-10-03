@@ -14,7 +14,6 @@ import { allPieces } from './tetrominoFactory.js';
  * @typedef {object} Session
  * @property {Board} gameBoard
  * @property {number} score
- * @property {number} level
  * @property {Tetromino} currentTetromino
  * @property {Tetromino[]} nextTetrominos
  * @property {Tetromino | null} heldTetromino
@@ -32,7 +31,6 @@ export function serializeSession(game) {
   return JSON.stringify({
     gameBoard: game.gameBoard,
     score: game.score,
-    level: game.level,
     currentTetromino: game.currentTetromino,
     nextTetrominos: game.nextTetrominos,
     heldTetromino: game.heldTetromino,
@@ -183,7 +181,6 @@ export function parseSession(text, { rows, columns }) {
   return {
     gameBoard,
     score,
-    level: Math.floor(score / 1000) + 1, // derived, never trusted from the save
     currentTetromino,
     nextTetrominos,
     heldTetromino,
