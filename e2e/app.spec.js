@@ -173,6 +173,22 @@ test('caches left by earlier versions of the game are cleared out [APP-2]', asyn
   await expect(page).toHaveTitle('Tetris');
 });
 
+// GitHub Pages serves every project of an account from one origin, so other
+// projects' caches sit next to the game's.
+test('caches of other projects on the same origin are left alone [APP-6]', async ({ page }) => {
+  // Set up from a page that does not start the service worker.
+  await page.goto('/icons/icon.svg');
+  await page.evaluate(async () => {
+    const other = await caches.open('other-project');
+    await other.put('/other-project/', new Response('Other project'));
+  });
+  await page.goto('/');
+  // The worker takes control of the page only after clearing out old caches.
+  await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+  expect(await page.evaluate(async () => (await caches.keys()).includes('other-project'))).toBe(true);
+  expect(await page.evaluate(async () => (await (await caches.match('/other-project/', { cacheName: 'other-project' }))?.text()))).toBe('Other project');
+});
+
 // A deploy caught half uploaded, or a connection lost partway through the
 // download: the cache must keep the old version whole, never a mix.
 test('a new version that cannot be downloaded in full leaves the cached game whole [APP-2]', async ({ page }) => {
