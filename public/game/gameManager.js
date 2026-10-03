@@ -105,8 +105,8 @@ export class GameManager {
     this.heldTetromino = null;
     /** @type {GameStateValue} */
     this.state = GameState.gameOver;
-    /** Whether New Game was pressed once on the pause screen, waiting for a second press. */
-    this.isNewGamePending = false;
+    /** Whether the pause screen is asking the player to confirm New Game, which gives up the game. */
+    this.isConfirmingNewGame = false;
     /** Counts every change to the locked blocks, so the page knows when to redraw them. */
     this.boardVersion = 0;
     this.score = 0;
@@ -452,17 +452,17 @@ export class GameManager {
 
   /** @param {PlayerActionValue} action */
   performAction(action) {
-    // A second New Game press on the pause screen confirms the first; any
-    // other action in between cancels it.
-    const newGameConfirmed = this.isNewGamePending;
-    this.isNewGamePending = false;
+    // New Game on the pause screen asks first, and a second New Game
+    // confirms; any other action in between cancels the question.
+    const newGameConfirmed = this.isConfirmingNewGame;
+    this.isConfirmingNewGame = false;
     switch (action) {
       case PlayerAction.newGame:
-        // From game over, or while paused to give up that game. That takes
-        // a second press, so one stray press cannot end a game.
+        // From game over, or while paused to give up that game, once the
+        // player confirms, so one stray press cannot end a game.
         if (this.state === GameState.playing) return;
         if (this.state === GameState.paused && !newGameConfirmed) {
-          this.isNewGamePending = true;
+          this.isConfirmingNewGame = true;
           return;
         }
         this.resetGameSession();
@@ -515,8 +515,15 @@ export class GameManager {
   }
 
   softDrop() {
-    this.isNewGamePending = false;
+    this.isConfirmingNewGame = false;
     this.guard(() => this.dropTetromino());
+  }
+
+  // Answers no to the pause screen's New Game question: the game stays paused.
+  cancelNewGame() {
+    this.guard(() => {
+      this.isConfirmingNewGame = false;
+    });
   }
 
   hardDrop() {
