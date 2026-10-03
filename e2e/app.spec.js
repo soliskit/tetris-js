@@ -64,10 +64,12 @@ test('the canvases are rebuilt when the screen pixel density changes [DSP-2]', a
   const size = page.viewportSize();
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: size.width, height: size.height, deviceScaleFactor: 2, mobile: false });
+  // Reported separately, so a failure shows whether the density changed or
+  // the page did not rebuild the canvas for it.
   await expect.poll(() => page.evaluate(() => {
     const canvas = document.getElementById('tetris');
-    return devicePixelRatio === 2 && canvas.width === Math.round(canvas.getBoundingClientRect().width * 2);
-  })).toBe(true);
+    return { devicePixelRatio, rebuilt: canvas.width === Math.round(canvas.getBoundingClientRect().width * 2) };
+  })).toEqual({ devicePixelRatio: 2, rebuilt: true });
   await expect.poll(() => filledCount(page)).toBe(4);
 });
 
