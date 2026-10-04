@@ -47,11 +47,11 @@ APP-* in REQUIREMENTS.md: APP-1, APP-2, APP-3, APP-4, APP-5, APP-6
 | Audited commit | 30e0085; measured at 409faf4, which has the same code, tests and configuration (section 1) | git |
 | `GameManager` lines | 591 (`public/game/gameManager.js`) | `wc -l` |
 | Mutable-state inventory | Section 4 | Code search |
-| Test count | 288 unit tests: 288 pass, 0 fail, 0 skipped | Local run and CI run 37216193410 agree |
+| Test count | 288 reported by the test runner, all passing, 0 fail, 0 skipped: 287 tests defined in the 11 `test/*.test.js` files, plus `test/helpers.js`, which `node --test` also runs as a file (its default file pattern includes everything under `test/`) and counts as one passing test although it defines none | Local run and CI run 37216193410 agree on 288 |
 | Browser-test count | 183: 61 tests in each of the three projects (WebKit at iPhone size, Chromium at iPhone size, Chromium at desktop size). In CI: 164 passed, 19 skipped, 0 failed. The 19 skips are declared in the tests: 13 touch tests on the desktop project, which has no touch, and 6 in WebKit (the install check, two Tab focus tests and three tests that need real touch events) | `npx playwright test --list`; CI run 37216193410 |
 | Coverage, engine (`public/game/`) | Lines 100% (1,434 of 1,434), branches 100% (465 of 465), functions 100% (138 of 138) | Node 26.10.0 test runner coverage; counts from its lcov output; CI prints the same percentages |
 | Coverage, page script (`public/script.js`) | Lines 100% (591 of 591), branches 100% (176 of 176), functions 100% (29 of 29) | Local Chromium projects with `scripts/browser-coverage.js`; counts from the same coverage map; CI prints 100% for all four measures |
-| Mutation totals | 1,152 mutants tested in `public/game/`, plus 2 left out by the documented shuffle exclusion (F10). The same 1,152 in CI | Section 5 |
+| Mutation totals | 1,152 mutants tested, in the engine (`public/game/`) only, plus 2 left out by the documented shuffle exclusion (F10). The same 1,152 in CI. `public/script.js` and `public/sw.js` are not mutated; the page script's only mutation evidence is the historical pilot (section 5) | Section 5 |
 | Killed, survived, timed out, errored | Local: 1,128 killed, 0 survived, 24 timed out, 0 errors, 0 without coverage. CI run 37216743885: 1,120 killed, 0 survived, 32 timed out, 0 errors, 0 without coverage | Section 5 |
 | Mutation score and repository threshold | 100.00, locally and in CI. Threshold in `stryker.config.json`: break 100 (the run fails below it), high 100, low 95; timeout 20,000 ms; concurrency 4. Timed out mutants count as caught, as QA-6 states | Section 5 |
 | Type-check result | Pass: `npm run typecheck` (both `tsconfig.json` and `tsconfig.sw.json`) exits 0 with no errors, locally and in CI | Local run; CI run 37216193410 |
@@ -101,7 +101,17 @@ Other modules:
 
 ## 5. Mutation results
 
-Local full run, `npm run test:mutation` (Stryker 10.0.0, every file in `public/game/`, 4 workers on a 4 core machine, Node 26.10.0):
+Scope. Stryker mutates `public/game/**/*.js`, the seven engine files, and nothing else: the page script `public/script.js` and the service worker `public/sw.js` are not mutated, and the browser tests in `e2e/` take no part. Every mutant is judged by one command, from `stryker.config.json`:
+
+```
+exec node --test --test-isolation=none test/model.test.js test/tetromino.test.js test/factory.test.js test/game.test.js test/gameManager.test.js test/session.test.js test/safety.test.js test/inputController.test.js
+```
+
+These eight files hold 266 of the 287 unit tests (counted by running the same command at 409faf4). The other three test files, `test/server.test.js`, `test/staticFiles.test.js` and `test/traceability.test.js` (21 tests), are not run against mutants. Stryker's command runner treats the whole command as one test (its dry run reports "Ran 1 tests"), so a mutant is killed when any of the 266 fails.
+
+Historical evidence for the page script, not Phase 0 evidence: the only mutation testing of `public/script.js` is the page script mutation pilot of October 3, 2026 (AUDIT.md D5 and its Baselines row). It mutated the hold box and New Game dialog handlers, 45 mutants, against the Chromium browser tests one mutant at a time: 35 killed, 7 timed out, 3 survived (93.3%), in 29 minutes 15 seconds. Its survivors led to F13 and F14, fixed in PR #39, and F15, rejected as equivalent. D5 estimates about 5.3 hours for all 488 mutants in the page script. The pilot ran before PR #39 and was not re-run for this record. `public/sw.js` has no mutation evidence.
+
+Local full run, `npm run test:mutation` (Stryker 10.0.0, the scope above, 4 workers on a 4 core machine, Node 26.10.0):
 
 | File | Killed | Timed out | Survived | No coverage | Errors | Score |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -133,7 +143,7 @@ A mutant that makes the tests run past the fixed 20 second limit counts as timed
 
 | Run | Commit | Result |
 | --- | --- | --- |
-| Test and deploy 37216193410 (push to main) | 409faf4 | Success. Test job: type check pass; 288 unit tests pass with 100% engine coverage; 183 browser tests, 164 passed and 19 skipped, page script coverage 100%. Deploy job: success |
+| Test and deploy 37216193410 (push to main) | 409faf4 | Success. Test job: type check pass; 288 unit tests reported, all passing (287 tests and `test/helpers.js`, section 3), with 100% engine coverage; 183 browser tests, 164 passed and 19 skipped, page script coverage 100%. Deploy job: success |
 | Test and deploy 37175384449 (push to main) | 30e0085 | Success |
 | Mutation testing on pull requests 37173755667 (PR #42) | aae40ba, whose code trees equal 30e0085's | Success: full suite, 1,152 mutants, 1,121 killed, 31 timed out, 0 survived, 0 errors, score 100.00 |
 | Mutation testing 37216743885 (manual run for this record) | 409faf4 | Success: full suite, 1,152 mutants, 1,120 killed, 32 timed out, 0 survived, 0 errors, score 100.00, 32 minutes 17 seconds |
@@ -167,7 +177,12 @@ Deployment: the deploy job uploaded the `public` folder as the `github-pages` ar
 * Development dependencies: `@playwright/test` 1.63.0, `@stryker-mutator/core` 10.0.0, `typescript` 7.0.2, `istanbul-lib-coverage` 3.2.2, `istanbul-lib-report` 3.0.1, `istanbul-reports` 3.2.0, `v8-to-istanbul` 9.3.0. The lockfile (version 3) installs 245 packages. `npm audit` reported 0 vulnerabilities on October 4, 2026, for all dependencies and for runtime ones alone.
 * Workflows: `pages.yml` runs the type check, unit tests and browser tests on every pull request and push to main, and deploys only after the test job passes on a push or manual run (never on a pull request). `mutation-pr.yml` runs on pull requests that change `public/game/`, `test/` or itself. `mutation.yml` runs Mondays at 06:17 UTC and on demand. The test and mutation jobs have only `contents: read`; the deploy job has `pages: write` and `id-token: write` and uses the `github-pages` environment.
 * Actions are referenced by major version tag, not pinned to a commit: `actions/checkout@v7`, `actions/setup-node@v7`, `actions/upload-artifact@v7`, `actions/configure-pages@v6`, `actions/upload-pages-artifact@v5`, `actions/deploy-pages@v5`.
-* Branches: GitHub reports `main` as protected. Which checks the rules require, and whether they require a pull request, could not be read with the tools available in this session (B2 says the rules require the test check but do not necessarily require a pull request). This value is not recorded here; see section 11.
+* Repository rules on `main`, as far as the tools available here show them:
+  * GitHub's branch listing reports `main` as protected (October 4, 2026).
+  * Every commit on `main`'s first-parent history after the initial commit of June 28, 2024 is a pull request merge: 40 merges, PR #6 to PR #45. This shows how changes have reached `main`, not what the rules enforce.
+  * PR #45 was merged with no review on record, so either the rules require no approving review, or the merge bypassed one; which, the tools here cannot tell.
+  * PR #46, which carries this record, at head a4bf15f: GitHub reported it `blocked` while its `test` check was running, and `clean` once that check passed at 17:13:49 UTC, with no review on record and the `deploy` job skipped, as it is on every pull request. That fits the `test` check being required and no approving review being required of the owner's account, but it is inferred from the merge state, not read from the rules.
+  * Remaining limit: the rule contents themselves (which status checks are required, whether a pull request and approvals are required, who may bypass, and whether force pushes and deletion are blocked) cannot be read with the GitHub tools available in this session, which have no rulesets or branch protection call. B2's statement, that the rules require the test check but do not necessarily require a pull request, is neither confirmed nor contradicted. The owner can read the settings under Settings, Rules, Rulesets, and Settings, Branches.
 * Before this record, the weekly mutation workflow had run once (September 28, 2026, at 96fb774), so no scheduled run had covered 30e0085.
 
 ## 8. Service worker and network observations
@@ -181,11 +196,12 @@ Deployment: the deploy job uploaded the `public` folder as the `github-pages` ar
 
 ## 9. Hosting and security headers (APP-6)
 
-Fetched on October 4, 2026 through this session's egress proxy, which re-terminates TLS, so the headers are as that proxy delivered them.
+Fetched on October 4, 2026 from this session, whose HTTPS traffic passes through an egress proxy that re-terminates TLS. Everything below is what was observed on that proxy route. It is not generalized to the origin: what the origin sends to other clients was not observed.
 
-* Every file checked (`/tetris-js/`, `sw.js`, `script.js`, `manifest.webmanifest`) is served by `GitHub.com` with `cache-control: max-age=600` and `access-control-allow-origin: *`, and the right content type (`text/html`, `application/javascript`, `application/manifest+json`, each `charset=utf-8`).
-* None of these headers is sent: `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Service-Worker-Allowed`, or any `Cross-Origin-*` policy. `index.html` has no CSP `meta` element either, so the project sets no CSP.
-* The game is served from `https://soliskit.github.io/tetris-js/`. The origin's root, `https://soliskit.github.io/`, also answers (200), so content outside this project is served from the same origin, which shares `localStorage` and the Cache Storage with the game, as APP-6 describes. Which other projects or workers are on the origin was not examined.
+* On this route, every file checked (`/tetris-js/`, `sw.js`, `script.js`, `manifest.webmanifest`) arrived with `server: GitHub.com`, `cache-control: max-age=600` and `access-control-allow-origin: *`, and the right content type (`text/html`, `application/javascript`, `application/manifest+json`, each `charset=utf-8`).
+* None of these headers was observed on this proxy route: `Content-Security-Policy`, `Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Service-Worker-Allowed`, or any `Cross-Origin-*` policy. Whether the origin sends any of them to other clients was not established.
+* Repository fact, separate from the route: `index.html` at 409faf4 has no CSP `meta` element.
+* The game is served from `https://soliskit.github.io/tetris-js/`. On this route the origin's root, `https://soliskit.github.io/`, answered 200. APP-6 itself states that GitHub Pages serves every project of an account from one origin that shares storage and caches; which other projects or workers are on the origin was not examined.
 * Whether GitHub Pages lets a project set its own response headers was not established here.
 
 ## 10. Appendix B2 observations rechecked
@@ -200,21 +216,72 @@ Fetched on October 4, 2026 through this session's egress proxy, which re-termina
 | The worker's network calls are `fetch(request)` around line 100 and `cache.addAll` at line 142 | Reproduced (section 8) |
 | No server or shared leaderboard | Reproduced (section 8) |
 | Main deployment follows CI | Reproduced: the deploy job needs the test job (`pages.yml`), and the 409faf4 deployment followed a passing test job |
-| Repository rules require the test check but do not necessarily require a PR | Not checked: `main` is reported protected, but the rules could not be read (section 7) |
+| Repository rules require the test check but do not necessarily require a PR | Neither confirmed nor contradicted: `main` is reported protected and every change since the initial commit arrived by pull request, but the rule contents could not be read (section 7) |
 | `express` is local-development infrastructure | Reproduced (section 7) |
 | One constant `innerHTML` use | Reproduced: `script.js`:231 |
-| No project-level CSP | Reproduced (section 9) |
-| Hosting-header limits not yet established | Still not established; the headers actually sent are recorded in section 9 |
+| No project-level CSP | Partly: `index.html` has no CSP `meta` element, and no CSP header was observed on this session's proxy route, which is not generalized to the origin (section 9) |
+| Hosting-header limits not yet established | Still not established; the headers observed on this session's proxy route are in section 9 |
 | GitHub Pages shared origin implications remain relevant to APP-6 | Noted in section 9 |
 
-## 11. Environment, limits and what is not recorded
+## 11. Environment, commands, limits and what is not recorded
 
 * Local machine: Linux, 4 cores, Node 26.10.0 and npm 12.2.0 installed for this record (the machine came with Node 22). `npm ci` left the working tree unchanged.
-* Playwright 1.63.0 expects Chromium build 1243 and WebKit build 2359. This machine has neither, and no browser was downloaded. The two Chromium projects ran locally with the preinstalled Chromium 141 headless shell, through a configuration file kept outside the repository that imports `playwright.config.js` and changes only the browser executable: 122 tests, 109 passed, 13 skipped (the desktop touch tests), 0 failed, and page script coverage 100%. WebKit was not run locally (B4); the WebKit result is the CI result. The page script coverage counts in section 3 come from this local Chromium 141 run; CI, with Chromium 153, prints only percentages, all 100%.
-* A first local attempt used the full Chromium 141 browser instead of its headless shell. The install check (APP-1, `e2e/app.spec.js`:103) failed in both Chromium projects: that browser reported the installability error `in-incognito`. The same test passed with the headless shell and in CI. Why the full browser reports it was not investigated. This is recorded so the failure is not lost; it is a property of the local browser, not an observation about the game.
-* Not recorded: which checks the repository rules require and whether they require a pull request (section 7). The owner can read this under Settings, Rules, or approve the exit with this value recorded as unavailable.
+
+Commands, run from the repository root at 409faf4:
+
+```
+# Toolchain: Node 26.10.0 from nodejs.org, checked against its SHASUMS256.txt, then
+npm install --global npm@12.2.0
+npm ci
+
+# Type check (npm run typecheck)
+tsc -p tsconfig.json && tsc -p tsconfig.sw.json
+
+# Unit tests with the 100% coverage gate (npm test)
+node --test --experimental-test-coverage --test-coverage-include="public/game/**" --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100
+
+# Engine coverage counts: the same run with the lcov reporter; LF/LH, BRF/BRH and FNF/FNH summed over the files
+node --test --experimental-test-coverage --test-coverage-include="public/game/**" --test-reporter=lcov --test-reporter-destination=unit.lcov
+
+# Tests run against mutants, counted
+node --test --test-isolation=none test/model.test.js test/tetromino.test.js test/factory.test.js test/game.test.js test/gameManager.test.js test/session.test.js test/safety.test.js test/inputController.test.js
+
+# Browser test count (no browser needed)
+npx playwright test --list
+
+# Chromium browser tests, local, then the page script coverage report and its 100% check
+npx playwright test -c pw-local.config.mjs
+node scripts/browser-coverage.js
+
+# Mutation testing (npm run test:mutation), with stryker.config.json
+stryker run
+```
+
+`pw-local.config.mjs`, kept outside the repository, verbatim:
+
+```js
+// Scratch only: runs the repository's Chromium projects with the preinstalled
+// Chromium, since this machine has no Playwright 1.63 browser builds.
+import base from '/home/user/tetris-js/playwright.config.js';
+const repo = '/home/user/tetris-js';
+export default {
+  ...base,
+  testDir: `${repo}/e2e`,
+  globalSetup: `${repo}/e2e/global-setup.js`,
+  outputDir: `${repo}/test-results`,
+  webServer: { ...base.webServer, cwd: repo },
+  projects: base.projects
+    .filter(p => p.use.browserName === 'chromium')
+    .map(p => ({ ...p, use: { ...p.use, launchOptions: { executablePath: '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell' } } }))
+};
+```
+
+It keeps everything else from `playwright.config.js`: the two Chromium projects with their viewports, touch and scale settings, `fullyParallel`, no retries, and the web server (`node index.js` on port 4173). The paths are absolute because the file lives outside the repository. The executable is the Chromium headless shell, build 1194, which reports Chromium 141.0.7390.37; Playwright chose 2 workers. The page script's absolute coverage counts come from a scratch script that loads the per-test files in `coverage/browser/` with `v8-to-istanbul` and `istanbul-lib-coverage`, as `scripts/browser-coverage.js` does, and prints the covered and total counts of the merged map.
+* Playwright 1.63.0 expects Chromium build 1243 and WebKit build 2359. This machine has neither, and no browser was downloaded. The two Chromium projects ran locally with the preinstalled Chromium 141 headless shell, through the configuration above: 122 tests, 109 passed, 13 skipped (the desktop touch tests), 0 failed, and page script coverage 100%. WebKit was not run locally (B4); the WebKit result is the CI result. The page script coverage counts in section 3 come from this local Chromium 141 run; CI, with Chromium 153, prints only percentages, all 100%.
+* A first local attempt used the full Chromium 141 browser instead of its headless shell. The install check (APP-1, `e2e/app.spec.js`:103) failed in both Chromium projects: that browser reported the installability error `in-incognito`. The same test passed with the headless shell and in CI. Why the full browser reports it was not investigated. It is recorded so the failure is not lost; no conclusion about the game is drawn from it. That attempt used the same configuration with `executablePath: '/opt/pw-browsers/chromium'`, the full browser, Chromium 141.0.7390.37.
+* Not readable here: the contents of the repository rules on `main` (section 7 records what could be recovered and the limit).
 * B5's prior evidence (the fault-injection matrix, persistence write detector, random-play probe, browser fault probes and timing measurements) was not re-run; the blueprint places its reproduction in later phases.
 
 ## 12. Phase 0 exit
 
-The blueprint: "Phase 0 closes only when the required Appendix B values, including the CI result, are actually recorded." Every B1 value is recorded above, including the CI result, except the repository rules detail noted in sections 7 and 11. Phase 0 exit, and with it the start of Phase 1, is the owner's decision under the Audit Advancement Gate and is not approved by this record.
+The blueprint: "Phase 0 closes only when the required Appendix B values, including the CI result, are actually recorded." Every B1 value is recorded above, including the CI result. For the repository rules, section 7 records the facts recovered and the one remaining limit: the rule contents could not be read with the tools available here. Phase 0 exit, and with it the start of Phase 1, is the owner's decision under the Audit Advancement Gate and is not approved by this record.
