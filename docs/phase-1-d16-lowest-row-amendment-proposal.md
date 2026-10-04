@@ -59,7 +59,9 @@ Resource check for B13 (running states): no additional authoritative game-state 
 
 ### A3a. Persistence and legacy-save consequences (material, not resolved here)
 
-Historical low affects future PLY-6 behavior: whether a later move reaches a new lowest row depends on the stored value. Under P1 the paused-state discriminator affects future behavior on resume. STA-4 says pausing saves the game and Continue restores exactly what was saved, paused. Consequence, stated as a requirement-derived [L] consequence: if either item is adopted into D16, an accepted current-format save must preserve enough information to restore that item's value exactly, wherever the item applies (the lowest row for a current piece; the discriminator for a paused resting piece at count 15). A save that loses either value would resume with different future behavior than the game that was saved.
+Historical low affects future PLY-6 behavior: whether a later move reaches a new lowest row depends on the stored value. Under P1 the paused-state discriminator affects future behavior on resume. STA-4 says pausing saves the game and Continue restores exactly what was saved, paused. Consequence, stated as a requirement-derived [L] consequence: if either item is adopted into D16, a save newly written under the adopted semantics must preserve enough information to restore that item's semantic value exactly wherever the item applies (the lowest row for a current piece; the discriminator for a paused resting piece at count 15). Otherwise Continue could resume with future behavior different from the game that was saved.
+
+The compatibility case is distinct. Saved games already represented in the released formats required by STA-6, including the released format STA-6 calls the current format, predate these semantic items. Their absence therefore cannot simply make those supported saves invalid. Loading them requires an explicit compatibility rule, because the missing historical information cannot in general be reconstructed exactly.
 
 Compatibility problem from STA-6:
 
@@ -72,7 +74,7 @@ Policies that could be analyzed, none adopted, each an owner interpretation / co
 
 1. Initialize a missing lowest row to the current piece's greatest occupied row. Consequence: a piece that had already been lower and moved up gets extra restart room after loading, so behavior can differ from the uninterrupted game.
 2. Choose a defined compatibility value for the P1 discriminator when it is missing (for example, treat the allowance as consumed, or as not consumed). Consequence: one of the two cases C5 or C7 is resumed wrongly for legacy saves at paused/resting/count 15.
-3. Introduce a version-specific compatibility rule, so legacy-format loads follow a stated rule and current-format loads restore exactly. Consequence: a format-version distinction in the later save text.
+3. Introduce a version-specific compatibility rule, so loads of saves in the released formats follow a stated rule and loads of saves newly written under the adopted semantics restore exactly. Consequence: a format-version distinction in the later save text.
 
 STA-4 already states one precedent in kind: a save from before the bag was saved continues with a fresh bag. It is a precedent for a compatibility default, not a ruling on these items.
 
@@ -162,4 +164,4 @@ Nothing in Part B is approved or applied. It describes an amendment to section 1
 
 **Reset count.** The lock-delay reset count (item 9) is a whole number from 0 to 15. The rules for when it changes are not part of this amendment; they belong to the later valid-state and legal-operation text, after the owner has chosen.
 
-**Unchanged.** Items 1 to 14, the derived items, the runtime resources and the presentation state of D16 are not altered by these amendments. These amendments do not rewrite the persisted representation of D16. If the added items are part of the game state, an accepted current-format save must restore their values exactly where they apply, and how legacy saves without them load is decided in the later save-validity text. 
+**Unchanged.** Items 1 to 14, the derived items, the runtime resources and the presentation state of D16 are not altered by these amendments. These amendments do not rewrite the persisted representation of D16. If the added items are part of the game state, a save newly written under the adopted semantics must preserve enough information to restore their semantic values exactly wherever they apply. Saved games already represented in the released formats required by STA-6, which predate these items, cannot simply be made invalid by the absence of the new values; how they load requires an explicit compatibility rule decided in the later save-validity text. 
