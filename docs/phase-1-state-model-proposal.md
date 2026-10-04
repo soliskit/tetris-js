@@ -1,6 +1,6 @@
 # Phase 1 proposal: state categories and authoritative transition boundary
 
-Status: **HISTORICAL PROPOSAL, REVIEW MATERIAL ONLY.** The owner's adopted rules are in `docs/phase-1-state-decision.md` (decision D16 in `AUDIT.md`). This document is not normative. Where it differs from that document, `docs/phase-1-state-decision.md` governs. The text below is unchanged from the reviewed proposal.
+Status: **HISTORICAL PROPOSAL, REVIEW MATERIAL ONLY.** This document is not normative. The clean candidate decision text is in `docs/phase-1-state-decision.md`. Where the two differ, that document is the candidate text. The text below is unchanged from the reviewed proposal.
 
 Base: main (D15 merged). Nothing in `docs/audit-blueprint.txt`, `docs/audit-blueprint.pdf`, `REQUIREMENTS.md`, `AUDIT.md`, the production code, the tests, the CI configuration or any proof tool is changed by this document.
 
