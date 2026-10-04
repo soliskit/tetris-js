@@ -184,6 +184,42 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => filledCount(page)).toBe(8);
   });
 
+  test('Enter and Space on the focused hold box are kept from the browser\'s default action [INP-3] [INP-6]', async ({ page }) => {
+    test.skip(!isChromium(page), 'Safari only moves focus to buttons with Tab when its settings ask it to');
+    const hold = page.locator('#heldPreview');
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => filledCount(page)).toBe(4);
+    await page.keyboard.press('Tab');
+    await expect(hold).toBeFocused();
+    // Listening after the game, on the hold box itself, sees what the game did with each key.
+    await hold.evaluate(canvas => {
+      window.holdKeys = [];
+      canvas.addEventListener('keydown', event => window.holdKeys.push([event.key, event.defaultPrevented]));
+    });
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    expect(await page.evaluate(() => window.holdKeys)).toEqual([['Enter', true], [' ', true]]);
+  });
+
+  test('a click inside the New Game dialog, away from its buttons, keeps the question open [STA-1]', async ({ page }) => {
+    const dialog = page.locator('#newGameDialog');
+    await continueSavedGame(page, savedGame({ piece: PieceColors.purple, score: 300 }));
+    const kept = await boardCells(page);
+    await page.keyboard.press('Enter');
+    await expect(dialog).toBeVisible();
+    // On the question, and on the padding around the dialog's content,
+    // halfway down, clear of the rounded corners, which are outside it.
+    await page.locator('#newGameQuestion').click();
+    const content = page.locator('.dialog-content');
+    const { height } = await content.boundingBox();
+    await content.click({ position: { x: 10, y: height / 2 } });
+    await page.waitForTimeout(300);
+    await expect(dialog).toBeVisible();
+    await expectLabel(page, 'Resume');
+    expect(await boardCells(page)).toEqual(kept);
+  });
+
   test('gravity moves the piece down, and pause stops it [PLY-2] [STA-2] [INP-1]', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('Enter');
