@@ -64,6 +64,20 @@ test('an error inside a timer stops the game safely and is reported [SAF-3]', ()
   assertSafeStop(game, scheduler, reported, 'unexpected error');
 });
 
+test('an error inside the gravity timer stops the game safely and is reported [SAF-3]', () => {
+  const factory = breakableFactory();
+  const { game, scheduler, reported } = recordingGame({ factory });
+  repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
+  game.lockDelayResetCount = 15; // the landing locks at once
+  game.lowestRowReached = game.currentTetromino.position.row + 1;
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 1, 'only gravity is waiting');
+  factory.broken = true;
+  assert.doesNotThrow(() => scheduler.advance(700));
+  assertSafeStop(game, scheduler, reported, 'unexpected error');
+  assert.equal(reported[0].error.message, 'factory failure');
+});
+
 test('an error during a soft drop is contained [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
@@ -75,16 +89,19 @@ test('an error during a soft drop is contained [SAF-3]', () => {
   assertSafeStop(game, scheduler, reported, 'unexpected error');
 });
 
-test('after a fault the last good save can still be continued [SAF-3]', () => {
+test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
   const storage = createMemoryStorage();
   const factory = breakableFactory();
   const { game, reported } = recordingGame({ factory, storage });
   game.handleAction(PlayerAction.moveLeft);
   game.togglePause(); // good save
   game.togglePause();
+  const saved = storage.getItem('tetris.savedGameSession');
   factory.broken = true;
   game.handleAction(PlayerAction.drop);
   assert.equal(reported.length, 1);
+  assert.equal(storage.getItem('tetris.savedGameSession'), saved, 'not rewritten');
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'not forgotten');
   assert.equal(game.isSessionSaved, true);
   factory.broken = false;
   game.handleAction(PlayerAction.continueGame);
@@ -104,6 +121,30 @@ test('after a fault New Game starts a clean game [SAF-3]', () => {
   assert.ok(game.gameBoard.flat().every(cell => !cell.isFilled));
   scheduler.advance(700);
   assert.equal(game.currentTetromino.position.row, 1);
+});
+
+test('after a fault no action or timer restarts play or changes the game [SAF-3]', () => {
+  const { game, scheduler, reported } = recordingGame();
+  game.guard(() => { throw new Error('engine failure'); });
+  assertSafeStop(game, scheduler, reported, 'unexpected error');
+  const snapshot = () => JSON.stringify([game.gameBoard, game.currentTetromino, game.nextTetrominos, game.heldTetromino, game.canHoldTetromino, game.score]);
+  const before = snapshot();
+  // Checked after each one, since some would undo another (left, then right).
+  // New Game and Continue are the ways out, tested above.
+  const attempts = [
+    ...[PlayerAction.resume, PlayerAction.pause, PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate,
+      PlayerAction.rotateCounterclockwise, PlayerAction.hold, PlayerAction.drop].map(action => [action, () => game.handleAction(action)]),
+    ['soft drop', () => game.softDrop()],
+    ['toggle pause', () => game.togglePause()],
+    ['time passing', () => scheduler.advance(5000)]
+  ];
+  for (const [name, attempt] of attempts) {
+    attempt();
+    assert.equal(game.state, GameState.gameOver, name);
+    assert.equal(scheduler.pending, 0, name);
+    assert.equal(snapshot(), before, name);
+  }
+  assert.equal(reported.length, 1, 'nothing else went wrong');
 });
 
 // Each invariant, broken on purpose, is caught by the monitor after the next operation.
