@@ -89,16 +89,19 @@ test('an error during a soft drop is contained [SAF-3]', () => {
   assertSafeStop(game, scheduler, reported, 'unexpected error');
 });
 
-test('after a fault the last good save can still be continued [SAF-3]', () => {
+test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
   const storage = createMemoryStorage();
   const factory = breakableFactory();
   const { game, reported } = recordingGame({ factory, storage });
   game.handleAction(PlayerAction.moveLeft);
   game.togglePause(); // good save
   game.togglePause();
+  const saved = storage.getItem('tetris.savedGameSession');
   factory.broken = true;
   game.handleAction(PlayerAction.drop);
   assert.equal(reported.length, 1);
+  assert.equal(storage.getItem('tetris.savedGameSession'), saved, 'not rewritten');
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'not forgotten');
   assert.equal(game.isSessionSaved, true);
   factory.broken = false;
   game.handleAction(PlayerAction.continueGame);
