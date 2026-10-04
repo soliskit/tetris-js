@@ -23,7 +23,15 @@ Section 1.1 says Phase 0 re-runs the pre-audit check and records the output. A s
 
 ```
 REQUIREMENTS.md rows: 55
-SAF-1, SAF-2, SAF-3, SAF-4, PLY-2, PLY-7, STA-1, STA-4, APP-6: exact match
+SAF-1: exact match
+SAF-2: exact match
+SAF-3: exact match
+SAF-4: exact match
+PLY-2: exact match
+PLY-7: exact match
+STA-1: exact match
+STA-4: exact match
+APP-6: exact match
 Reproduced texts matching exactly: 9 of 9
 Distinct IDs cited in the blueprint: 35
 Cited IDs: APP-2, APP-3, APP-6, INP-1, INP-2, INP-3, INP-4, PCE-1, PCE-2, PCE-3, PCE-4, PCE-5, PCE-6, PLY-2, PLY-3, PLY-6, PLY-7, QA-1, QA-2, QA-3, QA-4, QA-5, QA-6, SAF-1, SAF-2, SAF-3, SAF-4, SAF-5, SAF-6, SCO-1, SCO-2, STA-1, STA-3, STA-4, STA-6
@@ -44,8 +52,8 @@ APP-* in REQUIREMENTS.md: APP-1, APP-2, APP-3, APP-4, APP-5, APP-6
 | Coverage, engine (`public/game/`) | Lines 100% (1,434 of 1,434), branches 100% (465 of 465), functions 100% (138 of 138) | Node 26.10.0 test runner coverage; counts from its lcov output; CI prints the same percentages |
 | Coverage, page script (`public/script.js`) | Lines 100% (591 of 591), branches 100% (176 of 176), functions 100% (29 of 29) | Local Chromium projects with `scripts/browser-coverage.js`; counts from the same coverage map; CI prints 100% for all four measures |
 | Mutation totals | 1,152 mutants tested in `public/game/`, plus 2 left out by the documented shuffle exclusion (F10). The same 1,152 in CI | Section 5 |
-| Killed, survived, timed out, errored | Local: 1,128 killed, 0 survived, 24 timed out, 0 errors, 0 without coverage. CI: CI_COUNTS | Section 5 |
-| Mutation score and repository threshold | 100.00 locally and CI_SCORE in CI. Threshold in `stryker.config.json`: break 100 (the run fails below it), high 100, low 95; timeout 20,000 ms; concurrency 4. Timed out mutants count as caught, as QA-6 states | Section 5 |
+| Killed, survived, timed out, errored | Local: 1,128 killed, 0 survived, 24 timed out, 0 errors, 0 without coverage. CI run 37216743885: 1,120 killed, 0 survived, 32 timed out, 0 errors, 0 without coverage | Section 5 |
+| Mutation score and repository threshold | 100.00, locally and in CI. Threshold in `stryker.config.json`: break 100 (the run fails below it), high 100, low 95; timeout 20,000 ms; concurrency 4. Timed out mutants count as caught, as QA-6 states | Section 5 |
 | Type-check result | Pass: `npm run typecheck` (both `tsconfig.json` and `tsconfig.sw.json`) exits 0 with no errors, locally and in CI | Local run; CI run 37216193410 |
 | CI result | Section 6 | GitHub Actions |
 | Deployment result | Section 6 | GitHub Actions; live site |
@@ -110,9 +118,16 @@ The report's JSON also lists the 2 mutants left out by the documented exclusion 
 
 CI full runs on the same code:
 
-Pending: the manual run of `mutation.yml` on main (run 37216743885, at 409faf4) is in progress. The last full CI run on the same code trees was PR #42's run 37173755667 at aae40ba: 1,152 mutants, 1,121 killed, 31 timed out, 0 survived, 0 without coverage, 0 errors, score 100.00, 32 minutes 16 seconds.
+| Run | Commit | Killed | Timed out | Survived | No coverage | Errors | Score | Time |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 37216743885, the manual run of `mutation.yml` for this record | 409faf4 | 1,120 | 32 | 0 | 0 | 0 | 100.00 | 32 minutes 17 seconds |
+| 37173755667, PR #42's full run in `mutation-pr.yml` | aae40ba, whose code trees equal 30e0085's | 1,121 | 31 | 0 | 0 | 0 | 100.00 | 32 minutes 16 seconds |
 
-Timeouts differ between runs because a mutant that makes the tests hang is stopped at 20 seconds, and how many reach that limit rather than failing an assertion depends on the machine's speed. As B3 notes, a timeout counts as caught under the repository gate but is weaker evidence than a failing assertion.
+Per file in run 37216743885: `gameManager.js` 409 killed and 14 timed out, `tetromino.js` 53 and 6, `tetrominoFactory.js` 143 and 11, `gameState.js` 23 and 1; `inputController.js` 328, `session.js` 160 and `position.js` 4 killed, none timed out. Every file scores 100.00, and Stryker reported "Final mutation score of 100.00 is greater than or equal to break threshold 100". Its report is the run's artifact 11309411340.
+
+In all three runs every one of the 1,152 mutants was caught and none survived. Only the split between killed and timed out moved (24, 31 and 32 timed out), and only in `gameManager.js`; the other files have the same counts in all three. The CI run's totals equal the prior local run that B3 records (1,120 killed, 32 timed out).
+
+A mutant that makes the tests run past the fixed 20 second limit counts as timed out, so whether a slow mutant is recorded as killed or timed out can vary with the machine; which mutants moved was not investigated. As B3 notes, a timeout counts as caught under the repository gate but is weaker evidence than a failing assertion.
 
 ## 6. CI and deployment
 
@@ -121,7 +136,7 @@ Timeouts differ between runs because a mutant that makes the tests hang is stopp
 | Test and deploy 37216193410 (push to main) | 409faf4 | Success. Test job: type check pass; 288 unit tests pass with 100% engine coverage; 183 browser tests, 164 passed and 19 skipped, page script coverage 100%. Deploy job: success |
 | Test and deploy 37175384449 (push to main) | 30e0085 | Success |
 | Mutation testing on pull requests 37173755667 (PR #42) | aae40ba, whose code trees equal 30e0085's | Success: full suite, 1,152 mutants, 1,121 killed, 31 timed out, 0 survived, 0 errors, score 100.00 |
-| Mutation testing 37216743885 (manual run for this record) | 409faf4 | Pending: in progress |
+| Mutation testing 37216743885 (manual run for this record) | 409faf4 | Success: full suite, 1,152 mutants, 1,120 killed, 32 timed out, 0 survived, 0 errors, score 100.00, 32 minutes 17 seconds |
 
 CI toolchain in run 37216193410: runner image ubuntu-24.04 (version 20260927.320.1), Node 26.10.0, npm 12.2.0, Playwright 1.63.0 with Chrome for Testing 153.0.8010.12 (Chromium build 1243) and WebKit 26.6 (build 2359).
 
