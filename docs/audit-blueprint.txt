@@ -14,6 +14,7 @@ Changelog. Drafted by the assistant. It records what changed and where each chan
 * Added in the third review round (assistant drafting; the owner approves the blueprint as a whole): the Apple statement now says O1 to O8 are the owner's adopted properties with Apple material as inspiration only and no cited source; the scope-table rows are labelled illustrative; F20 has an applicability question; Phase 1 exit has an observable "fault reported" criterion; Phase 2 records a reason for each excluded file.
 * Added in the previous review round (assistant drafting; the owner approves the blueprint as a whole): "forgetting" replaces "deletion" in F20, 4.7 and N1, and the N1 record is corrected against gameManager.js:194; the good-save definition separates persisted-state validity from transition ordering; Phase 4.1 states that the implementation predicate cannot supply its own expected result; F20 separates the ordering question from the consequence question and states that the high-score write is not presumed to follow the saved-game rule; Phase 1 defines "reported" independently of the callback; a concrete requirement-scope table template; the status wording separates the persistence-ordering framework from the open R2 and R4 semantics. The three earlier history blocks were removed as superseded by this Changelog, and the "(drafted)" marker convention was dropped.
 * Amendment (assistant drafting, for owner review; not owner approval): the Status line states what is recorded; B2 names the service worker's `cache.addAll` network call; Phase 0 points to B1 as the single list, and B1 adds the mutation threshold and repository configuration facts; Appendix D lists the source files now kept in docs/.
+* Amendment (assistant drafting, for owner review; not owner approval): new section 4.8 on service-worker attacks, and an authorship-independence rule in O8 for the reference model.
 
 Reserved to the owner: R1 to R5, any change to REQUIREMENTS.md or to the D8 behavior, approval of this blueprint, and every phase exit.
 
@@ -304,6 +305,8 @@ Correspondence between the model and implementation is established through indep
 
 Correspondence evidence is not treated as proof merely because both sides agree.
 
+Authorship independence: the model is written from REQUIREMENTS.md and the owner-approved Phase 1 decisions, by an author who has not read the production code under public/ (for example, a separate session with no access to it). Where that cannot be done, the exception, the reason, and the independence argument that replaces it are recorded and need the owner's approval. This applies to areas whose semantics Phase 1 has settled; the model is not built for an area still open (for example R2 or R4).
+
 ⸻
 
 1.3 Exact meaning of valid state
@@ -512,7 +515,7 @@ Construct a small executable model of:
 * persistence effects;
 * safe-failure transition.
 
-The model is independent of production transition logic.
+The model is independent of production transition logic and is authored as O8 requires (authorship independence).
 
 It must not call production validators to decide whether its own expected result is correct.
 
@@ -1003,6 +1006,20 @@ For each wrapper:
 5. test any real dependency boundary that can be injected.
 
 If a wrapper contains no independent mutation or post-guard behavior and no relevant exception boundary exists, record the result as evidence rather than inventing a hypothetical failure.
+
+⸻
+
+4.8 Service-worker attacks (APP-2, APP-6)
+
+public/sw.js keeps its own state: one cache per downloaded version (names starting `tetris-version-`), page pins in `tetris-pins`, and deletion of older versions. Test the following as attacks on APP-2 and APP-6, without presuming a defect:
+
+* a cache from another project on the same origin that uses a name the worker deletes (`tetris`, `tetris-2`, or a name starting `tetris-version-`);
+* a malformed or unreadable entry in `tetris-pins`;
+* two downloads that start at the same time;
+* a download cut off partway;
+* a page opening just as a download finishes.
+
+At c311c00 the browser tests in e2e/app.spec.js already cover offline use, clearing of the caches left by earlier versions, a foreign cache named `other-project` left alone (APP-6), a download that cannot complete, and a page that loads every file from the version it opened with while a newer one finishes (APP-2). Phase 4 records which attacks those tests already exercise and adds the ones that are missing. Whether deleting the exact names `tetris` and `tetris-2` conflicts with APP-6's "deletes only caches it made" is for the audit to decide. It is recorded as an observation, not a defect, until it is reproduced and classified.
 
 ⸻
 
