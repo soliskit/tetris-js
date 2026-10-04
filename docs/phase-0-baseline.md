@@ -43,9 +43,9 @@ APP-* in REQUIREMENTS.md: APP-1, APP-2, APP-3, APP-4, APP-5, APP-6
 | Browser-test count | 183: 61 tests in each of the three projects (WebKit at iPhone size, Chromium at iPhone size, Chromium at desktop size). In CI: 164 passed, 19 skipped, 0 failed. The 19 skips are declared in the tests: 13 touch tests on the desktop project, which has no touch, and 6 in WebKit (the install check, two Tab focus tests and three tests that need real touch events) | `npx playwright test --list`; CI run 37216193410 |
 | Coverage, engine (`public/game/`) | Lines 100% (1,434 of 1,434), branches 100% (465 of 465), functions 100% (138 of 138) | Node 26.10.0 test runner coverage; counts from its lcov output; CI prints the same percentages |
 | Coverage, page script (`public/script.js`) | Lines 100% (591 of 591), branches 100% (176 of 176), functions 100% (29 of 29) | Local Chromium projects with `scripts/browser-coverage.js`; counts from the same coverage map; CI prints 100% for all four measures |
-| Mutation totals | Pending: the local run is in progress | Section 5 |
-| Killed, survived, timed out, errored | Pending: the local run is in progress | Section 5 |
-| Mutation score and repository threshold | Pending: the local run is in progress.. Threshold in `stryker.config.json`: break 100 (the run fails below it), high 100, low 95; timeout 20,000 ms; concurrency 4. Timed out mutants count as caught, as QA-6 states | Section 5 |
+| Mutation totals | 1,152 mutants tested in `public/game/`, plus 2 left out by the documented shuffle exclusion (F10). The same 1,152 in CI | Section 5 |
+| Killed, survived, timed out, errored | Local: 1,128 killed, 0 survived, 24 timed out, 0 errors, 0 without coverage. CI: CI_COUNTS | Section 5 |
+| Mutation score and repository threshold | 100.00 locally and CI_SCORE in CI. Threshold in `stryker.config.json`: break 100 (the run fails below it), high 100, low 95; timeout 20,000 ms; concurrency 4. Timed out mutants count as caught, as QA-6 states | Section 5 |
 | Type-check result | Pass: `npm run typecheck` (both `tsconfig.json` and `tsconfig.sw.json`) exits 0 with no errors, locally and in CI | Local run; CI run 37216193410 |
 | CI result | Section 6 | GitHub Actions |
 | Deployment result | Section 6 | GitHub Actions; live site |
@@ -95,7 +95,18 @@ Other modules:
 
 Local full run, `npm run test:mutation` (Stryker 10.0.0, every file in `public/game/`, 4 workers on a 4 core machine, Node 26.10.0):
 
-Pending: the run is in progress.
+| File | Killed | Timed out | Survived | No coverage | Errors | Score |
+| --- | --- | --- | --- | --- | --- | --- |
+| `gameManager.js` | 417 | 6 | 0 | 0 | 0 | 100.00 |
+| `gameState.js` | 23 | 1 | 0 | 0 | 0 | 100.00 |
+| `inputController.js` | 328 | 0 | 0 | 0 | 0 | 100.00 |
+| `position.js` | 4 | 0 | 0 | 0 | 0 | 100.00 |
+| `session.js` | 160 | 0 | 0 | 0 | 0 | 100.00 |
+| `tetromino.js` | 53 | 6 | 0 | 0 | 0 | 100.00 |
+| `tetrominoFactory.js` | 143 | 11 | 0 | 0 | 0 | 100.00 |
+| All files | 1,128 | 24 | 0 | 0 | 0 | 100.00 |
+
+The report's JSON also lists the 2 mutants left out by the documented exclusion as Ignored. Stryker reported "Final mutation score of 100.00 is greater than or equal to break threshold 100" and finished in 18 minutes 24 seconds (16:23:53 to 16:42:18 UTC); the command exited 0.
 
 CI full runs on the same code:
 
