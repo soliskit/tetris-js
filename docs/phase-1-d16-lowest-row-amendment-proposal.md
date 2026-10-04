@@ -57,7 +57,8 @@ Options, with consequences, labeled; the owner decides:
 - **P1.** Keep C5 and C7 as written and add one more authoritative item that records, for a paused resting piece, whether the pause consumed the last allowance (so resume starts a delay) or found it already exhausted (so resume locks). Satisfies the literal wording of STA-2 and PLY-6 in both cases. Costs one more D16 item in the amendment. Not added here.
 - **P2.** Resume with count 15 and a resting piece always locks at once. C5 changes: a pause that takes the count to 15 still counts as reset 15, but resume then locks at once. No extra state. It matches PLY-6 literally (the piece comes to rest by "play resuming", and the 15 are used) and departs from STA-2's "resuming starts it again" in that one corner.
 - **P3.** A pause does not consume the allowance: the count is unchanged and resume always starts the delay (the earlier R1a reading). No extra state. It departs from STA-2's "counts as one reset" and makes pausing a free restart.
-- Current reviewer recommendation, labeled, not adopted and not shown sufficient: **P1**, because it keeps the literal STA-2 behavior for the legitimate 15th reset (resume starts a delay) without allowing a 16th restart (C7 still locks at once). It needs the extra D16 item and the persistence consequences in A3a. P2 is the alternative if no extra item is wanted. Every option rests on an owner interpretation, and the owner decides.
+- **P4 (count-16 alternative, proposed by the owner for review; P1 above is unchanged).** Item 9 stays the sole reset-count item and its later R1 domain becomes 0 to 16. A pause with count 15 and a running delay records count 16, which marks exhaustion and is not a 16th restart. Full analysis in A3b.
+- Previously labeled reviewer recommendation, not adopted and not shown sufficient: **P1**, because it keeps the literal STA-2 behavior for the legitimate 15th reset (resume starts a delay) without allowing a 16th restart (C7 still locks at once). It needs the extra D16 item and the persistence consequences in A3a. P2 is the alternative if no extra item is wanted. The owner has stated a preference for P4 over P1 if review finds P4 coherent; A3b reports that review. Every option rests on an owner interpretation, and the owner decides.
 
 Resource check for B13 (running states): no additional authoritative game-state item is required for C2. D16 already places the lock-delay timer handle and state in the runtime resources. When C2 says the existing deadline continues, the existing scheduled firing and deadline remain part of that runtime-resource state. The exact timer representation and how it corresponds to elapsed time are later evidence questions. Under C7/P2 and C9 the piece locks at once on the transition that would otherwise start a delay, so no committed playing state has a resting piece at count 15 and no outstanding delay, and no state exists in which a delay must run and cannot. While paused, STA-2 leaves no running lock-delay resource. Runtime timer state therefore cannot distinguish the two paused/resting/count-15 states of C5 and C7. That is why P1 needs an authoritative item and not a resource.
 
@@ -83,6 +84,66 @@ Policies that could be analyzed, none adopted, each an owner interpretation / co
 STA-4 already states one precedent in kind: a save from before the bag was saved continues with a fresh bag. It is a precedent for a compatibility default, not a ruling on these items.
 
 This issue must be resolved before the final R1 and save-validity text can be approved. R2/R4 storage ordering and failure behavior are not resolved here.
+
+### A3b. Alternative P4 (count-16), review only, not adopted
+
+P4 is a separately named alternative. It does not change the meaning of P1 above. It remains a proposed owner interpretation resolving a boundary interaction between PLY-6 and STA-2. This review does not claim it is forced by the requirements.
+
+**Proposed semantics, for owner decision.**
+
+1. D16 item 9 remains the sole lock-delay reset-count item. No second authoritative item is added (P1's item 16 is not needed).
+2. Its later R1 domain becomes 0 to 16, conditional on selecting P4.
+3. The values 0 to 15 count reset events through the legitimate 15-reset allowance.
+4. A pause during a lock delay counts as one reset (STA-2). If the count is already 15, the paused, resting state is recorded as count 16.
+5. Count 16 does not represent a 16th restart allowance. It marks "the allowance was already used when the pause happened".
+6. Resume from paused, resting, count 15: the 0.5 s delay starts. Resume from paused, resting, count 16: the piece locks at once, with no further restart.
+7. Reaching a new lowest row resets the count to 0 (C4), including from 15 or 16 where applicable.
+8. C2 and C9 stay as drafted in the table above.
+
+Because D16 item 9 states no domain, "0 to 16" is a later R1 domain, not a D16 amendment. The definition in A3 ("number of restart allowances consumed ... 0 to 15") would be replaced under P4 by "number of reset events counted since the most recent lowest-row reset, 0 to 16, where 16 marks a pause taken after the 15 were used".
+
+**Cases under P4.**
+
+| Case | State before | Event | Result under P4 |
+| --- | --- | --- | --- |
+| P4-1 | count < 14, resting, delay running | pause | count + 1; resume starts the delay (C6) |
+| P4-2 | count 14, resting, delay running | pause | count 15; resume starts the delay (C5) |
+| P4-3 | count 15, resting, delay running (C2) | pause | delay canceled; count 16; resume locks at once (C7) |
+| P4-4 | paused, resting, count 15 | resume | delay starts (the 15th restart) |
+| P4-5 | paused, resting, count 16 | resume | lock at once; no restart |
+| P4-6 | count 15, delay canceled by C3, not resting | pause | no reset (C8); count stays 15; paused, not resting. Resume keeps falling; a later rest locks at once (C9) |
+| P4-7 | count 16 | any playing event | not applicable: see validity below |
+
+**Why this separates C5 from C7 without a second item.** After the pause in C5 the stored count is 15; after the pause in C7 the stored count is 16. The two paused states differ in item 9 itself, so the future behavior on resume is a function of the semantic state. This is also true of reachability: a paused, resting, count-15 state can only come from a pause at count 14 with a delay running, because every playing resting state at count 15 has a running delay (C2, C9) and a pause there records 16. So no paused, resting, count-15 state comes from an exhausted allowance.
+
+**Where count 16 may exist.** Count 16 is needed only to separate "exhausted at the pause" from "15th restart still owed" for a paused game whose current piece is resting. The proposed validity condition is: count 16 is valid only when the game is paused and the current piece is resting. It is not valid in any playing state: resume from 16 locks at once, so no committed playing state holds 16 (consistent with the B13 resource check above: no playing state exists in which a delay must run and cannot). It is not valid for a paused piece that is not resting (P4-6 keeps 15). It is not valid with no current falling piece. This condition is a new validity constraint on item 9 for the later valid-state text; P1 would need an equivalent applicability constraint on its discriminator.
+
+**Compatibility with the four requirement phrases.**
+
+- PLY-6 "at most 15 times". Compatible if "restart" means a restart of the delay. Delay restarts happen at counts 1 to 15 (including the resume at count 15 in P4-4); no delay restart follows from count 16. The count domain has 16 values of "reset events", so the sentence is read as about delay restarts, not about the number stored. That reading is an owner interpretation.
+- PLY-6 "once the 15 are used, landing locks at once". Compatible at count 16 and at C9. Reading P4-4 (resume at count 15 starts the delay) as consistent requires reading the 15th use as the delay that the resume starts; that is the same owner reading as C5.
+- STA-2 "counts as one reset". Satisfied literally: every pause during a lock delay changes the count by one, including 15 to 16. Count 16 is a counted reset that does not grant a restart.
+- STA-2 "resuming starts it again". Satisfied for counts below 16 (P4-1, P4-2, P4-4). Not satisfied at count 16, where resume locks at once. This is the same corner in which P2 departs from STA-2, now limited to a pause taken after the 15 were used. Under P1, C7 also locks at once on resume, so P1 and P4 depart from the same literal words in the same case (C7). The difference between P1 and P4 is where the distinction is stored, not the behavior.
+
+**Honest comparison with P1.** P1 and P4 give the same behavior in every case. P4 stores the distinction inside item 9 by giving the count a seventeenth value (0 to 16). P1 stores it in a separate item. The information needed is the same one extra distinction in either; neither is "free". P4 avoids a second authoritative item, but it changes item 9's meaning from restart allowances consumed to reset events counted, adds the validity constraint on 16, and makes 16 depend on the pause rule (a count of 16 cannot be reached by any move or rotation). The question for the owner is which representation determines all required future behavior from the semantic state with the least additional authority. Mutation-testing convenience is not a reason for either choice. Mutation tests could later test the selected semantics, but they are not authority for the state model.
+
+**Persistence under P4.** A save newly written under the adopted semantics must preserve the exact lowest row and the exact reset count, including 16 where applicable (A3a). If P4 is selected, the separate P1 discriminator and its legacy-missing-field compatibility choice do not exist.
+
+### A3c. Legacy-save compatibility analysis (proposed rules, analyzed and not adopted)
+
+Two version-specific compatibility rules are proposed for owner review. They apply only to saved games already represented in the released formats required by STA-6, which predate the lowest-row item and the P4 count 16. Saves newly written under the adopted semantics are not affected: they must preserve the exact lowest row and the exact reset count, including 16 where applicable.
+
+- **L1.** A released supported save lacking the lowest row initializes it to the current semantic piece's greatest occupied row.
+- **L2.** A released supported save with reset count 15 and no information allowing C5 or C7 reconstruction is interpreted under the legacy-load rule as the C5-compatible state: resume starts the delay.
+
+Both are deterministic compatibility defaults. Neither reconstructs the unknowable history of the saved game, and neither claims to. They are owner interpretations / compatibility rules.
+
+Consequences:
+
+- L1: a piece that had already been lower than its current row and moved up gets restart room after loading that the uninterrupted game would not have, so behavior can differ from the uninterrupted game. If the piece is at its lowest row the default is exact. A released save cannot show which case applies.
+- L2: the ambiguity exists only for a paused, resting piece at count 15. If the save came from a pause at count 14 (C5) the default is exact. If it came from a pause with the allowance already used (C7 origin), the default grants one delay that the exhausted-allowance reading would not. Released saves at count 15 with a piece that is not resting, or at counts other than 15, have no such ambiguity. L2 never produces a count of 16 from a legacy save. It maps to the existing value 15 and a delay.
+- L2 is stated for P4 and for P1. Under P4 the choice is exactly this one: there is no discriminator field to default. Under P1 the same default is the value given to the missing discriminator. Under P2 and P3 L2 is not needed.
+- A released save is accepted under STA-6; neither rule makes it invalid. Whether a legacy-loaded value later saves in the new format is decided in the later save-validity text and is not resolved here. R2/R4 storage ordering and failure behavior are not resolved here.
 
 ### A4. Input 3: SRS geometry oracle candidate
 
@@ -140,23 +201,25 @@ SHA-256 of the extracted table text (the lines above, without the four-space ind
 
 ### A6. Updated owner-choice package (nothing here is adopted)
 
-An earlier package pasted from outside advisors recommended choices. Those are advice; the choices below remain the owner's.
+An earlier package pasted from outside advisors recommended choices. Those are advice. The choices below remain the owner's. Where the Status column says "proposed by the owner for review", the owner stated the choice for analysis and has not adopted it.
 
 | # | Choice | Options | Status |
 | --- | --- | --- | --- |
-| 1 | Lowest-row semantics | historical low with greatest occupied block row (A2) / adjacent-state | Needs the D16 amendment if historical low |
-| 2 | Pause and the 15 allowance | P1, P2 or P3 (A3); C2 and C9 behavior | Owner interpretation; P1 is the current reviewer recommendation, not adopted, and needs one more D16 item |
-| 3 | PLY-7 hold | H1 per lock cycle / H2 per piece | Owner interpretation; both fit D16 as approved |
-| 4 | Ordinary game-over current piece | none / none or a retained piece satisfying PCE-6 | R1 bracket |
-| 5 | Other game-over items | semantically absent / retained within the normal domain; absent means the model has no semantic value, with no duty to clear an implementation field | R1 bracket |
-| 6 | Empty bag | valid / invalid / left to the transition decision | R1 bracket |
-| 7 | SRS geometry | adopt the A4 artifact by checksum / another artifact / leave as an oracle dependency | Owner |
-| 8 | Score domain and stored high score | integer 0 or more / also a multiple of 100 | R1 bracket |
-| 9 | Full row; hold-used implies held piece | adopt / not adopted, individually | R1 bracket |
-| 10 | Board cell | piece kind / color | R1 bracket |
+| 1 | Lowest-row semantics | historical low with greatest occupied block row (A2) / adjacent-state | Proposed by the owner for review: historical low, occupied block row. Needs the D16 amendment (Amendment 1) |
+| 2 | Pause and the 15 allowance | P1 (extra item), P2, P3, P4 (count 0 to 16) (A3, A3b) | Owner interpretation. P4 proposed by the owner for review, preferred over P1 if coherent; A3b finds the behavior identical to P1 with the distinction stored in item 9. P1 was the earlier reviewer recommendation. Not adopted |
+| 2a | C2 and C9 behavior | as drafted in A3 / other | Proposed by the owner for review: as drafted. Owner interpretation |
+| 3 | PLY-7 hold | H1 per lock cycle / H2 per piece | Proposed by the owner for review: H1. Owner interpretation; both fit D16 as approved |
+| 4 | Ordinary game-over current piece | none / none or a retained piece satisfying PCE-6 | Proposed by the owner for review: no semantic current piece. R1 bracket |
+| 5 | Other game-over items | semantically absent / retained within the normal domain; absent means no semantic value, with no duty to clear an implementation field | Proposed by the owner for review: semantically absent, no duty to clear implementation residue. R1 bracket |
+| 6 | Empty bag | valid / invalid / left to the transition decision | Proposed by the owner for review: valid. R1 bracket |
+| 7 | SRS geometry artifact | adopt the A4 image by SHA-256 / another artifact / leave as an oracle dependency | Proposed by the owner for review: the frozen TetrisWiki image by SHA-256 (candidate, external, independent of production code, community source). O non-rotation comes from PCE-4, not from the image |
+| 7a | Extracted geometry table | adopt the A5 table by SHA-256 / re-extract / none | Proposed by the owner for review: the A5 table by SHA-256 (extraction provenance in A4). Not adopted |
+| 8 | Score domain and stored high score | integer 0 or more / also a multiple of 100 | Proposed by the owner for review: whole number 0 or more, no multiple-of-100 predicate. R1 bracket |
+| 9 | Full row; hold-used implies held piece | adopt / not adopted, individually | Proposed by the owner for review: no full-row snapshot invariant and no hold-used implies held-piece invariant. R1 bracket |
+| 10 | Board cell | piece kind / color | Proposed by the owner for review: piece kind. R1 bracket |
 | 11 | SAF-4 check scope | element validity / length | Later, at SAF-4 mapping |
-| 12 | Legacy-save compatibility for a missing lowest row | initialize to current greatest occupied row / other defined value / version-specific rule (A3a) | Later owner decision; owner interpretation / compatibility rule; must precede final R1 and save-validity text |
-| 13 | Legacy-save compatibility for a missing P1 discriminator | defined compatibility value / version-specific rule (A3a); only if P1 | Later owner decision; same status as 12 |
+| 12 | Legacy-save default for a missing lowest row | L1: current greatest occupied row / other / version-specific rule (A3c) | Proposed by the owner for review: L1. Deterministic compatibility default, not exact reconstruction. Owner interpretation / compatibility rule; must precede final R1 and save-validity text |
+| 13 | Legacy-save default for a paused, resting, count-15 save | L2: resume starts the delay / lock at once / other (A3c) | Proposed by the owner for review: L2 (resume with delay). Same status as 12. Under P4 there is no discriminator field to default; under P1 L2 supplies the missing discriminator |
 
 ## Part B. Draft D16 amendment text (DRAFT, NOT APPROVED)
 
@@ -166,6 +229,6 @@ Nothing in Part B is approved or applied. It describes an amendment to section 1
 
 **Amendment 2 (conditional on the owner selecting P1).** Section 1.1 gains an item: 16. For a paused game whose current piece is resting, whether the pause consumed the last restart allowance. The item is meaningful only while paused. If the owner selects P2 or P3, this amendment is not made.
 
-**Reset count.** The lock-delay reset count (item 9) is a whole number from 0 to 15. The rules for when it changes are not part of this amendment; they belong to the later valid-state and legal-operation text, after the owner has chosen.
+**Reset count.** The lock-delay reset count (item 9) remains the lock-delay reset-count item. Its domain and the rules for when it changes are not part of this amendment; they belong to the later R1 and legal-operation text, after the owner has chosen.
 
 **Unchanged.** Items 1 to 14, the derived items, the runtime resources and the presentation state of D16 are not altered by these amendments. These amendments do not rewrite the persisted representation of D16. If the added items are part of the game state, a save newly written under the adopted semantics must preserve enough information to restore their semantic values exactly wherever they apply. Saved games already represented in the released formats required by STA-6, which predate these items, cannot simply be made invalid by the absence of the new values; how they load requires an explicit compatibility rule decided in the later save-validity text. 
