@@ -1,6 +1,6 @@
 # Phase 1 requirement-scope table
 
-Status: **owner scope decision recorded, subject to green CI on the exact head of the pull request that carries it** (see D14 in `AUDIT.md`). The owner approved this scope on October 4, 2026, after the assistant proposed it and the owner asked for one wording cleanup, made here. The assistant has read the production code, so it is not independent of the implementation (blueprint O8); this table is built from the requirement entries alone and makes no claim about what the code does.
+Status: **owner scope decision recorded, subject to green CI on the exact head of the pull request that carries it** (see D15 in `AUDIT.md`). The owner approved this scope on October 4, 2026, after the assistant proposed it and the owner asked for one wording cleanup, made here. The assistant has read the production code, so it is not independent of the implementation (blueprint O8); this table is built from the requirement entries alone and makes no claim about what the code does.
 
 Source: `REQUIREMENTS.md` at main 615dfee2b78067a504d3263d46bfc03e4a23ec84, SHA-256 fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc. It holds 55 requirement IDs, each in one row below, none missing or duplicated.
 
@@ -12,6 +12,13 @@ Blueprint 1.1 and the Phase 1 exit criteria require every ID to be marked in sco
 - Eight requirements depend on something outside the repository (APP-1, APP-4, DSP-1, DSP-2, DSP-4, DSP-6, DSP-7, QA-4). They remain in scope and may carry evidence gaps until the required device or browser evidence is obtained. Unavailable evidence is an evidence gap, not a reason to exclude the requirement.
 - "In scope" means the audit undertakes to address and certify the requirement if sufficient evidence can be obtained. It does not mean the requirement is already established or certified.
 - No state-model, boundary, R1 to R5 or certification decision is made or implied by this scope decision.
+
+Clarifications recorded with D15 (the owner's wording, October 4, 2026):
+
+- An in-scope requirement may carry an evidence gap at Phase 1 exit. Phase 1 exit approves scope and Phase 1 normative decisions; it does not certify the requirement.
+- Scope is determined by requirement applicability, not anticipated proofability or the later choice of trusted-state boundary. A later inability to establish an in-scope requirement is recorded as an evidence gap or certification result, not as a retroactive scope exclusion.
+
+What counts as a "timer" in SAF-4 is not decided here. It remains an owner decision for the later state-model and transition-boundary proposal.
 
 The Applicable claim, Evidence method and Certification status columns belong to Phases 3 and 5 and stay empty.
 
