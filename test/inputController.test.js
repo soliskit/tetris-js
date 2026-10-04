@@ -29,7 +29,12 @@ function setup(t) {
     softDrop() { this.actions.push('softDrop'); },
     cancelNewGame() { this.actions.push('cancelNewGame'); }
   };
-  const controller = new InputController(manager);
+  // The New Game question's buttons, recording what the controller asks of them.
+  const questionButtons = {
+    move(step) { manager.actions.push(`move ${step}`); },
+    press() { manager.actions.push('press'); }
+  };
+  const controller = new InputController(manager, questionButtons);
   const fire = (type, event = {}) => (listeners[type] ?? []).forEach(listener => listener(event));
   const key = (code, pressed = true, extra = {}) => {
     const event = { code, repeat: false, metaKey: false, ctrlKey: false, altKey: false, prevented: false, ...extra };
@@ -123,11 +128,11 @@ test('key repeat events from holding a key are ignored [INP-3]', t => {
   assert.deepEqual(manager.actions, [PlayerAction.drop]);
 });
 
-test('while the pause screen asks to confirm New Game, keys are left to its dialog, except a held key repeating and Escape, which answers no [STA-1] [INP-3]', t => {
+test('while the pause screen asks to confirm New Game, keys are left to its dialog, except a held key repeating, Escape, which answers no, and the left and right arrows, which move between its buttons [STA-1] [INP-3]', t => {
   const { manager, key, tap } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
-  for (const code of ['Enter', 'Space', 'KeyP', 'KeyC', 'Tab']) {
+  for (const code of ['Enter', 'Space', 'KeyP', 'KeyC', 'Tab', 'KeyA', 'KeyD']) {
     assert.equal(key(code).prevented, false, `${code} reaches the dialog's button`);
     key(code, false);
   }
@@ -137,12 +142,20 @@ test('while the pause screen asks to confirm New Game, keys are left to its dial
   key('Escape', true, { repeat: true });
   key('Escape', false);
   assert.deepEqual(manager.actions, ['cancelNewGame'], 'once per press');
+  // The arrows, not A and D, move between the buttons, once per press.
+  assert.equal(key('ArrowRight').prevented, true);
+  key('ArrowRight', true, { repeat: true });
+  key('ArrowRight', false);
+  assert.equal(key('ArrowLeft').prevented, true);
+  key('ArrowLeft', false);
+  assert.deepEqual(manager.actions, ['cancelNewGame', 'move 1', 'move -1']);
+  manager.actions = [];
   // A key pressed meanwhile still counts as held once the dialog closes.
   key('KeyD');
   manager.isConfirmingNewGame = false;
   manager.state = GameState.playing;
   tap('KeyA');
-  assert.deepEqual(manager.actions, ['cancelNewGame', PlayerAction.moveLeft, PlayerAction.moveRight]);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveRight]);
 });
 
 test('holding S or Down soft drops a row at once, then every 50ms until released [INP-1] [INP-2]', t => {
@@ -303,7 +316,7 @@ test('Menu and View act alone: other buttons pressed at the same moment do nothi
 test('View and A pressed together on the pause screen leave the New Game question open [INP-4] [STA-1]', t => {
   const { pads } = setup(t);
   const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
-  const controller = new InputController(game);
+  const controller = new InputController(game, { move() {}, press() {} });
   game.togglePause();
   pads[0] = gamepad({ pressed: ['view', 'a'] });
   controller.pollGamepads();
@@ -324,7 +337,7 @@ test('the menu button pauses during play and starts a new game at game over [INP
   assert.deepEqual(manager.actions, ['togglePause', PlayerAction.newGame]);
 });
 
-test('while the pause screen asks to confirm New Game, A confirms, B cancels, and nothing else on the gamepad acts [STA-1] [INP-4]', t => {
+test('while the pause screen asks to confirm New Game, left and right move between its buttons, A presses the selected one, B cancels, and nothing else on the gamepad acts [STA-1] [INP-4]', t => {
   const { manager, controller, pads, tick } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
@@ -332,18 +345,40 @@ test('while the pause screen asks to confirm New Game, A confirms, B cancels, an
     pads[0] = gamepad(state);
     controller.pollGamepads();
   };
-  for (const button of ['x', 'y', 'view', 'menu', 'lb', 'rb', 'up', 'down', 'left', 'right']) {
+  for (const button of ['x', 'y', 'view', 'menu', 'lb', 'rb', 'up', 'down']) {
     poll({ pressed: [button] });
     poll();
   }
-  poll({ x: -1, y: -1 });
+  poll({ y: -1 });
   tick(500);
   poll();
   assert.deepEqual(manager.actions, [], 'nothing else acts');
-  poll({ pressed: ['b'] });
-  assert.deepEqual(manager.actions, ['cancelNewGame']);
-  poll({ pressed: ['b', 'a'] });
-  assert.deepEqual(manager.actions, ['cancelNewGame', PlayerAction.newGame], 'A confirms, and B held from before does not cancel again');
+  // Once per push, on the directional pad or the stick, however long it is held.
+  poll({ pressed: ['right'] });
+  poll({ pressed: ['right'] });
+  tick(500);
+  poll({ pressed: ['right'] });
+  poll();
+  poll({ x: -1 });
+  poll({ x: -0.9 });
+  poll();
+  assert.deepEqual(manager.actions, ['move 1', 'move -1']);
+  manager.actions = [];
+  poll({ pressed: ['a'] });
+  assert.deepEqual(manager.actions, ['press'], 'A presses the selected button');
+  poll({ pressed: ['a', 'b'] });
+  assert.deepEqual(manager.actions, ['press', 'cancelNewGame'], 'B cancels, and A held from before does not press again');
+  poll();
+  // A push still held as the question closes does not then move a piece.
+  poll({ pressed: ['right'] });
+  manager.isConfirmingNewGame = false;
+  manager.state = GameState.playing;
+  manager.actions = [];
+  poll({ pressed: ['right'] });
+  assert.deepEqual(manager.actions, []);
+  poll();
+  poll({ pressed: ['right'] });
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight], 'a new push moves it');
 });
 
 test('the stick moves left and right with the same auto repeat as the keyboard [INP-4]', t => {

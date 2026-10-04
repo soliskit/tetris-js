@@ -7,14 +7,21 @@
 // Gamepad (standard mapping): stick or directional pad moves and soft drops,
 // A or pad up drop, B or right shoulder rotate, left shoulder rotate
 // counterclockwise, X hold, Y continue, Menu/Start pause or new game,
-// View/Select new game. While the pause screen asks to confirm New Game, A
-// confirms and B cancels.
+// View/Select new game. While the pause screen asks to confirm New Game,
+// left and right move between its buttons, A presses the selected one and B
+// cancels.
 
 import { GameState, PlayerAction } from './gameState.js';
 
 /** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
 /** @typedef {import('./gameManager.js').GameManager} GameManager */
 /** @typedef {Pick<GameManager, 'state' | 'isConfirmingNewGame' | 'handleAction' | 'togglePause' | 'softDrop' | 'cancelNewGame'>} Controllable */
+/**
+ * The New Game question's buttons, which the page shows: move selects the
+ * button before (-1) or after (1) the selected one, and press presses the
+ * selected one.
+ * @typedef {{ move(step: -1 | 1): void, press(): void }} QuestionButtons
+ */
 
 const DAS_DELAY_MS = 167;
 const ARR_INTERVAL_MS = 33;
@@ -53,9 +60,13 @@ const PAD_ACTIONS = [
 ];
 
 export class InputController {
-  /** @param {Controllable} gameManager */
-  constructor(gameManager) {
+  /**
+   * @param {Controllable} gameManager
+   * @param {QuestionButtons} questionButtons
+   */
+  constructor(gameManager, questionButtons) {
     this.gameManager = gameManager;
+    this.questionButtons = questionButtons;
     /** @type {PlayerActionValue | null} The move being auto repeated. */
     this.movement = null;
     /** @type {number | undefined} */
@@ -118,13 +129,18 @@ export class InputController {
     // While the pause screen asks to confirm New Game, keys belong to its
     // dialog and press its buttons, except a held key repeating: the Enter
     // that asked must not go on to answer. Escape answers no here rather
-    // than leaving the dialog to the browser, so the game hears of it at once.
+    // than leaving the dialog to the browser, so the game hears of it at once,
+    // and the left and right arrows move between the buttons, as on a
+    // controller.
     if (this.gameManager.isConfirmingNewGame) {
       if (event.repeat) {
         event.preventDefault();
       } else if (pressed && key === 'Escape') {
         event.preventDefault();
         this.gameManager.cancelNewGame();
+      } else if (pressed && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
+        event.preventDefault();
+        this.questionButtons.move(event.code === 'ArrowLeft' ? -1 : 1);
       }
       return;
     }
@@ -174,12 +190,20 @@ export class InputController {
   processInput(pressed, xAxis, yAxis) {
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
+    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
+      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight
+        : null;
 
-    // While the pause screen asks to confirm New Game, A confirms and B
-    // cancels; nothing else acts, so steering the stick cannot answer.
+    // While the pause screen asks to confirm New Game, left and right on the
+    // stick or directional pad move between its buttons, once per push, A
+    // presses the selected one and B cancels; nothing else acts. The pad's
+    // direction is still tracked, so a push held as the question closes does
+    // not then move a piece.
     if (this.gameManager.isConfirmingNewGame) {
-      if (newPresses.has('a')) this.gameManager.handleAction(PlayerAction.newGame);
+      if (newPresses.has('a')) this.questionButtons.press();
       else if (newPresses.has('b')) this.gameManager.cancelNewGame();
+      else if (direction && direction !== this.padDirection) this.questionButtons.move(direction === PlayerAction.moveLeft ? -1 : 1);
+      this.padDirection = direction;
       return;
     }
 
@@ -207,9 +231,6 @@ export class InputController {
 
     // Polling runs every frame, so only react to stick and pad changes;
     // otherwise a centered stick would cancel keyboard movement.
-    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
-      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight
-        : null;
     if (direction === this.padDirection) return;
     this.padDirection = direction;
     if (direction) {

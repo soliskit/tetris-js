@@ -10,7 +10,6 @@ import { InputController } from './game/inputController.js';
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
 const gameManager = new GameManager({ onChange: requestDraw });
-new InputController(gameManager);
 
 // Every id below exists in index.html; test/staticFiles.test.js checks that.
 /** @param {string} id */
@@ -515,8 +514,22 @@ element('newGameButton').addEventListener('click', () => gameManager.handleActio
 // close requests (such as Android's back gesture) answer no, and so does
 // Escape, through the input controller. Listening for clicks on the dialog
 // also keeps Safari from taking quick taps there as a double tap to zoom.
-element('confirmNewGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
-element('cancelNewGameButton').addEventListener('click', () => gameManager.cancelNewGame());
+const cancelNewGameButton = element('cancelNewGameButton');
+const confirmNewGameButton = element('confirmNewGameButton');
+confirmNewGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+cancelNewGameButton.addEventListener('click', () => gameManager.cancelNewGame());
+// In the order they appear.
+const questionButtons = [cancelNewGameButton, confirmNewGameButton];
+// The selected button is the focused one, so Tab and clicks stay in step with
+// a controller and the arrow keys, which move the focus; A presses it, as
+// Enter does. With none selected, a move selects Cancel, the safe answer.
+new InputController(gameManager, {
+  move: step => {
+    const index = questionButtons.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+    questionButtons[Math.max(0, Math.min(questionButtons.length - 1, index + step))].focus();
+  },
+  press: () => questionButtons.find(button => button === document.activeElement)?.click()
+});
 newGameDialog.addEventListener('click', event => {
   if (event.target === newGameDialog) gameManager.cancelNewGame();
 });
