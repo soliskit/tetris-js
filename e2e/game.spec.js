@@ -133,13 +133,77 @@ test.describe('start and game over', () => {
       await expectLabel(page, 'Resume');
       expect(await boardCells(page), how).toEqual(kept);
     }
-    // Enter on New Game gives the game up.
+    // The arrow keys move between the buttons, and the selected one is always highlighted.
     await page.keyboard.press('Enter');
     await expect(dialog).toBeVisible();
-    await confirm.focus();
+    await expect(cancel).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('ArrowRight');
+    await expect(confirm).toBeFocused();
+    await expect(confirm).toHaveCSS('outline-style', 'solid');
+    await page.keyboard.press('ArrowLeft');
+    await expect(cancel).toBeFocused();
+    // Enter on New Game gives the game up.
+    await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Enter');
     await expect(dialog).toBeHidden();
     await expectLabel(page, 'Pause');
+  });
+
+  test('with a controller, left and right move between the New Game dialog\'s buttons, A presses the selected one and B cancels [INP-4] [STA-1]', async ({ page }) => {
+    // A standard mapping controller the test presses buttons on.
+    await page.addInitScript(() => {
+      const pad = { connected: true, buttons: Array.from({ length: 16 }, () => ({ pressed: false })), axes: [0, 0] };
+      Object.defineProperty(window, 'testPad', { value: pad });
+      Object.defineProperty(navigator, 'getGamepads', { value: () => [pad], configurable: true });
+    });
+    const frames = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const push = async button => {
+      await page.evaluate(index => { window.testPad.buttons[index].pressed = true; }, button);
+      await frames();
+      await page.evaluate(index => { window.testPad.buttons[index].pressed = false; }, button);
+      await frames();
+    };
+    const [A, B, VIEW, LEFT, RIGHT] = [0, 1, 8, 14, 15];
+    const dialog = page.locator('#newGameDialog');
+    const cancel = page.locator('#cancelNewGameButton');
+    const confirm = page.locator('#confirmNewGameButton');
+    await continueSavedGame(page, savedGame({ piece: PieceColors.purple, score: 300 }));
+    const kept = await boardCells(page);
+    // A presses Cancel, selected and highlighted as the dialog opens.
+    await push(VIEW);
+    await expect(dialog).toBeVisible();
+    await expect(cancel).toBeFocused();
+    await expect(cancel).toHaveCSS('outline-style', 'solid');
+    await push(RIGHT);
+    await expect(confirm).toBeFocused();
+    await push(LEFT);
+    await expect(cancel).toBeFocused();
+    await push(A);
+    await expect(dialog).toBeHidden();
+    await expectLabel(page, 'Resume');
+    expect(await boardCells(page)).toEqual(kept);
+    // B cancels whichever is selected.
+    await push(VIEW);
+    await push(RIGHT);
+    await expect(confirm).toBeFocused();
+    await push(B);
+    await expect(dialog).toBeHidden();
+    await expectLabel(page, 'Resume');
+    // With none selected, A presses nothing, and a move selects Cancel.
+    await push(VIEW);
+    await expect(dialog).toBeVisible();
+    await cancel.evaluate(button => button.blur());
+    await push(A);
+    await expect(dialog).toBeVisible();
+    await push(RIGHT);
+    await expect(cancel).toBeFocused();
+    // A on New Game gives the game up.
+    await push(RIGHT);
+    await expect(confirm).toBeFocused();
+    await push(A);
+    await expect(dialog).toBeHidden();
+    await expectLabel(page, 'Pause');
+    await expect(page.locator('#score')).toHaveText('Score: 0');
   });
 });
 
