@@ -393,13 +393,17 @@ export class GameManager {
 
   /** @param {() => void} operation */
   runChecked(operation) {
+    /** @type {string | null} */
+    let violation;
     try {
       operation();
+      // Inside the try too: state broken in a way the check does not expect
+      // can make the check itself throw.
+      violation = this.findInvariantViolation();
     } catch (error) {
       this.failSafe('unexpected error', error);
       return;
     }
-    const violation = this.findInvariantViolation();
     if (violation) this.failSafe(violation);
   }
 
