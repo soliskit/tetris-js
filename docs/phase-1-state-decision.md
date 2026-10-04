@@ -1,10 +1,8 @@
 # Phase 1 decision: state categories and authoritative transition boundary
 
-Status: **owner decision recorded as D16 in `AUDIT.md`, subject to green CI on the exact head of the pull request that carries it.** The owner chose the rules below on October 4, 2026. This document holds only the adopted rules and their stated limits. The proposal that preceded it is `docs/phase-1-state-model-proposal.md`, kept as historical review material; where the two differ, this document governs.
+Status: **CANDIDATE normative decision text, for fidelity review. Not yet an adopted owner decision.** This text encodes the owner-choice package prepared from the completed proposal and reconciliation process. It awaits fidelity review of this exact text and then explicit owner approval of it. Until that approval it is not recorded in `AUDIT.md`, and it is a candidate for D16 only. The proposal that preceded it is `docs/phase-1-state-model-proposal.md`, kept as historical review material and not normative.
 
-Independence (blueprint O8): the assistant that wrote this text has read the production code, so the text is not independent of the implementation. It records the owner's choices and rests on `REQUIREMENTS.md` and the blueprint.
-
-This document certifies nothing. It establishes no implementation property.
+Limits of this text: it certifies nothing and establishes no implementation property. APP-2 and APP-6 remain in audit scope although outside this state model. R1 and the later Phase 1 decisions remain open. These are limits on the semantics below, not implementation evidence.
 
 ## 1. State categories
 
@@ -60,7 +58,7 @@ Derived state has no independent semantic authority. It is determined by other m
 
 Nondeterministic random values and the random source are modeled as input to bag refill and shuffle transitions. They are not authoritative game state. The resulting remaining bag contents are authoritative state (1.1, item 6).
 
-No requirement is adopted here that the production implementation expose or preserve random-generator internal state. A later requirement or proof obligation may need it.
+No requirement is adopted here that random-generator internal state be exposed or preserved.
 
 ## 3. Service-worker, cache and version state
 
