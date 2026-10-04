@@ -140,6 +140,24 @@ A mutant that makes the tests run past the fixed 20 second limit counts as timed
 
 CI toolchain in run 37216193410: runner image ubuntu-24.04 (version 20260927.320.1), Node 26.10.0, npm 12.2.0, Playwright 1.63.0 with Chrome for Testing 153.0.8010.12 (Chromium build 1243) and WebKit 26.6 (build 2359).
 
+Wall-clock times, from the step start and end times GitHub reports, which are whole seconds, so short steps are approximate:
+
+| Step | Test and deploy, run 37216193410 | Mutation testing, run 37216743885 |
+| --- | --- | --- |
+| Set up job and checkout | 1 s | 2 s |
+| `actions/setup-node` (Node 26, npm cache) | 7 s | 7 s |
+| `npm install --global npm@12.2.0` | 2 s | 2 s |
+| `npm ci` | 4 s | 3 s |
+| `npm run typecheck` | 1 s | |
+| `npm test` | 2 s | |
+| `npx playwright install --with-deps chromium webkit` | 49 s | |
+| `npm run test:e2e` (183 tests on 2 workers, then the coverage report) | 79 s | |
+| `npm run test:mutation` | | 32 min 18 s (Stryker reports 32 min 17 s) |
+| Upload the mutation report | | 3 s |
+| Whole job | Test 2 min 30 s (16:19:21 to 16:21:51 UTC); deploy 16 s (16:21:54 to 16:22:10) | 32 min 39 s (16:26:01 to 16:58:40 UTC) |
+
+Run 37216193410 was created at 16:17:03 UTC, but its test job only began at 16:19:21: the workflow's concurrency group queues pushes to main, and the run for PR #44's merge was still running until 16:19:19. From the start of the test job to the end of the deploy job took 2 minutes 49 seconds. The PR #42 mutation run took 32 minutes 33 seconds for the job, 32 minutes 17 seconds for its mutation step.
+
 Deployment: the deploy job uploaded the `public` folder as the `github-pages` artifact (105,695 bytes) and GitHub Pages reported the deployment of 409faf4 as successful. At 16:24 UTC on October 4, 2026 each of the 16 files under `public/` was fetched from https://soliskit.github.io/tetris-js/ and compared with the file at 409faf4: all 16 are byte for byte identical, and the folder URL itself serves `index.html`. Plain HTTP redirects to HTTPS (301).
 
 ## 7. Dependency and repository configuration facts
