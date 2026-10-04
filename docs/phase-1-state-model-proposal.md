@@ -10,6 +10,14 @@ The document has two parts. Part A is review material (reasoning, alternatives, 
 
 ## Part A. Review material
 
+### A0. The gate
+
+- Decides (owner decisions this proposal prepares): the placement of concrete state among the five categories; which transitions may commit each category; the authoritative transition boundary; the generic O1 rule for intermediate mutations and failure.
+- Leaves open for later gates: R1 predicates, R2/R4 persistence semantics, what "fault reported" means, the SAF-4 timer meaning, R3, R5, trust decisions, oracle and specification choices, the O8 pack.
+- Depends on earlier approved decisions: D14 (blueprint amendment, merged) and D15 (scope: all 55 requirements in scope, evidence gaps allowed, SAF-4 timer meaning undecided). Both are preserved verbatim and unchanged.
+- Exit criteria: the owner records the adopted placements, boundary and generic rule (Part B filled in) in a separate decision change, with CI on its exact head and the owner's separate merge authorization. This proposal alone does not meet them.
+- Labels: statements marked "Recommendation" are the drafter's recommendation, not an adopted rule. No evidence work is claimed here, so no evidence label (Tested, Proven, and so on) applies.
+
 ### A1. What this proposal decides and what it leaves open
 
 It asks the owner to choose: where each concrete piece of game state belongs among the five categories, which kinds of transition may commit each category, the authoritative transition boundary, and the generic rule for intermediate mutations and failure that O1 requires.
@@ -37,7 +45,7 @@ The five categories come from blueprint section 1.3 and are not reconsidered:
 
 ### A3. Proposed category placement
 
-Each row is derived from the requirement text, not from where the current code stores the item. "Alternative" is a reasonable different placement the owner may choose. Placement of every row is an owner decision.
+Each row is derived from the requirement text, not from where the current code stores the item. The Proposed column is the drafter's recommendation, not an adopted rule. "Alternative" is a reasonable different placement the owner may choose. Placement of every row is an owner decision.
 
 | Item | Proposed category | Reasoning from requirements | Alternative |
 | --- | --- | --- | --- |
@@ -103,6 +111,14 @@ If Rule 1 is chosen, the owner also chooses the generic failure rule for a trans
 - **Failure rule F2.** The engine enters the safe terminal/fault state with the authoritative state as it then is, which may be partly changed.
 
 Constraint from the committed blueprint: the safe terminal/fault state adds no condition on the board, queue, current piece, score or hold that SAF-3 does not state, because a fault normally leaves those contents malformed and the safe stop keeps them as they are. F1 and F2 differ in what the contents are at that point, and the choice does not add a validity condition to the fault state.
+
+Consequences and dependencies:
+
+- Rule 1 permits temporarily invalid intermediate states, so the failure rule matters and R1 must say which malformed contents are possible after a fault. Rule 2 needs no failure rule for partial changes, but it adds a requirement on every intermediate step that no requirement text states.
+- F1 needs the pre-transition state to be recoverable and gives R2/R4 a clear "state before the fault" to relate the last good save to. F2 asks nothing of the transition beyond entering the safe terminal state, and leaves contents as they are, as the SAF-3 skeleton already says.
+- The choice does not change how often SAF-4 requires a check (A7).
+
+Recommendation (the drafter's, not an adopted rule): Rule 1 with failure rule F2. Reason: the audit assumes neither atomicity nor a rollback mandate unless a requirement provides one, and no requirement text provides one. SAF-3 asks only that the game stops in a safe state and the last good save is kept, and the blueprint already says the safe stop keeps malformed contents as they are. Rule 2 and F1 would each add a stronger guarantee than the requirements state. This leaves the owner decision open.
 
 Persistence-specific consequences are not decided here: last-good-save ordering, storage rollback and discoverability, STA-3 forgetting and write failures stay with R2/R4.
 
