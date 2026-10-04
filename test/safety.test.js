@@ -210,6 +210,34 @@ test('a fault reporter that throws does not make things worse [SAF-3]', () => {
   assert.equal(scheduler.pending, 0);
 });
 
+test('an error while checking the invariants stops the game safely, even if reporting it fails [SAF-3] [SAF-4]', () => {
+  const { game, scheduler } = newGame({ onFault: () => { throw new Error('reporter broke'); } });
+  game.nextTetrominos = null; // breaks the check itself, not one of its invariants
+  assert.doesNotThrow(() => scheduler.advance(700));
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(game.faults.length, 1);
+  assert.equal(game.faults[0].reason, 'unexpected error');
+  assert.ok(game.faults[0].error instanceof TypeError);
+});
+
+test('a fault record that fails does not stop the report, the redraw or the safe stop [SAF-3]', () => {
+  for (const reporterWorks of [true, false]) {
+    const reported = [];
+    let changes = 0;
+    const onFault = reporterWorks ? fault => reported.push(fault) : () => { throw new Error('reporter broke'); };
+    const { game, scheduler } = newGame({ onFault, onChange: () => { changes += 1; } });
+    game.faults = null; // the record itself breaks
+    game.gameBoard.pop(); // and an invariant breaks, so the game must stop
+    changes = 0;
+    assert.doesNotThrow(() => game.handleAction(PlayerAction.moveLeft));
+    assert.equal(game.state, GameState.gameOver);
+    assert.equal(scheduler.pending, 0);
+    assert.equal(changes, 1, 'the page is told');
+    assert.deepEqual(reported.map(fault => fault.reason), reporterWorks ? ['board is not 20 by 10'] : []);
+  }
+});
+
 test('only the 20 most recent faults are kept [SAF-3]', () => {
   const { game } = recordingGame();
   for (let i = 0; i < 25; i++) game.failSafe(`fault ${i}`);
