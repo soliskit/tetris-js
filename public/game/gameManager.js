@@ -393,13 +393,17 @@ export class GameManager {
 
   /** @param {() => void} operation */
   runChecked(operation) {
+    /** @type {string | null} */
+    let violation;
     try {
       operation();
+      // Inside the try too: state broken in a way the check does not expect
+      // can make the check itself throw.
+      violation = this.findInvariantViolation();
     } catch (error) {
       this.failSafe('unexpected error', error);
       return;
     }
-    const violation = this.findInvariantViolation();
     if (violation) this.failSafe(violation);
   }
 
@@ -434,8 +438,14 @@ export class GameManager {
     this.stopGameLoop();
     this.cancelLockDelay();
     const fault = { reason, error };
-    this.faults.push(fault);
-    if (this.faults.length > MAX_FAULTS_KEPT) this.faults.shift();
+    // Keeping the record and reporting are tried apart, so neither can stop
+    // the other, and the catches are empty, so nothing in them can throw.
+    try {
+      this.faults.push(fault);
+      if (this.faults.length > MAX_FAULTS_KEPT) this.faults.shift();
+    } catch {
+      // Keeping the record must never make things worse.
+    }
     try {
       this.onFault(fault);
     } catch {
