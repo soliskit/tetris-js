@@ -2,7 +2,7 @@ Tetris.js audit blueprint instinctVersion1.0
 
 Safe by construction, small trusted core
 
-Status: Audit blueprint, added to the repository by pull request 43 and recorded as D9 in AUDIT.md. The owner's approval of this text is confirmed separately from this line and is not asserted here. No audit phase has been executed under this version. Process, evidence vocabulary, transition-boundary framework, persistence-ordering framework, research, baseline, approval, falsification, and test-minimization rules are locked when the owner approves this version. R1-R5 are explicit Phase 1 requirement/security decisions and are not unresolved blueprint mechanics. No Phase 0 or Phase 1 work has been executed under this version (the pre-audit repository verification in 1.1 is not Phase 0). No code change, proof-tool change, repair, architecture change, or Swift rewrite is assumed or authorized. This version corrects factual and internal-consistency errors found in v5.11, restores rules agreed in earlier versions that v5.11 omitted, and includes revisions from the owner's review messages. Its changes are listed in the Changelog.
+Status: Audit blueprint, added to the repository by pull request 43, where D9 in AUDIT.md recorded the text as merged; the amended text is recorded in D10. The owner's approval of this text is confirmed separately from this line and is not asserted here. No audit phase has been executed under this version. Process, evidence vocabulary, transition-boundary framework, persistence-ordering framework, research, baseline, approval, falsification, and test-minimization rules are locked when the owner approves this version. R1-R5 are explicit Phase 1 requirement/security decisions and are not unresolved blueprint mechanics. No Phase 0 or Phase 1 work has been executed under this version (the pre-audit repository verification in 1.1 is not Phase 0). No code change, proof-tool change, repair, architecture change, or Swift rewrite is assumed or authorized. This version corrects factual and internal-consistency errors found in v5.11, restores rules agreed in earlier versions that v5.11 omitted, and includes revisions from the owner's review messages. Its changes are listed in the Changelog.
 
 Supersedes: every earlier version and draft, including claudeVersion1.0 to claudeVersion1.4, the earlier instinctVersion1.0 files, v5.11, the copy of it labeled v5.12, and chatgptVersion1.0. This version combines them. The name instinctVersion1.0 is kept for the latest blueprint.
 
@@ -13,7 +13,7 @@ Changelog. Drafted by the assistant. It records what changed and where each chan
 * Added in the fourth review round (assistant drafting; the owner approves the blueprint as a whole): R4 decides whether a save written during a step that then faults counts as the last good save, and the good-save content definition does not settle it; F20 has a Correspondence question; "reported" is stated as an owner interpretation because REQUIREMENTS.md gives no method or audience (checked: only SAF-3 and SAF-5 use the word); Phase 1 fills only Scope and Owner decision in the scope table.
 * Added in the third review round (assistant drafting; the owner approves the blueprint as a whole): the Apple statement now says O1 to O8 are the owner's adopted properties with Apple material as inspiration only and no cited source; the scope-table rows are labelled illustrative; F20 has an applicability question; Phase 1 exit has an observable "fault reported" criterion; Phase 2 records a reason for each excluded file.
 * Added in the previous review round (assistant drafting; the owner approves the blueprint as a whole): "forgetting" replaces "deletion" in F20, 4.7 and N1, and the N1 record is corrected against gameManager.js:194; the good-save definition separates persisted-state validity from transition ordering; Phase 4.1 states that the implementation predicate cannot supply its own expected result; F20 separates the ordering question from the consequence question and states that the high-score write is not presumed to follow the saved-game rule; Phase 1 defines "reported" independently of the callback; a concrete requirement-scope table template; the status wording separates the persistence-ordering framework from the open R2 and R4 semantics. The three earlier history blocks were removed as superseded by this Changelog, and the "(drafted)" marker convention was dropped.
-* Amendment (assistant drafting, for owner review; not owner approval): the Status line states what is recorded; B2 names the service worker's `cache.addAll` network call; Phase 0 points to B1 as the single list, and B1 adds the mutation threshold and repository configuration facts; Appendix D lists the source files now kept in docs/.
+* Amendment (assistant drafting, for owner review; not owner approval): the Status line states what is recorded; B2 names the service worker's `cache.addAll` network call; Phase 0 points to B1 as the single list, and B1 adds the mutation threshold and repository configuration facts; Appendix D lists the source files now kept in docs/ and says which are relied on and where the Google summary's source was read; the first line of Appendix A and the Appendix C source line say the repository holds secondary summaries and cites none as grounding; the Status line points to D9 for the merged text and to D10 for the amended text; the B1 baseline list keeps its earlier wording for mutant outcomes and deployment result.
 * Amendment (assistant drafting, for owner review; not owner approval): new section 4.8 on service-worker attacks, and an authorship-independence rule in O8 for the reference model.
 
 Reserved to the owner: R1 to R5, any change to REQUIREMENTS.md or to the D8 behavior, approval of this blueprint, and every phase exit.
@@ -1603,7 +1603,7 @@ Only the underlying applicable security property is adopted when the project lac
 
 Appendix A. Research grounding
 
-No primary external source is reproduced in this appendix. Assistant-written secondary summaries are kept as files listed in Appendix D. If primary sources are added, they are retained as design-grounding material for these themes, which are the topics the adopted properties address:
+No external research source is cited in this appendix. Assistant-written secondary summaries are kept as files listed in Appendix D; they are kept for reference and are not cited as grounding. If sources are added, they are retained as design-grounding material for these themes, which are the topics the adopted properties address:
 
 * trusted boundaries;
 * validated state transitions;
@@ -1633,11 +1633,11 @@ Record:
 * browser-test count;
 * coverage (engine and page scripts, each as lines, branches and functions);
 * mutation totals;
-* mutation outcomes;
+* killed/survived/timed-out/errored mutant counts;
 * mutation score and repository threshold;
 * type-check result;
 * CI result;
-* deployment result;
+* deployment result where applicable;
 * relevant dependency and repository configuration facts;
 * service-worker/network observations;
 * hosting/security-header observations relevant to APP-6.
@@ -1847,7 +1847,7 @@ C6. Sources
 
 Appendix D. Source files kept in the repository
 
-These files are kept so that the summaries this blueprint relies on can be checked. The text file docs/audit-blueprint.txt is authoritative; the PDF is a rendering of it. The other files are assistant-written secondary summaries prepared for the owner. They are not audit facts, not evidence that the implementation conforms to anything, and not the wording of Apple, Google or any other source; the primary sources they cite remain the authority for what those sources say.
+These files are kept for reference. The blueprint relies only on the Tetris survey, through Appendix C; the Apple and Google summaries are background and are not relied on. Where the Tetris survey and Appendix C differ, Appendix C governs. The text file docs/audit-blueprint.txt is authoritative; the PDF is a rendering of it. The other files are assistant-written secondary summaries prepared for the owner. They are not audit facts, not evidence that the implementation conforms to anything, and not the wording of Apple, Google or any other source; the primary sources they cite remain the authority for what those sources say.
 
 File | What it is | Provenance | SHA-256
 
@@ -1859,4 +1859,4 @@ docs/sources/Apple-platform-security-review.pdf | Assistant-written summary of A
 
 docs/sources/Apple-platform-security-full-reading.pdf | Assistant-written fuller reading of Apple's published security documentation, October 3, 2026 | secondary summary; primary sources are the Apple pages it cites | b543029911457180a27f71500a7353d6b980a9b10e17d6f5163b0372a3ac5ab3
 
-docs/sources/Google-security-lessons-v3.pdf | Assistant-written summary of Google security publications, October 3, 2026 | secondary summary; primary sources are the Google pages it cites in its section 5 | 482943493ee7156c7e286f82beb80b4c0484d0ad86a2f3c6157c25e807c2b209
+docs/sources/Google-security-lessons-v3.pdf | Assistant-written summary of Google security publications, October 3, 2026 | secondary summary; its source list includes Google pages, blog posts and papers, and two papers by outside authors. For Google's Secure by Design technical report it read a third-party copy and cites Google's own page, which holds only the abstract. Google's official PDF is https://storage.googleapis.com/gweb-research2023-media/pubtools/7665.pdf. Checked on October 4, 2026 against that PDF: the claims the summary makes about the report match, except that the summary places the syzkaller bug counts after its data-race remark, while the report uses them for bug finding outpacing bug fixing. The summary's Android-blog figures were not checked | 482943493ee7156c7e286f82beb80b4c0484d0ad86a2f3c6157c25e807c2b209
