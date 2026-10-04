@@ -14,6 +14,10 @@ PLY-6 says "reaching a lower row than before resets the count". Two readings wer
 
 Supporting evidence, labeled by strength: the blueprint's Appendix C2 reports, from an unauthenticated copy of the 2009 Tetris Design Guideline, that the count resets when the piece falls one row below the lowest yet reached. This supports the reading and is not an authority for REQUIREMENTS.md. PLY-6's own words, "than before", do not by themselves decide between the readings. A consequence of the adjacent-state reading, stated as a possibility and not shown reachable in this game: a rotation or kick that lifts the piece, followed by a fall back to the earlier row, would reset the count repeatedly.
 
+### A1a. Review history
+
+Gemini objected that Part B Amendment 1 contained transition semantics (initialization and a never-decreases rule) that belong to the later valid-state and legal-operation text and not to the D16 state-category amendment. The objection was accepted. Initialization, update, monotonicity, reset-count effect and precedence rules remain review material in A2, for the later R1 and legal-operation text. Amendment 1 now adds only the authoritative state item and its snapshot meaning.
+
 ### A2. Input 1: the lowest-row reference
 
 Proposed owner interpretation, for owner decision: the lowest row reached is the greatest board-row index occupied by any block of the current semantic piece. Rows increase downward.
@@ -158,7 +162,7 @@ An earlier package pasted from outside advisors recommended choices. Those are a
 
 Nothing in Part B is approved or applied. It describes an amendment to section 1.1 of the D16 decision for later review. It does not change the approved D16 artifact.
 
-**Amendment 1 (conditional on the owner selecting the historical-low interpretation of PLY-6).** Section 1.1 gains an item: 15. The lowest row reached by the current falling piece, defined as the greatest board-row index occupied by any block of the piece since it became current, with rows increasing downward. The item exists while a current falling piece exists. It is initialized when a piece becomes current, as the greatest row occupied by that piece in its initial valid state. It never decreases while the piece is current. It is an authoritative item.
+**Amendment 1 (conditional on the owner selecting the historical-low interpretation of PLY-6).** Section 1.1 gains an item: 15. The lowest row reached by the current falling piece, represented as the greatest board-row index reached by any block of that piece during its current-piece lifetime, with rows increasing downward. The item exists while a current falling piece exists and is authoritative.
 
 **Amendment 2 (conditional on the owner selecting P1).** Section 1.1 gains an item: 16. For a paused game whose current piece is resting, whether the pause consumed the last restart allowance. The item is meaningful only while paused. If the owner selects P2 or P3, this amendment is not made.
 
