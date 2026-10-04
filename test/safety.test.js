@@ -64,6 +64,20 @@ test('an error inside a timer stops the game safely and is reported [SAF-3]', ()
   assertSafeStop(game, scheduler, reported, 'unexpected error');
 });
 
+test('an error inside the gravity timer stops the game safely and is reported [SAF-3]', () => {
+  const factory = breakableFactory();
+  const { game, scheduler, reported } = recordingGame({ factory });
+  repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
+  game.lockDelayResetCount = 15; // the landing locks at once
+  game.lowestRowReached = game.currentTetromino.position.row + 1;
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 1, 'only gravity is waiting');
+  factory.broken = true;
+  assert.doesNotThrow(() => scheduler.advance(700));
+  assertSafeStop(game, scheduler, reported, 'unexpected error');
+  assert.equal(reported[0].error.message, 'factory failure');
+});
+
 test('an error during a soft drop is contained [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
