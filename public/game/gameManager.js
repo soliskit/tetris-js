@@ -438,8 +438,14 @@ export class GameManager {
     this.stopGameLoop();
     this.cancelLockDelay();
     const fault = { reason, error };
-    this.faults.push(fault);
-    if (this.faults.length > MAX_FAULTS_KEPT) this.faults.shift();
+    // Keeping the record and reporting are tried apart, so neither can stop
+    // the other, and the catches are empty, so nothing in them can throw.
+    try {
+      this.faults.push(fault);
+      if (this.faults.length > MAX_FAULTS_KEPT) this.faults.shift();
+    } catch {
+      // Keeping the record must never make things worse.
+    }
     try {
       this.onFault(fault);
     } catch {
