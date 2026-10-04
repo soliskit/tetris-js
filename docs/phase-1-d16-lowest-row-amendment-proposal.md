@@ -10,13 +10,13 @@ Independence (blueprint O8): the assistant that drafted this has read the produc
 
 ### A1. Why a D16 amendment is in question
 
-PLY-6 says "reaching a lower row than before resets the count". Two readings were analyzed in the R1 proposal: an adjacent-state relation, and a historical-low reading. The owner has asked for the historical-low reading to be drafted as an owner interpretation for review. The lowest row reached by the current piece is not computable from the board and the current piece. D16 section 1.1 item 9 lists the reset count only. Adding the lowest row reached therefore changes the approved D16 state list and needs a D16 amendment before it can be selected. This document drafts that amendment for review and does not apply it.
+PLY-6 says "reaching a lower row than before resets the count". Two readings were analyzed in the R1 proposal: an adjacent-state relation, and a historical-low reading. The owner asked for the historical-low reading to be drafted for review. It is a proposed owner interpretation. The owner has not selected it. The lowest row reached by the current piece is not computable from the board and the current piece. D16 section 1.1 item 9 lists the reset count only. Adding the lowest row reached therefore changes the approved D16 state list and needs a D16 amendment before it can be selected. This document drafts that amendment for review and does not apply it.
 
 Supporting evidence, labeled by strength: the blueprint's Appendix C2 reports, from an unauthenticated copy of the 2009 Tetris Design Guideline, that the count resets when the piece falls one row below the lowest yet reached. This supports the reading and is not an authority for REQUIREMENTS.md. PLY-6's own words, "than before", do not by themselves decide between the readings. A consequence of the adjacent-state reading, stated as a possibility and not shown reachable in this game: a rotation or kick that lifts the piece, followed by a fall back to the earlier row, would reset the count repeatedly.
 
 ### A2. Input 1: the lowest-row reference
 
-Owner's proposed interpretation, for review: the lowest row reached is the greatest board-row index occupied by any block of the current semantic piece. Rows increase downward.
+Proposed owner interpretation, for owner decision: the lowest row reached is the greatest board-row index occupied by any block of the current semantic piece. Rows increase downward.
 
 Contrast with origin-row semantics (the row of a fixed point of the piece, such as the top-left corner of its bounding box): the two are not equivalent under rotation. In the SRS box a flat I piece in rotation state 0 occupies box row 1 and the vertical I in state 1 occupies box rows 0 to 3. With the box at a fixed board position the greatest occupied row moves from R+1 to R+3 without any origin movement, so a rotation can establish a new historical low under occupied-block semantics and cannot under origin semantics. The converse also occurs: the vertical-to-flat rotation reduces the greatest occupied row and under occupied-block semantics never lowers the stored value. Origin semantics also depends on which point is the origin, which the shape reference must then fix.
 
@@ -33,7 +33,7 @@ Validity (candidate, for the later R1 text): while a current falling piece exist
 
 ### A3. Input 2: the reset-limit boundary, each case separately
 
-Definition proposed by the owner: the reset count is the number of restart allowances consumed since the most recent lowest-row reset, domain 0 to 15.
+Proposed definition for owner decision: the reset count is the number of restart allowances consumed since the most recent lowest-row reset, domain 0 to 15.
 
 | Case | State before | Event | Proposed result | Support in the requirements |
 | --- | --- | --- | --- | --- |
@@ -53,9 +53,30 @@ Options, with consequences, labeled; the owner decides:
 - **P1.** Keep C5 and C7 as written and add one more authoritative item that records, for a paused resting piece, whether the pause consumed the last allowance (so resume starts a delay) or found it already exhausted (so resume locks). Satisfies the literal wording of STA-2 and PLY-6 in both cases. Costs one more D16 item in the amendment. Not added here.
 - **P2.** Resume with count 15 and a resting piece always locks at once. C5 changes: a pause that takes the count to 15 still counts as reset 15, but resume then locks at once. No extra state. It matches PLY-6 literally (the piece comes to rest by "play resuming", and the 15 are used) and departs from STA-2's "resuming starts it again" in that one corner.
 - **P3.** A pause does not consume the allowance: the count is unchanged and resume always starts the delay (the earlier R1a reading). No extra state. It departs from STA-2's "counts as one reset" and makes pausing a free restart.
-- Drafter's labeled recommendation, not shown sufficient: P2 if no extra D16 item is wanted, P1 if both texts must hold literally. Both rest on owner interpretation.
+- Current reviewer recommendation, labeled, not adopted and not shown sufficient: **P1**, because it keeps the literal STA-2 behavior for the legitimate 15th reset (resume starts a delay) without allowing a 16th restart (C7 still locks at once). It needs the extra D16 item and the persistence consequences in A3a. P2 is the alternative if no extra item is wanted. Every option rests on an owner interpretation, and the owner decides.
 
-Resource check for B13 (running states): under C2 the already-running deadline continues, so the delay is outstanding and "running while the piece rests" holds. Under C7/P2 and C9 the piece locks at once on the transition that would otherwise start a delay, so no committed playing state exists with a resting piece at count 15 and no outstanding delay; the resource rule needs no new state in which a delay must run and cannot. A paused state has no delay running. The remaining-time of a running deadline is not state (R3 timing tolerance).
+Resource check for B13 (running states): no additional authoritative game-state item is required for C2. D16 already places the lock-delay timer handle and state in the runtime resources. When C2 says the existing deadline continues, the existing scheduled firing and deadline remain part of that runtime-resource state. The exact timer representation and how it corresponds to elapsed time are later evidence questions. Under C7/P2 and C9 the piece locks at once on the transition that would otherwise start a delay, so no committed playing state has a resting piece at count 15 and no outstanding delay, and no state exists in which a delay must run and cannot. While paused, STA-2 leaves no running lock-delay resource. Runtime timer state therefore cannot distinguish the two paused/resting/count-15 states of C5 and C7. That is why P1 needs an authoritative item and not a resource.
+
+### A3a. Persistence and legacy-save consequences (material, not resolved here)
+
+Historical low affects future PLY-6 behavior: whether a later move reaches a new lowest row depends on the stored value. Under P1 the paused-state discriminator affects future behavior on resume. STA-4 says pausing saves the game and Continue restores exactly what was saved, paused. Consequence, stated as a requirement-derived [L] consequence: if either item is adopted into D16, an accepted current-format save must preserve enough information to restore that item's value exactly, wherever the item applies (the lowest row for a current piece; the discriminator for a paused resting piece at count 15). A save that loses either value would resume with different future behavior than the game that was saved.
+
+Compatibility problem from STA-6:
+
+- The currently supported released save formats predate these items. STA-6 requires every supported format to keep loading, so rejecting a saved game only because the new fields are absent is not permissible.
+- An old payload generally cannot reconstruct the historical-low history. The board and current piece give the current greatest occupied row only.
+- For a paused, resting piece at count 15, an old payload also cannot tell whether the pause consumed reset 15 (C5) or occurred after exhaustion (C7).
+- Missing historical information cannot be recovered exactly, so any rule for loading such a save is an owner interpretation or compatibility rule. This document does not choose a default.
+
+Policies that could be analyzed, none adopted, each an owner interpretation / compatibility rule:
+
+1. Initialize a missing lowest row to the current piece's greatest occupied row. Consequence: a piece that had already been lower and moved up gets extra restart room after loading, so behavior can differ from the uninterrupted game.
+2. Choose a defined compatibility value for the P1 discriminator when it is missing (for example, treat the allowance as consumed, or as not consumed). Consequence: one of the two cases C5 or C7 is resumed wrongly for legacy saves at paused/resting/count 15.
+3. Introduce a version-specific compatibility rule, so legacy-format loads follow a stated rule and current-format loads restore exactly. Consequence: a format-version distinction in the later save text.
+
+STA-4 already states one precedent in kind: a save from before the bag was saved continues with a fresh bag. It is a precedent for a compatibility default, not a ruling on these items.
+
+This issue must be resolved before the final R1 and save-validity text can be approved. R2/R4 storage ordering and failure behavior are not resolved here.
 
 ### A4. Input 3: SRS geometry oracle candidate
 
@@ -64,6 +85,7 @@ Candidate artifact: the image `SRS-pieces.png` from the Tetris Wiki.
 - Source: https://tetris.wiki/images/3/3d/SRS-pieces.png (file description https://tetris.wiki/File:SRS-pieces.png, used on https://tetris.wiki/Super_Rotation_System). The wiki's API reports the file as imported 2015-12-23 and gives a SHA-1 of 78119b4e42316cc61597a21e51bfb1c02838a39b.
 - Bytes: 1218 bytes, PNG, 336 by 480 pixels. SHA-256 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236 (and SHA-1 as above, matching the wiki's report). Fetched 2026-10-04.
 - Frozen copy: the Internet Archive holds a capture of the same URL (https://web.archive.org/web/20260627160739id_/https://tetris.wiki/images/3/3d/SRS-pieces.png). Its bytes are identical to the live file (same SHA-256, byte comparison). The proposal adopts the bytes by checksum. The exact retention route (committing the file under `docs/sources/` in a later approved change, or relying on the archive capture) is an owner choice and is not done here.
+- O piece: the image shows four identical geometries for O. They do not independently establish semantic non-rotation. PCE-4 independently requires that the O piece does not rotate. An adopted geometry artifact may define O's occupied geometry, while the normative one-state/non-rotation rule comes from REQUIREMENTS.md and not from inference from the four identical image columns.
 - Content: the four rotation states of all seven tetrominoes, spawn state first, then successive clockwise rotations, with circles marking the rotation centers. It is geometry only. Wall-kick tables are text on the wiki page, are not part of this artifact, and are not adopted here (they belong to the later legal-operation specification).
 - Coordinate convention: a grid of 16-pixel cells, rows increasing downward and columns increasing to the right, the same orientation as the audit's (row 0 top, column 0 left). Each state is read in a box: 4 by 4 for I, 2 by 2 for O, 3 by 3 for the others, located by the rotation-center circle (the center of the box). A block at box-relative (row, column) with the box top-left at board (R, C) occupies board (R + row, C + column). No axis flip is needed. The board position (R, C) of a spawned piece comes from PCE-3 and is not in the artifact.
 - Extraction: I read cell colors from the pixels with a script written for this proposal. No production code or test was consulted. The result is in A5. Consistency check computed independently of the picture: for every kind, state s + 1 equals state s rotated clockwise in its box ((row, col) to (col, n - 1 - row)), including the O piece, which is the same in all four states. All 28 states have four blocks.
@@ -117,7 +139,7 @@ An earlier package pasted from outside advisors recommended choices. Those are a
 | # | Choice | Options | Status |
 | --- | --- | --- | --- |
 | 1 | Lowest-row semantics | historical low with greatest occupied block row (A2) / adjacent-state | Needs the D16 amendment if historical low |
-| 2 | Pause and the 15 allowance | P1, P2 or P3 (A3); C2 and C9 behavior | Owner interpretation; P1 needs one more D16 item |
+| 2 | Pause and the 15 allowance | P1, P2 or P3 (A3); C2 and C9 behavior | Owner interpretation; P1 is the current reviewer recommendation, not adopted, and needs one more D16 item |
 | 3 | PLY-7 hold | H1 per lock cycle / H2 per piece | Owner interpretation; both fit D16 as approved |
 | 4 | Ordinary game-over current piece | none / none or a retained piece satisfying PCE-6 | R1 bracket |
 | 5 | Other game-over items | semantically absent / retained within the normal domain; absent means the model has no semantic value, with no duty to clear an implementation field | R1 bracket |
@@ -127,6 +149,8 @@ An earlier package pasted from outside advisors recommended choices. Those are a
 | 9 | Full row; hold-used implies held piece | adopt / not adopted, individually | R1 bracket |
 | 10 | Board cell | piece kind / color | R1 bracket |
 | 11 | SAF-4 check scope | element validity / length | Later, at SAF-4 mapping |
+| 12 | Legacy-save compatibility for a missing lowest row | initialize to current greatest occupied row / other defined value / version-specific rule (A3a) | Later owner decision; owner interpretation / compatibility rule; must precede final R1 and save-validity text |
+| 13 | Legacy-save compatibility for a missing P1 discriminator | defined compatibility value / version-specific rule (A3a); only if P1 | Later owner decision; same status as 12 |
 
 ## Part B. Draft D16 amendment text (DRAFT, NOT APPROVED)
 
@@ -138,4 +162,4 @@ Nothing in Part B is approved or applied. It describes an amendment to section 1
 
 **Reset count.** The lock-delay reset count (item 9) is a whole number from 0 to 15. The rules for when it changes are not part of this amendment; they belong to the later valid-state and legal-operation text, after the owner has chosen.
 
-**Unchanged.** Items 1 to 14, the derived items, the runtime resources, the persisted representation and the presentation state of D16 are not altered by these amendments. 
+**Unchanged.** Items 1 to 14, the derived items, the runtime resources and the presentation state of D16 are not altered by these amendments. These amendments do not rewrite the persisted representation of D16. If the added items are part of the game state, an accepted current-format save must restore their values exactly where they apply, and how legacy saves without them load is decided in the later save-validity text. 
