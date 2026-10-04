@@ -1,6 +1,6 @@
 # Phase 1 proposal: state categories and authoritative transition boundary
 
-Status: **PROPOSAL FOR REVIEW. This is not an approved decision.** No owner decision is recorded by this document, and no row in `AUDIT.md` refers to it. The owner approves or changes it separately. This is a revision of the first draft after adversarial and advisory review; it is not ready for owner adoption until that review is complete.
+Status: **HISTORICAL PROPOSAL, REVIEW MATERIAL ONLY.** The owner's adopted rules are in `docs/phase-1-state-decision.md` (decision D16 in `AUDIT.md`). This document is not normative. Where it differs from that document, `docs/phase-1-state-decision.md` governs. The text below is unchanged from the reviewed proposal.
 
 Base: main (D15 merged). Nothing in `docs/audit-blueprint.txt`, `docs/audit-blueprint.pdf`, `REQUIREMENTS.md`, `AUDIT.md`, the production code, the tests, the CI configuration or any proof tool is changed by this document.
 
