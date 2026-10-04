@@ -123,6 +123,30 @@ test('after a fault New Game starts a clean game [SAF-3]', () => {
   assert.equal(game.currentTetromino.position.row, 1);
 });
 
+test('after a fault no action or timer restarts play or changes the game [SAF-3]', () => {
+  const { game, scheduler, reported } = recordingGame();
+  game.guard(() => { throw new Error('engine failure'); });
+  assertSafeStop(game, scheduler, reported, 'unexpected error');
+  const snapshot = () => JSON.stringify([game.gameBoard, game.currentTetromino, game.nextTetrominos, game.heldTetromino, game.canHoldTetromino, game.score]);
+  const before = snapshot();
+  // Checked after each one, since some would undo another (left, then right).
+  // New Game and Continue are the ways out, tested above.
+  const attempts = [
+    ...[PlayerAction.resume, PlayerAction.pause, PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate,
+      PlayerAction.rotateCounterclockwise, PlayerAction.hold, PlayerAction.drop].map(action => [action, () => game.handleAction(action)]),
+    ['soft drop', () => game.softDrop()],
+    ['toggle pause', () => game.togglePause()],
+    ['time passing', () => scheduler.advance(5000)]
+  ];
+  for (const [name, attempt] of attempts) {
+    attempt();
+    assert.equal(game.state, GameState.gameOver, name);
+    assert.equal(scheduler.pending, 0, name);
+    assert.equal(snapshot(), before, name);
+  }
+  assert.equal(reported.length, 1, 'nothing else went wrong');
+});
+
 // Each invariant, broken on purpose, is caught by the monitor after the next operation.
 const violations = [
   ['the board losing a row', game => game.gameBoard.pop(), 'board is not 20 by 10'],
