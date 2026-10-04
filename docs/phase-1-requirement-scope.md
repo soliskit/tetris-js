@@ -2,7 +2,7 @@
 
 Status: **owner scope decision recorded, subject to green CI on the exact head of the pull request that carries it** (see D15 in `AUDIT.md`). The owner approved this scope on October 4, 2026, after the assistant proposed it and the owner asked for one wording cleanup, made here. The assistant has read the production code, so it is not independent of the implementation (blueprint O8); this table is built from the requirement entries alone and makes no claim about what the code does.
 
-Source: `REQUIREMENTS.md` at main 615dfee2b78067a504d3263d46bfc03e4a23ec84, SHA-256 fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc. It holds 55 requirement IDs, each in one row below, none missing or duplicated.
+Source: `REQUIREMENTS.md` at main fd10f07ba63dc4f935b9e79745c59ec83a549fbf (the D14-merged baseline; the file is unchanged from 615dfee2b78067a504d3263d46bfc03e4a23ec84), SHA-256 fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc. It holds 55 requirement IDs, each in one row below, none missing or duplicated.
 
 Blueprint 1.1 and the Phase 1 exit criteria require every ID to be marked in scope or out of scope, with an owner decision. A requirement outside scope is listed as not certified, and none is excluded merely because it is inconvenient to prove.
 
