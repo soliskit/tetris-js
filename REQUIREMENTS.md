@@ -64,6 +64,7 @@ A change with no game code and no requirement entries needs no class. It still f
 | STA-3 | The game ends when a new or held piece has no room to appear. All timers stop and the saved game is forgotten. |
 | STA-4 | Pausing saves the game, and so does clearing lines. Continue, from game over only, restores exactly what was saved, paused, including the pieces left in the bag. A save from before the bag was saved continues with a fresh bag. |
 | STA-5 | The game pauses when the page is hidden, for example when switching apps. |
+| STA-6 | Saved games in every supported format keep loading: the current format, and the earlier one that also stored the level, which loading ignores. Each format has a fixture in `test/fixtures/`, a saved game exactly as a released version stored it, that must continue to load. A saved game stored under the names used before APP-6 (without the `tetris.` prefix) is not read. |
 
 ## Safety
 
