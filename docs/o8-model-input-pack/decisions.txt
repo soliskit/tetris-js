@@ -1,0 +1,452 @@
+MODEL INPUT PACK DRAFT, NOT APPROVED. Decision text only. Labels such as D16 or D21 refer to the documents below by these labels; no other record is supplied.
+D16: state categories and transition boundary
+D17: D16 Amendment 1
+D18: R1 valid-state semantics
+D20: D16 Amendment 2
+D21: R2 to R5
+D22: fault reporting and timer trust
+D23: storage trust, SAF-5 reporting, timer cancellation, SAF-4 scope
+D24: trust assumptions
+D27: browser trust
+D28: service worker and network trust
+D29: clock
+D31: frame principle
+D32: operations record
+D33: operation choices
+D34: touch excursion and resume rule
+D30: reading of DSP-5 for Continue availability
+Other inputs: REQUIREMENTS.md; geometry reference image 1-SRS-pieces.png and extracted table 2-srs_table.txt (both named in B2).
+
+##### SOURCE: phase-1-state-decision.md
+# Phase 1 decision: state categories and authoritative transition boundary
+## 1. State categories
+
+Every item of modeled state belongs to exactly one of five categories: authoritative game state, derived state, runtime resources, persisted representation, presentation state. There is no sixth category.
+
+### 1.1 Authoritative game state
+
+1. Locked blocks.
+2. The current falling piece, including its kind, rotation and position.
+3. The held piece.
+4. The once-per-piece hold-used state.
+5. The next-three queue.
+6. The remaining bag contents.
+7. The score.
+8. The game mode.
+9. The lock-delay reset count.
+10. The logical New Game confirmation-pending state.
+11. The logical selected confirmation choice.
+12. The held-direction state and the newest-direction ordering.
+13. The repeat-sequence position needed by INP-2.
+14. The semantic touch-drag state needed by INP-5, including the controlled falling piece and the gesture state needed to determine required future behavior.
+
+Each of items 10 to 14 is an individual placement.
+
+### 1.2 Derived state
+
+1. The level.
+2. Whether the current piece is resting.
+3. The landing (ghost) position.
+4. The gravity interval.
+
+Derived state has no independent semantic authority. It is determined by other modeled state according to the applicable rule. An implementation may compute, store or cache it. Later correspondence evidence must establish agreement where required.
+
+### 1.3 Runtime resources
+
+1. The gravity timer handle and state.
+2. The lock-delay timer handle and state.
+3. The key-repeat timer and scheduler handles.
+4. Other scheduled-callback handles where modeled as runtime resources.
+5. The screen wake lock.
+
+### 1.4 Persisted representation
+
+1. The saved game.
+2. The stored high score.
+
+### 1.5 Presentation state
+
+1. The rendered UI, including board and canvas output, text, hints, buttons, the Game Over display and the visual rendering of the confirmation dialog.
+2. The locked-block redraw/change marker. It is presentation state, not a sixth category.
+
+## 2. Randomness
+
+Nondeterministic random values and the random source are modeled as input to bag refill and shuffle transitions. They are not authoritative game state. The resulting remaining bag contents are authoritative state (1.1, item 6).
+
+No requirement is adopted here that random-generator internal state be exposed or preserved.
+
+## 3. Service-worker, cache and version state
+
+Service-worker, cache and version state is outside this state model, while remaining in scope as outer-layer state subject to APP-2 and APP-6 inventory, evidence, falsification and certification.
+
+- APP-2 and APP-6 remain fully in audit scope.
+- Placing that state outside this model does not take those requirements out of scope and does not certify them.
+- Evidence about the engine state model must not be presented as covering APP-2 or APP-6 unless a later proof obligation explicitly establishes that correspondence.
+
+## 4. Authoritative transition boundary
+
+A transition is a specified legal operation that attempts to move authoritative state from one certified state to another certified state, or to the certified safe terminal/fault state.
+
+The authoritative transition boundary is the conceptual commit point at which the specified legal operation commits the authoritative changes the model permits, together with any authorized persistence effects belonging to that transition.
+
+1. The boundary is defined independently of implementation function structure.
+2. A function does not become authoritative merely because it validates.
+3. No privileged exception is adopted at this gate.
+4. External or environmental routes may change external, runtime or persisted state without gaining authority to commit game state.
+5. External data becomes authoritative only when accepted through an authorized transition.
+6. Drawing, polling and other outer-layer routes do not directly commit authoritative game state, unless a later explicitly approved exception says otherwise.
+
+## 5. Conceptual control operations
+
+Because the control values in 1.1 are authoritative, the operations that may commit them cross the authoritative transition boundary. They are conceptual model operations, not claims about implementation function names.
+
+1. New Game confirmation open.
+2. Confirmation selection change.
+3. Confirmation answer.
+4. Direction or control press.
+5. Direction or control release.
+6. Repeat-control progression.
+7. Touch or drag begin.
+8. Touch or drag update.
+9. Touch or drag end or cancel.
+
+## 6. Validity policy V1
+
+V1 is the owner's validity policy: validity at the commit boundary.
+
+1. Intermediate authoritative mutations inside an unfinished transition may temporarily violate the ordinary valid-state predicates.
+2. Every successful committed legal transition ends in a certified valid state under the R1 predicates, which a later Phase 1 decision approves.
+3. The certified SAF-3 safe terminal/fault state is separate and is governed by its own definition. V1 does not require malformed ordinary game contents retained after a fault to satisfy R1.
+
+This is an owner-approved interpretation of the word "never" in PCE-6, for this audit. Under it, PCE-6 constrains successful committed legal states. It does not create a requirement that every invisible internal microstep preserve ordinary validity.
+
+This decision does not reduce or reinterpret SAF-4. SAF-4 still requires invariant checking "after every action and every timer". SAF-4 does not prove V1. V1 is an explicit owner interpretation.
+
+## 7. Thrown-transition rule F2
+
+F2 is the owner's thrown-transition rule. If a transition throws after authoritative mutation has begun but before successful completion, the ordinary authoritative contents reached at the point of fault are retained, except for fields and effects that must change to enter the SAF-3 safe terminal/fault state. The safe-terminal transition is then applied.
+
+1. No rollback guarantee for ordinary authoritative contents is adopted.
+2. F2 does not itself prove that the system is safe. Safety claims still depend on SAF-3 and on later evidence.
+3. Persistence-specific consequences are not decided here. The meaning of "last good save", persistence ordering, storage rollback and discoverability, STA-3 forgetting effects and related persistence semantics remain for R2 and R4.
+4. Retained partial in-memory contents do not become valid game state by being retained.
+
+## 8. SAF-3 safe terminal/fault state
+
+Only the fixed skeleton of SAF-3 is recorded:
+
+1. game over;
+2. no timers running;
+3. fault reported;
+4. last good save kept.
+
+No board, queue, piece, score, hold or other validity condition is added. This decision does not decide what "fault reported" means, what "last good save" means, or persistence ordering. Those remain later Phase 1 decisions.
+
+## 9. SAF-4 timer meaning
+
+SAF-4 keeps its literal wording: "after every action and every timer". This decision adopts no interpretation of what "timer" means for SAF-4. It narrows no required check point. It does not merge SAF-4 with the "no timers running" part of SAF-3. The SAF-4 timer interpretation remains an explicit later owner decision.
+
+##### SOURCE: phase-1-d16-amendment-1.md
+# Phase 1 decision: D16 Amendment 1 (lowest row reached)
+## 1. Amendment
+
+Section 1.1 of D16 gains an item:
+
+15. The lowest row reached by the current falling piece, represented as the greatest board-row index reached by any block of that piece during its current-piece lifetime, with rows increasing downward. The item exists while a current falling piece exists. It is authoritative game state.
+
+## 2. Reset count
+
+Item 9 of D16, the lock-delay reset count, remains the only lock-delay reset-count item. This amendment adds no other item for the lock delay or for pausing.
+
+## 3. Persistence
+
+A save newly written under the adopted semantics must preserve enough information to restore the semantic value of item 15 exactly wherever the item applies. Saved games already represented in the released formats required by STA-6 predate item 15. Their absence of the item cannot by itself make those supported saves invalid. How they load is decided by a compatibility rule in the later save-validity text (R1, B16).
+
+## 4. Scope
+
+- It adds one authoritative state item, the lowest row reached.
+- It states no domain for the reset count. The domain 0 to 16, the meaning of 16 and where 16 is valid belong to the R1 text.
+- It states no initialization, update, monotonicity, reset-count effect or precedence rule for item 15. Those belong to the R1 text and the later legal-operation text.
+- It does not rewrite D16 section 1.4 and does not decide R2 and R4 storage ordering or failure behavior.
+
+## 5. Unchanged
+
+Items 1 to 14 of D16, sections 1.2 to 1.5 and sections 2 to 10 of D16 are not altered by this amendment. Section 1.1 continues to place every item of modeled authoritative game state in section 1.1.
+
+##### SOURCE: phase-1-d16-amendment-2.md
+# Phase 1 decision: D16 Amendment 2 (Continue state placements)
+## 1. Amendment
+
+Section 1.1 of D16 gains an item:
+
+16. The withdrawn-from-Continue indicator, a true or false value belonging to one running session of the game (one page load). It is true from the moment a saved game is withdrawn from Continue in this session, or an attempt to withdraw it is made, until this session writes a saved game successfully. It is false when the session starts. It is not persisted. It is authoritative game state.
+
+Section 1.2 of D16 gains an item:
+
+5. Continue availability. It is true only when the saved-game eligibility indicator (D16 1.4 item 3) is true, item 16 of section 1.1 is false, and the saved game passes the validity rules for persisted content. It has no independent semantic authority. How Continue is shown is presentation state (D16 1.5).
+
+Section 1.4 of D16 gains an item:
+
+3. The saved-game eligibility indicator, a stored value. Only the exact stored value "true" makes a saved game eligible for Continue. Any other value, or no value, means no saved game is eligible.
+
+## 2. Validity of item 16
+
+In every mode, item 16 is true or false. Nothing else is a valid value. This adds one predicate to the R1 text and changes no existing R1 predicate.
+
+## 3. Scope
+
+- It adds the three items above and states no behavior. When item 16 becomes true or false and what happens on storage failure belong to the R2 to R5 decision text (D21).
+- It adds no sixth category and moves no existing item.
+- It does not change items 1 to 15 of D16 section 1.1, items 1 to 4 of section 1.2, items 1 and 2 of section 1.4, or sections 2 to 10 of D16.
+- It does not change REQUIREMENTS.md and authorizes no code change.
+
+##### SOURCE: phase-1-r1-decision.md
+# Phase 1 decision: R1, exact valid-state semantics
+## Decision text
+
+**B1. Scope.** These predicates define a valid state for the opening state and every committed state other than the SAF-3 safe terminal state, which keeps its own definition (D16 section 8). Each predicate is evaluated on one state alone.
+
+**B2. Conventions.** Rows 0 at the top to 19 at the bottom, columns 0 to 9; a lower row has a larger number. The kinds are I, O, T, S, Z, J and L. The rotation states of each kind are the geometry of the owner-adopted external geometry reference: the image `SRS-pieces.png` from the Tetris Wiki (1218 bytes, SHA-256 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236) and the table of its states extracted from that image (SHA-256 c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c). The reference is the fixed bytes identified by those checksums, not the content of any web page. It gives geometry only; wall-kick data is not part of it. In the reference each state is a set of four cells (row, column) in a box that is 4 by 4 for I, 2 by 2 for O and 3 by 3 for the other kinds, rows increasing downward and columns increasing to the right. The position of a piece is the board position of the top-left cell of its box. A block at box cell (row, column) occupies the board cell (position row + row, position column + column). The two files are supplied with this pack as 1-SRS-pieces.png and 2-srs_table.txt. Neither governs the other. If the table and the image disagree about any state of any kind, the reference is inconsistent: no state of that kind is defined by it until the owner decides. A kind has four rotation states in the table's order, spawn state first and then each clockwise rotation, except that the O kind has one valid rotation state, its first (PCE-4).
+
+**B3. Representation.** Validity is defined on semantic values: whole numbers, ordered lists and finite maps. A representation is valid only if it denotes exactly one value of the item's domain. A missing or extra entry in a collection, a sparse collection, a missing row or cell, or a value of another type is not valid. No numeric format limit is part of R1.
+
+**B4. Game mode.** Exactly one of playing, paused and game over.
+
+**B5. Board.** Exactly 20 rows of 10 positions; each is empty or a locked block. A locked block identifies one of the seven kinds.
+
+**B6. Current falling piece.** Playing or paused: exactly one, with a kind, one of that kind's valid rotation states and a whole-number position, all four blocks on the board and on empty positions (PCE-6). Game over (ordinary): there is no semantic current falling piece. The held piece, hold-used, the bag and the touch-drag state also have no semantic value (B8, B10, B12). The piece kind, the row and column coordinates, the orientation, the lowest row reached (B9) and the reset count (B9) have no semantic value. An implementation is not required to clear a field that holds such a value. The attempted new or held piece that had no room is not a semantic current piece merely because it caused game over. No ordinary-piece validity is imposed on the SAF-3 safe terminal state. A malformed value is invalid in every mode.
+
+**B7. Upcoming pieces.** In every mode, three valid semantic pieces, each one of the seven kinds. Whether the SAF-4 runtime check must establish element validity or only the count is a separate later interpretation and is not decided here.
+
+**B8. Held piece and hold-used.** The held piece is none or one of the seven kinds. Hold-used represents whether Hold is unavailable for the current piece. A New Game begins with Hold available. Continue restores the saved semantic value. Playing or paused: held is none or a kind; hold-used is true or false. Game over: the held piece and hold-used have no semantic value, and an implementation is not required to clear a field that holds one. Interpretation of PLY-7 ("Hold works once per piece"), per lock cycle: Hold is available at the start of a lock cycle; any successful Hold consumes that availability; a piece brought in by that Hold does not make Hold available again; availability returns when the next piece becomes the current falling piece after the current lock cycle ends.
+
+**B9. Lowest row and reset count.**
+
+*B9.1 Validity predicates (the values; they stand alone on one state).*
+
+Values. Playing or paused: the lowest row reached is a whole number from 0 to 19 and is at least the greatest row occupied by any block of the current falling piece. The reset count is a whole number from 0 to 16. A reset count of 16 is valid only when the game is paused and the current falling piece is resting (B14). It is not valid in a playing state, for a piece that is not resting, or when there is no current falling piece. Game over: no semantic lowest row and no semantic reset count (B6).
+
+*B9.2 Meaning and operation rules (what the values denote and how legal operations change them; separate from B9.1, and not a validity predicate on one state).*
+
+Lowest row reached. It is the greatest board-row index occupied by any block of the current falling piece during its time as the current piece, with rows increasing downward. When a piece becomes the current falling piece it is the greatest row occupied by that piece's four blocks in its initial valid state, and a different piece becoming current starts a new value. After a valid move, rotation or fall of that piece, if its current greatest occupied row is greater than the stored value, the stored value becomes that row and the reset count becomes 0. Moving or rotating upward never decreases it. Returning to a row already reached does not reset the count. A move or rotation that would both restart the lock delay and reach a new lowest row sets the reset count to 0 and does not increment it.
+
+Reset count. It counts reset events since the most recent lowest-row reset. The values 0 to 15 count events within the 15-restart allowance of PLY-6. The value 16 does not represent a 16th restart. It marks a pause taken during the lock delay after the 15 were used.
+
+Reset count when a piece becomes the current falling piece. A piece becomes the current falling piece at the start of a game, when the next piece appears after a lock, and when Hold brings a piece in. At that moment the reset count is 0 and the lowest row reached is the greatest row occupied by that piece in its initial valid state. A pause and its resume do not make a piece current. Continue restores the saved reset count and lowest row exactly and does not apply this rule. A saved game in a released format required by STA-6 takes its saved reset count; the lowest row is given by L1 only when it is missing from the save, and a legacy paused, resting save with count 15 is handled by L2 only when it carries no information distinguishing a pause that took the count from 14 to 15 from a pause taken after the 15 were used (B16).
+
+Resting piece, count below 15. A legal move or rotation that leaves the piece resting and reaches no new lowest row adds 1 to the count and restarts the 0.5-second lock delay. The step from 14 to 15 is the 15th restart.
+
+Resting piece, count 15. A legal move or rotation is permitted. If the piece remains resting and reaches no new lowest row, the delay is not restarted and the already running lock deadline continues. Moving off a ledge cancels the delay. If a piece at count 15 whose delay was canceled comes to rest again without reaching a new lowest row, it locks at once (PLY-6).
+
+Pause. A pause during the lock delay cancels the delay and counts as one reset (STA-2). If the count is 14 or less, the count increases by 1, and on resume a resting piece starts the 0.5-second delay again. If the count is 15, the paused, resting state records count 16, and on resume the piece locks at once and the delay is not restarted. A resume from a paused, resting piece with count 15 starts the delay. A pause when the piece is not in a lock delay is not a reset.
+
+**B10. Bag.** Playing or paused: an ordered sequence of distinct kinds; the empty sequence is valid. Game over: the bag has no semantic value, and an implementation is not required to clear a field that holds one.
+
+**B11. Score.** In every mode, a whole number of zero or more, with no divisibility condition. SAF-4 says "valid score" without defining it. This choice is made here once and is not repeated in B15.
+
+**B12. Control state.**
+- Confirmation pending: yes or no; yes only while paused. Selected choice: Cancel or New Game while pending; absent otherwise.
+- Held directions: the held controls, one token per physical control (for example keyboard A, keyboard Left, stick, pad Left). Held horizontal tokens form an ordered sequence from oldest to newest by the time each became held, each with a direction left or right; the newest-direction rule is that the direction of the last token wins, and releasing a token removes it, so the last remaining token wins. Example: A(left), D(right), Left(left), then release Left leaves A, D, and D wins. Held soft-drop tokens are a set. Tokens of the same direction are all remembered.
+- Repeat position: for moves, not repeating, waiting for the first repeat, or repeating; for soft drop, not dropping or dropping. Anything but the idle value only while playing and only with a matching direction held (INP-2: repeating stops when the game stops playing). Game over and paused: idle.
+- Touch drag: none, or a drag with its start and current points, the whole columns and rows moved, and whether it still controls the current falling piece, yes only while there is a falling piece. Game over: the touch-drag state has no semantic value, and an implementation is not required to clear a field that holds one.
+
+**B13. Runtime resource states.** Semantic running: a resource is running exactly when an outstanding scheduled firing of it exists; it is not running when none exists, and a fired or canceled firing is not outstanding. This is independent of any concrete handle; null or undefined handle handling is later correspondence. Playing: the gravity resource is running; the lock-delay resource is running exactly while the falling piece rests (B14); the horizontal-repeat resource is running exactly while a horizontal held token exists and the repeat position is not idle; the soft-drop repeat resource is running exactly while a soft-drop token is held and soft drop is dropping. The horizontal-repeat and soft-drop repeat schedules are separate resources and may be running at the same time. Paused and game over: none running. The set T of other resources the SAF-4 word "timer" may cover is left open. The later timer-universe decision may add constraints for members of T and does not change the states defined here for gravity, lock delay and the two repeat resources. A resting piece in a committed playing state with reset count 15 has an outstanding lock delay (B9), and a resting piece with reset count 16 exists only while paused, when no resource runs. The screen wake lock is not an ordinary validity condition: DSP-7 requires only best-effort behavior (the game plays normally if it is unsupported or refused, and the system may take it back), so no state of it is required of a valid game state.
+
+**B14. Derived values (semantic definitions).** Level is the score divided by 1000, rounded down, plus 1 (SCO-2). Gravity interval is max(0.25, 0.7 - 0.02 × (level - 1)) seconds (PLY-2). Resting: playing or paused with a falling piece that cannot move down one row and stay valid under B6; false when there is no falling piece. Landing position: defined only when there is a falling piece, as the lowest position it can reach straight down and stay valid under B6; when there is none, there is no landing position and no ghost. Derived state has no independent semantic authority (D16 1.2). Whether an implementation cache or stored copy agrees with these values is later correspondence evidence and is not an R1 validity condition.
+
+**B15. Legal-play properties.** No R1 snapshot-validity condition requires that a committed state has no completely filled row. No R1 snapshot-validity condition requires that hold-used true implies a held piece exists. Whether legal play or history produces or forbids either property is not decided by R1. Consistency of the bag, queue and current piece with dealing whole bags of seven (PCE-5) is historical, cannot be evaluated from one state under B1, and is not an R1 snapshot-validity condition.
+
+**B16. Persisted content.** Arbitrary external data may be malformed, and invalid external data is not authoritative. A saved game is accepted whole or not at all. The pieces of an accepted saved game map to the built-in piece definitions. The gameplay contents of an accepted saved game are such that, when Continue restores them paused (STA-4), the resulting authoritative state is R1-valid; the saved payload's own representation of the mode is not decided here. Supported legacy formats are accepted. The level stored by the earlier format is ignored (STA-6). A saved game from before the bag was saved continues with a fresh bag (STA-4). A save newly written under these rules preserves the lowest row reached and the reset count exactly, including a reset count of 16 where applicable, so that Continue restores the same semantic values. Saved games in the released formats required by STA-6 predate the lowest row and the reset count of 16. Two compatibility defaults apply when loading them. They are deterministic defaults and are not recovered history. L1: a missing lowest row is the greatest board-row index occupied by any block of the current falling piece. L2: a legacy paused, resting saved game with reset count 15 and no information that distinguishes a pause that took the count from 14 to 15 from a pause taken after the 15 were used resumes with the lock delay starting. An accepted stored high score is a whole number of zero or more with no divisibility condition (B11); a stored high-score value outside that domain is invalid and is ignored (SAF-2). Forgetting, discoverability, failure behavior, rollback, last-good-save and persistence ordering belong to R2 and R4 and are not stated here.
+
+**B17. Presentation state.** Presentation state (D16 1.5) is non-authoritative and outside the ordinary authoritative validity predicate. Its own requirements, which may also depend on viewport, device and browser state, are evidenced separately.
+
+##### SOURCE: phase-1-r2-r5-decision.md
+# Phase 1 decision: R2, R3, R4 and R5
+## Decision text
+
+**S1. Meaning of forgetting (R2).** "Forgets the saved game" in STA-1 and STA-3 means withdrawing the saved game from Continue. Deleting its stored bytes is not required. Withdrawn data may remain stored.
+
+**S2. When withdrawal happens (R2).** The saved game is withdrawn when a New Game is confirmed and when normal game over occurs, meaning a new or held piece has no room (STA-3). A later error does not undo a withdrawal that has been made.
+
+**S3. Compatibility with SAF-3 (R2).** STA-3 applies to normal game over. SAF-3 applies when the engine throws, and keeps the last good save (S6). The two have different triggers and do not conflict. A fault stop by itself does not withdraw the saved game.
+
+**S4. Failed withdrawal (R4).** If writing a withdrawal fails, the game continues. In the running session the previous saved game is not offered by Continue (item 16 is true). After a reload nothing is promised: the previous saved game may be offered again. No retry mechanism and no new save format are required.
+
+**S5. Failed save (R4).** If saving the current game fails, the previous saved game is withdrawn from Continue. If that withdrawal also fails, S4 applies.
+
+**S6. Last good save (R4).** A saved game that was written successfully with valid content (R1, B16) is the last good save even if the same step later faults. It is not rolled back, consistent with D16 section 7 item 1. On a fault stop the last good save is kept.
+
+**S7. Failed read (R4).** A failed read of storage, as opposed to stored content that is invalid, may make the saved game unavailable to Continue. A failed read does not by itself withdraw the saved game and does not change any stored value. Stored content that is invalid is rejected whole and withdrawn, as before (SAF-1). Nothing is promised about when the saved game becomes available again after a failed read.
+
+**S8. Definitions (R4).** The saved-game eligibility indicator is eligible only for the exact stored value "true" (D16 Amendment 2, item 3 of section 1.4). A stored high score is good when it is a whole number of zero or more, otherwise it counts as zero (R1, B11 and B16).
+
+**S9. Item 16 lifetime (R4).** Item 16 is set when a saved game is withdrawn from Continue or a withdrawal is attempted. It is cleared when the session starts and when this session writes a saved game successfully. A session does not track other sessions: item 16 in a session stays set even if another session saves a game.
+
+**S10. Gravity timing (R3).** PLY-2 is judged against the delay the game requests from its scheduler, compared with max(0.25, 0.7 - 0.02 x (level - 1)) seconds (R1, B14) expressed in milliseconds, with an absolute tolerance for numerical rounding. The tolerance is 0.000000001 millisecond. The claim covers the value requested. Conversion of that value by the browser, actual elapsed time, lateness and throttling are not claimed. Whether timer registration and cancellation are inside the trusted boundary remains a separate Phase 1 item.
+
+**S11. Hand-edited persisted state (R5).** Persisted state that was edited by hand is judged only by the untrusted-input rules: it is accepted whole if it is valid under R1 (B16), otherwise rejected whole. Gameplay requirements such as PLY-7 govern the play the game itself produces. They are not applied to the history of an accepted saved game, and no claim is made that an accepted state could be reached by legal play. No check that a result was earned through play, no anti-cheating protection and no tamper protection is claimed.
+
+
+##### SOURCE: phase-1-fault-timer-decision.md
+# Phase 1 decision: fault reporting for SAF-3 and timer trust
+## Decision text
+
+**T1. Fault reported, SAF-3.** When the engine throws and the game stops in the SAF-3 safe state, the fault counts as reported when both of these happen: (a) the player is shown a plain message that the game stopped because of an internal error, so that no developer console is needed to see that something went wrong, and (b) a separate signal that a test can observe is raised. The criterion does not depend on any particular callback or interface.
+
+**T2. No stored fault record.** No fault record is required to be written to storage. T1 does not add a stored error log, and it adds no condition on the board, queue, current piece, score or hold beyond those in D16 section 8.
+
+**T3. Timer registration and cancellation.** A timer that was cancelled successfully is trusted not to run afterwards. Registering a timer and cancelling a timer are inside the SAF-3 behavior: if either throws, the engine stops in the SAF-3 safe state and the fault is reported under T1. No defense against a scheduler that runs a timer after a successful cancellation is required. This records the trust assumption that D2, F5 and F6 already relied on.
+
+**T4. Relation to earlier text.** T3 settles the sentence in D21 S10 that left the trust of timer registration and cancellation as a separate Phase 1 item. Nothing else in D21 changes.
+
+
+##### SOURCE: phase-1-trust-and-timer-scope-decision.md
+# Phase 1 decision: storage trust, SAF-5 reporting, timer cancellation failure and SAF-4 timer scope
+## Decision text
+
+**U1. Storage trust.** When a browser storage operation succeeds, the game trusts that operation. The game never trusts stored contents without validation: contents read back are judged by the rules already decided (R1, D21 S7, S8 and S11), accepted whole or rejected whole. Stored data can be edited or lost, so the game promises no permanent storage and no protection against tampering. A storage failure must not stop gameplay; what the game does about the saved game after a failed write or read is decided in D21 S4 to S7. This records a trust assumption and adds no requirement.
+
+**U2. Fault reported, SAF-5.** When drawing or reading a gamepad fails, the drawing and polling loops keep running (SAF-5). The fault counts as reported when both of these happen: (a) the player is shown a small notice that drawing or controller input had a problem, which does not interrupt play and is not a popup, and (b) a separate signal that a test can observe is raised. No fault record is required to be written to storage. D22 T1 and T2 are unchanged and still govern the SAF-3 stop.
+
+**U3. Failed timer cancellation during a fault stop.** If cancelling a timer fails while the game is stopping safely after a fault, a timer may still fire, but it must not change the stopped game. The game remains over, the last good save is kept and the fault is reported. This is an owner-approved interpretation of "no timers running" in SAF-3 for that case only. It adds no trust in a scheduler that runs a timer after a successful cancellation: D22 T3 still applies to successful cancellation. This text states the outcome and selects no mechanism.
+
+**U4. Timer scope for SAF-3 and SAF-4.** The timers these rules cover are the gravity timer, the lock-delay timer and the held-key repeat timers. The invariant checks of SAF-4, and the safe stop of SAF-3 on a broken invariant, apply after each firing of these timers and to the actions they cause. These timers are stopped when the game is paused or over. The drawing loop and the controller-polling loop are not timers in this sense; they keep running under SAF-5 and U2. This interprets the word "timer" and does not change the check points SAF-4 names.
+
+
+##### SOURCE: phase-1-trust-ledger-decision.md
+# Phase 1 decision: trust assumptions for hosting, the service worker, GitHub Actions and the random source
+## Decision text
+
+**V1. Hosting and the offline cache.** GitHub Pages is trusted to serve the files that were deployed. The browser's cache operations are trusted to work as documented when they succeed. The game's own offline-cache logic is not trusted: it is tested, including interference from other projects served from the same site address (APP-2, APP-6). No protection is claimed against a compromised GitHub account and no availability of the hosting is promised.
+
+**V2. GitHub Actions and repository settings.** The audit records dated evidence of what continuous integration and the repository settings enforce, and relies on GitHub to run the workflows as written and report their results accurately. A passing check is evidence that the checks it runs passed. It is not a proof of complete safety. The recording changes no setting and no workflow.
+
+**V3. Random source.** The random-number source is assumed to return valid values. The audit checks that the game follows the seven-piece bag rule (PCE-5) with the values it receives. No claim is made that the sequence is unpredictable, unbiased or cryptographically secure, and no new random generator is added. A random source supplied by a test is a trusted test control.
+
+
+##### SOURCE: phase-1-browser-trust-decision.md
+# Phase 1 decision: trust boundary for browser features
+## Decision text
+
+**W1. Browser implementation of specified features, when the call reports success.** The browser's implementation of a specified web feature is trusted, when the call reports success, to follow that feature's documented semantics. The audit does not test whether the browser itself is correct. This trust does not cover the game's arguments to the feature, its sequencing of calls, its state changes, its rendering decisions, its controller mapping, its wake-lock policy, its retries, or its handling of the feature's result.
+
+**W2. Everything on the project's side stays inside the audit.** The game's own logic around a browser feature is not trusted. That includes how the game calls the feature, how it uses what the feature returns, and what it does when the feature is missing, refused or throws an error. All of it is audited under the rules already decided and the requirements that apply: SAF-5 and D23 U2 for drawing and controller faults, and DSP-7 for the wake lock (if it is unsupported or refused, the game plays normally). W2 adds no requirement and changes none.
+
+**W3. No requirement is established by this trust.** W1 is an assumption about the browser, not evidence about the game. It does not by itself establish any requirement, including any INP, DSP, APP or SAF requirement. Each requirement still needs its own evidence. Trusting a browser feature is not a way to shrink the audit: the audit's aim is to demonstrate as much of the game's own behavior as practical.
+
+**W4. The browser facilities the game depends on.** The browser features the game depends on are: the 2D drawing surface, including the display color space option the game requests; the animation-frame callback; the Gamepad interface and its connect and disconnect events; the Screen Wake Lock interface; the size and resolution observers and queries used to fit the display; the modal dialog element; page visibility and its event; keyboard and window blur events; the active-element query. Features already decided elsewhere are unchanged: local storage (D23 U1), the four timer calls (D22 T3, D23 U3 and U4), the browser cache on success (D24 V1) and the random source (D24 V3). Service worker registration and the service worker's network requests are decided by D28, and the clock by D29. A browser feature not named here or in those decisions is not trusted. The list names features by what they do and is not a requirement.
+
+**W5. What is not claimed.** The audit claims no protection against bugs in the browser, against a browser that does not follow its documentation, or against a feature that reports success but does not work. A test may replace a browser feature with a controlled stand-in; that stand-in is a trusted test control.
+
+
+##### SOURCE: phase-1-sw-fetch-decision.md
+# Phase 1 decision: trust boundary for service worker registration and network requests
+## Decision text
+
+**X1. Registration and network requests, when the call reports success.** The browser's implementation of service worker registration (`navigator.serviceWorker.register`) and of network requests (`fetch`) is trusted, when the call reports success, to follow its documented semantics. This adds no guarantee that a registration or a download will succeed.
+
+**X2. Project logic stays inside the audit.** The game's own requests, its handling of what a request returns, its handling of a registration that is refused or fails, and the worker's behavior around them are not trusted. They are audited under the requirements that apply, including APP-2 and APP-6.
+
+**X3. What is not decided.** The clock (`Date.now`) is not covered by this file and stays unresolved. No requirement is established by X1. The served content stays under D24 V1.
+
+
+##### SOURCE: phase-1-clock-decision.md
+# Phase 1 decision: the clock is not trusted; clock jumps are audited
+## Decision text
+
+**K1. The clock is not trusted.** The audit assumes nothing about the clock: not that it is accurate, and not that it is steady. The clock can jump forward or backward.
+
+**K2. Clock jumps are audited.** The audit tests forward and backward clock jumps wherever time decides whether something is cleaned up or loaded. That includes how long the previous offline version of the game is kept after an update, and the requirement that a page never mixes two versions (APP-2). A clock jump is never treated as proof that an old version is safe to delete.
+
+**K3. A failed check is a finding.** A check that fails is recorded as a finding and addressed under the audit's normal process. It is not assumed away. A test existing is not by itself a guarantee of safety.
+
+**K4. What is not decided.** No requirement is established by K1 to K3. The test design, any change to `REQUIREMENTS.md`, and any code change are not decided here.
+
+
+##### SOURCE: phase-1-dsp5-reading-decision.md
+# Phase 1 record: reading of DSP-5 for Continue availability, and provenance note for D29
+## Part 1. Reading of DSP-5
+
+**P1. Reading.** DSP-5 reads: "The score, high score, buttons and hints always match the game state, including changes made in another tab." For this audit, DSP-5 is read in full, with one exception that the owner already decided: Continue availability in a session follows item 16. Item 16 is set when this session withdraws the saved game from Continue or attempts to, and is cleared when the session starts (a reload) and when this session writes a saved game successfully (D21 S9). While item 16 is set, Continue is unavailable in this session even if another tab saves a game. A session does not track other sessions. DSP-5's other obligations are unchanged.
+
+**P2. What this does not do.** It does not change `REQUIREMENTS.md`. Whether the requirement text should later be edited to state the exception, and the class of such an edit, stay undecided. If the edit is made, its class depends on whether the game already behaves as P1 reads; that has not been checked here. This reading creates no claim that the game behaves as P1 says.
+
+
+##### SOURCE: phase-1-frame-principle-decision.md
+# Phase 1 decision: frame principle for legal operations
+## Decision text
+
+**Z1. Frame principle.** Each legal operation may change only the authoritative game state (D16 section 1.1 items 1 to 14, D17 item 15, D20 item 16) that is explicitly assigned to that operation. All other authoritative game state is preserved by the operation. A change to state not assigned to the operation is a violation, not a permitted side effect.
+
+**Z2. What this does not decide.** Z1 chooses the principle only. It does not adopt any operation table, and it does not assign any item to any operation. Which items each operation is assigned stays to be recorded from the requirements and decisions, operation by operation. Where the sources are silent on an operation's effect on an item, that point stays unspecified and is not treated as assigned or excluded by Z1. The timing and order of persistence effects, such as when a line-clear save is written, are not decided by Z1. Draft tables prepared earlier are proposals and are not adopted.
+
+
+##### SOURCE: phase-1-operations-record.md
+# Phase 1 record: sourced assignments of authoritative state to legal operations
+## Part A. Assignments stated by the sources
+
+Control operations (D16 section 5):
+
+| Operation | Items changed and source |
+| --- | --- |
+| 1. Confirmation open | 10 to pending, only while paused; 11 to Cancel (B12, STA-1) |
+| 2. Confirmation selection change | 11 (STA-1, INP-4) |
+| 3. Confirmation answer | New Game: the game is given up and a new one starts (STA-1): board, score, held piece, queue and bag reset, hold available (B8), saved game withdrawn (S1, S2; item 16 set, S9); 10 and 11 cleared (B12). Cancel, Escape, a click outside the dialog or any other action: 10 and 11 cleared, the game stays paused (STA-1, B12) |
+| 4. Direction or control press | 12 gains a token in order of pressing (B12). A press with Cmd, Ctrl or Alt never counts as held (INP-3). The game effect of a pressed control is the gameplay operation below |
+| 5. Direction or control release | 12 loses the token; the last remaining token wins (B12, INP-2); disconnecting a gamepad releases everything (INP-4) |
+| 6. Repeat-control progression | 13 advances (INP-2: first repeat after 167 ms, then every 33 ms; soft drop at once, then every 50 ms); each repeat is a move or soft drop below; repeating stops when the game stops playing or the window loses focus (INP-2; 13 idle when paused or over, B12) |
+| 7. Touch begin | 14 (B12, INP-5); see Part B |
+| 8. Touch update | 14 (B12); a drag moves one column per cell after half a cell, and soft drops one row per cell (INP-5); those are the move and soft drop below; 14 controls only the piece that was falling when the drag began (INP-5, B12) |
+| 9. Touch end or cancel | 14 (B12); see Part B |
+
+Gameplay operations (not enumerated in D16 section 5):
+
+| Operation | Items changed and source |
+| --- | --- |
+| Move left or right, rotate | 2 if legal (PLY-1, PCE-4; unchanged if nothing fits). If the piece reaches a new lowest row, 15 becomes that row and 9 becomes 0; otherwise a resting piece with 9 below 15 gets 9 plus 1 and the 0.5 second delay restarts; at 9 equal to 15 the delay is not restarted; moving off a ledge cancels the delay (B9.2, PLY-6) |
+| Gravity tick, soft drop | 2 down one row (PLY-2, PLY-3); 15 and 9 as for a fall (B9.2: "move, rotation or fall") |
+| Hard drop | 2 to its landing position, then lock (PLY-4) |
+| Lock (hard drop, delay expiry, landing at count 15 after a cancelled delay) | 1 gains the piece, full rows removed and rows above shift (SCO-1); 7 scores 100, 300, 500 or 800 for 1, 2, 3 or 4 rows (SCO-1); the next piece becomes current from 5 and 5 refills from 6, 6 refills with a full bag when empty (PCE-3, PCE-5, D16 1.1); 4 returns to available (B8); 9 becomes 0 and 15 becomes the greatest row of the new piece (B9.2); 14 no longer controls the old piece (INP-5, B12). If the new piece has no room: ordinary game over (STA-3) |
+| Hold | 2 and 3 swap, the held piece in its starting state, or the next piece from 5 and 6 when none is held (PLY-7); 4 set (B8); the piece brought in has 9 equal to 0 and 15 at its initial row (B9.2); no room means ordinary game over (STA-3) |
+| Pause, page hidden | 8 to paused (STA-2, STA-5); a pause during the lock delay cancels the delay and counts as one reset: 9 plus 1 when 9 is 14 or less, and 9 becomes 16 when it was 15 (B9.2, STA-2); gravity, lock delay and repeat stop (STA-2, U4); 13 idle (B12); pausing saves the game (STA-4) |
+| Resume | 8 to playing (STA-2); a resting piece starts the 0.5 second delay again, except that at 9 equal to 16 it locks at once (B9.2) |
+| Continue (from game over only, when Continue is available) | 1 to 9 and 15 restored exactly as saved, 8 to paused; a fresh bag if the save has none (STA-4, B9.2, STA-6) |
+| New Game from game over | as New Game under operation 3 (STA-1, INP-4 "a game Menu just started", B8) |
+| Ordinary game over (new or held piece has no room) | 8 to game over; all timers stop; saved game withdrawn (STA-3, S2; item 16 set, S9); items 2, 3, 4, 6, 9, 14 and 15 have no semantic value, and clearing them is not required (B6, B8, B12) |
+| Engine fault stop (SAF-3) | not an ordinary transition: game over, no timers running (a failed cancel may still fire but must not change the stopped game, U3), fault reported (T1), last good save kept (S6); the ordinary contents reached at the fault are retained (D16 section 7); a fault alone does not withdraw the saved game (S3) |
+
+Persistence effects stated by the sources: item 16 is set when this session withdraws the saved game or attempts to, and cleared when the session starts and when this session writes a saved game successfully (S9); a failed save withdraws the saved game from Continue (S5); a failed withdrawal is covered by S4.
+
+## Part B. Points the sources do not specify
+
+These are not assigned and not excluded by this record. They stay unspecified until an owner selection records them. This record does not resolve them.
+
+1. The effect of a cancelled touch on the controlled piece, and which of the touch operations (7, 8 or 9) commits the rotation that INP-5 says a tap causes.
+2. When the save that STA-4 says line clearing causes is written, relative to the next piece appearing and to a game-over result. STA-4 says only that clearing lines saves; B16 says what a valid saved game contains, not when it is written.
+3. Whether the held-direction tokens (item 12) survive a pause, and whether repeat (item 13) restarts on resume while a direction is still held.
+4. Whether Continue changes item 16. S9 lists only withdrawal or its attempt, session start and this session's successful save, so by S9's wording Continue does not.
+
+##### SOURCE: phase-1-operations-choices-decision.md
+# Phase 1 decision: operation choices for the points left unspecified in D32
+## Decision text
+
+**C1. Line-clear save (D32 Part B point 2).** When clearing lines causes a save (STA-4), the save captures the completed turn: the state after the lock transition has finished, including the next piece having appeared. If that turn ends the game (STA-3), no save is written for it, and the saved game is withdrawn from Continue (S1, S2).
+
+**C2. Touch rotation (D32 Part B point 1).** A touch rotates the piece only when it ends within 10 px of where it started (INP-5). The rotation is committed by operation 9, touch end. A cancelled touch commits no rotation. The gesture state (item 14) still returns to none when a touch ends or is cancelled (B12); C2 concerns only the rotation.
+
+**C3. Resume with a direction still held (D32 Part B point 3).** If a direction key is still held when the game resumes, repeating waits until that key is released and pressed again. Resuming does not by itself move the piece.
+
+**C4. Continue and item 16 (D32 Part B point 4).** Continue does not change item 16. This is the reading of the wording of D21 S9, which lists only withdrawal or its attempt, session start and this session's successful save as changing item 16; it is not an owner choice.
+
+
+##### SOURCE: phase-1-operations-choices-2-decision.md
+# Phase 1 decision: touch excursion and the resume rule for held controls
+## Decision text
+
+**E1. Touch excursion (completes D33 C2).** A touch is a tap only if it never moved beyond 10 px from where it started and ends within 10 px of where it started (INP-5). A touch that moved beyond 10 px at any time during the gesture is not a tap, even if it returns to within 10 px of its start, and it commits no rotation. Sourced consequence, not a separate choice: the moves and soft drops the gesture already committed under operation 8 stay committed, because no source undoes a committed operation (D16 section 4); the gesture state (item 14) returns to none when the touch ends (B12).
+
+**E2. Held controls on resume (extends D33 C3).** The rule of D33 C3 applies to every control that repeats under INP-2 and INP-4: a direction key, a held soft drop (S or Down), a gamepad stick direction and a directional pad direction. If such a control is still held when the game resumes, it does not repeat until it is released and pressed again.
+
+**E3. Sourced consequences of C3 and E2 (not choices).** A control held at the moment of resume, including one pressed during the pause (STA-2: no input while paused), does not repeat until released and pressed again. Releasing a different, newer control does not make it repeat again; INP-2's return to a still-held direction does not apply to it. A control pressed after resume behaves as INP-2 says, with the newest-direction rule applied among those. How the held-direction tokens (item 12) are represented to produce this behavior is not decided and is left to the implementation.
+
+
