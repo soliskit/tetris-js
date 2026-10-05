@@ -26,6 +26,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-operations-choices-decision.md` (choices for the points D32 left unspecified) | D33 | a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa |
 | `docs/phase-1-operations-choices-2-decision.md` (touch excursion; resume rule for held controls) | D34 | 134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4 |
 | `docs/phase-1-normative-text-register.md` (normative text register; code-free restatements of D29 K2 and D27 W4) | D35 |  |
+| `docs/phase-1-closure-record.md` (Phase 1 closure matrix against the blueprint's exit criteria) | D36 |  |
 
 ## Historical review material, not governing
 
