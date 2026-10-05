@@ -16,7 +16,7 @@ The integrator checked that each of the 55 requirement IDs in `docs/phase-1-requ
 
 ## 2. What the records state and do not state
 
-- Every model-correspondence cell is pending: no reference model exists yet. The model input pack was approved on October 5, 2026 (ledger row D39) and a clean author is being assigned. No model transition was invented to fill a template.
+- Every model-correspondence cell in the unedited partition records remains pending. Those records predate model construction; four subsequent frozen model revisions and their limits are recorded by D41. The model input pack was approved on October 5, 2026 (ledger row D39). No model transition was invented to fill a template.
 - Where the model does not apply (outer layer, display, process and tooling claims), the record names the actual independent evidence method.
 - The partition readers ran no full test suite, browser, coverage, mutation or device evidence. P3-E ran 19 dependency-free static tests under Node 22 rather than the target Node 26; two server attempts failed for a missing dependency in the reader's environment, which is an environment limit and not an application result. The eight requirements that depend on devices or external installation (APP-1, APP-4, DSP-1, DSP-2, DSP-4, DSP-6, DSP-7, QA-4) remain in scope with their evidence gaps.
 - P3-C and P3-D list candidate observations for Phase 4 (P3-C 15, P3-D 18, P3-E 10). None is a finding. Each needs reproduction against the governing text before it can become one.
