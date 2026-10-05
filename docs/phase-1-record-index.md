@@ -1,0 +1,26 @@
+# Phase 1 record index
+
+This index tells a reader which Phase 1 documents govern and which are review material. It is navigation only. The ledger in `AUDIT.md` governs status and provenance.
+
+## Governing
+
+| Document | Ledger row | SHA-256 |
+| --- | --- | --- |
+| `docs/phase-1-state-decision.md` (D16, state categories and transition boundary) | D16 | 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182 |
+| `docs/phase-1-d16-amendment-1.md` (D16 Amendment 1, lowest row reached) | D17 | 0e0775998098c827a5fb3dddb89c432d3d88b99c5cfcab07c7d836cef8af5bba |
+| `docs/phase-1-r1-decision.md` (R1, exact valid-state semantics) | D18 | aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec |
+| `docs/sources/1-SRS-pieces.png` (geometry reference, image) | D18 | 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236 |
+| `docs/sources/2-srs_table.txt` (geometry reference, extracted table) | D18 | c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c |
+
+## Historical review material, not governing
+
+These were merged as records of how the decisions were reached. They contain alternatives and open choices that were later settled. Where one differs from a governing document, the governing document wins.
+
+| Document | Pull request | SHA-256 |
+| --- | --- | --- |
+| `docs/phase-1-state-model-proposal.md` (state model proposal, historical per D16) | before #51 |  |
+| `docs/phase-1-r1-valid-state-proposal.md` | #51 |  |
+| `docs/phase-1-r1-proposal-rev1.md` | #52 |  |
+| `docs/phase-1-d16-lowest-row-amendment-proposal.md` | #53 |  |
+| `docs/phase-1-d16-amendment-candidate.md` | #54 |  |
+| `docs/phase-1-r1-normative-candidate.md` | #54 |  |
