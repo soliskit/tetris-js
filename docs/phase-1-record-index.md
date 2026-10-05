@@ -11,6 +11,8 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-r1-decision.md` (R1, exact valid-state semantics) | D18 | aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec |
 | `docs/sources/1-SRS-pieces.png` (geometry reference, image) | D18 | 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236 |
 | `docs/sources/2-srs_table.txt` (geometry reference, extracted table) | D18 | c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c |
+| `docs/phase-1-d16-amendment-2.md` (D16 Amendment 2, Continue state placements) | D20 | 957ba3926778c5c18fa3ff7796d29196f9cd954d1f58fc7fbc399d8a1eff3355 |
+| `docs/phase-1-r2-r5-decision.md` (R2, R3, R4 and R5) | D21 | 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8 |
 
 ## Historical review material, not governing
 
