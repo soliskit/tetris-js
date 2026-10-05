@@ -1,0 +1,77 @@
+P2-C INPUT / CONTROL ROUTES - PHASE 2 INVENTORY (read-only; no findings, no statuses)
+
+1. Base, scope, method
+- Base SHA used: b3c177eb3f6ed43170890fbfbe1af75e3a67585a (every file read with --ref at that SHA). Main-head check: current default-branch bytes of inputController.js, script.js and gameManager.js are identical to the base copies (cmp). I could not read the head SHA itself with the available GitHub tools; open PR list was empty at 14:29 PT. AUDIT.md/index at the base list D36 (closure record) as the latest row.
+- Governing text read: blueprint sec. 2 + Phase 2 exit (lines 466, 478-521); D16 (sec 1.1 items 1-14, sec 4 boundary, sec 5 ops 1-9); D31-D34 (operations record, C1-C4, E1-E3). D16 file header still says "CANDIDATE"; the index/ledger treat it as governing (noted, not resolved here). Items 15/16 per D17/D20 as named in D32. REQUIREMENTS.md INP rows read only via D32 citations.
+- Files read in full: public/game/inputController.js (314 lines), gameManager.js (592), script.js (592, input parts 386-545 and 543-592), index.html. Not run: no tests, no code execution.
+- Line refs are file:line at the base. IC=public/game/inputController.js, GM=public/game/gameManager.js, SC=public/script.js, HT=public/index.html.
+- Method: derived from code and call relationships. Names were not used to decide boundary status. "Boundary" below = D16 sec 4: the commit point where a legal operation commits authoritative changes. Code-side mapping is stated as "enters engine via X", "state held at Y".
+
+2. Public entry routes owned by P2-C (event -> handler)
+IC registers: window keydown IC:85, keyup IC:86, blur IC:87, gamepaddisconnected IC:88, gamepadconnected IC:89; startPolling IC:94 (constructor). Constructed once at SC:526.
+SC registers (touch/hold/control buttons): boardCanvas pointerdown SC:431, pointermove SC:440, pointerup SC:493, pointercancel SC:494, boardCanvas click no-op SC:586; heldCanvas click SC:496, mousedown preventDefault SC:502, keydown SC:503; newGameButton click SC:509; confirm/cancel buttons SC:519-520; dialog click SC:533, dialog cancel SC:536; continueButton SC:540; playPauseButton SC:541.
+Hand-off to P2-D: visibilitychange SC:544 (calls resetDragState SC:546 then handleAction(pause) SC:547); storage SC:552; dialog open/close driven by gameManager.isConfirmingNewGame SC:226-228. Listed here only where they touch input state.
+
+3. Route table: input event -> engine call (every engine entry from input; all engine entries go through GM.guard GM:389 -> runChecked GM:395 -> findInvariantViolation GM:412 / failSafe GM:436, then onChange)
+R1 Keyboard A/D/arrows: IC:119 handleKey -> startMoving IC:257 -> GM.handleAction(moveLeft/Right) GM:459 -> performAction GM:464 -> moveTetromino GM:550 (writes currentTetromino.position GM:554, resetLockDelay GM:555). Release: IC:157 resumeHeldMovement IC:245 -> startMoving / stopMoving IC:273.
+R2 Keyboard S/arrow down: IC:159-162 -> GM.softDrop GM:527 (clears isConfirmingNewGame GM:528, guard(dropTetromino) GM:529) once, then updateSoftDrop IC:281 -> startSoftDrop IC:289.
+R3 Keyboard W / Z / Space / H / Enter / C: KEY_ACTIONS IC:40-47 -> IC:166 GM.handleAction(rotate|rotateCounterclockwise|drop|hold|newGame|continueGame) -> GM:469-520 switch -> rotateTetromino GM:583, hardDrop GM:539, holdTetromino GM:559, newGame GM:470-481 (resetGameSession GM:478, startGameLoop GM:480), continueGame GM:482-485 (loadGameSession GM:484).
+R4 Keyboard P / Esc: IC:163 -> GM.togglePause GM:523 -> handleAction(pause|resume) -> GM:486-501 (pause: stopGameLoop, lockDelayResetCount++ GM:490-492, cancelLockDelay, saveGameSession GM:494).
+R5 Confirmation open: New Game while paused, from any of Enter IC:166, gamepad View IC:221 / Menu-at-gameOver IC:216 (gameOver path = no question), buttons SC:509 -> GM:474-477 sets isConfirmingNewGame = true (item 10). Item 11 has no engine field (see 7.1).
+R6 Confirmation answer: confirm button SC:519 -> handleAction(newGame) -> GM:467 newGameConfirmed true -> GM:478 reset+start. Cancel button SC:520, dialog backdrop click SC:533-535, dialog cancel event SC:536-538 (preventDefault then cancel), Esc IC:138-140, pad B IC:204 -> GM.cancelNewGame GM:533 -> guard -> isConfirmingNewGame=false GM:535. Any other handleAction clears it GM:468; softDrop clears it GM:528.
+R7 Confirmation selection change: IC:141-143 (ArrowLeft/Right), IC:205 (pad left/right) -> questionButtons.move SC:527-530 (DOM focus change; no engine call). Press: IC:203 (pad A) -> questionButtons.press SC:531 -> element.click() -> R6 handlers.
+R8 Gamepad: IC:99 startPolling (requestAnimationFrame IC:109,112) -> IC:171 pollGamepads (first connected pad IC:173; reads buttons IC:175-179; axes IC:181) -> IC:190 processInput. processInput: confirm branch IC:202-208; menu IC:214-219 (gameOver -> newGame IC:216, else togglePause IC:218); view IC:220-221 newGame; PAD_ACTIONS IC:52-60 deduplicated into a Set IC:225 then handleAction IC:226 (y continue, b/rb rotate, lb ccw, x hold, a/up drop); padDown IC:229 -> updateSoftDrop IC:230; direction IC:193-195 -> startMoving IC:237 / resumeHeldMovement IC:239. Polling continues while any pad connected; error caught and polling continues IC:106-109; stops when none IC:110.
+R9 Auto repeat: startMoving IC:257-271: immediate handleAction IC:261, setTimeout(repeat, 167) IC:270 (DAS_DELAY_MS IC:26), repeat re-arms setTimeout 33 ms IC:268 (ARR IC:27); repeat stops itself when GM.state != playing IC:263-266. Soft drop: setInterval 50 ms IC:291-297 (IC:28) calling GM.softDrop IC:296; self-stops when not playing IC:292-295.
+R10 Release-all: blur IC:87 and gamepaddisconnected IC:88 -> releaseAllInput IC:305-312 (stopMoving, stopSoftDrop, clears heldButtons/padDirection/padDown/heldKeys).
+R11 Touch (all in SC, module-level object `drag` SC:394-405): pointerdown SC:431: resetDragState SC:407; drag.piece = gameManager.currentTetromino SC:434; start coords SC:435-436; setPointerCapture SC:437 (no state check). pointermove SC:440-483: ignored if different pointer or canvas size absent SC:441, or currentTetromino != drag.piece SC:444; 10 px slop SC:392,448 sets drag.moved SC:449; horizontal: tryMove SC:425-429 -> handleAction(moveRight|moveLeft) and compares piece.position.column (read) SC:428; blocked-push logic SC:453-463; offsets SC:465-476; rows: newRowOffset SC:478 -> gameManager.softDrop() SC:480. pointerup/pointercancel SC:493-494 -> endDrag SC:486-491: isTap = !drag.moved && type==pointerup && currentTetromino===drag.piece SC:488; if tap handleAction(rotate) SC:489; resetDragState SC:490.
+R12 Hold box: click SC:496 and keyboard Enter/Space on focused box while playing SC:503-508 (stopPropagation SC:506) -> handleAction(hold) -> holdTetromino GM:559-580.
+R13 Buttons: playPause SC:541 -> togglePause (R4 path); continueButton SC:540 -> handleAction(continueGame) (R3 path); newGameButton SC:509 (R5 path).
+
+4. Timers and callbacks (input side)
+- IC:268/270 movementTimer (setTimeout chain); IC:291 softDropTimer (setInterval); IC:109/112 requestAnimationFrame poll. All use global timers directly, NOT the engine Scheduler (GM:20, GM:66-67) and NOT GM.schedule/guard GM:382-392. Each callback reads GM.state and calls guarded engine entries; the callback bodies themselves (state reads, stopMoving, clearTimeout) run outside GM.guard. The poll callback has its own try/catch IC:104-108.
+- clearTimeout/clearInterval sites: IC:260, IC:274, IC:301. clearTimeout IC:260 is called with movementTimer possibly undefined (no-op).
+- Engine timers triggered by input actions (owned by P2-A, hand-off): GM:359 startGameLoop, GM:263 startLockDelay via resetLockDelay GM:287 / landIfResting GM:274.
+
+5. State mutation routes and D16 items
+Input-held state (all in InputController instance; IC:67-83):
+- item 12 held-direction / newest-direction: heldKeys Set IC:77 (written IC:126-127, IC:311), heldButtons IC:79 (IC:192, IC:308), padDirection IC:81 (IC:206, IC:235, IC:309), padDown IC:83 (IC:229, IC:310), movement IC:71 (IC:259, IC:276). "Newest-direction order" is represented by `movement` plus resumeHeldMovement priority KeyA > KeyD > padDirection IC:246-248 (no token order list). Writers: handleKey, processInput, resumeHeldMovement, startMoving/stopMoving, releaseAllInput.
+- item 13 repeat position: movementTimer IC:73 (set IC:270,268; cleared IC:274-276), softDropTimer IC:75 (IC:291, IC:302). Phase within DAS/ARR is held only in timer handles (runtime resource category 1.3 item 3 per D16; the "repeat-sequence position needed by INP-2" is item 13 authoritative).
+- item 14 touch drag: SC `drag` object SC:394-405 (writers SC:407-414, 432-437, 449, 458-475, 481, 490); controlled piece = drag.piece SC:434 compared by object identity SC:444,479,488.
+- item 10 confirmation pending: GM.isConfirmingNewGame GM:109 (writers GM:468, 475, 528, 535).
+- item 11 selected choice: no engine field. Held as DOM focus: read via document.activeElement SC:528,531; written by .focus() SC:529; initial focus via `autofocus` on Cancel HT:69. (Cross-partition: P2-D.)
+Engine routes reached from input (hand-off to P2-A/P2-B, not duplicated): moveTetromino GM:550, rotateTetromino GM:583, hardDrop GM:539 (-> lockAndSpawnNext GM:317), holdTetromino GM:559, dropTetromino GM:245 (via softDrop GM:527), pause/resume GM:486-501 (saveGameSession GM:219, P2-B), newGame GM:470-481 (resetGameSession GM:182, P2-B), continueGame GM:482 (loadGameSession GM:199, P2-B).
+D32 operation mapping: ops 1-3 -> R5/R6; 4-5 -> R1-R3, R8 (press/release); 6 -> R9; 7-9 -> R11; gameplay ops (move/rotate/soft drop/hard drop/hold/pause/resume/Continue/New Game) -> R1-R4, R12, R13.
+
+6. Boundary mapping / containment (derived from code)
+- Engine entry points used by input: handleAction, togglePause, softDrop, cancelNewGame. Each runs its mutation inside GM.guard (GM:459-460, 523-525 via handleAction, 527-530, 533-537). No input file writes any GameManager field directly (grep of SC for gameManager.<field> assignments: none; IC: none). Input reads engine state (state, isConfirmingNewGame, currentTetromino, columns).
+- Engine items 10: committed inside GM (passes through the guarded entry). Items 12, 13, 14 (and the selection part of 11): committed outside the engine, in IC fields, SC `drag`, and DOM focus. They are authoritative per D16 1.1 yet written by input-layer code with no engine commit point and no invariant check (findInvariantViolation GM:412-428 does not cover them). Disposition: candidate placement/bypass observation, see 7.1.
+- Gameplay effect of every input reaches authoritative engine state only through the four guarded entries above (call-chain verified R1-R13). Candidate bypass of that: tryMove SC:425-428 and SC:444,479,488 hold a direct reference to the Tetromino object (gameManager.currentTetromino) but only compare/read it; no write found.
+- Drawing/polling/timers: IC poll loop is an outer-layer route; it commits no engine state itself, only via R8 entries (D16 sec 4 item 6).
+
+7. Candidate observations (labeled candidates; not findings; compare against D16/D32-D34 in later phases)
+7.1 Items 11-14 live outside the engine (see 6). Unlike item 10, the commit point for ops 2, 4-9 is not inside the engine guard.
+7.2 Item 12 representation: no ordered token list; ordering is fixed priority KeyA > KeyD > pad IC:246-248 (compare D32 op 5 "last remaining token wins", B12; D34 E3 says representation left open).
+7.3 Pause/resume with held controls (compare D33 C3, D34 E2/E3): heldKeys/padDirection/padDown/heldButtons are not cleared on pause (only blur/disconnect IC:87-88, 305-312). movement repeat self-stops while paused IC:263-266, and `movement` is reset by stopMoving so a held key does not repeat on resume (browser repeat events ignored IC:151). Soft-drop interval self-stops IC:292-295 but heldKeys keeps KeyS; updateSoftDrop is called only from KeyS key events IC:162 and processInput IC:230, so a held keyboard S is not restarted on resume, while a held pad-down is restarted at the next poll IC:230 (padDown recomputed each frame). Releasing a different direction after resume calls resumeHeldMovement IC:157/239, which restarts repeat for a still-held key/pad direction IC:246-248.
+7.4 Touch (compare D33 C2, D34 E1): drag.moved is set once beyond 10 px SC:448-449 and never cleared before resetDragState SC:490, so a touch that exceeded 10 px and returned within 10 px does not rotate (SC:488). pointercancel resets without rotating SC:493-494,486-491. Rotation is committed at pointerup SC:489 (op 9). Whether tap threshold is checked at end distance: code tests only !drag.moved, i.e. "never beyond 10 px" (hypotenuse test SC:448, strict < comparison), not an explicit end-distance test.
+7.4a pointerdown has no state check SC:431-438: a touch begun while paused/over still creates drag.piece; moves/drops/rotate then go through engine guards which no-op when not playing (GM:540,551,560,584; dropTetromino GM:245 not read for guard).
+7.4b visibilitychange resets drag state SC:546 but does not call releaseAllInput; blur calls releaseAllInput IC:87 but not resetDragState.
+7.5 Confirmation keys: while GM.isConfirmingNewGame, handleKey updates heldKeys IC:126-127 before the confirm branch returns IC:145, so keys pressed during the dialog count as held. Enter during the dialog is not handled in IC:135-146 and is left to the focused dialog button (browser click -> SC:519/520).
+7.6 Gamepad: only the first connected pad is read IC:173; processInput runs every frame IC:109,181 with deduplicated actions IC:225; Menu and View act alone IC:214-222 (matches comment IC:210-213).
+7.7 Input timers (IC:268/270/291) bypass the engine Scheduler and GM.schedule/guard; bodies are not invariant-checked, though their engine calls are. (Relevant to D22/D23 SAF-4 timer scope and D27 scheduler trust decisions - not interpreted here.)
+7.8 Dedup in PAD_ACTIONS IC:223-226: b and rb both map rotate; a and up both map drop; one action per frame per distinct action.
+7.9 Keyboard KeyP/Escape and gamepad Menu both route to togglePause; key Escape while dialog -> cancelNewGame IC:138 (not togglePause).
+
+8. Excluded files/routes (reason)
+- None excluded from P2-C scope. Blueprint-excluded files (icons/, manifest.webmanifest, style.css, blueprint line 493) - not examined by P2-C, no input route depends on them as read. HT not otherwise inventoried here beyond control element ids and tabindex (HT:33, 54-59, 64-70).
+
+9. Hand-offs (not duplicated)
+- P2-A: GM:459-590 gameplay handlers, GM:359-372 timers, GM:389-454 guard/failSafe.
+- P2-B: saveGameSession GM:219 (pause), loadGameSession GM:199 (Continue), resetGameSession GM:182 (New Game), isSessionSaved GM:158-172.
+- P2-D: SC:226-228 dialog sync, SC:544-548 visibilitychange, SC:552-556 storage event, DOM focus for item 11, requestDraw/ResizeObserver.
+- P2-E: none from P2-C.
+
+10. Assumptions and limits
+- Line numbers from `cat -n` of the files fetched at the base SHA.
+- Not verified: browser behavior (Safari/Chrome event ordering, Gamepad API), anything at runtime. REQUIREMENTS.md INP-1..INP-5 texts relied on through D32 citations only.
+- D16 state-items 15 and 16 are not input-written.
+- No claim of defect, proof, or any status.

@@ -1,0 +1,53 @@
+P2-E INVENTORY: service worker / app / static exclusion (read-only; candidate observations only, no finding or certification status)
+
+1. BASE AND METHOD
+Base used: ref b3c177eb3f6ed43170890fbfbe1af75e3a67585a, read via GitHub file reads at that ref (public/sw.js, public/script.js, public/index.html, public/manifest.webmanifest, public/game/*.js imports, REQUIREMENTS.md, AUDIT.md, docs/audit-blueprint.txt, docs/phase-1-closure-record.md). I could not independently confirm that b3c177e is current main head (no ref-resolve action available); latest PR seen is #73 (D36, closed). Line numbers are sw.js / script.js / index.html at the base. Nothing was run or changed. Not examined: public/icons binaries, style.css bytes (not fetched), test/, e2e/, CI files, server (express) file.
+Governing text used: blueprint section 2 (lines ~478-521) incl. the exclusion paragraph (line 493) and the Phase 2 exit bullet; REQUIREMENTS.md APP-1..APP-6, SAF-2. Derived from code, not function names.
+
+2. ROUTE TABLE (public/sw.js; outer layer, no engine call)
+Registration (page side, hand-off to P2-D): script.js:589-591 `if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {})`. Relative path (APP-3). Failure swallowed. index.html:12 links manifest; index.html:75 loads script.js as module.
+SW entry points (3 listeners + 1 guard):
+ E1 install: sw.js:151-154. event.waitUntil(download()); worker.skipWaiting().
+ E2 activate: sw.js:159-162. caches.delete for each of OLD_CACHES (['tetris','tetris-2'], line 22) then clients.claim().
+ E3 fetch: sw.js:164-175.
+   - non-GET: return, SW does not respond (165).
+   - GET non-navigate: respondWith(versionFor(event.clientId).then(v => answer(request, v))) (166-169).
+   - GET navigate: opened = openPage(event); respondWith(opened); waitUntil(opened.then(download).catch(()=>{})) (170-174).
+Internal call chains:
+ openPage (104-109): newestVersion() -> completeVersions() -> versionNames()+caches.open().keys(); if version && event.resultingClientId -> pin(clientId, version) [writes PINS cache entry, 78-80]; answer(request, version).
+ versionFor (87-91): clientId ? caches.match(pinKey, {cacheName: PINS}) -> pinned version if caches.has(version), else newestVersion().
+ answer (97-101): caches.match(request, {cacheName: version, ignoreSearch: true}); on miss fetch(request).catch(Response.error()).
+ download (136-149): number = last versionNumber+1; name = VERSION_PREFIX + number + '-' + Math.random().toString(36).slice(2) (140); caches.open(name).addAll(APP_SHELL.map(Request cache:'no-cache')) (142); on throw caches.delete(name) and rethrow (143-146); then removeOldVersions().catch(()=>{}) (148).
+ removeOldVersions (114-131): complete = completeVersions(); keeps newest 2 complete; reads PINS, deletes pin entries older than PIN_MS (10 min, line 20) else keeps pinned version; deletes version caches numerically below newest and not kept (128).
+ pin (78-80), pinKey (72), versionNumber (46), versionNames (49-54, filters caches.keys() by prefix 'tetris-version-' then sorts by number), completeVersions (57-65, complete = cache with >=1 entry).
+
+3. TIMERS / CALLBACKS
+ No setTimeout/setInterval/requestAnimationFrame in sw.js. Callbacks are only: three event listeners (151, 159, 164) and the promise continuations above. Time source: Date.now() at 79 (pin timestamp) and 124 (expiry compare). Random source: Math.random at 140 (cache-name suffix only).
+ Page side: register() call at script.js:589-591 runs once at module load.
+
+4. CACHE / VERSION / PIN ROUTES (persistence in the CacheStorage namespace, outer state; not game localStorage)
+ Names written: 'tetris-version-<n>-<rand>' (download:142), 'tetris-pins' (pin:79, key 'pins/<encoded clientId>'; value JSON {version, at}).
+ Names deleted: OLD_CACHES 'tetris','tetris-2' (E2:160); version caches below newest and not kept (128, only names filtered by VERSION_PREFIX at 50); failed partial version cache (144); pin entries (124).
+ APP-6 mapping: deletion sites enumerated above. The only fixed-name deletions are 'tetris' and 'tetris-2' (candidate observation: those names are generic and are not under VERSION_PREFIX; the comment at 156-158 says they were this app's earlier caches; the code cannot prove same-origin sibling projects do not use those names). Deletion of version caches is limited by VERSION_PREFIX 'tetris-version-' (also a shared-origin namespace, candidate observation: another same-origin project using the same prefix would be matched). 'tetris-pins' is not deleted as a cache, only its entries.
+ SW writes no localStorage (no storage API reference in sw.js; workers have no localStorage). High score / saved game keys live in gameManager.js (outside P2-E; hand-off to P2-B, see gameManager.js:33 comment on shared localStorage, :57 storage default).
+
+5. APP_SHELL vs files the page uses (APP-2/APP-3 outer state) (sw.js:23-41)
+ APP_SHELL (16 entries, all relative): './', index.html, style.css, script.js, manifest.webmanifest, icons/icon.svg, icons/icon-192.png, icons/icon-512.png, icons/apple-touch-icon.png, game/{gameManager,gameState,inputController,position,session,tetromino,tetrominoFactory}.js.
+ Page references: index.html:12 manifest.webmanifest; :13 icons/icon.svg; :14 icons/apple-touch-icon.png; :15 style.css; :17-23 modulepreload of the 7 game/*.js; :75 script.js. Manifest icons: icons/icon-192.png, icons/icon-512.png (x2). Static import graph from script.js:4-6: gameManager, gameState, inputController; gameManager imports position, gameState, session, tetrominoFactory (10-13); inputController imports gameState (14); session imports gameState, position, tetrominoFactory (6-8); tetromino imports position, gameState (6-7); tetrominoFactory imports position, tetromino (5-6). All 7 modules are in APP_SHELL; no import outside the list; no dynamic import(), fetch() or new URL in script.js (grep). All paths relative (APP-3 candidate: consistent at base for the listed refs). Not verified: style.css contents, any url() in it (the blueprint states none at 30e0085; not re-read at base).
+ Candidate observation: SW fetch handler is path-agnostic (answer uses request match with ignoreSearch, line 98), so files not in APP_SHELL are served from network only (answer 100) and are not versioned; at base no page reference was found outside APP_SHELL.
+
+6. CONTAINMENT / BYPASS DISPOSITION (outer-layer)
+ SW: does not call engine code, has no access to GameManager objects, localStorage or the page DOM; it only answers fetches and manages CacheStorage. Disposition: does not commit authoritative state (D16 state items are page-side); effect on the game is limited to which version of the files a page loads (APP-2). Candidate observation: a stale or mixed version is possible only through route E3 choices (versionFor 87-91 falls back to newestVersion when the pin is missing/expired or its cache deleted); this is the APP-2 mixing boundary to be examined in Phase 3, not evaluated here.
+ Page registration (script.js:589-591): outer layer, does not commit authoritative state; failure ignored (.catch(()=>{})). Fault reporting (SAF-5 scope) not applicable by code: no reporting call at that site (candidate observation, whether SAF-5 reaches it is a Phase 3 question).
+ Hand-offs: script.js registration -> P2-D; gameManager storage keys and shared-origin naming -> P2-B; no call from sw.js into any other partition.
+
+7. EXCLUDED FILES: reasons and dependency check (blueprint line 493, re-checked against base)
+ icons/ (icon.svg, icon-192.png, icon-512.png, apple-touch-icon.png): reason recorded: static images, no script, referenced only by index.html, manifest and the sw.js cache list. Base check: references found are exactly index.html:13-14, manifest icons, APP_SHELL 31-34. In-scope dependency: APP-1 (icon) and APP-2 (cached list) touch these; the blueprint reason still holds for authoritative state; I did not open the binaries.
+ manifest.webmanifest (17 lines): declarative data: name, short_name, description, start_url './', scope './', display fullscreen, orientation portrait, colours, icons. Executes nothing. Retained dependency per blueprint: APP requirements; start_url './' and scope './' interact with APP_SHELL './' entry and relative-path rule APP-3; display/orientation relate to APP-1/APP-4. No in-scope claim found that needs more than the declared data.
+ style.css: not fetched in this pass. The blueprint reason (no script, no @import, no url()) is carried forward unverified at base; P2-D or integrator should confirm. In-scope presentation requirement retains it per blueprint.
+ No file was found failing the exclusion test; this is limited by the unverified style.css item above.
+
+8. GAPS / LIMITS / OUT OF SCOPE
+ - Base head not confirmed as main head; docs/phase-1-record-index.md and the D-files (D16, D22-D24, D27-D29 trust, D31-D34) were not read in this pass beyond the closure record matrix; closure record criterion 11 (owner approval of Phase 1 exit) text was cut in my read, so I did not independently confirm the Phase 1 exit approval record. My assignment text says Phase 1 closed, so I proceeded; coordination attachment's snapshot said exit was not yet approved. Main/coordinator should confirm the exit record and that "automatic-through10" covers starting Phase 2.
+ - No runtime behavior observed (no browser, no cache inspection), only static source.
+ - Server file, CI workflows, tests not examined (outside P2-E list).
