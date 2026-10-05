@@ -22,6 +22,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-clock-decision.md` (clock not trusted; clock jumps audited) | D29 | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d |
 | `docs/phase-1-dsp5-reading-decision.md` (DSP-5 reading for Continue availability; D29 provenance note) | D30 |  |
 | `docs/phase-1-frame-principle-decision.md` (frame principle for legal operations) | D31 | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 |
+| `docs/phase-1-operations-record.md` (sourced assignments of state to operations; unspecified points) | D32 | 9e0a7db4b0423e8c831e265deca6ee2b66df4db1684995c9d070eaead0770101 |
 
 ## Historical review material, not governing
 
