@@ -19,6 +19,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-property-mapping.md` (adopted properties mapped to requirements, conflict register) | D25 | dc9f04dfa53a3e2bff21cb3401595b4ffa03a4bdbc46035166f2b91f0f606674 |
 | `docs/phase-1-browser-trust-decision.md` (trust boundary for browser features) | D27 | cc51ba2ddb152bf2d0758a5220fb3666f633a9d7c3c5c950f544dc774af10a3b |
 | `docs/phase-1-sw-fetch-decision.md` (trust boundary for service worker registration and network requests) | D28 | 02097c3b991ce4c1ba8859ef352ea010aed0af9adc5d466a212f3b2ebf350e54 |
+| `docs/phase-1-clock-decision.md` (clock not trusted; clock jumps audited) | D29 | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d |
 
 ## Historical review material, not governing
 
