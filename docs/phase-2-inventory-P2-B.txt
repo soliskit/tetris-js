@@ -1,0 +1,88 @@
+P2-B PERSISTENCE AND SESSION INVENTORY (Phase 2, read-only; candidate observations only, no findings/status)
+
+1. BASE AND METHOD
+- Base SHA used for all code and docs reads: (read via GitHub get-file-content with that ref). Current main head NOT independently verified (the tool surface has no head-SHA read I ran); coordinator to verify.
+- Files read in full: public/game/session.js (190 lines), public/game/gameManager.js (592), public/script.js (592, storage/draw parts), public/sw.js (grep only for storage). Docs: D16 state decision, D16 Amendment 2 (D20), D21 r2-r5 decision, D32 operations record, record index, blueprint section 2 and Phase 2 exit.
+- Line numbers below are file lines in the fetched content at the base SHA. I did not run any code, tests or scratch mutations.
+- Method: followed every read/write of the three storage keys and of storedIsSessionSaved through its callers. Derived from call relationships, not function names.
+- Bounds: gameManager.js lines 260-290 (landIfResting, lock-delay start/expiry) were not read; they belong to P2-A. inputController.js and sw.js internals not read (P2-C, P2-E).
+
+2. STORAGE KEYS (gameManager.js:34-36) AND D16 MAPPING
+- 'tetris.highScore' -> D16 1.4 item 2 (stored high score)
+- 'tetris.isSessionSaved' -> D16 1.4 item 3 (eligibility indicator, D20); exact value "true" only (read at :159)
+- 'tetris.savedGameSession' -> D16 1.4 item 1 (saved game); written :221, read :201 via readItem(:133)
+- Storage object: injectable, default globalThis.localStorage else in-memory Map (:41-62, :78). Interface used: getItem, setItem only. removeItem exists only on the memory fallback (:50); no code path calls removeItem.
+- Session item 16 (D20 withdrawn-from-Continue indicator, non-persisted): NO field or code in the in-scope files corresponds to it (grep for "withdrawn"/"removeItem" in session.js, gameManager.js, gameState.js, script.js, inputController.js, sw.js returned nothing). Continue availability in code is derived from isSessionSaved alone (script.js:221 canContinue = isGameOver && isSessionSaved; gameManager.js:200).
+
+3. PERSISTENCE ROUTE TABLE (all inside GameManager; no other file touches storage)
+Reads
+R-a getItem(IS_SESSION_SAVED) : getter isSessionSaved gameManager.js:158-161. Cached in storedIsSessionSaved (:90) until storageChanged (:174) or a setter call (:165). Read error -> readItem returns null (:133-139) -> cached false. Callers: loadGameSession :200; script.js:207 (draw), :221, :319 (frame snapshot).
+R-b getItem(HIGH_SCORE) : getter highScore :142-145. Non-safe-integer -> 0, negative -> 0 (matches S8). Callers: clearFullRows :349; script.js:206.
+R-c getItem(SAVED_SESSION) : loadGameSession :201 only, via readItem, parsed by parseSession (session.js:146-189) with {rows:20, columns:10}.
+Writes
+W-a setItem(HIGH_SCORE) : setter :148-154, errors swallowed. Only caller clearFullRows :349 (Math.max(highScore, score)), after score update :348.
+W-b setItem(IS_SESSION_SAVED, String(value)) : setter :164-171; calls storageChanged() first (:165), errors swallowed (:168-170). Callers (value false unless noted):
+  - resetGameSession :194 (false)
+  - loadGameSession :204 (false, only when not session -> invalid/missing/ineligible)
+  - saveGameSession :222 (true, after successful session write) and :224 (false, in catch)
+  - generateNextTetromino :238 (false, new piece does not fit)
+  - holdTetromino :568 (false, held piece does not fit)
+W-c setItem(SAVED_SESSION, serializeSession(this)) : saveGameSession :221 only. serializeSession session.js:29-40 writes gameBoard, score, currentTetromino, nextTetrominos, heldTetromino, canHoldTetromino, bag (colors).
+Cross-tab: window 'storage' listener script.js:552-556 -> gameManager.storageChanged() (clears cache), lastSnapshot='' , requestDraw(). Does not commit game state (outer layer; hand-off to P2-D for disposition).
+
+4. ENTRY ROUTES AND CALL CHAINS TO STORAGE (user-visible entries; all go handleAction -> guard -> performAction)
+handleAction :459-461 -> guard :389 -> runChecked :395 (try operation; findInvariantViolation :412; failSafe :436) -> onChange :391.
+- New Game (button script.js:509; confirm button :519): performAction newGame :470-481. From gameOver, or paused with isConfirmingNewGame already true (:467-477) -> resetGameSession :182-195 -> W-b(false) :194; then state=playing :479, startGameLoop :480. No write to SAVED_SESSION key. Persistence effect = eligibility flag false only. First paused New Game press only sets isConfirmingNewGame (:475), no storage effect.
+- Continue (script.js:540): performAction continueGame :482-485, only if state gameOver -> loadGameSession :199-217. Success path (:207-216) assigns board, boardVersion, score, current/next/held, canHold, factory.resetBag(session.bag), resetLockDelay; state=paused. It makes NO storage write: flag stays "true", saved bytes unchanged. Failure path (:203-206): W-b(false), state stays gameOver.
+- Pause (button script.js:541 togglePause :523; visibilitychange script.js:544-548 -> handleAction(pause)): performAction pause :486-495 -> saveGameSession :494 (W-c then W-b(true), or W-b(false) on throw). Executed after state=paused, stopGameLoop, lock-delay cancel/reset-count increment (:488-493).
+- Line clear: gravity tick (startGameLoop :359-367 -> schedule :382 -> guard -> dropTetromino :245) or hard drop (:539-547) or lock-delay expiry -> lockAndSpawnNext :317-324: lockTetrominoInPlace :327, clearFullRows :334-351 (W-a only if rows cleared), generateNextTetromino :228-243, then saveGameSession :322 if clearedLines && state still playing (so the save is written after the next piece has become current).
+- Ordinary game over, new piece no room: generateNextTetromino :236-239 -> state=gameOver, W-b(false) :238, stopGameLoop. Held piece no room: holdTetromino :566-569 -> state=gameOver, W-b(false) :568, returns without startGameLoop (gravity stopped :561, lock delay cancelled :562).
+- Engine fault: failSafe :436-454 sets gameOver, stops timers, records fault, calls onFault. No storage call in failSafe or in runChecked/guard.
+- Soft drop, move, rotate, resume: no storage writes themselves (soft drop may reach lockAndSpawnNext via landIfResting; hand-off to P2-A to confirm the chain; persistence effect as in Line clear / game over rows).
+- Page startup: new GameManager({onChange}) script.js:12; constructor :77-116 reads no storage; initial state gameOver :107. First storage read is at first draw (script.js:207).
+
+5. TIMERS/CALLBACKS TOUCHING PERSISTENCE
+Gravity (gameLoopTask) and lock-delay callbacks reach W-a/W-b/W-c only through lockAndSpawnNext/generateNextTetromino as above. No timer, rAF or interval calls storage directly. The storage event listener (script.js:552) and draw reads (script.js:206-207, 221, 319) are the only non-engine-action callers touching storage-derived values. rAF scheduling: requestDraw script.js:355-361 (P2-D).
+
+6. BOUNDARY MAPPING FOR PERSISTENCE ROUTES (map onto D16 section 4, D16 1.4 and D32; boundary defined independently of code)
+- W-a, W-b, W-c and R-a/R-b/R-c are performed by GameManager methods that run inside guard()-wrapped operations in every route listed in section 4. Each reachable write is downstream of a handleAction/timer entry. I found no write route from script.js, sw.js or session.js. session.js (serializeSession, parseSession) performs no storage calls itself; it is called only at gameManager.js:201 and :221.
+- loadGameSession success path assigns authoritative items 1-9 and 15 (gameManager.js:208-216) from parseSession output; parseSession constructs fresh piece objects from built-in definitions (session.js:66, 112-114, 125) and rejects the whole save on any failure. This is the route by which external data enters authoritative state; it runs only via Continue (performAction :482-485).
+- Setters/getters are public members (no private access): highScore, isSessionSaved, storedIsSessionSaved, storage, and saveGameSession/loadGameSession/resetGameSession can be called on a GameManager instance without going through handleAction (these are call-graph facts; whether any caller outside performAction exists within in-scope files: none found in script.js/inputController.js by grep for "gameManager\." calls, which are handleAction, togglePause, softDrop, cancelNewGame, storageChanged and reads). Candidate for the boundary analysis: public-method bypass surface is by construction not by encapsulation.
+- script.js:552 storage listener: outer layer, writes only the cache invalidation (storedIsSessionSaved=undefined) and page-local lastSnapshot; does not commit authoritative game state.
+- visibilitychange handler script.js:544-548 enters via handleAction(pause), hence the Pause route above.
+
+7. D16/D21/D32 CORRESPONDENCE TABLE (descriptive, not a judgement)
+Operation (D32) | Code route | Storage effect in code | D21 text at that point
+New Game confirmed | :478 reset :194 | flag=false | S1/S2 withdraw at confirm (item 16 set)
+Ordinary game over | :236-239, :566-569 | flag=false | S2
+Pause/page hidden | :494 | save then flag true; flag false on write failure | STA-4 (D32 row Pause)
+Line clear | :322 | same as above, after next piece spawned | STA-4; timing relative to next piece and game over listed as unspecified in D32 line 48
+Continue | :199-217 | none on success; flag=false on invalid/missing | D32 row Continue; D20 provenance text says Continue withdraws old save (see candidate C2)
+Engine fault | :436-454 | none | S3/S6 fault alone does not withdraw
+
+8. CANDIDATE OBSERVATIONS (not findings; no status; each needs comparison to governing text in Phase 3)
+C1. Item 16 (D20, S9) has no code counterpart in the inventoried files. S4 (failed withdrawal: not offered in running session) and S9 describe session state; code has only the cached flag plus stored flag. If the withdraw write throws (:168-170), cache was cleared at :165 so the next read re-reads storage and may return the old "true".
+C2. Continue success (:207-216) does not clear the flag or set any indicator. D20 provenance describes an owner choice "Continue withdraws the old save", but D21 S2 lists withdrawal only at New Game confirm and normal game over. Whether Continue is a withdrawal trigger is for the governing text to decide; code behavior stated here only.
+C3. Failed read vs S7: readItem swallows read errors and returns null (:133-139). In loadGameSession a null saved-session read gives parseSession null (session.js:151-155), then W-b(false) at :204, i.e. a withdrawal write after a failed read. S7 says a failed read does not by itself withdraw and changes no stored value. The flag read R-a failing is cached as false without a write (:159).
+C4. Failed save vs S5: saveGameSession catch (:223-225) calls W-b(false) (withdraws previous save), consistent in shape with S5. But the try block includes W-b(true) (:222): if the flag write itself threw inside the setter it is swallowed in the setter, so the catch is reached only by W-c or serializeSession throwing. Partial-failure state (saved bytes new, flag old value) possible when W-c succeeds and W-b(true) throws silently (:167-170).
+C5. Write order in saveGameSession: bytes first then flag (:221-222). Flag-then-bytes interleaving by another tab is not tracked (S9 says no cross-tab tracking).
+C6. Score/high-score ordering at line clear: highScore written (:349) before saveGameSession (:322 after lockAndSpawn). W-a failure swallowed (:151-153), no fault reported.
+C7. holdTetromino game-over branch (:566-569) returns after stopGameLoop/cancelLockDelay without touching held/canHold; no save. Persistence effect is the flag withdrawal only.
+C8. sw.js lists 'game/session.js' in its cache list (sw.js:37): static asset reference only, no storage. Handoff to P2-E.
+C9. parseSession accepts saves with no bag key (session.js:176-178 returns empty bag; resetBag(session.bag) at gameManager.js:215 then receives []). Whether resetBag([]) means "fresh full bag" depends on tetrominoFactory (not read by me; hand-off to P2-A).
+C10. saveGameSession writes the session while paused with lockDelayResetCount/lowestRow adjusted (:490-493), but serializeSession (session.js:29-40) does not include lock-delay reset count or lowest-row; loadGameSession recomputes via resetLockDelayForNewPiece (:216, :306-310). D32 Continue row says items 1-9 and 15 restored exactly as saved. Candidate comparison for Phase 3 against D16 items 9 and 15 (which items the saved game must contain is stated by R1 B16, not read in full by me).
+
+9. HAND-OFFS (not duplicated here)
+- P2-A: guard/runChecked/failSafe internals, landIfResting, lock-delay expiry, tetrominoFactory.resetBag semantics, all non-storage state writes.
+- P2-C: inputController and keyboard/touch/gamepad entry that reach handleAction/softDrop.
+- P2-D: storage event listener disposition, draw reads of isSessionSaved/highScore (script.js:206-207, 221, 319), visibilitychange, dialogs (script.js:226, 509-540).
+- P2-E: sw.js cache list including game/session.js; no storage use there.
+
+10. EXCLUSIONS / OUT OF SCOPE
+- docs/*proposal*, *candidate* files not used. test/ and e2e/ not read. REQUIREMENTS.md not read in full (D16/D21/D32 used for the boundary and operation text).
+- No file in P2-B depends on icons/, manifest.webmanifest or style.css.
+
+11. UNRESOLVED GAPS
+- Main head SHA not verified by me.
+- Line citations are against fetched file content; coordinator should spot-check with git blame at the SHA.
+- Items I did not read that affect completeness: gameManager.js 260-290, tetrominoFactory.js, inputController.js, sw.js body, REQUIREMENTS.md B16 text.

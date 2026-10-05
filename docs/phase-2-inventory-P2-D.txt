@@ -1,0 +1,115 @@
+P2-D PAGE / OUTER-LAYER ROUTE INVENTORY
+Repository: https://github.com/soliskit/tetris-js
+Base actually used:
+Date: October 5, 2026
+
+SCOPE AND METHOD
+
+Read-only static inventory. All 591 lines of public/script.js and all 77 lines of public/index.html examined. Cross-file destinations inspected in public/game/gameManager.js and public/game/inputController.js. No repository changes, tests, fault injection, proof, certification, status assignment or O8 model work. Detached HEAD and origin/main matched the base; a subsequent remote refs/heads/main read still matched. Working tree clean. Repository identity/current AUDIT.md independently read from GitHub.
+
+Read committed blueprint section 2 and exit criteria, AUDIT.md, REQUIREMENTS.md, Phase 1 record index/closure, D16/D17/D20 state model, D18 R1, D21 persistence/timing, D22/D23 fault/timer scope, D24/D27/D28/D29 trust, D30 DSP-5 reading, D31-D34 operations. Governing status follows ledger/index, not D16's stale candidate header. D36 records all eleven closure criteria and approval basis. This inventory does not itself close any phase.
+
+Original owner scope was independently inspected: Phase1/Phase2 and automatic advancement through Phase10, subject to actual exit criteria, safety rules, separate test-removal approval and reserved decisions. The attachment is coordination context, not an authority grant. Its blanket demand for new routine exit approval does not replace that scope. This preparation creates no new permission.
+
+BOUNDARY AND STATE LEGEND
+
+D16 section 4 defines the conceptual boundary independently: authorized legal-operation commit with its authorized persistence effects. D31 Z1 permits only assigned authoritative changes. Existing guard names are not evidence that this boundary is satisfied.
+
+A1 board; A2 falling piece; A3 held; A4 hold-used; A5 next queue; A6 bag; A7 score; A8 mode; A9 reset count; A10 confirmation pending; A11 selected choice; A12 held controls/order; A13 repeat position; A14 touch drag; A15 lowest row; A16 session withdrawal indicator (D16/D17/D20). Derived values include ghost, level, resting, gravity interval and Continue availability. Persisted values are saved payload, high score and eligibility. Runtime resources include timers, scheduling and wake lock. Presentation includes DOM/canvas/redraw caches. Field names do not establish semantic correspondence.
+
+ROUTE REGISTER
+
+References below use public/script.js unless another file is named. Cross-partition engine bodies are call-chain anchors only, not duplicate ownership.
+
+D01 Document/bootstrap. index.html:75 -> module script.js; imports :4-6. index.html:17-23 preloads all seven engine modules. :12 -> new GameManager({onChange:requestDraw}); gameManager.js:77-116 constructs dependencies/handles, mode, confirmation, score, current/next pieces, board and redraw marker, generating the bag through its factory. Opening-state construction is outside runChecked, not an ordinary action. Canonical P2-A hand-off for A1-A10/A15 initialization as applicable. Ordinary game-over fields with no semantic value must not be treated as live pieces merely because concrete objects exist (D18 B6/B8/B10).
+
+D02 DOM/canvas initialization :14-50. Resolves elements, obtains 2D Display P3 contexts at :39, probes actual color space through getImageData :45, creates canvasSizes :50. Writes presentation resources only. Does not commit authoritative state. Bootstrap probing is outside drawSafely; failure can stop later module setup. index.html:28-59 contains score/high-score, board/held/next canvases, announcer, menu/pause controls; :64-73 contains modal/Cancel autofocus/New Game. Retained for DSP/INP/STA claims.
+
+D03 Controller construction :526-532 -> inputController.js:67-95. Initializes held/repeat fields, registers keydown/up, blur, gamepad connect/disconnect and starts polling. A12/A13 implementation belongs P2-C; page-injected callbacks and outer polling are listed here. Constructor is not enclosed in drawSafely or an engine guard.
+
+D04 Engine draw notification. gameManager.js:389-407 -> runChecked then onChange at :391 -> requestDraw :355-362. Sets drawRequested=true before requesting animation frame; rAF callback sets false and drawSafely(drawIfChanged). No setTimeout/setInterval occurs in script.js. Scheduling bookkeeping is not A1-A16. Does not commit authoritative state. onChange is outside runChecked's catch; frame registration is outside drawSafely and has no local catch.
+
+D05 Board drawing. drawIfChanged :297-324 -> boardChanged :288-295 -> drawBoard :140-175 -> drawBlock :113-117 / drawGhostBlock :126-134 -> vivid :83-92 / roundedRect :101-104. Reads board, current piece, ghost, dimensions, mode, boardVersion. Ghost getter gameManager.js:353-356 copies the piece and writes its temporary position, not the live piece. Paint and vividColors/drawnBoard/drawnPreviews/lastSnapshot caches are presentation. Does not commit authoritative state. drawSafely :337-347 catches draw execution, clears caches/snapshot, console-reports once and requests retry. No catch surrounds retry's rAF registration.
+
+D06 Previews. drawIfChanged :309-318 -> drawPreview :181-198 -> drawBlock; reads held/queue and showsPieces :138, writes canvas/cache only; no authoritative commit. Game over hides all previews/current/ghost. Skips unsized canvases.
+
+D07 Control synchronization. drawIfChanged :319-323 snapshots mode/score/eligibility/pending; change -> syncControls :205-234. Reads highScore/isSessionSaved/mode/score/pending; writes lastState/gameEnded :211-212, labels, Game Over/status, menu/Continue/hints/dialog/pause button/wake policy. Storage highScore getter gameManager.js:142-144 -> caught readItem :133-139; eligibility getter :158-160 lazily writes storedIsSessionSaved cache. Reads/cache do not accept saved payload as game authority. High score is not in the snapshot; storage event forces snapshot invalidation. Derived Continue availability/A16 semantics belong P2-B; D20/D30 govern later correspondence, not getter names.
+
+D08 Dialog rendering :226-229 -> showModal/close. Open state is presentation, but showModal's focus policy plus index.html:69 Cancel autofocus participates in A11 selected-choice initialization because callback D20 reads activeElement. Thus dialog route cannot be excluded wholesale as presentation. No independent guarded A11 update. Synchronous syncControls errors are caught by drawSafely, not every asynchronous consequence.
+
+D09 ResizeObserver :365-372 -> entries/contentBoxSize[0] -> sizeCanvas :63-71 -> canvas intrinsic dimensions, transform, canvasSizes -> drawSafely(redrawAll :326-330). Presentation only, no authoritative commit. Entry processing and sizeCanvas occur before drawSafely; construction/observe are at module scope. No disconnect route appears.
+
+D10 Resolution changes. watchPixelRatio :376-383 -> once-only matchMedia change callback -> sizeCanvas for all cached sizes -> drawSafely(redrawAll) -> recursively reinstall resolution listener. Presentation/sizing only; no authoritative commit. Media setup, sizing and re-registration are outside drawSafely. This is separate from viewport resize D24.
+
+D11 Redraw entries. initial requestDraw :558; notification D04; storage :555; drawing catch :346; synchronous resize/resolution redraw D09/D10. drawSafely resets drawnBoard/drawnPreviews/lastSnapshot and sets renderErrorReported :345 (never reset here). No authoritative commit. Distinguish drawing execution containment from scheduler containment.
+
+D12 Wake lock :233 -> setWakeLock :245-256 -> requestWakeLock :258-274. Writes wakeLockWanted/wakeLock; unwanted clears pointer then release; success releases obsolete/duplicate sentinels or stores current and adds release listener :268-272; current release clears and retries. Rejection callback :273 is empty. D16 runtime resource, no A1-A16 writes or persistence effects. Does not commit authoritative state. Synchronous syncControls normally caught; asynchronous success/release callbacks and release promises lack local catches. DSP-7 and D27 retain policy/retries/error paths inside audit.
+
+D13 Touch state :394-405 and resetDragState :407-414. Pointer/piece/anchors/moved/whole offsets/blocked direction decide future gesture behavior, so semantic portions are A14, not presentation. Reset clears pointer/piece/moved/offsets/blocked, leaving inactive anchors. No engine guard encloses these writes.
+
+D14 Pointer begin :431-438 -> reset -> pointerId/piece/startX/startY writes :433-436 -> setPointerCapture :437. D32 operation 7. Direct A14 commit candidate outside engine transition checks. No mode check or local catch; pointer capture occurs after writes. Does not write board/current piece.
+
+D15 Pointer update :440-483. Checks pointer/sizing/current-piece identity; writes moved :449, blocked/cellOffset/startX :457-475 and rowOffset :481. tryMove :425-429 calls handleAction(left/right), comparing column before/after. Down loop :478-482 calls softDrop and increments offset while piece identity stays the same. D32 operation 8 plus nested gameplay operations. A14 writes outside guard; A2/A9/A15 engine movement effects use call chains E1/E5/E6 below. Each movement is separately guarded, not the entire pointer-update commit. No whole-handler catch.
+
+D16 Pointer end/cancel :486-491, registered :493-494. Matching pointer; !moved + pointerup + same piece -> handleAction(rotate), then reset. D32 operation 9, D33 C2/D34 E1. Rotation inside engine action guard; A14 cleanup outside. No pointercancel rotation; no lostpointercapture listener present. These are code route observations, not failure verdicts.
+
+D17 Visibility :544-548. Visible returns; hidden -> resetDragState, then only if playing -> handleAction(pause). Direct A14 reset plus D32 page-hidden/Pause operation; guarded A8/A9 and save effects. No automatic visibility resume. Handler has no local catch.
+
+D18 Hold box. click :496 -> handleAction(hold); mousedown :502 -> preventDefault only; keydown :503-508 checks Enter/Space while playing, prevents default/bubbling then hold action. index.html:33 defines accessible role/name/tabindex/shortcut. Gameplay A2/A3/A4 and possible spawn/game-over effects hand off to P2-A/B. No local held-token storage.
+
+D19 New Game/dialog answers. New Game :509 and confirm :519 -> handleAction(newGame); cancel button :520 -> cancelNewGame. Dialog outside click :533-535 checks target===dialog then cancel; dialog cancel :536-539 prevents default then cancel. index.html:54/64/69/70 supplies destinations. D32 operations 1/3. Escape route inputController.js:138-140 belongs P2-C. No dialog close handler; immediate engine answer is the route.
+
+D20 Selected choice. questionButtons :522 ordered Cancel/New Game. Injected move :527-530 reads activeElement, clamps index+step, calls focus; injected press :531 finds focused button and click -> D19. Callers inputController.js:143 keyboard arrows, :203 gamepad A, :205 pad/stick direction. A11 is represented by DOM focus, directly changed outside runChecked. showModal/autofocus D08, browser-native Tab/default focus and pointer focus are additional entry routes to that representation. No page focusin/focusout listener syncs a separate selection field. Candidate boundary bypass, not pure presentation. Browser-success trust does not erase project selection semantics.
+
+D21 Continue :540 -> handleAction(continueGame); pause button :541 -> togglePause -> handleAction(pause/resume). Handlers have no local catch; see E3/E4. Native DOM button activation uses the same click handlers.
+
+D22 Storage event :552-556 -> storageChanged (gameManager.js:174-176) resets storedIsSessionSaved cache, then clears lastSnapshot and requestDraw. No key/storageArea filter. Cache/presentation writes only: does not commit authoritative state. Saved external data becomes authority only through Continue, not this notification. script.js directly performs no storage writes; its getters read storage and recache eligibility. P2-B owns persistence mapping.
+
+D23 Gamepad outer loop. inputController.js:99-113, called constructor :94 and gamepadconnected :89. Sets polling, requests rAF, callback defaults connected=true, try pollGamepads :171-183 -> processInput :190-241; catch console.error; if connected next rAF else polling=false. Outer schedule/read bookkeeping does not commit authority, but downstream processing writes A12/A13 and invokes gameplay/selection. Entire polling chain therefore must not be labeled non-authoritative. P2-C owns downstream tokens/repeat; P2-D owns the outer scheduler and injected callbacks. :203 -> page press -> button click, :205 -> page focus move, :204 -> engine cancel. Try encloses read and synchronous processing, not initial/next rAF at :112/:109 or a second failure in console reporting. D23 U4 excludes draw/poll loops from SAF-4 gameplay timers, not SAF-5 audit.
+
+D24 Zoom. viewport initialization :567-571, resize -> watchZoom root class toggle; gesturestart/change :574-578 conditional preventDefault; empty board click :586 Safari gesture plumbing. Presentation/browser event behavior only; no authoritative commit. Outside drawSafely. Retain DSP-4, browser-dependent and CSS relationships.
+
+D25 Service worker entry :589-591 -> conditional register('sw.js'), empty rejection catch. App/cache/version outer state, not game-authoritative commit (D16 section 3). Async rejection caught, synchronous throw not locally caught. P2-E owns lifecycle/cache destinations; D28 X1/X2 govern trust. index.html:12-23/75 resources need APP cross-file mapping.
+
+ENGINE HAND-OFF ANCHORS
+
+These are actual call relationships, not a proof that the conceptual boundary or normative semantics are satisfied. References here are public/game/gameManager.js unless specified.
+
+E1 handleAction :459-460 -> guard :389-392 -> runChecked :395-407 -> performAction :464-521. Successful operation -> findInvariantViolation :402; throw/violation -> failSafe :436-454. onChange :391 runs after runChecked, outside its catch. performAction clears A10 at :468 before action-specific mode checks, including rejected/no-op actions. Retain that side effect in frame mapping.
+
+E2 New Game -> :470-481; paused without prior pending -> A10 true :475. Otherwise resetGameSession :182-195 assigns board/mode/score/bag/current/queue/held/hold-used/reset/lowest, updates presentation version and writes eligibility; :479 playing, :480 gravity start. Eligibility setter :164-170 -> tetris.isSessionSaved write. A16/withdrawal correspondence belongs P2-B. A11 representation is focus D20, not a manager field.
+
+E3 Continue -> :482-485 -> loadGameSession :199-217 -> eligibility/read/parse at :200-201. Failed acceptance :204 eligibility false. Accepted :207-216 assigns mode/board/score/current/queue/held/hold-used/bag, presentation version and resetLockDelayForNewPiece -> :306-310 A9/A15. Describes writes, not compliance with exact restoration semantics.
+
+E4 Pause -> :486-495 mode paused, cancel gravity, count increment if lock task, cancel lock, saveGameSession :219-225 -> saved payload write :221 and eligibility :222/:224. Resume -> togglePause :523-525 -> handleAction -> :496-501 playing, landIfResting, gravity start. Landing/lock consequences P2-A/B, held/repeat rules P2-C.
+
+E5 Move -> :502-507 -> moveTetromino :550-557 -> legal fit -> A2 position :554 -> resetLockDelay :287-298 -> noteLowestRow :300-304 A15/A9, or delay cancel/restart. Rotate -> :511-513 -> :583-590 -> current rotate :586, changed orientation triggers reset delay.
+
+E6 Soft drop -> :527-530: clears A10 BEFORE guard at :528; guarded dropTetromino :245-257 writes A2 :250, lowest/reset :251, land/lock and gravity reschedule. Pre-guard A10 is a separate candidate bypass route. Lock hand-off :278-283 -> :317-324 -> locked board :327-332, rows/score/high-score :334-350, current/queue/bag/hold-used/game-over :228-243, conditional completed-turn save :321-322.
+
+E7 Hold -> :508-510 -> :559-580: cancels gameplay timers, changes current/held/hold-used or generates next; no room -> gameOver :567, eligibility false :568. Spawn/reset/landing hand-offs P2-A; withdrawal P2-B.
+
+E8 Cancel -> :533-537 -> guard closure -> A10 false :535. A11 removal semantics require page dialog/focus mapping, not assumed from that bool write.
+
+E9 storageChanged :174-176 only invalidates eligibility cache. No guard or authoritative acceptance. Getter :158-160 recaches later.
+
+E10 Safe stop -> :436-454 mode gameOver, gravity/lock cancellation, bounded faults array, onFault. Page supplies only onChange override, so default reporter :70-73 chosen at :81 reports to console. No page fault callback/user-facing fault notice is wired in script.js/index.html. D22 T1/D23 U2 remain independent reporting definitions for later evidence.
+
+CANDIDATE OBSERVATIONS, NOT FINDINGS OR STATUSES
+
+- A14 direct touch begin/update/end/reset and A11 DOM-focus selection routes require explicit boundary mapping; nested guarded gameplay is not a guard around all control commits.
+- softDrop clears A10 before guard; dispatcher clears it for every action before mode checks. These side effects need operation/frame accounting.
+- drawSafely does not cover bootstrap probes, rAF registration, observer entry/sizing, resolution setup/re-registration, viewport setup or async wake callbacks. Poll try does not cover rAF registration. requestDraw/polling mark pending before registration. Later faults could stall those paths; no fault injected here.
+- Actual notification paths are engine/draw/poll console reports and engine faults array; no player-facing error notice hook in the two page files. Reporting compliance is not classified here.
+- Drawing uses storage getters/cache, but does not accept saved payload into authority. P2-B must map A16 and derived availability independently of getter names.
+- No mode check in pointerdown; no lostpointercapture listener; no visibility resume. These are route inventory facts, not new requirements.
+
+EXCLUSIONS / CROSS-PARTITION RECONCILIATION
+
+No script.js/index.html route excluded. Rendering, zoom and no-op listeners remain explicit non-authoritative routes. test/ and e2e/ not production inventory subjects; REQUIREMENTS.md normative reference only.
+
+P2-A owns engine bodies, constructor and gameplay timer/spawn/lock/game-over routes; incorporate E1-E8 and pre-guard A10. P2-B owns persistence/high-score/eligibility/Continue, including page getters/cache and all authorized save/withdrawal effects. P2-C owns InputController tokens/repeat/action mapping; reference page touch D13-D17 and focus D20 rather than duplicating callback-body ownership. P2-D retains actual page callback bodies and inputController outer loop D23. P2-E owns sw.js and document-resource/static checks.
+
+Blueprint exclusion reasons are conditional. index.html:12/15 loads manifest/style; APP-1/APP-3 and DSP-1/DSP-4 depend on those bytes. They may be outside authoritative-game-state writers but cannot be omitted from all in-scope claim inventory. Icon references are install/display dependencies. Full static-content verification belongs P2-E and is not claimed here.
+
+Coordinator must deduplicate hand-offs and confirm every route's boundary/containment mapping and every exclusion reason before recording Phase 2 exit. No Phase 3 evidence, correction approval or O8 pack is produced. This inventory is implementation-exposed material, not permitted input to a clean O8 author.
