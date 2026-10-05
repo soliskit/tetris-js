@@ -21,6 +21,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-sw-fetch-decision.md` (trust boundary for service worker registration and network requests) | D28 | 02097c3b991ce4c1ba8859ef352ea010aed0af9adc5d466a212f3b2ebf350e54 |
 | `docs/phase-1-clock-decision.md` (clock not trusted; clock jumps audited) | D29 | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d |
 | `docs/phase-1-dsp5-reading-decision.md` (DSP-5 reading for Continue availability; D29 provenance note) | D30 | 5d914373a1f6d1d0e85284e50dde26b27bab62d94c751a76b7a4b67c8c95b9a3 |
+| `docs/phase-1-frame-principle-decision.md` (frame principle for legal operations) | D31 | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 |
 
 ## Historical review material, not governing
 
