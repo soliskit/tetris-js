@@ -1,0 +1,90 @@
+P2-A ENGINE GAMEPLAY AND TIMERS - READ-ONLY INVENTORY (candidate observations only; no findings, no statuses)
+
+1. BASE AND METHOD
+Base SHA used: (files read at that ref via GitHub contents API). I also read the same five engine files at default-branch head and they are byte-identical to the base (gameManager.js, gameState.js, position.js, tetromino.js, tetrominoFactory.js). I cannot list commits with my tools, so the head SHA itself is not independently confirmed; byte equality for P2-A files is.
+Read: public/game/gameManager.js (592 lines), gameState.js (58), position.js (22), tetromino.js (153), tetrominoFactory.js (112); docs/phase-1-state-decision.md (D16), docs/phase-1-operations-record.md (D32), docs/phase-1-record-index.md, AUDIT.md (ledger), docs/audit-blueprint.txt section 2 and Phase 2 exit (line ~466). NOT read by me: D17/D18/D20-D24/D27-D31/D33-D36 files (only their ledger/index descriptions), session.js, inputController.js, script.js, tests. Static reading only; nothing run.
+Line refs: file:line at base. For tetrominoFactory.js lines are exact within the file.
+Boundary used: D16 sec 4 (conceptual commit point of a specified legal operation; independent of function structure; a function is not authoritative because it validates) mapped onto code using D32 Part A operation list (Z1 frame principle). Not derived from guard() naming.
+
+2. SCOPE NOTE (for coordinator)
+- gameManager.js also holds persistence/storage routes (readItem 133, highScore 142-154, isSessionSaved 158-171, storageChanged 174, loadGameSession 199, saveGameSession 219, failSafe storage-untouched) -> owner P2-B. Listed below only as hand-offs.
+- Sequencing: the file packet says no Phase2 before owner-approved Phase1 exit. D36 records the closure matrix; criterion11 relies on the October5 automatic-through-Phase10 scope, not SHA-level exit prose approval. This preparation followed the coordination instruction, with that distinction retained in the closure basis.
+
+3. PUBLIC ENTRY ROUTES (engine)
+E1 handleAction(action) gameManager.js:459 -> guard(() => performAction) . Callers outside P2-A: inputController/script.js (P2-C/D).
+E2 softDrop() :527 (sets isConfirmingNewGame=false :528 OUTSIDE guard, then guard(dropTetromino)).
+E3 togglePause() :523 -> handleAction(pause|resume).
+E4 cancelNewGame() :533 -> guard(sets isConfirmingNewGame=false).
+E5 hardDrop() :539, moveTetromino() :550, holdTetromino() :559, rotateTetromino() :583, dropTetromino() :245, pieceLanded/lockAndSpawnNext etc: public methods on the class with NO guard of their own; guarded only when reached via E1-E4 or schedule(). Candidate: any direct external call to these skips guard (see C3).
+E6 storageChanged() :174 (P2-B). E7 constructor :77-116. E8 getters level :118, ghostTetromino :353, standardDropInterval :178, isOnSurface :259 (read-only; ghostTetromino calls copy(), no write).
+performAction switch :464-521 actions: newGame :470, continueGame :482, pause :486, resume :496, moveLeft/Right :502/:505, hold :508, rotate :511, rotateCounterclockwise :514, drop :517. Every action first clears isConfirmingNewGame :467-468 (so any action incl. non-applicable ones cancels the confirmation).
+
+4. TIMERS AND CALLBACKS (all via scheduler.setTimeout; injectable, default globalThis.setTimeout :64-68)
+T1 Gravity: startGameLoop :359 stores handle in gameLoopTask; callback :363-366 sets gameLoopTask=null then dropTetromino(). Wrapped by schedule() :382 -> guard(). Starts: performAction newGame :480, resume :500, dropTetromino :255, lock-delay callback :268, hardDrop :545, holdTetromino :579. Stops: stopGameLoop :369 (also called by startGameLoop :360, generateNextTetromino game-over :239, pause :489, hold :561, failSafe :438).
+T2 Lock delay: startLockDelay :263 clears existing handle (:264, without nulling lockDelayTask), stores new handle :266; callback :266-269 = lockAndSpawnNext(); if playing startGameLoop(). Wrapped by schedule()->guard(). Interval lockDelayInterval*1000 = 500 ms (:102,:269). Cancel: cancelLockDelay :312 (clear + null). NOTE the callback does not null lockDelayTask itself; nulling happens in generateNextTetromino -> resetLockDelayForNewPiece -> cancelLockDelay :307 (reached via lockAndSpawnNext :320).
+T3 Gravity interval: standardDropInterval :178 = max(0.25, 0.7-0.02*(level-1)) s; level :118 = floor(score/1000)+1 (D16 1.2 derived items 1 and 4).
+T4 No other timers in these five files. (Key-repeat, wake lock, rAF are P2-C/D.)
+Timer-handle state = D16 1.3 items 1-2: gameLoopTask :96, lockDelayTask :98.
+
+5. STATE MUTATION ROUTES (item numbers = D16 sec 1.1 / D17 item 15 / D20 item 16; "RT" = runtime resource 1.3; "P" = persisted 1.4 hand-off)
+Fields: gameBoard (item 1) :115,:184,:208,:329,:343-346; boardVersion (presentation marker 1.5.2) :111,:185,:209,:331,:339/347; currentTetromino (2) :113,:189,:211,:231,:250(position),:542(position),:554(position),:571, and rotate() mutates this.rotationState/position tetromino.js:145-146; heldTetromino (3) :101?no :105,:191,:213,:577; canHoldTetromino (4) :103,:192,:214,:233,:578; nextTetrominos (5) :114,:190,:212,:230-232; factory.bag (6) tetrominoFactory.js:253,:256(shift),:262; score (7) :112,:186,:210,:348; state/game mode (8) :107,:183,:207,:237,:479,:488,:498,:437,:567; lockDelayResetCount (9) :99,:293,:295,:303,:308,:491; lowestRowReached (item 15) :100,:302,:309; isConfirmingNewGame (10) :109,:468,:475,:528,:535. Item 11 (selected confirmation choice), 12 (held directions), 13 (repeat position), 14 (touch drag): NOT present in these files (candidate observation O-2).
+Routes (writer -> items; caller chain):
+M1 resetGameSession :182-195 [New Game confirm / from game over]: 8(paused),1,score7,6(resetBag),2,5,3=null,4=true,9,15 via resetLockDelayForNewPiece :306, item16/P via isSessionSaved=false :194 (-> P2-B setter :164). Then performAction sets state=playing :479 and startGameLoop :480. Chain: E1->performAction:470-481. Note game mode passes paused->playing inside one guarded call.
+M2 loadGameSession :199-217 [Continue, only from gameOver :483]: 8(paused),1,7,2,5,3,4,6 (resetBag(session.bag) :215),9/15 reset :216. Parse/validation = session.js (P2-B). If invalid: isSessionSaved=false :204, no engine change.
+M3 generateNextTetromino :228-243 [called by lockAndSpawnNext :320 and holdTetromino :575]: 5 (shift/push :230,:232), 2 (:231), 6 (via factory.generate :232), 4=true :233, 9/15 :234; no-room -> 8=gameOver :237, isSessionSaved=false :238 (P), stopGameLoop :239 (RT); else landIfResting :241.
+M4 lockAndSpawnNext :317-324 [hard drop :543, lock-delay callback :267, pieceLanded at count>=15 :281]: lockTetrominoInPlace :327-332 (1), clearFullRows :334-351 (1, 7, highScore P :349), generateNextTetromino, then if lines cleared && playing -> saveGameSession :322 (P, line-clear save).
+M5 dropTetromino :245-257 [gravity T1 callback; E2 softDrop]: 2 down :250 if not on surface; noteLowestRow :251 (15, 9); landIfResting :253; startGameLoop :255.
+M6 moveTetromino :550-557: 2 column :554; resetLockDelay :555 (15, 9, RT lock delay). Only when state playing :551 and fits :553.
+M7 rotateTetromino :583-590 -> Tetromino.rotate tetromino.js:131-151 (writes rotationState, position on first fitting kick); resetLockDelay :588 only if rotationState changed :587 (candidate O-5: a kick that changes position but not state cannot occur; rotation state always changes on success).
+M8 holdTetromino :559-580: stopGameLoop :561, cancelLockDelay :562, 2/3/4/5/6 swaps :563-578; game-over branch :566-569 sets 8=gameOver and isSessionSaved=false but returns BEFORE startGameLoop and without setting heldTetromino/canHold (candidate O-6, see 8).
+M9 hardDrop :539-547: 2.position = ghost position :542, lockAndSpawnNext :543, startGameLoop :545 if playing.
+M10 pause :486-495: 8=paused :488, stopGameLoop, lockDelayResetCount+=1 if lockDelayTask!==null :490-492, cancelLockDelay :493, saveGameSession :494 (P). resume :496-501: 8=playing, landIfResting :499, startGameLoop :500.
+M11 resetLockDelay :287-298, noteLowestRow :300-304, resetLockDelayForNewPiece :306-310, cancelLockDelay :312, landIfResting :274, pieceLanded :278-285, startLockDelay :263 (items 9, 15, RT lock delay).
+M12 Confirmation open/clear: performAction :467-477 (10), softDrop :528, cancelNewGame :535.
+M13 failSafe :436-454 [from runChecked :404/:407]: 8=gameOver :437, stopGameLoop :438, cancelLockDelay :439, faults array push/shift :444-445 (cap 20 :39), onFault :450. Storage deliberately untouched. Fault-stop route (D32 "Engine fault stop").
+M14 guard :389-392 / runChecked :395-408 / findInvariantViolation :412-428 (reads only, plus failSafe). onChange :391 runs after every guarded op (presentation callback; outside-layer, P2-D).
+M15 Constructor :77-116 initial state: state=gameOver :107, board, piece, queue (factory.generate x4). No timers.
+Tetromino/factory/position/gameState writers: Tetromino.copy/spawned (new objects, tetromino.js:45-65), rotate (in-place, :131-151), position setter by direct assignment from gameManager (:250,:542,:554). factory.generate :98-103 (shift from bag, refill via shuffle(allPieces(), random) when empty :99-100), resetBag :108-110 (replaces bag by reference with session.bag array or []), shuffle :80-87 uses injected random (Math.random default :91; D24 random source trust). gameState.js: constants + createBoard :42 / cellAt :55 (pure). position.js: pure constructors (position, below).
+
+6. GAME-OVER ROUTES (all in P2-A)
+G1 generateNextTetromino no-room :236-239 (state=gameOver, saved game withdrawn P, gravity stopped; lock delay already cancelled :234).
+G2 holdTetromino no-room for held piece :566-569 (state=gameOver, withdrawn; timers: gravity/lock cancelled at :561-562).
+G3 failSafe :436-454 (fault stop; save kept).
+No other writer of state=gameOver except constructor :107.
+Hold-via-generateNextTetromino game over (M8 else-branch :575 -> G1) then continues :577-578 (sets heldTetromino, canHold=false after the game-over) and skips startGameLoop because state!==playing :579.
+
+7. BOUNDARY MAPPING (route -> D16 sec 4 commit point)
+Passes the conceptual boundary as a legal operation (entry guarded, invariants checked after): E1/E2/E3/E4 operations and the timer callbacks T1/T2, since schedule() :382 routes timer fire through guard(). All M1-M12 reached only through those entries are internal steps of the commit (V1: intermediate violations allowed within an unfinished transition, D16 sec 6).
+Candidate bypass dispositions (candidate only, need integrator/Phase 3-4 confirmation):
+ B1 Direct public calls to hardDrop/moveTetromino/holdTetromino/rotateTetromino/dropTetromino/lockAndSpawnNext/resetGameSession/loadGameSession from outside performAction/schedule are unguarded (no invariant check, no onChange, no confirmation clear). Whether any caller outside P2-A does this is for P2-C/D call-chain pass (hand-off).
+ B2 softDrop :527-530 clears isConfirmingNewGame (item 10) before guard() and outside try/catch; the write is trivial but is a committed authoritative write outside guard.
+ B3 pause :494 and line-clear :322 write storage inside the guarded operation (P2-B owns persistence boundary effects). isSessionSaved setter :164 is called from engine routes M1, M3, M8-G2 (writes P state from engine ops, "authorized persistence effects belonging to the transition", D16 sec 4).
+ B4 failSafe is itself a state write (8, RT) that bypasses performAction but is the specified SAF-3 route (D32 "Engine fault stop").
+ B5 Timer callbacks run guard() even if handle was cancelled but fires anyway: lock-delay callback T2 and gravity callback T1 do not re-check state on entry except through dropTetromino's :246 check (gravity) ; the lock-delay callback calls lockAndSpawnNext unconditionally (:267) with no state check (candidate O-3; D23 U3 failed-cancellation trust relevant).
+Outer-layer routes: none in the five files draw or poll; onChange :391 is the only outward call (P2-D). Does not commit authoritative state: onChange default no-op :82.
+
+8. CANDIDATE OBSERVATIONS (not conclusions; no finding status)
+O-1 findInvariantViolation :412-428 checks board shape, queue length, score validity, piece fit, timers vs state, lock-delay vs resting. It does not check heldTetromino/canHold coherence, bag content, lockDelayResetCount range, lowestRowReached, or cell colour/validity; R1 (D18) predicates not read by me, so the mapping of this checker to R1 is Phase 3 work.
+O-2 D16 items 10-14: item 10 present (isConfirmingNewGame :109); item 11 (selected confirmation choice), 12, 13, 14 have no representation in P2-A files (presumably inputController/script.js: hand-off P2-C/P2-D).
+O-3 Lock-delay callback T2 :266-269 calls lockAndSpawnNext() with no state check; correctness relies on cancellation (cancelLockDelay/clearTimeout) and the invariant "timers running while not playing" :424-425. Failed clearTimeout is trusted-boundary matter (D23 U3).
+O-4 startLockDelay :264 clearTimeout(this.lockDelayTask) but does not set lockDelayTask=null; callers go through pieceLanded :279 (guard lockDelayTask !== null return) or resetLockDelay :296, where lockDelayTask is non-null. After lock-delay callback fires, lockDelayTask stays non-null until nulling in cancelLockDelay :314 called from generateNextTetromino path :307; if lockAndSpawnNext throws mid-way the handle stays set (then failSafe cancels :439).
+O-5 rotation: Tetromino.rotate tries clockwise/counter attempts in the order given; for a 1-state O piece rotations.length=1 so attempts index 0 with kick [0,0] re-fits at the same position, rotationState unchanged, resetLockDelay not called (:587).
+O-6 holdTetromino game-over branch :566-569 returns without heldTetromino/canHold update and without cancelling anything beyond :561-562; while the else-branch G1 path continues to :577-578. Whether either leaves state consistent with D18 game-over "semantically absent" items is a Phase 3 question; not asserted.
+O-7 Score validity check :418 requires score % 100 === 0; LINE_SCORES :38 gives multiples of 100. highScore write :349 in clearFullRows (P hand-off) occurs before the rest of lock transition completes.
+O-8 resetGameSession :182-195 sets state=paused :183 then performAction sets playing :479; between them startGameLoop not yet called (invariant check only after whole operation). New game from gameOver: confirmation not required (:474 applies only when paused).
+O-9 resume :496-501: landIfResting :499 can call pieceLanded -> lockAndSpawnNext :281 (when count>=15) which can end the game; startGameLoop only if still playing :500. pause increments reset count :491 only if delay running, consistent with D32 pause row (D32 also says count becomes 16 when it was 15; code adds 1 -> 16 when 15 (no cap), and adds 1 when lower: consistent as read, not verified for 14->15).
+O-10 D16 file at base still carries a "CANDIDATE ... Not yet an adopted owner decision" status header (docs/phase-1-state-decision.md:3) although the index lists it governing (D16, SHA 66aa067d...). Candidate wording-record gap for the coordinator; I did not recompute the SHA.
+O-11 Duplicate hard-drop path: hardDrop :542 writes the position from ghostTetromino (copy + dropDistance, tetromino.js:115-122) then locks; no resetLockDelay before lock (lock follows immediately).
+O-12 Randomness: factory.generate/shuffle only; random injected :243; resetBag(pieces) takes caller-owned array by reference (:262) so session bag object is shared with the engine.
+
+9. HAND-OFFS (call chains leaving P2-A, not duplicated)
+- To P2-B: readItem/highScore/isSessionSaved/storageChanged/loadGameSession parse/saveGameSession/serializeSession(this) (reads engine fields).
+- To P2-C: callers of handleAction/softDrop/togglePause/cancelNewGame; items 11-14.
+- To P2-D: onChange consumer, boardVersion consumer, ghostTetromino/level/standardDropInterval getters read by drawing, any direct call of unguarded methods.
+- To P2-E: none from these files.
+
+10. EXCLUSIONS (P2-A)
+None excluded; position.js and gameState.js are pure (no scheduler, storage or state write). Exclusion of icons/, manifest.webmanifest, style.css not tested by me (P2-E).
+
+11. LIMITS
+Static reading only; no execution; session.js, inputController.js, script.js, tests, D17-D34 files not read. Line numbers for the M-table fields list are as read at base; item-to-line pairs should be spot-checked by the integrator. No finding or certification status asserted.
