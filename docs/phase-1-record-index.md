@@ -15,6 +15,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-r2-r5-decision.md` (R2, R3, R4 and R5) | D21 | 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8 |
 | `docs/phase-1-fault-timer-decision.md` (SAF-3 fault reporting and timer trust) | D22 | c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f |
 | `docs/phase-1-trust-and-timer-scope-decision.md` (storage trust, SAF-5 reporting, failed cancellation, SAF-4 timer scope) | D23 | 0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b |
+| `docs/phase-1-trust-ledger-decision.md` (trust assumptions: hosting, service worker, GitHub Actions, random source) | D24 | 32f25db8bdc2f9ae62389dfd7dda90206132098f7f26f4540a03e048d3b7dab9 |
 
 ## Historical review material, not governing
 
