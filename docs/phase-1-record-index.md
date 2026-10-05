@@ -24,6 +24,7 @@ This index tells a reader which Phase 1 documents govern and which are review ma
 | `docs/phase-1-frame-principle-decision.md` (frame principle for legal operations) | D31 | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 |
 | `docs/phase-1-operations-record.md` (sourced assignments of state to operations; unspecified points) | D32 | 9e0a7db4b0423e8c831e265deca6ee2b66df4db1684995c9d070eaead0770101 |
 | `docs/phase-1-operations-choices-decision.md` (choices for the points D32 left unspecified) | D33 | a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa |
+| `docs/phase-1-operations-choices-2-decision.md` (touch excursion; resume rule for held controls) | D34 | 134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4 |
 
 ## Historical review material, not governing
 
