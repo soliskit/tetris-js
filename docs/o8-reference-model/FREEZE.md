@@ -1,8 +1,8 @@
-# O8 reference-model freeze, revisions 1 and 2
+# O8 reference-model freeze, revisions 1 to 4
 
-Status: frozen source record only. Neither revision is accepted as a complete specification oracle or as evidence that the implementation is correct. Phase 3 remains open.
+Status: frozen source record only. No revision is accepted as a complete specification oracle or as evidence that the implementation is correct. Phase 3 remains open.
 
-The clean author was supplied only the four owner-approved input files recorded by D39. The exact input bytes were independently checked against D39. The owner approved the inputs, not the model or results. Both revisions were hashed and preserved before any implementation comparison by the successor integrator on October 5, 2026. No model logic was copied from production. Author statements are provenance evidence, not independent proof of absence of exposure.
+The clean author was supplied only the four owner-approved input files recorded by D39. The exact input bytes were independently checked against D39. The owner approved the inputs, not the model or results. All four revisions were hashed and preserved before any implementation comparison by the successor integrator on October 5, 2026. No model logic was copied from production. Author statements are provenance evidence, not independent proof of absence of exposure.
 
 ## Frozen bytes
 
@@ -43,4 +43,8 @@ Revision 4 was received and hashed before any implementation comparison on Octob
 | `rev4/CORRESPONDENCE_AND_LIMITATIONS_REV4.md` | ac2a6ce580b996f990a42d157207bcb2280a5122df12cf437ce28fff5f14f395 |
 | `rev4/selftest_rev4.py` | c581a3eee4b6a4d6506e9e1b771be8030c3f9fd5af2ef9a8f35028b193b6d41c |
 
-A separate pack-only reviewer reports forced Undefined rollback checks for New Game, rotation, release and touch end, plus a direct geometry comparison of all 28 states. No new blocking defect was found in that review. This is bounded source-review evidence, not blanket oracle certification. Rollback cannot reverse caller storage side effects; the differential harness must preflight required choices and discard a trace that encounters Undefined. The successful-soft-drop restart counter is not a deadline or timer-phase oracle. Other scheduler reissue points and all stated partial choices remain unmodeled or caller supplied. Kicks, spawn position and other choices may never be taken from production to define its expected result. Legacy save formats, stored high-score validity, input mapping, device/display/outer-layer behavior and real timing still need their separate evidence methods.
+The bounded report is recorded in `REV4-PACK-REVIEW.md` (SHA-256 33cd355217cffeda3166c240f60a46075945d2d44b023899359ccab14156bb7b). A separate pack-only reviewer reports forced Undefined rollback checks for New Game, rotation, release and touch end, plus a direct geometry comparison of all 28 states. No new blocking defect was found in that review. This is bounded source-review evidence, not blanket oracle certification. Rollback cannot reverse caller storage side effects; the differential harness must preflight required choices and discard a trace that encounters Undefined. The successful-soft-drop restart counter is not a deadline or timer-phase oracle. Other scheduler reissue points and all stated partial choices remain unmodeled or caller supplied. Kicks, spawn position and other choices may never be taken from production to define its expected result. Legacy save formats, stored high-score validity, input mapping, device/display/outer-layer behavior and real timing still need their separate evidence methods.
+
+## Publication and merge scope
+
+The exact executable source and self-check bytes remain preserved on the unmerged `soliskit-patch-17` branch at 3cc3956783184def0eaf3d7d6b86d536c80c9e0b (PR75). The documentation-only branch includes the approved inputs, correspondence notes, freeze hashes and reconciliation, but excludes all eight Python files. Their presence on the retained source branch is not owner approval to merge them. This documentation records their exact identity and known limits without changing the game or its tests.
