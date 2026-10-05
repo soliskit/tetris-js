@@ -1,4 +1,4 @@
-# Frozen O8 revisions 1 and 2: source reconciliation
+# Frozen O8 revisions 1 to 4: source reconciliation
 
 Status: model review, not an implementation finding. Phase 3 remains open. Revision 2 cannot yet be used as the complete correctness oracle. This integrator record is implementation-exposed and is never clean-author input. The separate pack-only reviewer supplies its own pack-derived feedback to the author.
 
