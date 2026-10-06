@@ -1,0 +1,74 @@
+# Pinned source identity ledger
+
+File hashes identify exact source files at main. PR87 later main changes one documentation file only; the public tree remains1e09ad61c19e0b235a231ad8810dae176be4ea77. Source identity is not historical execution, live served body or phone-cache attestation.
+
+| Source file | SHA256 | Bytes |
+|---|---|---|
+| REQUIREMENTS.md | fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc | 15045 |
+| docs/audit-blueprint.txt |  | 117925 |
+| docs/phase-1-browser-trust-decision.md | cc51ba2ddb152bf2d0758a5220fb3666f633a9d7c3c5c950f544dc774af10a3b | 4474 |
+| docs/phase-1-clock-decision.md | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d | 1761 |
+| docs/phase-1-closure-record.md |  | 3781 |
+| docs/phase-1-d16-amendment-1.md | 0e0775998098c827a5fb3dddb89c432d3d88b99c5cfcab07c7d836cef8af5bba | 2289 |
+| docs/phase-1-d16-amendment-2.md | 957ba3926778c5c18fa3ff7796d29196f9cd954d1f58fc7fbc399d8a1eff3355 | 2441 |
+| docs/phase-1-d16-amendment-candidate.md |  | 3812 |
+| docs/phase-1-d16-lowest-row-amendment-proposal.md |  | 32572 |
+| docs/phase-1-dsp5-reading-decision.md |  | 2470 |
+| docs/phase-1-fault-timer-decision.md | c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f | 3243 |
+| docs/phase-1-frame-principle-decision.md | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 | 1977 |
+| docs/phase-1-normative-text-register.md |  | 5098 |
+| docs/phase-1-operations-choices-2-decision.md | 134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4 | 2748 |
+| docs/phase-1-operations-choices-decision.md | a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa | 2810 |
+| docs/phase-1-operations-record.md | 9e0a7db4b0423e8c831e265deca6ee2b66df4db1684995c9d070eaead0770101 | 7412 |
+| docs/phase-1-property-mapping.md | dc9f04dfa53a3e2bff21cb3401595b4ffa03a4bdbc46035166f2b91f0f606674 | 5166 |
+| docs/phase-1-r1-decision.md | aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec | 15373 |
+| docs/phase-1-r1-normative-candidate.md |  | 25952 |
+| docs/phase-1-r1-proposal-rev1.md |  | 33155 |
+| docs/phase-1-r1-valid-state-proposal.md |  | 41991 |
+| docs/phase-1-r2-r5-decision.md | 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8 | 4780 |
+| docs/phase-1-record-index.md |  | 4790 |
+| docs/phase-1-requirement-scope.md |  | 14860 |
+| docs/phase-1-state-decision.md | 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182 | 8537 |
+| docs/phase-1-state-model-proposal.md |  | 30608 |
+| docs/phase-1-sw-fetch-decision.md | 02097c3b991ce4c1ba8859ef352ea010aed0af9adc5d466a212f3b2ebf350e54 | 1671 |
+| docs/phase-1-trust-and-timer-scope-decision.md | 0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b | 3993 |
+| docs/phase-1-trust-ledger-decision.md | 32f25db8bdc2f9ae62389dfd7dda90206132098f7f26f4540a03e048d3b7dab9 | 2961 |
+| e2e/app.spec.js | de90fc3ccff0d4160dcbde2fb5701d463952434eaef64e076999200c530d071f | 21661 |
+| e2e/fixtures.js | ae232242ff43bae1cff86e5f5b554d0adaa69979d84f8780dbbc42cd1f28194a | 999 |
+| e2e/game.spec.js | be4ea55b4bc789721a8287a7056bac4d2c5e67972297a23c54ed09f85e4315ff | 23857 |
+| e2e/global-setup.js | 80de2353c2e4d6354542214b25b2a58fbf7d87fb4a6e01c1461c32f621b281e9 | 252 |
+| e2e/helpers.js | 7c9e9233b81cb27ec8062d8b8ca8abec9bf305c85e3e313fd3be56408d2b64f2 | 8108 |
+| e2e/safety.spec.js | 623aee55a4d968421f65efd2ffcb861d9f55802667e1450f18b92da0c0745fdf | 3394 |
+| e2e/touch.spec.js | 63ddcfdf7bb2ee9e4b0751674da02edf85d7083771864e97be27dbae0eef216a | 10526 |
+| o8_reference_model_rev6.py | f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2 | 27875 |
+| public/game/gameManager.js | 31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea | 20035 |
+| public/game/gameState.js | 4d4d88f18f8d2335fac4104e746b972214991df8b1c6e72e0cc5d8d12cb30878 | 1562 |
+| public/game/inputController.js | 7454a3c23b9de0acb152fe76bedab74bb4a604ac62ca11d41ff5ee12e3ed27e2 | 11682 |
+| public/game/position.js | e598b5ea4ff8f125bcb405b35ab6fb21d64e1fc6fc623a862b46ca839c2b6144 | 516 |
+| public/game/session.js | 54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b | 6340 |
+| public/game/tetromino.js | d99c1bd6cb4a9e255b9ef2840264281e46a9665dcb30f66c6b45e654d1654bfe | 4552 |
+| public/game/tetrominoFactory.js | 25e1da6c0b1992b0317aef7025fb7030803a8fd20e649a45eb2ddeaa166ae8b4 | 3574 |
+| public/icons/apple-touch-icon.png | 0aeea8d0ab4909514a97b4db2216d55c1ecb05b4c18935e768d5b8a95f5181f1 | 6527 |
+| public/icons/icon-192.png | ae98494e7f50a2014cc81b26932937dda62d8a2dd353e580caaffcbf1d5ca876 | 6606 |
+| public/icons/icon-512.png | 2c7aa12144eff81c956c4529819d4a511bc8eed863b25ce69fa9c878a61609fc | 76690 |
+| public/icons/icon.svg | 8d96a421dd234365a2285a410dfe94b2148b85209ebd6f8b4244e4626cb031a0 | 773 |
+| public/index.html | 96f7fb5b112d6890b33b0f38d51e2bb47fe2289875354559a82ab4e036ab85c1 | 3433 |
+| public/manifest.webmanifest | b8e0c8ff8236a827cd8326a71bfe83b3a30a58be5b151adfc5223f7d4333b403 | 562 |
+| public/script.js | 59fcb3343f35d0022c739cce82c5c9601a9e3bc354a9dc991eb1660c4e599ad4 | 23071 |
+| public/style.css | 76d219d4a4bad0e4c94ab4c2b1d583992ea08154725c6de002c78623bc87c5ca | 4829 |
+| public/sw.js | c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96 | 6973 |
+| test/factory.test.js | d27ecaf0c8d5b6d5acefda08a434f545964d9faacd23b61b16819e85b9345489 | 2923 |
+| test/fixtures/README.md | a073f21ee6855acef2df84bef471c24da4c4b29f90aacca0fc72733a9955d8df | 1348 |
+| test/fixtures/saved-game-current.json | 5db92314408a59661f17e47887778df96de91e19ae433827b1f74a42227e126e | 10197 |
+| test/fixtures/saved-game-with-level.json | c628f4442aab487f185b2ba88c58adce6fbf6c55310c3f0314e1dc1e7abc1ebb | 10211 |
+| test/game.test.js | 6d38429548b6e9b6196476e923be03443b0b05ead72691137a499cf52c3271b6 | 6887 |
+| test/gameManager.test.js | 5d70141e99f4cb0fa43b1d4bc95b37304c2168522826ca27c027836cb3963251 | 44664 |
+| test/helpers.js | 81d2c452e9cc6d2f414a0b30a6f2f87604cc06aba66c277f25b044ab2510e55c | 3777 |
+| test/inputController.test.js | 807066a0005daaa652bc8946e461633900e26557f10a9c41df27ad6febe20271 | 27302 |
+| test/model.test.js | 4f509cd814fc74ae0a210b4a7006d8caf7c06dda568068a4deae80fffe1b3281 | 1894 |
+| test/safety.test.js | 382be803b77881957f2e71e058c1e5f841f478eac15dc365fcf6b01b8ffd1c5f | 16021 |
+| test/server.test.js | de09c6a2a1b240b792cabb831dbe66f452ca23cd5bfd5bef405ede150f9ea66d | 2237 |
+| test/session.test.js | 5cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152 | 10774 |
+| test/staticFiles.test.js | eca4a6f59e8255149ef1798dcedc80bd1fd176f14486caae013bed67eac89224 | 5915 |
+| test/tetromino.test.js | 248f10e8600c030d4aca2723742f202b47d05ce9ccb317d8e69b3a579d9a95f0 | 10587 |
+| test/traceability.test.js | d6a3976269bfd4243f23b699b79d783b0cb7e369858ea116c3cdfec33d34127e | 5833 |
