@@ -1,0 +1,21 @@
+# Later input scratch identities
+
+Hash manifest only, not historical execution/exact served-byte attestation. Source copies and index.html outside manifest; no executable proposed for merge.
+
+key-order-v18.mjs 7129033a7561f62fe860017d9407a4f273e8f91991b1cad03c0a25ea35d53e8d
+key-order-v18.json 6e1ea84ad1f3744cdcf0de377af17ed9e475572642340bc661ca02701f540c34
+key-order-plan.md 98783bde18922c490bdaa523fdeb135aa1dd2ababe7b9eb19ceffae0428eb511
+key-order-v18-initial-stdout.txt 3aa2c8fb7cc36eda0e173c3c14e8898409854012d8c46dadc1cc2576f40baee0
+key-order-v18-final-stdout.txt d48ec7440164be1a3fee881740bbac640b2430c28a2c1bc23dc233bb98964a6e
+key-survivor-v19.mjs 797efb22bcd36466e2538977ed7dfc66bec6d6c2adb52d8cfdb8c959d18d4eec
+key-survivor-v19.json 3825646ba055204a8206b319e5c8334bfaf3181ca1055256f564a6e99f8c5166
+key-survivor-plan.md a1afe0104c8c6d1dc0fe370ca9510a0bd7421f7701145a72e9f038ba53c4d5b1
+resume-survivor-v20.mjs 70bc02cc93a7c18ff41f8c178c32a56b9d43877e4c4f097bc4a2b31373a55bcb
+resume-survivor-v20.json 06c7aeaee05e1515dce4424e373200ec06495607171cec3f9cbc857ced94f7da
+resume-survivor-plan.md 01db2d428f1db4089064a29cc122b42f15310c340f22e19f02aef5850defb295
+pointer-session-v21.mjs 826b433daa4f9d762e15d601d2dd9374ed01d238341f5d77e4938537c089018d
+pointer-session-v21.json 8ae0a4b206d44b823a36a8e386bdb65e9142582b0d6a518c3ccf0d4b8b4bc60c
+pointer-session-plan.md fcfa96b0af88936a689c8794f5e45b089391bee90abfb1b8eb2a0609cee23ade
+input-results-v18-v21-check.py f672d2b36c7fff4b2faffaff24ed02e5a309fd716d477d92b8ceb75daf51256c
+
+input-results-v18-v21-check.py checks the delivered final JSON numeric/cell predicates locally; it does not rerun browsers, count blocked attempts, prove native timing or form a permanent repository test.
