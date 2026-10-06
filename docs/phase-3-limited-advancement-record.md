@@ -29,7 +29,7 @@ All four stay in scope for later phases. They count as neither verified nor supp
 
 ## Native evidence and remaining candidate
 
-The recordings show installation, the game opening from its icon, native portrait gameplay on an iPhone 14 Pro Max running iOS 27.0.1, rapid rotations and a Safari page becoming enlarged then returning to normal size. The owner identified the recovery gesture as a pinch and reported that zoom can occur once per session. The recordings do not reveal finger contacts or exact cache bytes.
+The recordings show installation, the game opening from its icon, native portrait gameplay on the privately identified recorded target, rapid rotations and a Safari page becoming enlarged then returning to normal size. The owner identified the recovery gesture as a pinch and reported that zoom can occur once per session. The recordings do not reveal finger contacts or exact cache bytes.
 
 The Home Screen pinch-recovery issue remains open. Safari pinch recovery does not reject that separate issue. System status and home-indicator regions remain visible in the installed recording; no new meaning of "full screen" is selected here. Exact engine version, every later device/version, heard assistive-technology behavior and physical color measurements are not inferred from the recordings.
 
