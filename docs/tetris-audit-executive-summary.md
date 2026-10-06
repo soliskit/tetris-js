@@ -25,3 +25,11 @@ The recordings do not identify every finger contact or the exact files run from 
 ## What happens next
 
 Publish the reviewed record. Finish the remaining mapping judgments and Phase 4 domains. Then separately decide which behaviors are defects and which rules are supported strongly enough to certify. Corrections and regression tests need their own approvals. New features and CI improvements, which change automated checks on each commit, remain on hold. There is no grounded Phase 10 finish time yet.
+
+## Later bounded Phase 4 checks
+
+Four later checks are now ready to record. In one controlled failure after confirming New Game, a fresh saved-flag check still treated the old save as eligible. In one paused held-key callback, the expected safety checkpoint was not called. In one controlled cache failure, the download-failure handler removed a foreign cache's name binding. A separate resize test left the board blank after a drawing call was refused, without the chosen small player notice; a later resize drew the board again.
+
+These are candidate findings at the tested scopes, not confirmed defects or fixes. The New Game check did not establish that its old payload was a valid last-good save or that Continue was shown to the player. The cache check used a controlled fixture, not a native installation. The resize result does not prove the whole game continued correctly. The earlier unsuccessful resize attempt is still recorded as unsuccessful.
+
+Phase 4 remains open. Wider failure, timing, input, saved-content and native-device domains remain, as do the four previously approved phone-evidence limits. No property is certified by this update. The next step is to disposition the candidates and finish the remaining declared domains, with evidence or separately approved limits, before requesting corrections or final certification.
