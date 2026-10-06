@@ -35,7 +35,7 @@ Implementation-exposed audit documentation. Not an accepted complete oracle or a
 
 ## Native evidence update and limits
 
-The earlier unsupported native installation and named-device observations subsequently received recording evidence: installation/icon launch, native portrait gameplay on iPhone 14 Pro Max/iOS 27.0.1, and Safari magnification followed by pinch-associated return. Finger-contact identity and executed cache bytes remain uncertain. The exact four owner-approved Not established relations are listed in the limited-advancement record. Conditional platform contracts are not target execution, and target execution is not a universal compatibility proof.
+The earlier unsupported native installation and named-device observations subsequently received recording evidence: installation/icon launch, native portrait gameplay on the privately identified recorded target, and Safari magnification followed by pinch-associated return. Finger-contact identity and executed cache bytes remain uncertain. The exact four owner-approved Not established relations are listed in the limited-advancement record. Conditional platform contracts are not target execution, and target execution is not a universal compatibility proof.
 
 ## Evidence interpretation
 
