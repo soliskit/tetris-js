@@ -2,7 +2,7 @@
 
 Status: record recorded by ledger row D40 in `AUDIT.md`. The ledger row governs the status and provenance of this text. This record is implementation-exposed: its sources cite production code and tests, so it must never be given to a clean O8 model author. It adds no finding status, no certification status, no requirement change and no code change.
 
-Base: main. The three partition files below are unedited copies of what the read-only partition readers produced.
+Base: main. The three partition files preserve the original technical records. P3-C has nontechnical publication redactions; P3-D and P3-E remain unedited. The table records original source hashes, not a claim that all current published bytes are unchanged.
 
 ## 1. Partition files and requirement coverage
 
@@ -14,9 +14,11 @@ Base: main. The three partition files below are unedited copies of what the read
 
 The integrator checked that each of the 55 requirement IDs in `docs/phase-1-requirement-scope.md` has exactly one record across the three files, with no ID missing or duplicated, and that each record carries the blueprint 3.3 fields. Every record has the status Candidate or Not assessed. Candidate means the record can carry evidence and lists its limits. Not assessed means a stated sub-claim has no method yet. No record is marked certified.
 
+Current published P3-C SHA-256 after nontechnical redaction: . Its requirements, properties, transitions, routes, candidate statuses and technical limitations are unchanged.
+
 ## 2. What the records state and do not state
 
-- Every model-correspondence cell in the unedited partition records remains pending. Those records predate model construction; four subsequent frozen model revisions and their limits are recorded by D41. The model input pack was approved on October 5, 2026 (ledger row D39). No model transition was invented to fill a template.
+- Every model-correspondence cell in the historical partition records remains pending. Those records predate model construction; four subsequent frozen model revisions and their limits are recorded by D41. The model input pack was approved on October 5, 2026 (ledger row D39). No model transition was invented to fill a template.
 - Where the model does not apply (outer layer, display, process and tooling claims), the record names the actual independent evidence method.
 - The partition readers ran no full test suite, browser, coverage, mutation or device evidence. P3-E ran 19 dependency-free static tests under Node 22 rather than the target Node 26; two server attempts failed for a missing dependency in the reader's environment, which is an environment limit and not an application result. The eight requirements that depend on devices or external installation (APP-1, APP-4, DSP-1, DSP-2, DSP-4, DSP-6, DSP-7, QA-4) remain in scope with their evidence gaps.
 - P3-C and P3-D list candidate observations for Phase 4 (P3-C 15, P3-D 18, P3-E 10). None is a finding. Each needs reproduction against the governing text before it can become one.
