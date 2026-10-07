@@ -78,6 +78,26 @@ Requirement or security-scope decisions may be proposed during the phase respons
 
 The gate controls advancement and authorization. It does not require Phase 1 questions to be answered before Phase 1 begins.
 
+Responsibility separation and parallel preparation
+
+Independent evidence gathering, correction preparation, independent review and final integration may proceed concurrently when their information and artifact dependencies are satisfied. Concurrent preparation does not close a phase or authorize implementation.
+
+Each work item records its claim or correction scope, responsible owner, input versions, proposed output artifacts, read/write set, upstream dependencies, independent reviewer and remaining approval or exit gates. Assign ownership by artifact or bounded claim rather than treating an entire phase as a single indivisible work item.
+
+Responsibilities are separate:
+
+* Evidence gathering binds requirements, source and evidence identities, covered domains, assumptions, limitations and candidate dispositions. It does not supply its own independent review or certify a property merely by collecting results.
+* Correction preparation proposes a minimal conceptual change, a regression with independently justified expected results, and the protections plausibly affected. Preparation is not production or permanent-test implementation permission.
+* Independent review evaluates the named immutable artifact and its evidence at an exact version. A content review and final exact-version verification are separate gates. Changed inputs or outputs require reassessment of the affected review; an earlier pass is not transferred by assumption.
+* Final integration preserves governing records, sequences shared writes, binds the final reviewed versions and records verification and publication results. Integration cannot invent requirement choices, change evidence scope or exercise approval outside the applicable owner grant.
+
+Independent artifacts may be prepared in parallel. Shared governing records, approved model-input packs and overlapping source files have one writer at a time. Conflicting changes are sequenced or reconciled before final review. Each work item identifies cross-cutting dependencies, including fault cleanup, reporting, persistence ordering and timer/input lifecycle where relevant; responsibility separation does not remove those dependencies.
+
+O8's model-input preparation, owner approval, pre-freeze authorship isolation, checksum freeze and independently justified later model changes remain unchanged. A responsibility assignment does not permit production behavior, tests or implementation-derived expectations to enter pre-freeze model construction.
+
+The Audit Advancement Gate, numbered phase-exit criteria, mandatory candidate reproduction order unless separately changed, finding/property distinction, production and permanent-test approval, pre-fix failing/post-fix passing regression, affected-protection re-verification and final certification remain unchanged. A blocked work item does not block unrelated authorized preparation. Per-defect implementation before the applicable phase gates would require a separate explicit amendment; it is not authorized by this section.
+
+
 ⸻
 
 Evidence vocabulary
