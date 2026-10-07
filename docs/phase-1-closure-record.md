@@ -14,7 +14,7 @@ Base: `main` at c672a43423d063e218613626c0d8245fa1e5b290 (D35 merged). Criteria 
 | 4 | Authoritative transition boundary recorded | D16 section 4; D31 to D34 (frame principle, operation assignments, choices) | Satisfied |
 | 5 | Trust assumptions recorded, including scheduler registration and cancellation | D22 T3, D23 U3 and U4, D24, D27, D28, D29 | Satisfied |
 | 6 | "Fault reported" for SAF-3 and SAF-5 decided with owner approval | D22 T1 (SAF-3), D23 U2 (SAF-5), owner replies cited in those rows | Satisfied |
-| 7 | Scope table: every REQUIREMENTS.md ID in one row, scope and owner decision filled | `docs/phase-1-requirement-scope.md`: 55 IDs, 55 rows; D15 with the owner's approval (question phonemsg-01M446PN75FPTBR726KTW7TQGJ, reply phonemsg-01M446R2MS7PQ0ZK7043TNV408) | Satisfied |
+| 7 | Scope table: every REQUIREMENTS.md ID in one row, scope and owner decision filled | `docs/phase-1-requirement-scope.md`: 55 IDs, 55 rows; D15's specific scope approval | Satisfied |
 | 8 | Applicable requirements identified for each proof obligation | D25 section 2 (O8 lists none, with the reason) | Satisfied. QA-4 and QA-5 are intentionally outside the O5 list: they are browser-test and typecheck requirements, not claim-to-code traceability, and D25 states its lists are open to correction by later phases |
 | 9 | Conflicts identified and resolved by requirement text or an explicit owner-approved clarification | D25 register rows 1 to 9; row 9 (DSP-5) by the owner's decision recorded in D25 and the reading in D30 | Satisfied as an owner-approved clarification recorded in this ledger. It is not an edit of `REQUIREMENTS.md`; that edit is a separate gate and is not granted |
 | 10 | Each decision recorded as normative text without code locations, test names, observed implementation behavior or finding history | D35 register (sections 1 to 3 separate decision text from annotations; sections 2 gives code-free restatements of D29 K2 and D27 W4) | Satisfied by D35. Historical files are not edited; annotations stay outside the decision text and outside any model input |
@@ -22,7 +22,7 @@ Base: `main` at c672a43423d063e218613626c0d8245fa1e5b290 (D35 merged). Criteria 
 
 ## Approval basis (criterion 11)
 
-Each behavioral decision in D16 to D34 rests on the owner's reply to a specific question, cited by message ID in its ledger row. D15 rests on his explicit approval. D26 to D35 were recorded under his 6:57:14 AM October 5 instruction to carry the audit to Phase 10 automatically (phonemsg-01M465NER4X0PKMC296DJCDPP6), accepted with "Agreed" (phonemsg-01M465PVA7FC6FTV1DXM3DZRWT), as stated in each row. The owner did not review the final prose or SHA-256 of D18 and later files; those rows say so. This record does not claim that he did. D30, D32 and D35 are readings, sourced consequences and annotations, and carry no new owner choice.
+Behavioral decisions D16-to-D34 rest on the owner's answers to specific questions; D15 has explicit scope approval. D26-to-D35 were recorded under the October5,2026 automatic-through-Phase10 scope, retaining phase criteria, safety and reserved decisions. The owner did not review final prose or SHA-256 for D18 and later files; this record does not claim otherwise. D30, D32 and D35 are readings, sourced consequences and annotations with no new owner choice. Private proof is retained separately.
 
 ## Not decided here
 
