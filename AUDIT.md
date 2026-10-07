@@ -114,3 +114,7 @@ Only audit documentation is changed. Production, public-site, test, executable-m
 ## Later formal Phase 3 gate
 
 D50 and `docs/phase-3-formal-criterion-gate.md` record the later completed claim-appropriate correspondence and exact publication checks. They supersede the above historical pending-mapping description only when their own review, exact-head checks, authorized merge and postmerge publication gates are met. The historical interim and limited-advancement records are not rewritten. Phase4 declared-domain work and Phase5 finding/property certification remain separate. No property is promoted to Proven by this gate.
+
+## Later status consolidation and scoped dispositions
+
+D51 remains the historical Candidate record at its published scope. The later review draft `docs/audit-status-and-dispositions-2026-10-06.md` supplies the specific D50 publication followthrough receipt, separately scoped later finding dispositions and critical remaining gates. It is not Phase4 completion, property certification or approval of source/test/CI/model changes. This consolidation becomes the later documentation record only after independent review, exact-head checks, authorized documentation-only merge and postmerge publication verification. No D52 adopted decision is recorded by this draft.
