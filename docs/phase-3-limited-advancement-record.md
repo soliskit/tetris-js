@@ -4,15 +4,8 @@ Status: owner-approved limited advancement, subject to review of this documentat
 
 ## Decision and chronology
 
-On October 5, 2026 at 10:19:43 PM PDT, the owner was asked:
+On October5,2026, after PR81 merged, the owner approved limited advancement to Phase4 with four relations marked Not established: delivery of both quick taps, double-tap recovery, recovery after reloading while zoomed, and exact correspondence of phone-cached files to the audited version. They remain in scope for later phases, do not count as verified and do not support full certification. Recorded Safari zoom/pinch recovery remains evidence; the Home Screen pinch issue stays open. D46-D49 retain their accurate historical interim no-Phase3-closure status.
 
-> My recommendation is to finish Phase 3 with these remaining points explicitly marked "Not established": whether both quick taps reach the game, double-tap recovery, recovery after reloading while zoomed, and whether your phone's cached files exactly match the audited version.
->
-> They stay in scope for the later phases, and won't count as verified or support full certification. The Safari zoom and pinch recovery you recorded remain evidence; the Home Screen pinch issue stays open.
->
-> Do you approve that limited disposition and moving to Phase 4?
-
-The owner answered "Yes" at 10:20:22 PM PDT. This decision came after PR #81 merged at 7:18:19 PM PDT. D46-D49 therefore remain accurate historical interim records; their "no Phase 3 closure" text is not rewritten.
 
 The decision was initially retained in working evidence rather than published. That publication delay is a process failure. At the October 6, 2026 6:59 AM PDT check, main be96b53865c5715b99aa07550bb33fc9d445c1b2 did not contain the later limited-advancement record. Work performed afterward is bounded Phase 4-oriented research, not evidence that Phase 4 is complete.
 
