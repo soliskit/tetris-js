@@ -27,7 +27,7 @@ These restate, without any file name, constant name or code location, decisions 
 
 | Class | Meaning | Records |
 | --- | --- | --- |
-| Owner-approved behavior | The owner answered the specific question in the cited original exchange | D16 to D18, D20 to D25 and D27 to D34 decision statements, with the message IDs in each ledger row; D15 scope: question phonemsg-01M446PN75FPTBR726KTW7TQGJ naming the exact head and scope SHA-256, owner reply "Yes I approve" phonemsg-01M446R2MS7PQ0ZK7043TNV408, October 4, 2026 at 12:37:40 PM PDT |
+| Owner-approved behavior | The owner answered specific choice questions; private source proof is retained separately | D16-to-D18, D20-to-D25 and D27-to-D34 decision statements; D15's specific scope approval was independently checked |
 | Sourced consequence | Follows from an approved statement and the cited source; not separately approved | D32 Part A, D33 and D34 E3, the "sourced consequence" clauses named in their rows |
 | Annotation | Not decision text | section 3 |
 

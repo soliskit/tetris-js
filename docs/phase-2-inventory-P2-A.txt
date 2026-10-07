@@ -8,7 +8,7 @@ Boundary used: D16 sec 4 (conceptual commit point of a specified legal operation
 
 2. SCOPE NOTE (for coordinator)
 - gameManager.js also holds persistence/storage routes (readItem 133, highScore 142-154, isSessionSaved 158-171, storageChanged 174, loadGameSession 199, saveGameSession 219, failSafe storage-untouched) -> owner P2-B. Listed below only as hand-offs.
-- Sequencing: file packet says no Phase 2 before owner-approved Phase 1 exit. Ledger D36 records closure matrix; its criterion 11 basis is the owner's 6:57:14 AM Oct 5 "carry to Phase 10 automatically" instruction, not an SHA-level exit approval. I proceeded per main's instruction; flagging so the coordinator records this in the closure basis.
+- Sequencing: the file packet says no Phase2 before owner-approved Phase1 exit. D36 records the closure matrix; criterion11 relies on the October5 automatic-through-Phase10 scope, not SHA-level exit prose approval. This preparation followed the coordination instruction, with that distinction retained in the closure basis.
 
 3. PUBLIC ENTRY ROUTES (engine)
 E1 handleAction(action) gameManager.js:459 -> guard(() => performAction) . Callers outside P2-A: inputController/script.js (P2-C/D).

@@ -12,7 +12,7 @@ Baseline: D20 (`docs/phase-1-d16-amendment-2.md`: item 16, the withdrawn-from-Co
 
 ## Part 2. Provenance note on D29
 
-D29 records what the owner chose: not to assume the clock is accurate or steady, and to test clock jumps (reply "Go with option 2", phonemsg-01M46891V9W4EXVV218BTXQPGT). The words "forward and backward" in D29 K2 are the audit's scoped test elaboration of that choice, not words the owner used. The question he answered named a forward jump while a page loads (phonemsg-01M4684EC8RN7KM05S264DGPGY). D29 is not edited. This note adds no accuracy guarantee and no requirement.
+D29 records the owner's choice not to assume the clock is accurate or steady and to test clock jumps. Forward and backward testing in D29 K2 is the audit's scoped elaboration, not a direct owner quotation. The question concerned a forward jump while a page loads. D29 is not edited. This note adds no accuracy guarantee or requirement.
 
 ## Not decided here
 

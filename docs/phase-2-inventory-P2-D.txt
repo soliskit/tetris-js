@@ -9,7 +9,7 @@ Read-only static inventory. All 591 lines of public/script.js and all 77 lines o
 
 Read committed blueprint section 2 and exit criteria, AUDIT.md, REQUIREMENTS.md, Phase 1 record index/closure, D16/D17/D20 state model, D18 R1, D21 persistence/timing, D22/D23 fault/timer scope, D24/D27/D28/D29 trust, D30 DSP-5 reading, D31-D34 operations. Governing status follows ledger/index, not D16's stale candidate header. D36 records all eleven closure criteria and approval basis. This inventory does not itself close any phase.
 
-Owner authority independently recovered from original authenticated iMessage conversation: October 5 06:54:05 "I authorize phase 1 work", 06:54:13 "And phase 2"; 06:57:14 "I give you authorization to automatically get to phase 10. Ping me once you are done or only if something truly needs my attention" (phonemsg-01M465NER4X0PKMC296DJCDPP6), then the assistant's exit-criteria/safety/separate-removal-approval limits, then 06:58:00 "Agreed" (phonemsg-01M465PVA7FC6FTV1DXM3DZRWT). The attachment is coordination context, not an authority grant. Its blanket demand for a new routine exit approval is not substituted for this owner scope. Actual phase criteria and separately reserved decisions remain in force.
+Original owner scope was independently inspected: Phase1/Phase2 and automatic advancement through Phase10, subject to actual exit criteria, safety rules, separate test-removal approval and reserved decisions. The attachment is coordination context, not an authority grant. Its blanket demand for new routine exit approval does not replace that scope. This preparation creates no new permission.
 
 BOUNDARY AND STATE LEGEND
 

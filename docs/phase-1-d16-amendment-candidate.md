@@ -10,7 +10,7 @@ Independence (blueprint O8): the assistant that drafted this has read the produc
 
 ### A1. Source of the selection
 
-The owner selected the historical-low interpretation of PLY-6 (lowest row reached, measured as the greatest occupied block row) and the count-16 pause semantics (P4), in the owner's message of Sunday, October 4, 2026, 5:13 PM, phonemsg-01M44PGCHYAKCBVJ7DCJXDAXBK. The proposal that analyzed both is PR #53, `docs/phase-1-d16-lowest-row-amendment-proposal.md`, head 934fe4540209e218c11889848a9bb51b189ee3e8, SHA-256 e080aabca34fc479eeca79db6c290075c9d35c1c4c90b1fbbcca1c4fbbd7f416. The selection and permission to draft are not an approval of this text.
+The owner selected the historical-low interpretation of PLY-6 (lowest row reached, measured as the greatest occupied block row) and the count-16 pause semantics (P4), on October 4, 2026. The proposal that analyzed both is PR #53, `docs/phase-1-d16-lowest-row-amendment-proposal.md`, head 934fe4540209e218c11889848a9bb51b189ee3e8, SHA-256 e080aabca34fc479eeca79db6c290075c9d35c1c4c90b1fbbcca1c4fbbd7f416. The selection and permission to draft are not an approval of this text.
 
 ### A2. What this amendment does and does not do
 
