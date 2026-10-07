@@ -1,6 +1,6 @@
 # Phase 3 current claim-appropriate correspondence record
 
-Documentation-only current integration. The four original obligation documents remain unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
+Documentation-only current integration. The four original obligation documents retain their technical content. P3-C has nontechnical publication redactions; the other three remain unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
 
 Pinned implementation main: c1a721cb99b46d3b20a6692a1f6510985640388c. Public tree: 1e09ad61c19e0b235a231ad8810dae176be4ea77. Evidence identity is not execution, cached-phone identity, proof of all domains or compliance. Historical executed model revisions and caller choices retain their names. The current frozen reference model SHA256 is f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2; named applicable methods below are correspondence anchors, not an accepted universal oracle.
 
@@ -10,7 +10,7 @@ This candidate does not itself record an operative phase exit. Any formal gate r
 
 ## Integrity and governing source
 
-The original partitions contain the full thirteen fields under blueprint 3.3. Original hashes:
+The original partitions contain the full thirteen fields under blueprint 3.3. Original source hashes (not all current published bytes):
 
 | Original record | SHA256 |
 |---|---|
@@ -18,6 +18,8 @@ The original partitions contain the full thirteen fields under blueprint 3.3. Or
 | [phase-3-obligations-P3-C.txt](phase-3-obligations-P3-C.txt) | 02cd7d55b99c47a243e07bde66fd7b71954ec243e16d441c383fa8466c1a0145 |
 | [phase-3-obligations-P3-D.txt](phase-3-obligations-P3-D.txt) | faa742b77ddd0f67819dae3fdaa39a96177d042ccef2de374220354a0ee3bc47 |
 | [phase-3-O1-O8-obligations.txt](phase-3-O1-O8-obligations.txt) | d87e4ce34f1f08463ff7abb13b897ae0201eab194fb68aa307361d201b0c376a |
+
+Current published P3-C SHA256 after nontechnical redaction: `9bda448547f48b956c71bbf3ec5da387ee17eca5d72377f0e4876dca8e5b3bd8`. Original source identity above remains historical; all technical claim fields remain unchanged.
 
 Current independent domain method text: [method support](phase-3-current-method-support.md). These derived methods retain named premises and actual finite/adverse/conditional outcomes.
 
