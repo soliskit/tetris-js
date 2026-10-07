@@ -21,6 +21,7 @@ Choose the finite engine ordering with these actions completed before each relev
 The fixed adopted spawn-cell sets independently give these box anchors at lock:
 
 | Piece | Anchor | Occupied cells |
+| --- | --- | --- |
 | I | (18,0) | (19,0),(19,1),(19,2),(19,3) |
 | O | (18,4) | (18,4),(18,5),(19,4),(19,5) |
 | T | (17,0) | (17,1),(18,0),(18,1),(18,2) |
