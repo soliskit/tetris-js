@@ -1,0 +1,38 @@
+# Phase 3 formal criterion and advancement record
+
+Status: candidate until this record and its D50 ledger entry pass documentation review, required exact-head checks, authorized merge and postmerge publication verification. This is not certification.
+
+## Criterion
+
+The audit blueprint, line467 and section3.3, requires a proof-obligation record for every in-scope requirement and adopted property, with a method and complete mapping appropriate to the claim. Section3.4 separately governs actual differential evidence, not another copy of the proof-obligation template. That mapping names the requirement, applicable state property, transition class, production route or trusted component, model transition where applicable, actual independent method and evidence. A non-engine claim is not forced into an artificial model relationship. Appropriate mapping is distinct from compliance, Phase4 exhaustion and Phase5 certification.
+
+The four original obligation partitions retain all13fields and their candidate/Notassessed statuses. The current63 correspondence and seven companion documents supply the later claim-specific source/method/evidence/limits, including corrected mixed-model fields, authoritative-state/order identities and the adopted timer split. Independent integrated adequacy assessment and the publication derivation's source/method/evidence review found no absent appropriate mapping in their declared scope. Counts, hashes and links are integrity checks, not the adequacy argument. Actual differential evidence retains executed revision, input choices, valid-state/transition category, stimulus, comparison adapter, safe-failure and execution-versus-attribution scope. Source-only and conditional deductions are not promoted to newly executed or universal proof.
+
+## Published integration
+
+PR88: https://github.com/soliskit/tetris-js/pull/88
+
+Reviewed head:290f7dfa2ee789ed27be8f26700074662fe12b79. Base:a243e4b2f5191779b3e6ff25617191b43b89ff0b. Merge:c48502f40068e16f7ddd685190872f20d248c03c. The net change is eight Markdown documents,3334lines; the four original records and production/test/model/CI/requirement/public-site bytes are unchanged. The public tree remains1e09ad61c19e0b235a231ad8810dae176be4ea77.
+
+Exact-head required run https://github.com/soliskit/tetris-js/actions/runs/37520857430 succeeded: test2m35s,164browser passes/19skips; deploy skipped for the pull request. This is process evidence, not proof of properties or removal of skips. Postmerge run https://github.com/soliskit/tetris-js/actions/runs/37522479879 succeeded on c48502f: test2m41s, deploy15s,164browser passes/19skips. On October6 at1:26PM PDT,16actual served resource bodies, including all three PNG icons, returned200 and matched their exact audited public-tree hashes. This checks served bytes, not the cached files executed on the phone. The eight merged document bytes and unchanged original four partitions were read back against their reviewed identities. This record and D50 still require their own exact-head checks, authorized merge and postmerge verification before becoming operative.
+
+| Publication document | SHA256 | Bytes |
+|---|---|---|
+| phase-3-current-clause-process-support.md | 5a6a0a5f9bd02ddaa4518f6ee5e7e898792d80cfb6aea18c91f888a786460d64 | 54245 |
+| phase-3-current-grouped-result-identities.md | 953d525e99799a161d9912c1a01bc0a0c895161981c140f1459d029f458fd96a | 8905 |
+| phase-3-current-method-support.md | 89f47665d51e9f8281143ba6dca21b01c3082894aeab270f99bc92f1b96471fe | 82095 |
+| phase-3-current-restored-domain-relations.md | b2c46b7a3792c52c448b987256cb1542a13589c8ca3c0313820944940c84633f | 24758 |
+| phase-3-current-source-identities.md | 7a09a339bc46ea3040eed1f3359a6cd7a06b40d482fd39e49f081cc536b25bb4 | 7676 |
+| phase-3-current-use-site-support.md | 18502204be3c1b717a0ccc6ddc75bcf671f7a15df28bb19b32fd9420d8f2dae0 | 63874 |
+| phase-3-current63-correspondence-record.md | 566c6c78505a69e7518964a1d24e2c4735e50e7d540fccc276f5e0767d843243 | 125387 |
+| phase-3-kind-geometry-source-evidence.md | 1e6f7f5c7db75b6f481a3f701a78ce18bc1444f90f9bc678863fabd4b72d31a0 | 3781 |
+
+## Four approved remaining relations
+
+The previously recorded limited-advancement decision retains exactly four relations as Not established: both quick taps reaching the game, double-tap recovery, zoomed-reload recovery and exact cached phone-file identity. They stay in scope for later work and support no full certification. No fifth native, persistence, assistive-technology, physical-wake, color or provider waiver is inferred. The source classification of drawing/controller polling under the adopted timer scope does not remove downstream authoritative-action/write checks or fault-report/required-continuation obligations. F3/F4/F5 and omitted-predicate adverse relations remain.
+
+## Disposition and later work
+
+Under the existing owner authorization to advance through Phase10 only as exit criteria are met, record Phase3's complete appropriate correspondence once the documented publication gates are met. Proceed with Phase4 declared-domain falsification and exhaustion, not acceptance of properties or an implementation correction. Phase5 retains separate finding/property statuses. Production corrections, permanent test changes/removal, CI work and final certification retain their separate approval gates.
+
+D46-D49 and the limited-advancement record remain historical records. D50 appends this later criterion decision and exact publication bindings rather than rewriting earlier no-closure statements. No new source rule, model oracle, implementation feedback to the independent model author, requirement change, native/device measurement or certification is created.
