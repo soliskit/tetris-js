@@ -1,6 +1,6 @@
 PHASE 3 PARTITION P3-C: PROOF-OBLIGATION RECORDS (READ-ONLY PREPARATION, NOT CERTIFICATION)
 Repository: soliskit/tetris-js   Base: 0f4e51047ad177a247a3461ed34263599fe01949 (main; verified by checkout, git log -1)
-Prepared for coordinator agent-01M44F7Q0T73MDW80MCA66NTSA. Nothing was written to the repository. No O8 model input pack, model or model code was read or written. Statuses below are only Candidate or Not assessed. No finding status, certification status or requirement change is asserted.
+Read-only preparation. Nothing was written to the repository. No O8 model input pack, model or model code was read or written. Statuses below are only Candidate or Not assessed. No finding status, certification status or requirement change is asserted.
 
 0. OWNED IDs (17), as written in REQUIREMENTS.md
 PCE-1 PCE-2 PCE-3 PCE-4 PCE-5 PCE-6 | PLY-1 PLY-2 PLY-3 PLY-4 PLY-5 PLY-6 PLY-7 PLY-8 | SCO-1 SCO-2 SCO-3
@@ -16,7 +16,7 @@ PCE-1 PCE-2 PCE-3 PCE-4 PCE-5 PCE-6 | PLY-1 PLY-2 PLY-3 PLY-4 PLY-5 PLY-6 PLY-7 
 - git diff between the D38 inventory base (b3c177e) and 0f4e510 shows no change under public/, test/, e2e/ or REQUIREMENTS.md, so P2-A line references still apply. Line references below are file:line at the base.
 
 0.2 Authority and provenance
-The "audit automatic-through-Phase-10" authority is stated in my parent agent's task message (not independently verified against the owner channel). Repository records (D36, D38) repeat it and cite owner message IDs (phonemsg-01M465NER4X0PKMC296DJCDPP6, phonemsg-01M465PVA7FC6FTV1DXM3DZRWT). I did not verify those against the owner channel and treat repository text as evidence about the audit, not as authority. This work is read-only preparation and creates no approval. No requirement is reduced, deferred or merged.
+This read-only preparation creates no approval. Repository records (D36, D38) cite owner message IDs (phonemsg-01M465NER4X0PKMC296DJCDPP6, phonemsg-01M465PVA7FC6FTV1DXM3DZRWT), which were not independently verified for this preparation. Repository text is evidence about the audit, not authority. No requirement is reduced, deferred or merged.
 
 0.3 Common field notes
 - "Model transitions": the O8 model was not read. Each record names the conceptual D16 section 5 or D32 operation the model must cover and marks "model correspondence pending model". Where a claim is not a transition property, the record names the independent method proposed.
