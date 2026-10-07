@@ -33,3 +33,9 @@ Four later checks are now ready to record. In one controlled failure after confi
 These are candidate findings at the tested scopes, not confirmed defects or fixes. The New Game check did not establish that its old payload was a valid last-good save or that Continue was shown to the player. The cache check used a controlled fixture, not a native installation. The resize result does not prove the whole game continued correctly. The earlier unsuccessful resize attempt is still recorded as unsuccessful.
 
 Phase 4 remains open. Wider failure, timing, input, saved-content and native-device domains remain, as do the four previously approved phone-evidence limits. No property is certified by this update. The next step is to disposition the candidates and finish the remaining declared domains, with evidence or separately approved limits, before requesting corrections or final certification.
+
+## Current status consolidation
+
+The later [status and disposition record](audit-status-and-dispositions-2026-10-06.md) separates the old Candidate reports from later narrow defect decisions. It also records Phase3's completed publication checks. That is not proof that the whole game is correct.
+
+The repository stayed quiet after PR90 while private evidence was reconciled. That work corrected real mistakes in the evidence, but did not finish Phase4. The next step is to close a specific remaining evidence or interpretation gate, rather than keep producing repeated source summaries. No fix is approved by this update, and there is no grounded finish date.
