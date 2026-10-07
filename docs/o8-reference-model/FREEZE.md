@@ -4,6 +4,10 @@ Status: frozen source record only. No revision is accepted as a complete specifi
 
 The clean author was supplied only the four owner-approved input files recorded by D39. The exact input bytes were independently checked against D39. The owner approved the inputs, not the model or results. All four revisions were hashed and preserved before any implementation comparison by the successor integrator on October 5, 2026. No model logic was copied from production. Author statements are provenance evidence, not independent proof of absence of exposure.
 
+## Historical status scope
+
+The "Phase 3 remains open" status above and in the reconciliation record describes preparation of these historical freezes, not current audit readiness. Later advancement and closure records are `docs/phase-3-limited-advancement-record.md` and `docs/phase-3-formal-criterion-gate.md`; completed publication followthrough is recorded in `docs/audit-status-and-dispositions-2026-10-06.md`. Their stated limits remain. Publishing this archive does not reopen or close a phase.
+
 ## Frozen source identities
 
 | Revision | File | SHA-256 |
@@ -49,4 +53,6 @@ The bounded report is recorded in `REV4-PACK-REVIEW.md` (SHA-256 33cd355217cffed
 
 ## Publication and merge scope
 
-The exact executable source and self-check bytes remain preserved on the unmerged `soliskit-patch-17` branch at 3cc3956783184def0eaf3d7d6b86d536c80c9e0b (PR75). The documentation-only branch includes the approved inputs, correspondence notes (with the stated prose redaction), historical source hashes and reconciliation, but excludes all eight Python files. Their presence on the retained source branch is not owner approval to merge them. This documentation records their exact identity and known limits without changing the game or its tests.
+The eight executable model and self-check files from historical revisions 1 to 4 are preserved without byte changes from PR75 source commit 3cc3956783184def0eaf3d7d6b86d536c80c9e0b. They document earlier partial models and their known errors. They are not the latest model, an accepted complete oracle, production code or permanent regression tests. Later revisions 5 and 6 and their separately attributed bounded comparisons are recorded in `docs/phase-3-ledge-observations.md` and `docs/phase-3-observation-integration-record.md`. Those records remain separate; archive publication does not accept any revision as a complete oracle.
+
+The current approved input pack, sanitized correspondence notes, review records and later audit history are retained from main. Publishing these historical executables does not replace those records, reverse the nontechnical publication redactions, accept old model readings, close Phase 4 or certify the game. The frozen self-checks use their own model-derived predicates and test-control choices; a successful run is self-consistency evidence only.
