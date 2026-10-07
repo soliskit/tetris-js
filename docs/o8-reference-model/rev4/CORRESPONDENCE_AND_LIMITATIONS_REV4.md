@@ -1,4 +1,4 @@
-# Revision 4 note. Revisions 1-3 are frozen and untouched. Inputs: the four supplied files plus the pack-only reviewer feedback relayed by main (no other source).
+# Revision 4 note. Revisions 1-3 are frozen and untouched. Inputs: the four supplied files and the associated pack-only review (no other source).
 
 ## Corrections to revision 3
 1. Revision 3 note item 7 was wrong in saying the invalid-save Continue path is reachable only by bypassing availability. continue_game calls availability first and, when it is false because an eligible, not-withdrawn save fails validation, withdraws it. So the path is reachable normally. It stays a reading (A17): D32/D20 do not say when validation runs relative to the Continue press, and S7 gives no read timing. Availability including validity itself is sourced (D20 section 1.2 item 5).
