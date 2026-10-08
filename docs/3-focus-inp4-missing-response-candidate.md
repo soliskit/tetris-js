@@ -1,0 +1,31 @@
+# Controller A: conditional missing-response certificate
+
+The selected source branch consumes a fresh controller A edge but supplies no required Cancel activation. The conditional certificate compares that missing INP-4 response while retaining logical Cancel as valid throughout. It does not infer that quiescence proves a completed answer or that any callback return is a conceptual commit. Candidate documentation for independent exact-content review, not a finding promotion, whole-property certificate, adopted rule or new execution.
+
+## Fixed scope and independent obligation
+
+Requirements INP-4 says that while the confirmation is pending, A presses the selected button, once per press. STA-1 says completed opening selects Cancel, an inside nonbutton click does nothing, and Cancel keeps the game paused. D16 defines conceptual control operations/commit independently of implementation functions; D32 operation3 consumes confirmation by its answer. These clauses supply the answer effect, not the production focus predicate.
+
+Scope: successful standard-mapping delivery of one newly pressed isolated A, with pending confirmation at invocation, completed open plus retained logical Cancel through the specifically classified STA-1 no-op, dialog focused at invocation, and no other pressed button, direction change, state transition, focus restoration, fault or provider refusal. This is a conditional source delivery class. Actual native hardware delivery/liveness is not inferred from the heading pixels.
+
+## Proposed correspondence and progress relation
+
+1. Identify the successful fresh A edge at the control adapter as the one named INP-4 press request. This identification uses the input contract and its exact named edge, not an arbitrary engine function name. Failure to identify this request as in-scope leaves a delivery/correspondence gap, not a defect.
+2. Its required response is activation of the independently selected button once. Under retained logical Cancel, the required response is Cancel activation and confirmation answer with pending cleared and paused retained. A frame boundary is not required by the clause; the relationship is causal to this edge.
+3. For the selected ordinary synchronous source lifecycle, classify the causal work remaining after the press request: all invoked handlers returned successfully, no promise, task, timer, event or other continuation carrying this A answer was registered, and this A has entered the consumed held-button set. A return by itself is insufficient. The independent absence of an outstanding answer continuation and consumed-edge relation is the proposed finite quiescence criterion.
+4. Show that later ordinary polling with the same held A cannot create another new A edge, and releasing A creates no pending-question press. Thus no later normal continuation of this particular request can supply the required answer. A new A, competing transition or focus restoration is a different input history, excluded from the comparison, not a delayed successful completion of this request.
+5. At that causal quiescence boundary, either the request supplied the required answer, failed/threw, or has no permitted response continuation. The first is the completed response; the second is excluded by the successful scope; the third is proposed evidence of a missing required response, rather than being dismissed forever as an unfinished implementation request. This establishes absence of the required response only, not successful conceptual answer completion.
+
+This tests a required input-to-response relation, not a universal rule that source quiescence creates a D16 commit. It need not claim B12 was checked at an invalid intermediate state: retain logical Cancel and compare the unanswered INP-4 request. An implementation that silently drops every required press cannot satisfy the required response merely by calling every request forever unfinished. Independent review accepts this as absence of the existing required response for the selected finite source lifecycle, not as a new completion rule. Causal-closure and delivery admission still require their exact stated premises.
+
+## Exact source support and limits
+
+Unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77, fetched main7666487321d148bf44d33e10ec9146560a233aef. IC pollGamepads172-184 synchronously forms the pressed set then calls processInput. processInput190-208 forms newPresses, stores heldButtons, calls questionButtons.press for fresh A, updates padDirection and returns from the pending branch. SC531 finds a known Cancel/Confirm button equal to activeElement and invokes click only if found. With dialog active, find returns undefined, optional click is not called, and no answer continuation is registered by that branch. No exception/provider refusal is included. The surrounding polling RAF is a recurring input sample, not an enqueued response for this already-consumed edge.
+
+Independent semantic review accepts steps1-5 within scope, with step5 only a missing-required-response conclusion. Exact artifact/classification review and publication gates remain separate. Do not use implementation behavior as its own required oracle. Native default click processing would need its own contract if a button had actually been clicked; this no-button branch makes no click call. Other callbacks, key repeats, reentrant getters/aliases, changed mapping, modal loss, later fresh presses and physical delivery remain separate histories.
+
+## Status and next gate
+
+No owner choice is needed to apply the existing INP-4 response obligation at this scope. Logical Cancel remains B12-valid throughout; no B12-invalid state is claimed. The original completed-answer comparison remains conditional and is not silently converted into proof of completion. This certificate supplies a narrower missing-response route, with physical delivery, causal-closure admission, complete native focus histories and broader property status left separate.
+
+Next: exact-content independent review of this candidate certificate, then a proposed scoped finding classification if its premises and source relation are accepted. No finding status promotion or whole-domain discharge occurs here. Phase4 remains OPEN, broader focus/property Not established. No production/permanent test/model/CI change. PR129 is unchanged.
