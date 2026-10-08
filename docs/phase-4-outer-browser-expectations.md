@@ -34,7 +34,7 @@ The blocked-storage test at lines 62-78 replaces both reads and writes for every
 
 ## Touch tests: geometry, transport and history are different premises
 
-`shapeOf` normalizes the sampled color-cell coordinates and sorts them. It checks a selected shape modulo translation; losing or changing a coordinate changes the normalized string. Simple "shape changed" assertions do not specify the correct next orientation. The two-turn T literal adds a particular expected orientation from the fixed table. Every saved touch fixture still uses production Pause/Continue and the fixed repeated-kind factory; no legal seven-bag history or complete save-goodness follows.
+`shapeOf` normalizes the sampled color-cell coordinates and sorts them. It checks a selected shape modulo translation; losing a cell or changing the relative coordinate set changes the normalized string; uniform translation does not. Simple "shape changed" assertions do not specify the correct next orientation. The two-turn T literal adds a particular expected orientation from the fixed table. Every saved touch fixture still uses production Pause/Continue and the fixed repeated-kind factory; no legal seven-bag history or complete save-goodness follows.
 
 The sideways drag test starts the T at box column 3. Its state-0 occupied columns start at 3. A 2.6-cell drag is expected to move it three columns, then the reverse drag returns it to 3. This selected expectation reflects the half-cell threshold in INP-5. It does not enumerate exact boundary equality, all event partitions, reversal paths or saved history. The downward test accepts a minimum row of at least 5 after a 3.2-cell drag from row 2; the loose inequality permits additional gravity and is not an exact per-cell transition proof.
 
