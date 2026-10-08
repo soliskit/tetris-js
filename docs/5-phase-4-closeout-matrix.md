@@ -220,23 +220,29 @@ All published cut IDs are included: NG0-NG2; CT0-CT3; PS0; SV0-SV4; CL0-CL4; NO0
 | Remove fault containment | [phase-4-selected-independent-expectations.md](phase-4-selected-independent-expectations.md); original4.5 | OPEN: exact variant/source/domain, suite/coverage/mutation result, semantic relevance and replacement protection. Survival is not a production defect. |
 | Weaken timer-state validation | [phase-4-selected-independent-expectations.md](phase-4-selected-independent-expectations.md); original4.5 | OPEN: exact variant/source/domain, suite/coverage/mutation result, semantic relevance and replacement protection. Survival is not a production defect. |
 
-Important-test reconciliation starts with the actual tracked assertion universe, not a registration threshold. The following file inventory is complete for tracked test/*.test.js and e2e/*.spec.js at this baseline; importance selection and every expected-value/fixture child row are still OPEN. These are candidate test-universe containers, not claims that every file or assertion is important.
+Important-test reconciliation uses the actual tracked assertion universe, not a registration threshold. There are 11 tracked `test/*.test.js` files and four `e2e/*.spec.js` files. Eleven of these 15 containers now have linked child source readings below. The other four still have no child register linked here. This is a source-reconciliation count, not test execution, importance selection or a whole-domain denominator.
 
-- `e2e/app.spec.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `e2e/game.spec.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `e2e/safety.spec.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `e2e/touch.spec.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/factory.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/game.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/gameManager.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/inputController.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/model.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/safety.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/server.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/session.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/staticFiles.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/tetromino.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
-- `test/traceability.test.js`: OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping.
+The linked test files and shared `test/helpers.js` bytes were checked against fresh main `fc5bbf7a90f85f131557734cac12d4b57ec641db`; their SHA256 values equal the source identities in the linked registers. No game, test, parser, serializer or model was executed for this join. Each register supplies only its listed declarations, assertions and limits. A source row that names a literal expected result is not a receipt that the test passed or that the fixture belongs to ordinary play.
+
+| Test container | Exact child source reading | Remaining important-assertion obligation |
+|---|---|---|
+| `e2e/app.spec.js` | [Browser register](10-browser-app-game-safety-child-oracle-register.md), BA-01 to BA-20, with the wake-lock family kept separate | Bind native delivery, cache creator/file identity, all-resource preservation and independent color/notice relations where needed. DOM, callback and injected API observations do not settle physical-device claims. |
+| `e2e/game.spec.js` | [Browser register](10-browser-app-game-safety-child-oracle-register.md), BG-01 to BG-22 | Bind fixture validity, exact authoritative state and each rendered-state relation; canvas samples and production-built snapshots retain their selected scope. |
+| `e2e/safety.spec.js` | [Browser register](10-browser-app-game-safety-child-oracle-register.md), BS-01a/b/c, BS-02 and BS-03 | Separate payload refusal and fault callbacks from independently valid prior content, exact restoration, complete resource stop and player-visible notice. |
+| `e2e/touch.spec.js` | [Touch register](10-touch-browser-child-oracle-register.md), TB-01 to TB-13 and W30-W33 join | Bind complete gesture frames, equality/anchor cases, capture/failure histories and native delivery. Policy adapters do not settle physical zoom recovery. |
+| `test/factory.test.js` | [Piece and bag register](10-tetromino-factory-child-oracle-register.md), factory rows | Bind ordinary bag history, semantic kind/color identity and alias ownership. Finite cardinality, custom random streams and object identity do not prove the complete bag domain. |
+| `test/game.test.js` | [Engine register](10-engine-game-child-oracle-register.md), G-01 to G-14 | Bind fixed-kind/white-block fixtures, complete state/history and save goodness independently. Production landing helpers, snapshots and fake-time examples are not those relations. |
+| `test/gameManager.test.js` | [Engine register](10-engine-game-child-oracle-register.md), manager declarations and four line/score tuples | Bind admitted action/history/failure cuts, complete frame/resource projection and persistence ordering; selected snapshots omit fields named by the register. |
+| `test/inputController.test.js` | [Controller register](7-controller-child-oracle-register.md), IC-01 to IC-47 | Join literal request/fake-time answers to actual game effects, physical token identity, Resume suppression and native default/focus behavior. Stand-in callbacks do not establish selected-button activation. |
+| `test/model.test.js` | No child source reading linked here | OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping; model self-consistency is not implementation correctness. |
+| `test/safety.test.js` | [Safety register](9-safety-child-oracle-register.md), named declarations and explicit generated violations | Bind independently good prior saves, complete timer/resource histories and player notice. Safe-stop helper fields, console records and redraw counts are not the complete safety criterion. |
+| `test/server.test.js` | No child source reading linked here | OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping. |
+| `test/session.test.js` | [Session register](6-session-child-oracle-register.md), SC-01 to SC-43; [raw-format cuts](8-session-raw-format-oracle-cuts-proposal.md) | Bind the raw-format classifier to semantic save meaning, acceptance-baseline goodness and exact restore/history. Independently invalid fields can justify local rejection without proving the whole baseline good. |
+| `test/staticFiles.test.js` | No child source reading linked here | OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping. |
+| `test/tetromino.test.js` | [Piece and bag register](10-tetromino-factory-child-oracle-register.md), TG-I/O/T/S/Z/J/L and standalone TP rows | Bind translated canonical geometry, malformed representations, kick order and alias effects at each intended claim. Adopted B2 geometry alone does not adopt kicks or color encodings. |
+| `test/traceability.test.js` | No child source reading linked here | OPEN per-important-assertion oracle, fixture provenance, production-logic reuse and comparison mapping; requirement tags are navigation, not the assertion's proof. |
+
+These joins fill declaration-to-assertion navigation for the linked containers. Importance selection, every required admission/oracle relation, actual attack receipts and complete domain discharge remain separate closeout fields. No finding status or property status changes in this table.
 
 Selected completed readings remain [phase-4-selected-independent-expectations.md](phase-4-selected-independent-expectations.md), [phase-4-selected-browser-expectations.md](phase-4-selected-browser-expectations.md), [phase-4-outer-browser-expectations.md](phase-4-outer-browser-expectations.md) and [phase-4-unit-expectations.md](phase-4-unit-expectations.md). Their own bounds are preserved. Fixtures and generated declarations need their own expected-value ancestry; agreement with the same validator cannot close the oracle row.
 
