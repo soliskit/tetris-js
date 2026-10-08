@@ -1,0 +1,19 @@
+{
+  "main": "",
+  "sources": {
+    "REQUIREMENTS.md": "fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc",
+    "docs/audit-blueprint.txt": "",
+    "docs/phase-1-r1-decision.md": "aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec",
+    "docs/phase-1-fault-timer-decision.md": "c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f",
+    "docs/phase-1-trust-and-timer-scope-decision.md": "0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b",
+    "docs/sources/2-srs_table.txt": "c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c",
+    "test/gameManager.test.js": "5d70141e99f4cb0fa43b1d4bc95b37304c2168522826ca27c027836cb3963251",
+    "test/helpers.js": "81d2c452e9cc6d2f414a0b30a6f2f87604cc06aba66c277f25b044ab2510e55c",
+    "test/session.test.js": "5cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152",
+    "test/tetromino.test.js": "248f10e8600c030d4aca2723742f202b47d05ce9ccb317d8e69b3a579d9a95f0",
+    "test/safety.test.js": "382be803b77881957f2e71e058c1e5f841f478eac15dc365fcf6b01b8ffd1c5f",
+    "test/fixtures/README.md": "a073f21ee6855acef2df84bef471c24da4c4b29f90aacca0fc72733a9955d8df",
+    "test/fixtures/saved-game-current.json": "5db92314408a59661f17e47887778df96de91e19ae433827b1f74a42227e126e",
+    "test/fixtures/saved-game-with-level.json": "c628f4442aab487f185b2ba88c58adce6fbf6c55310c3f0314e1dc1e7abc1ebb"
+  }
+}
