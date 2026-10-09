@@ -10,13 +10,13 @@ This is a wording-only organization of the selected save rules. It changes no be
 
 ### Save
 
-A save succeeds when the valid saved position is written and marked available for Continue. If the position writes but marking it available fails, the save failed. A failed save attempts withdrawal as described below. This applies to saving the current game and to an admitted one-time conversion: there is no conversion-specific exception keeping the original available after failed publication.
+A save succeeds when the valid saved position is written and marked available for Continue. If the position writes but marking it available fails, the save failed. A failed save attempts withdrawal as described below. This applies to saving the current game and to an admitted one-time conversion: there is no conversion-specific exception keeping the original available after failed publication. October 9, 2026 update: the admitted one-time conversion case belongs to the superseded convert-once target (D58); the failed-publication rule for saving the current game is unchanged.
 
-New saves use a labeled format that preserves the exact reset count and lowest-row history. The label tells a reader how to decode the save; it does not prove when or by which software version it was written.
+New saves use a labeled format that preserves the exact reset count and lowest-row history. The label tells a reader how to decode the save; it does not prove when or by which software version it was written. October 9, 2026 update: the owner selected no dedicated format label for the current save layout (D59); the labeled-format sentences record the superseded target. The exact reset-count and lowest-row history requirement for new saves stays active. The current adopted STA-4/STA-6 requirement contract is unchanged; implementation is unchanged.
 
-The selected conversion direction is to convert existing old saves once, then keep only the new format. This includes otherwise-valid preexisting saves whose old or recent origin cannot be determined. It does not admit all future unlabeled inputs or permit indefinite legacy support. The stored high score is separate and is not erased by old-save policy.
+The selected conversion direction is to convert existing old saves once, then keep only the new format. This includes otherwise-valid preexisting saves whose old or recent origin cannot be determined. It does not admit all future unlabeled inputs or permit indefinite legacy support. The stored high score is separate and is not erased by old-save policy. October 9, 2026 update: the owner selected current layout only, with old-layout saves refused and no conversion step (D58); this convert-once direction is the superseded target, preserved as history. The limits on accepting future input and the high-score separation stay current. The current adopted STA-4/STA-6 requirement contract remains; implementation is unchanged. Whether refusal of otherwise-valid old-layout content changes persisted eligibility was left open at selection time and resolved the same day by D60: ordinary withdrawal is attempted; stored payload bytes stay.
 
-This direction is not an implemented migration. Exact encoding, keys, trigger, durable completion, cleanup ordering, failure ordering across source and target copies, and old cached tab writes are still to be selected and reviewed. Current STA-6 supported-format loading remains adopted until an authorized behavior and requirement change.
+This direction is not an implemented migration. Exact encoding, keys, trigger, durable completion, cleanup ordering, failure ordering across source and target copies, and old cached tab writes are still to be selected and reviewed. Current STA-6 supported-format loading remains adopted until an authorized behavior and requirement change. October 9, 2026 update: the migration mechanics listed here (encoding, keys, trigger, durable completion, cleanup ordering and failure ordering across source and target copies) were conversion-only and are retired with the convert-once target (D58). Old cached tab writes stay relevant: an old tab can still write, and that interference remains under review.
 
 ### Withdraw
 
@@ -26,8 +26,9 @@ Withdrawal happens when:
 - New Game is confirmed;
 - normal game over occurs because a new or held piece has no room;
 - stored saved-game content is invalid and rejected whole;
+- stored saved-game content is present and successfully read but fails the full finalized current layout and validation, covering old-layout, unknown-layout and malformed-current records; ordinary withdrawal is attempted and no gameplay from the refused record is loaded (D60, October 9, 2026);
 - saving the current game fails, including failure to publish the saved position;
-- saving an admitted old save in the new format fails, with no conversion-specific exception.
+- saving an admitted old save in the new format fails, with no conversion-specific exception. (Admitted-conversion trigger, part of the superseded convert-once target, D58; the other triggers are unchanged.)
 
 When withdrawal happens or is attempted, this running session's withdrawn indicator (item 16 of D16 Amendment 2, section 1.1) is set. If writing withdrawal fails, gameplay continues and this session does not offer the previous save; only in that failure case, after a reload nothing is promised: the save may be offered again. No retry system and no new save format are required by this rule.
 
@@ -39,7 +40,7 @@ Continue is available only when stored eligibility is exactly the string "true",
 
 A storage read failure is not invalid stored content and is not absence established by a successful read. A failed read may make the saved game unavailable, but does not by itself withdraw it or change stored values. Nothing is promised about when availability returns.
 
-Invalid stored content is rejected whole and withdrawn. The game does not partly load it or use conversion defaults to repair invalid content. Accepted gameplay content is restored whole and paused under the persisted-content rules.
+Invalid stored content is rejected whole and withdrawn. The game does not partly load it or use conversion defaults to repair invalid content. Accepted gameplay content is restored whole and paused under the persisted-content rules. Under the current-layout target (D58/D59), present and successfully read content that fails the full finalized current layout and validation is refused and ordinary withdrawal is attempted (D60); a failed read and a successfully established absence remain distinct from this refusal and do not themselves mutate storage.
 
 ### Fault
 
@@ -50,6 +51,8 @@ The adopted last-good rule keeps a save successfully written with valid content 
 This section does not expand the safe-terminal definition, promise rollback for ordinary state, or certify any current game-written payload as valid.
 
 ### Conversion defaults
+
+Superseded target, October 9, 2026: the owner selected current layout only (D58); these conversion defaults belong to the earlier convert-once target and are preserved as history, not as live target work. The current adopted STA-4/STA-6 requirement contract is unchanged; implementation is unchanged.
 
 The defaults below supply selected values, not recovered gameplay history. Use them only within the applicable old-save or selected preexisting ambiguous-save conversion scope. Preserve history already present, subject to whole-content validity. They do not repair missing required history in future new-format records.
 
