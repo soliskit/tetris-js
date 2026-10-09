@@ -23,6 +23,10 @@ A failed save of an admitted old save in the new format follows the ordinary fai
 
 REQUIREMENTS.md STA-6 supported-format loading remains the current adopted behavior. This record sets the target outcome; it does not amend STA-6 or any other requirement. A requirement changes only with the behavior change in the same commit, after the exact conversion protocol is selected, independently reviewed and authorized.
 
+## New-format unknown members
+
+A save in the new format that carries an unused extra member at the top level or inside the falling-piece object is rejected whole, even when every required member is present and valid. The exact permitted member set and literal field names are not selected. The owner answered for rejection on October 9, 2026 and, after a correction of the effort data presented with the recommendation, said he wants a stricter game and then reconfirmed the rejection the same day. The full record is `docs/new-format-unknown-member-rejection-decision.md`. This rejection applies to the new layout only: legacy save handling and the approved missing-history defaults are unchanged.
+
 ## Not selected
 
-Migration keys, conversion trigger, durable completion, cleanup ordering, failure ordering beyond the failed-conversion withdrawal rule and old cached tab writes remain unselected. The last-good identity after failed publication is selected in `docs/phase-1-r2-r5-decision.md` (D21, Fault section): only a fully finished save replaces the last-good position. No eager rewrite on every read, destructive migration at first launch, wall-clock cutoff, automatic deletion before commit or cross-tab retirement is adopted.
+Migration keys, conversion trigger, durable completion, cleanup ordering, failure ordering beyond the failed-conversion withdrawal rule and old cached tab writes remain unselected. Duplicate-member handling, format-label and unsupported-label dispatch, numeric denotation, syntax and string rules, and preservation of extra members during a later re-save also remain unselected. The last-good identity after failed publication is selected in `docs/phase-1-r2-r5-decision.md` (D21, Fault section): only a fully finished save replaces the last-good position. No eager rewrite on every read, destructive migration at first launch, wall-clock cutoff, automatic deletion before commit or cross-tab retirement is adopted.
