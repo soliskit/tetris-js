@@ -4,7 +4,7 @@
 
 The stored high-score maximum is now 9,007,199,254,740,991, the same as saved-game scores. The plain decimal 9007199254740992 (2^53) is above that maximum and is invalid stored high-score content. S8 counts it as zero. The reader returning zero is therefore consistent with the current numeric-domain rule for this exact value, not a current defect.
 
-The earlier conditional read and lower-write findings below depended on admitting 2^53 as good content under the then-unbounded rule. That premise is superseded. Replacing this invalid stored value with 100 is not established as a current only-higher defect by that argument. Whether SCO-3's unchanged wording needs an explicit exception or clarification for replacing invalid stored content remains open. REQUIREMENTS.md is not changed here.
+The earlier conditional read and lower-write findings below depended on admitting 2^53 as good content under the then-unbounded rule. That premise is superseded. Replacing this invalid stored value with 100 is not established as a current only-higher defect by that argument. The owner has resolved the SCO-3 interpretation: repairing invalid stored high-score content is not lowering a valid high score. The only-higher rule still protects valid stored high scores; see `invalid-high-score-repair-decision.md`. The interpretation question is closed, not implementation certification. REQUIREMENTS.md is not changed here.
 
 The source response, finite route calculations and historical evidence retain their original scope. No new execution, code correction, permanent test, format-wide certification or phase closure follows. Other read/write failures, valid in-range values and their replacement behavior remain separate.
 
