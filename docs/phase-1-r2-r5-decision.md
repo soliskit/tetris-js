@@ -1,32 +1,100 @@
 # Phase 1 decision: R2, R3, R4 and R5
 
-Status: decision text recorded by ledger row D21 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+Status: decision text recorded by ledger row D21 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests. A wording-only reorganization on October 9, 2026 (ledger row D52 in `AUDIT.md`) rearranged the save rules of this text into sections. The rule index below maps the original rule numbers S1 to S9 to the sections; the high-score clause of S8, S10 and S11 are carried unchanged.
 
 Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182), D16 Amendment 1 (D17), the R1 decision (`docs/phase-1-r1-decision.md`, D18, SHA-256 aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec) and D16 Amendment 2 (`docs/phase-1-d16-amendment-2.md`, ledger row D20), whose items 16 (section 1.1), 5 (section 1.2) and 3 (section 1.4) this text uses. None is changed by this file.
 
-## Decision text
+## Save rules
 
-**S1. Meaning of forgetting (R2).** "Forgets the saved game" in STA-1 and STA-3 means withdrawing the saved game from Continue. Deleting its stored bytes is not required. Withdrawn data may remain stored.
+This is a wording-only organization of the selected save rules. It changes no behavior, code, tests, storage or requirements. Exact conversion mechanics and the last-good identity after failed publication remain unresolved.
 
-**S2. When withdrawal happens (R2).** The saved game is withdrawn when a New Game is confirmed and when normal game over occurs, meaning a new or held piece has no room (STA-3). A later error does not undo a withdrawal that has been made.
+### Save
 
-**S3. Compatibility with SAF-3 (R2).** STA-3 applies to normal game over. SAF-3 applies when the engine throws, and keeps the last good save (S6). The two have different triggers and do not conflict. A fault stop by itself does not withdraw the saved game.
+A save succeeds when the valid saved position is written and marked available for Continue. If the position writes but marking it available fails, the save failed. A failed save attempts withdrawal as described below. This applies to saving the current game and to an admitted one-time conversion: there is no conversion-specific exception keeping the original available after failed publication.
 
-**S4. Failed withdrawal (R4).** If writing a withdrawal fails, the game continues. In the running session the previous saved game is not offered by Continue (item 16 is true). After a reload nothing is promised: the previous saved game may be offered again. No retry mechanism and no new save format are required.
+New saves use a labeled format that preserves the exact reset count and lowest-row history. The label tells a reader how to decode the save; it does not prove when or by which software version it was written.
 
-**S5. Failed save (R4).** If saving the current game fails, the previous saved game is withdrawn from Continue. If that withdrawal also fails, S4 applies.
+The selected conversion direction is to convert existing old saves once, then keep only the new format. This includes otherwise-valid preexisting saves whose old or recent origin cannot be determined. It does not admit all future unlabeled inputs or permit indefinite legacy support. The stored high score is separate and is not erased by old-save policy.
 
-**S6. Last good save (R4).** A saved game that was written successfully with valid content (R1, B16) is the last good save even if the same step later faults. It is not rolled back, consistent with D16 section 7 item 1. On a fault stop the last good save is kept.
+This direction is not an implemented migration. Exact encoding, keys, trigger, durable completion, cleanup ordering, failure ordering across source and target copies, and old cached tab writes are still to be selected and reviewed. Current STA-6 supported-format loading remains adopted until an authorized behavior and requirement change.
 
-**S7. Failed read (R4).** A failed read of storage, as opposed to stored content that is invalid, may make the saved game unavailable to Continue. A failed read does not by itself withdraw the saved game and does not change any stored value. Stored content that is invalid is rejected whole and withdrawn, as before (SAF-1). Nothing is promised about when the saved game becomes available again after a failed read.
+### Withdraw
 
-**S8. Definitions (R4).** The saved-game eligibility indicator is eligible only for the exact stored value "true" (D16 Amendment 2, item 3 of section 1.4). A stored high score is good when it is a whole number from 0 through 9,007,199,254,740,991, with no divisibility condition; otherwise it counts as zero (R1, B16). The later stored-score ceiling replaces the original unbounded S8 domain; see the current amendment in AUDIT.md.
+Withdrawal means Continue no longer offers the saved game. Deleting its stored bytes is not required.
 
-**S9. Item 16 lifetime (R4).** Item 16 is set when a saved game is withdrawn from Continue or a withdrawal is attempted. It is cleared when the session starts and when this session writes a saved game successfully. A session does not track other sessions: item 16 in a session stays set even if another session saves a game.
+Withdrawal happens when:
+- New Game is confirmed;
+- normal game over occurs because a new or held piece has no room;
+- stored saved-game content is invalid and rejected whole;
+- saving the current game fails, including failure to publish the saved position;
+- saving an admitted old save in the new format fails, with no conversion-specific exception.
 
-**S10. Gravity timing (R3).** PLY-2 is judged against the delay the game requests from its scheduler, compared with max(0.25, 0.7 - 0.02 x (level - 1)) seconds (R1, B14) expressed in milliseconds, with an absolute tolerance for numerical rounding. The tolerance is 0.000000001 millisecond. The claim covers the value requested. Conversion of that value by the browser, actual elapsed time, lateness and throttling are not claimed. Whether timer registration and cancellation are inside the trusted boundary remains a separate Phase 1 item.
+When withdrawal happens or is attempted, this running session's withdrawn indicator is set. If writing withdrawal fails, gameplay continues and this session does not offer the previous save. After reload nothing is promised: the save may be offered again. No retry system is required by this rule.
 
-**S11. Hand-edited persisted state (R5).** Persisted state that was edited by hand is judged only by the untrusted-input rules: it is accepted whole if it is valid under R1 (B16), otherwise rejected whole. Gameplay requirements such as PLY-7 govern the play the game itself produces. They are not applied to the history of an accepted saved game, and no claim is made that an accepted state could be reached by legal play. No check that a result was earned through play, no anti-cheating protection and no tamper protection is claimed.
+A later error does not undo a withdrawal already made. Another session saving a game does not clear this session's withdrawn indicator. The indicator starts clear on page load and clears when this session successfully saves. It is not persisted.
+
+Continue is available only when stored eligibility is exactly the string "true", the session's withdrawn indicator is clear, and the saved content passes the persisted-content validity rules. Other stored flag values or absence are ineligible.
+
+### Read
+
+A storage read failure is not invalid stored content and is not absence established by a successful read. A failed read may make the saved game unavailable, but does not by itself withdraw it or change stored values. Nothing is promised about when availability returns.
+
+Invalid stored content is rejected whole and withdrawn. The game does not partly load it or use conversion defaults to repair invalid content. Accepted gameplay content is restored whole and paused under the persisted-content rules.
+
+### Fault
+
+An engine fault by itself does not withdraw the saved game. Normal game over and an engine fault have different triggers.
+
+The adopted last-good rule keeps a save successfully written with valid content even if the same step later faults, without rolling it back. On a fault stop, the last good save is kept. This wording does not decide whether a payload written during an operationally failed publication becomes the new last-good target. Physical payload writing and content validity do not alone settle that identity; the interpretation and exact preservation relation remain unresolved.
+
+This section does not expand the safe-terminal definition, promise rollback for ordinary state, or certify any current game-written payload as valid.
+
+### Conversion defaults
+
+The defaults below supply selected values, not recovered gameplay history. Use them only within the applicable old-save or selected preexisting ambiguous-save conversion scope. Preserve history already present, subject to whole-content validity. They do not repair missing required history in future new-format records.
+
+| Condition | Meaning |
+| --- | --- |
+| Applicable older save has no reset count | Use zero. Do not overwrite a count already present. |
+| Applicable older save has no lowest row reached | Use the greatest board-row index occupied by a block of the current falling piece. This is not necessarily the piece's box-origin row. |
+| Legacy paused, resting save has count 15 and lacks information distinguishing a pause from 14 to 15 from a pause after the allowance was used | Resume with the lock delay starting, under the exact L2 condition. This is not a general count-15 rule for new saves. |
+| Save predates storing the bag and that compatibility condition applies | Continue with a fresh bag under STA-4/B16. A valid empty stored bag is distinct from a missing bag. |
+
+Later saves preserve the selected converted values exactly. That exact restoration does not claim the unknown original history was recovered.
+
+### Unchanged rules
+
+The stored high-score clause of S8 is unchanged:
+
+A stored high score is good when it is a whole number from 0 through 9,007,199,254,740,991, with no divisibility condition; otherwise it counts as zero (R1, B16). The later stored-score ceiling replaces the original unbounded S8 domain; see the current amendment in AUDIT.md.
+
+S10 is unchanged:
+
+PLY-2 is judged against the delay the game requests from its scheduler, compared with max(0.25, 0.7 - 0.02 x (level - 1)) seconds (R1, B14) expressed in milliseconds, with an absolute tolerance for numerical rounding. The tolerance is 0.000000001 millisecond. The claim covers the value requested. Conversion of that value by the browser, actual elapsed time, lateness and throttling are not claimed. Whether timer registration and cancellation are inside the trusted boundary remains a separate Phase 1 item.
+
+S11 is unchanged:
+
+Persisted state that was edited by hand is judged only by the untrusted-input rules: it is accepted whole if it is valid under R1 (B16), otherwise rejected whole. Gameplay requirements such as PLY-7 govern the play the game itself produces. They are not applied to the history of an accepted saved game, and no claim is made that an accepted state could be reached by legal play. No check that a result was earned through play, no anti-cheating protection and no tamper protection is claimed.
+
+### Rule index
+
+The original decision numbered the save rules S1 to S9. Current records and research ledgers cite those numbers; this index keeps them meaningful after the reorganization.
+
+| Original rule | Where the rule lives now |
+| --- | --- |
+| S1, meaning of forgetting | Withdraw, first paragraph |
+| S2, when withdrawal happens | Withdraw, trigger list and the later-error paragraph |
+| S3, compatibility with SAF-3 | Fault, first paragraph |
+| S4, failed withdrawal | Withdraw, session indicator and reload paragraph |
+| S5, failed save | Save, first paragraph; Withdraw, trigger list |
+| S6, last good save | Fault, last good paragraph |
+| S7, failed read | Read |
+| S8, definitions | the eligibility clause: Withdraw, Continue availability paragraph; the stored high-score clause: unchanged below |
+| S9, item 16 lifetime | Withdraw, session indicator paragraphs |
+
+### Publication scope
+
+This text only reorganizes save-related meaning. Gravity timing and hand-edited-state rules in S10/S11 remain unchanged and outside this organization. No finding, property or phase status is closed.
 
 ## Not decided here
 
