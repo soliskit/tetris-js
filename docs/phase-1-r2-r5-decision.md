@@ -20,7 +20,7 @@ Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 66aa067da57a525dcdc23d2
 
 **S7. Failed read (R4).** A failed read of storage, as opposed to stored content that is invalid, may make the saved game unavailable to Continue. A failed read does not by itself withdraw the saved game and does not change any stored value. Stored content that is invalid is rejected whole and withdrawn, as before (SAF-1). Nothing is promised about when the saved game becomes available again after a failed read.
 
-**S8. Definitions (R4).** The saved-game eligibility indicator is eligible only for the exact stored value "true" (D16 Amendment 2, item 3 of section 1.4). A stored high score is good when it is a whole number of zero or more, otherwise it counts as zero (R1, B11 and B16).
+**S8. Definitions (R4).** The saved-game eligibility indicator is eligible only for the exact stored value "true" (D16 Amendment 2, item 3 of section 1.4). A stored high score is good when it is a whole number from 0 through 9,007,199,254,740,991, with no divisibility condition; otherwise it counts as zero (R1, B16). The later stored-score ceiling replaces the original unbounded S8 domain; see the current amendment in AUDIT.md.
 
 **S9. Item 16 lifetime (R4).** Item 16 is set when a saved game is withdrawn from Continue or a withdrawal is attempted. It is cleared when the session starts and when this session writes a saved game successfully. A session does not track other sessions: item 16 in a session stays set even if another session saves a game.
 
