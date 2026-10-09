@@ -10,7 +10,7 @@ This selects only unknown-member handling for the two scopes named. It does not 
 
 ## Decision record
 
-On October 9, 2026 at [private time removed] the owner answered the selected answer to the question the recorded selection, selecting rejection. The recommendation he had just answered described the comparative effort of the two options as about equal; that claim was wrong. Minutes later he was sent a correction: comparative effort and the prevalence of extra members are unmeasured, no independently certified population of saves under the new format was found, and the listed ways an extra member could appear are scenarios without frequency data. After that correction, at [private time removed], the rejection was retained, and at [private time removed] he approved a decision priority order: never let the game run in a state that makes no sense; within that, the simplest app.
+The owner selected rejection of unused extra members. An earlier claim that the options required about equal effort was corrected: comparative effort and the prevalence of extra members are unmeasured, no independently certified population of saves under the new format was found, and the listed ways an extra member could appear are scenarios without frequency data. The earlier invalid-state-first priority order was later superseded by simplest app first, then avoid an invalid state. That later order does not change this unused-member rejection decision or its reconfirmation.
 
 The owner confirmed rejection of unused extra members after the correction that comparative effort is unmeasured. This records the decision and its scope, not approval of final document bytes or a code change. Publication follows the separate docs-only review, checks and merge grant.
 
