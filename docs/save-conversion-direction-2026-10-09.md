@@ -25,7 +25,7 @@ REQUIREMENTS.md STA-6 supported-format loading remains the current adopted behav
 
 ## New-format unknown members
 
-A save in the new format that carries an unused extra member at the top level or inside the falling-piece object is rejected whole, even when every required member is present and valid. The exact permitted member set and literal field names are not selected. The owner selected this on October 9, 2026; the full record is `docs/new-format-unknown-member-rejection-decision.md`. This rejection applies to the new layout only: legacy save handling and the approved missing-history defaults are unchanged.
+A save in the new format that carries an unused extra member at the top level or inside the falling-piece object is rejected whole, even when every required member is present and valid. The exact permitted member set and literal field names are not selected. The owner answered for rejection on October 9, 2026 and, after a correction of the effort data presented with the recommendation, said he wants a stricter game and then reconfirmed the rejection the same day. The full record is `docs/new-format-unknown-member-rejection-decision.md`. This rejection applies to the new layout only: legacy save handling and the approved missing-history defaults are unchanged.
 
 ## Not selected
 
