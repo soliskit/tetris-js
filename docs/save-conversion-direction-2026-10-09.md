@@ -25,4 +25,4 @@ REQUIREMENTS.md STA-6 supported-format loading remains the current adopted behav
 
 ## Not selected
 
-Migration keys, conversion trigger, durable completion, cleanup ordering, failure ordering beyond the failed-conversion withdrawal rule, old cached tab writes and S6 identity remain unselected. No eager rewrite on every read, destructive migration at first launch, wall-clock cutoff, automatic deletion before commit or cross-tab retirement is adopted.
+Migration keys, conversion trigger, durable completion, cleanup ordering, failure ordering beyond the failed-conversion withdrawal rule and old cached tab writes remain unselected. The last-good identity after failed publication is selected in `docs/phase-1-r2-r5-decision.md` (D21, Fault section): only a fully finished save replaces the last-good position. No eager rewrite on every read, destructive migration at first launch, wall-clock cutoff, automatic deletion before commit or cross-tab retirement is adopted.
