@@ -216,3 +216,14 @@ This changes the current tree only. Old public commits still contain the removed
 ## Controller A: scoped missing selected-Cancel response
 
 `docs/4-focus-inp4-scoped-classification-proposal.md`, SHA-256 `4d10e6160ad7e75d1480c19a7e049ad1faa6026edaf08f467d36d53b166a5447`, records the narrow INP-4 Confirmed defect disposition by independently reviewed conditional source argument: after the named successful opening/interior-nonbutton prefix retains logical Cancel, a fresh isolated controller A edge is consumed while the dialog stays active, but the selected-Cancel response does not occur. Successful providers, the consumed-edge policy, finite causal closure and explicit focus premises are bounds, not native-pad measurements. Logical Cancel stays B12-valid; no completed answer or invalid selected-button state is inferred. This promotes only the exact missing-response Candidate, not a new Reproduced status, broader focus/property certification or Phase 4 exit. No fix, game/permanent-test/model/CI/requirement/public-site change is approved. Operative only after exact-head review, required checks, authorized documentation merge and separate publication verification.
+
+
+## Current amendment: one ceiling for stored scores
+
+The owner selected 9,007,199,254,740,991 as the maximum for both saved-game scores and the stored high score, and authorized bringing the repository documentation in line through a docs-only PR. This amends the stored-content domain in R1 B16 and D21 S8. It does not change B3 or B11's semantic in-session score domain. Stored high-score content outside the bounded whole-number domain counts as zero; no divisibility requirement is added.
+
+D18 and D21's earlier checksums identify their historical source bytes. Their current decision files now carry this amendment; those old checksums must not be read as hashes of the amended files. Earlier publication and finding records remain historical at their exact scope.
+
+The exact 2^53 read and ordinary lower-write dispositions are superseded for current policy: 9007199254740992 is now invalid stored content, so returning zero is not the earlier valid-content read defect. The lower-write argument no longer establishes a current defect from replacing that invalid content with 100. Both disposition files retain their old conditional arguments as clearly marked history.
+
+Open requirement question: SCO-3 still says the stored high score is only replaced by a higher score. Whether that text needs clarification for replacing invalid stored content remains unresolved. REQUIREMENTS.md, production code, tests, models, CI and repository settings are unchanged. No finding outside these exact 2^53 premises is reclassified; Phase 4 remains open. Review, head checks, merge and publication verification are separate gates.
