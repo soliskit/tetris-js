@@ -1,6 +1,6 @@
 # Phases 5 to 10: exit-field, dependency and test-plan inventory
 
-This register lists what each later phase needs in order to close and what each phase waits on. It is preparation only. Phases 5 to 10 are blocked on Phase 4 and on owner approvals, and nothing here starts, certifies or approves any of them.
+This register lists what each later phase needs in order to close and what each phase waits on. It is preparation only. Phases 5 to 10 wait on Phase 4 and their written exit checks. The owner authorized automatic progression through Phase 10 when those checks pass. Separate approvals for reserved actions still apply; nothing here starts, certifies or approves them.
 
 Candidate inventory for independent review. No execution, finding promotion or demotion, correction, permanent-test change, property certification, phase promotion or Phase 4 exit. Central matrix and AUDIT.md rows are left to the coordinator.
 
@@ -19,7 +19,7 @@ Also read: `docs/audit-status-and-dispositions-2026-10-06.md`, `docs/phase-4-wor
 
 ## Governing rules that apply to every later phase
 
-- A phase advances only when the preceding phase's exit criteria are recorded and approved by the owner (Audit Advancement Gate).
+- Under the owner's automatic-through-Phase-10 authorization, a phase advances when the preceding phase's written exit criteria are verified and recorded. Routine phase advancement needs no new approval. This does not waive the written checks or separate approvals for corrections, production changes, limits, test removal, final certification or requirement/security-scope changes.
 - Finding status (5.1) and property certification status (5.2) are separate fields. Evidence gaps are tracked apart from both.
 - No Proven claim comes from "no counterexample found" without an added argument for the complete domain and an independently justified oracle.
 - Concurrent preparation is allowed; it does not close a phase or authorize implementation. Shared governing records, approved model-input packs and overlapping source files have one writer at a time.
@@ -137,12 +137,16 @@ Exit: each removal states its replacement protection and the owner has approved 
 6. Phase 9 certification, after 5 to 8.
 7. Phase 10 minimization, after 9.
 
-Each arrow is also an owner approval gate. Phases 5 to 10 can have unrelated preparation proceed in parallel, but a blocked item does not block unrelated authorized preparation and does not authorize its own successor.
+Each arrow is an exit-check gate, not a new owner approval request for routine phase advancement. Phases 5 to 10 can have unrelated preparation proceed in parallel, but a blocked item does not block unrelated authorized preparation and does not authorize its own successor.
 
 ## Owner approvals still required
 
-Every phase exit; each limitation not covered by proof; each correction and its regression test; each production change; any permanent test removal; final certification; any requirement or security-scope change. None is assumed here.
+Each limitation not covered by proof; each correction and its regression test; each production change; any permanent test removal; final certification; any requirement or security-scope change. None is assumed here.
 
 ## What remains
 
 This register does not decide any finding status, count requirements per status, or schedule work, and it gives no finish estimate. Claim-status counts and the completeness of the Appendix E trust ledger are unreviewed. Phase 4 open; no property newly certified.
+
+## Phase advancement authorization
+
+This corrects the earlier claim that every phase exit needs a new owner approval. Automatic progression through Phase 10 was authorized separately and remains conditional on verified, recorded written exit checks. It is not approval to skip a phase, certify an unproved claim or perform a reserved action. Phase 4 is still open. This wording change does not edit the blueprint, requirements, code, tests, models, CI or settings.
