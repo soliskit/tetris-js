@@ -29,7 +29,7 @@ Withdrawal happens when:
 - saving the current game fails, including failure to publish the saved position;
 - saving an admitted old save in the new format fails, with no conversion-specific exception.
 
-When withdrawal happens or is attempted, this running session's withdrawn indicator is set. If writing withdrawal fails, gameplay continues and this session does not offer the previous save. After reload nothing is promised: the save may be offered again. No retry system is required by this rule.
+When withdrawal happens or is attempted, this running session's withdrawn indicator (item 16 of D16 Amendment 2, section 1.1) is set. If writing withdrawal fails, gameplay continues and this session does not offer the previous save; only in that failure case, after a reload nothing is promised: the save may be offered again. No retry system and no new save format are required by this rule.
 
 A later error does not undo a withdrawal already made. Another session saving a game does not clear this session's withdrawn indicator. The indicator starts clear on page load and clears when this session successfully saves. It is not persisted.
 
