@@ -17,7 +17,7 @@ One current version of the game. Old saves are converted once into the new forma
 
 ## Failed conversion
 
-A failed save of an admitted old save in the new format follows the ordinary failed-save rule: the previous saved game is withdrawn from Continue, with no conversion-specific exception keeping the original available after failed publication. After a reload nothing is promised, under the ordinary failed-withdrawal rule. The owner selected this on October 9, 2026. The ordinary failed-save and failed-withdrawal rules live in `docs/phase-1-r2-r5-decision.md` (D21, Save and Withdraw sections).
+A failed save of an admitted old save in the new format follows the ordinary failed-save rule: the previous saved game is withdrawn from Continue, with no conversion-specific exception keeping the original available after failed publication. If the withdrawal write itself fails, the ordinary failed-withdrawal rule applies: after a reload nothing is promised. The owner selected this on October 9, 2026. The ordinary failed-save and failed-withdrawal rules live in `docs/phase-1-r2-r5-decision.md` (D21, Save and Withdraw sections).
 
 ## Relation to current rules
 
