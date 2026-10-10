@@ -6,7 +6,7 @@ Status: Confirmed defect by independently reviewed conditional source argument f
 
 D34 E2 applies the release-and-press-again resume rule to held soft drop, keyboard directions and gamepad directions. A control still held when the game resumes does not repeat until released and pressed again. E3 preserves that suppression through unrelated control events. The original owner question extending the rule to held soft drop/gamepad and its affirmative answer were independently inspected. Production's canonical held-key Set is not the definition of physical control history.
 
-Source main82a1c4f017e7462859b64113ca74fa236398146c has public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. InputController hash7454a3c23b9de0acb152fe76bedab74bb4a604ac62ca11d41ff5ee12e3ed27e2 and GameManager hash31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea bind the source comparison.
+Source main has public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. InputController hash7454a3c23b9de0acb152fe76bedab74bb4a604ac62ca11d41ff5ee12e3ed27e2 and GameManager hash31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea bind the source comparison.
 
 Choose an ordinary O-first NewGame using the previously reviewed valid zero-valued shuffled-factory prefix: empty dense20x10 board, score0, queueT/S/Z, bagJ/L/I and no held piece. The focused page receives nonmodifier, nonrepeat physical S/P key events. An already exposed connected neutral gamepad remains visible and selected by navigator.getGamepads throughout, with centered axes and no pressed buttons. No blur, disconnect, physical S release/repress or competing actor intervenes. Successful storage/timer/RAF operations and the finite event ordering below are explicit premises, not native platform measurements.
 
