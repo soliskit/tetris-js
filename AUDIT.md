@@ -132,7 +132,7 @@ D51 remains the historical Candidate record at its published scope. The later re
 
 ## New-save reset-count preservation disposition
 
-`docs/new-save-reset-count-disposition.md` records an independently reviewed source-argument defect under its stated ordinary engine-route premises. Two finite legal Pause routes yield reset counts1 and3 but identical ordinary saved payloads, so one fixed denotation cannot preserve both exact counts under R1 B3/B9/B16. This closes the earlier paired-argument writer-entry admission gap, not prior-good payload construction, whole F20/S6/B16 certification, native reproduction or Phase4. No fix, permanent test, model or CI change is approved. Operative only after documentation review, exact-head checks, authorized merge and postmerge verification. PR91's separate status/D50 consolidation is complete at337960fe2102eb1cac1a0c7c009edd08f9a9c2f8; its receipt does not certify this later finding.
+`docs/new-save-reset-count-disposition.md` records an independently reviewed source-argument defect under its stated ordinary engine-route premises. Two finite legal Pause routes yield reset counts1 and3 but identical ordinary saved payloads, so one fixed denotation cannot preserve both exact counts under R1 B3/B9/B16. This closes the earlier paired-argument writer-entry admission gap, not prior-good payload construction, whole F20/S6/B16 certification, native reproduction or Phase4. No fix, permanent test, model or CI change is approved. Operative only after documentation review, exact-head checks, authorized merge and postmerge verification. PR91's separate status/D50 consolidation is complete at; its receipt does not certify this later finding.
 
 ## Injected serialization-failure handling disposition
 

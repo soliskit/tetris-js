@@ -6,7 +6,7 @@ Candidate for independent review. Do not promote until the exact asynchronous AP
 
 ## Independent criterion and source
 
-APP2 requires all files of a page to use its opening version. D29 permits clock anomalies, but this history needs none. Source main230cd4b4693e8857a1072da1cfbc63b789ede56d, public/sw.js c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Successful CacheStorage/Cache operation semantics are explicit trust premises, not native validation. Every completed V1/V2/V3 contains all16 independently generation-labelled shell resources. Distinct valid suffixes, no foreign bindings, provider failures, malformed pins or collision.
+APP2 requires all files of a page to use its opening version. D29 permits clock anomalies, but this history needs none. Source main, public/sw.js c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Successful CacheStorage/Cache operation semantics are explicit trust premises, not native validation. Every completed V1/V2/V3 contains all16 independently generation-labelled shell resources. Distinct valid suffixes, no foreign bindings, provider failures, malformed pins or collision.
 
 ## Proposed finite order
 

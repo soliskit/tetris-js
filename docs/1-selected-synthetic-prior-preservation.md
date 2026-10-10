@@ -6,7 +6,7 @@ The complete synthetic prior was independently reviewed as a model-side content 
 
 ## Method and source
 
-Pinned main67d66398bee9cf2b5cc399f52c0e9526ae823fe3. The seven copied public/game modules were byte-compared with this commit immediately before execution. Source comparison output, exact comparison command saved as compare-source.py, preparation payload and run stdout/exit receipt are retained. This comparison script preserves the command that ran inline; it is not a separate second experiment.
+Pinned main. The seven copied public/game modules were byte-compared with this commit immediately before execution. Source comparison output, exact comparison command saved as compare-source.py, preparation payload and run stdout/exit receipt are retained. This comparison script preserves the command that ran inline; it is not a separate second experiment.
 
 Raw prior-save SHA25615d48337cabd7e1dad841078bb450e65091bab8deb74a512929440f5904d2464. Reviewed harness SHA25654dfb2218928154472221e3faba65aa028c1b076542e6b693c4d105efb34e56e. It ran once in scratch, with synthetic storage/scheduler and no callback delivery. It records successful payload, eligibilitytrue and highscore0 preparation writes before engine construction. This is preparation, not saveGameSession capture.
 
