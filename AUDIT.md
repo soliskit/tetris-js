@@ -290,3 +290,55 @@ Approval is not implementation or verification. The corrections are being prepar
 F25 records the default page's missing internal-error explanation as a Confirmed defect by conditional source argument, for the player-message half only. The separate observable-signal half and other fault routes are not certified by that finding. Historical F18 and F19 stay unchanged.
 
 The earlier preparation rows that described these exact scope/admission questions as unresolved, or all notice/checker corrections as unapproved, are superseded only to the extent stated above. Other correction families, independent saved-content/history, timing, platform, cache, model, classification and final certification gates stay open. No tests or protections are retired, and no new implementation or review permission is created by this note.
+
+## Controller, drawing and action research, October 9, 2026
+
+This dated register entry records narrow reviewed proposals, bounded measurement reconciliations and unreviewed source preparation separately. It assigns no new finding status, correction permission, phase exit or property certificate. Historical findings and evidence keep their original scopes. Raw receipts remain private.
+
+### Reviewed classification preparation
+
+The five proposals below passed independent source review only at their stated child scopes. A proposed Confirmed classification is not a Confirmed assignment here. Source hashes bind returned text, not one atomic historical main snapshot; historical observations are corroboration, not fresh execution.
+
+- Gamepad-read player notice: on the selected default-page read-throw path, completing console reporting and successor-frame registration do not produce the required small controller-problem notice. The engine-fault notice is not a carrier for this separate route. Signal, hardware failure incidence, reporting/frame refusal and full SAF-5 remain separate.
+- Drawing player notice: a selected operation error caught by drawSafely invalidates caches, attempts reporting and requests retry, but supplies no drawing-problem player notice under completing report/retry premises. The current engine-notice selection does not explain a recoverable drawing problem. Context restoration, refused dependencies, transient pixels and full drawing recovery remain open.
+- Physical direction-token survival: the A-down, D-down, Left-down, Left-up, D-up comparison loses still-held physical A because Left shares its stored alias token. The independent last-remaining rule expects A to survive. This is the token/selection child, not all input ordering, timing, hardware or board displacement.
+- Resume-suppressed survivor: after an accepted paused repeat stops movement while retaining A, Resume followed by D-down/D-up can rearm A without A release/repress. The suppression exception is separate from nominal newest-survivor behavior, alias-token loss, soft-drop rearm and outstanding-resource/checkpoint findings.
+- Gamepad read plus refused report: the delivered read-throw/console-refusal prefix exits before successor registration with polling still true; a later connection notification makes no new attempt. The conditional source argument has bounded injected-mechanism corroboration, not native failure-frequency or full-game evidence. Refused successor registration and initial construction have different obligations; neither is assigned this proposed child status.
+
+Potential corrections, including notice wording/lifecycle and physical-token or report/continuation changes, remain unselected and require their own approved scope. The engine-notice approval is not reused. No test, protection or QA gate is retired.
+
+### Bounded W04/W05 measurements
+
+The reconciled packet records sixteen direct-entry cases and six isolated local Chromium mouse/touch receipts, not an independent rerun. Direct Cancel and nonplaying softDrop preserve the captured frame apart from pending/derived absence and notification count; playing softDrop moves one row and replaces gravity in the declared empty-spawn fixture. Refused notifications escape after pending or movement changes without safe stop/report at that cut. Manual timers, Map storage, deterministic factory, directly assigned paused pending and incomplete model correspondence limit these comparisons.
+
+All six native receipts admit captured downward movement while paused/pending, produce two softDrop calls and clear pending without falling-row or captured gameplay/storage change. Held-modal-open retains the dialog/Cancel focus until the next draw; natural-modal-open admits the move with ordinary frame delivery. Subsequent Escape resumes the already-no-answer paused game. This is bounded native-browser admission, not physical-device proof, a presumed STA-1 defect or a browser-nonconformity finding. Supplied touch before/after images were independently inspected by the reconciliation lane, not newly rendered here. Chromium only and Node 22 versus the declared >=26 toolchain remain explicit limits. Parent W04/W05, surfaces/locks, provider cuts, platforms and full R1 stay open.
+
+### Bounded gamepad-loop refusal measurements
+
+The reconciliation records one run per case and 600 ms windows in Chromium 154 with a Node 22 harness, real controller on a blank local page, stub manager/question methods, injected refusals, observer-wrapped frames and synthetic connection. Read plus refused console, and read plus completing console plus refused successor registration, each leave no outstanding successor and polling=true; the later connect makes no new attempt. The control repeatedly reports with one successor, then intentionally stops when no pad is returned. It is not successful connection/restart evidence, physical hardware, player-notice evidence or whole SAF-5 certification.
+
+The packet reports main f17929c8 and a controller hash matching the independently read source. Archive/member hashes were checked by its reconciliation lane, not rerun here. Served bytes versus the reported source identity remain a binding limit; the reported head/hash is not upgraded to an independently verified identity for every served probe byte. These bounded refusal cuts are measured rather than only hypothetical, but classification and broader recovery obligations remain separate.
+
+### Unreviewed source preparation: D22 and W17
+
+D22 preparation separates ordinary storage-event cache invalidation from later draw/getter/Continue effects. The source argument names no immediate gameplay or persisted-storage write, and a refused new frame registration escapes after cache invalidation without rollback/safe stop; an already-pending frame is different. Native event ordering, later read refusal, payload admission, withdrawal history and full external-actor behavior remain open. This is unreviewed source preparation, not new execution or a finding assignment.
+
+W17 preparation separates unavailable/no-op Hold, fitting held replacement, no-held queue/factory draw and each no-fit branch. It names changed identities, legitimate spawned copies, resource/factory failure prefixes and the different outer assignment order. Stale ordinary game-over bytes do not by themselves impose clearing or rollback. This is unreviewed batched collateral, not a complete frame/history proof, fresh suite result or new defect. Parent W17 retains full-state projection, no-fit admission, provider cuts, lowest-history and control/drag/session-withdrawal composition gates.
+
+### Packet identities
+
+These hashes identify the privately retained preparation and reconciliation text, not public raw evidence or new execution receipts.
+
+| Packet | Review or method state | SHA-256 |
+|---|---|---|
+| U2-gamepad-read-player-notice-classification-proposal | Reviewed narrow proposal | 4182343ca9766b0c610ace0d04238149512396d95f7a13cf4cc2f9516abe1d81 |
+| U2-drawing-player-notice-classification-preparation | Reviewed narrow proposal | 21557496016d02298329fd1e17d8671a8f9c046a4c26db0871d0e1236c9eb563 |
+| physical-direction-token-survival-classification-preparation | Reviewed narrow proposal | db32e4a742252841978de20c9139ba7f466eb7722a17e611e22857aa36b8d367 |
+| horizontal-resume-suppressed-survivor-classification-preparation | Reviewed narrow proposal | beb4a73c90e23127c805660d3051e417d3b8397fc19f6b494f4234bb3e66f466 |
+| U2-gamepad-report-refusal-continuation-classification-preparation | Reviewed narrow proposal | 5ccf6bc56d5326b773570ce488534cca8056f092cff7a2364295e2fbd5a1f2d4 |
+| W04-W05-measurement-reconciliation | Bounded receipt reconciliation, not rerun | b1a4c22d1e864615774b5b37e537576435fe0102600176cd7bf8360941e98038 |
+| gamepad-loop-refusal-measurement-reconciliation | Bounded receipt reconciliation, not rerun | 9a40ad644d6a231d4dfb9ab0087e33acc72b09e51837197637b78d2fb15ccf55 |
+| D22-storage-notification-frame-and-composition | Unreviewed source preparation | c03c6d9e6451e0297a1f077a1340733b2b9f9bb7919a9e65172789374fa0ed7f |
+| W17-Hold-branch-frame-and-failure-prefix-reconciliation | Unreviewed batched collateral | 33e9be4ab04ec4806fe46b19b8ea8d1aa87b5fd4b805a1334df3e11708f4405c |
+
+Operative as documentation only after independent content review, exact-head required checks, authorized merge and main verification. No production, permanent-test, model, CI, requirement, storage or public-site change.
