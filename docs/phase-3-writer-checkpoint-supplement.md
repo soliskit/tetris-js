@@ -1,6 +1,6 @@
 # Phase 3 writer-anchor and conditional checkpoint supplement
 
-Source main789fb7aa154ea54766435e45f037503123596390, whose public tree remains identical to D43 scoped source. No repository edits, execution, tests, model author contact, rule adoption or finding classification. These are direct static reads of actual fetched source bytes.
+Source main, whose public tree remains identical to D43 scoped source. No repository edits, execution, tests, model author contact, rule adoption or finding classification. These are direct static reads of actual fetched source bytes.
 
 Checked anchor groups: W01-W21 and W25-W33. W22-W24 and W34-W35 direct static anchors are checked below; their full native-focus, alias/reachability/category relations are still not proved. No full writer exhaustiveness or runtime proof is claimed.
 
