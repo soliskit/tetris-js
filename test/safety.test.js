@@ -154,7 +154,7 @@ const violations = [
   ['an upcoming piece going missing', game => game.nextTetrominos.pop(), 'upcoming pieces missing'],
   ['the score turning negative', game => { game.score = -100; }, 'score is invalid'],
   ['the score becoming a fraction', game => { game.score = 12.5; }, 'score is invalid'],
-  ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece overlaps the board'],
+  ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece is invalid or overlaps the board'],
   ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing'],
   ['the score not being a multiple of 100', game => { game.score = 150; }, 'score is invalid'],
   ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface'],
@@ -349,4 +349,169 @@ test('by default a broken invariant is reported to the console without an error 
   game.nextTetrominos.pop();
   game.guard(() => {});
   assert.deepEqual(logged.mock.calls[0].arguments, ['Tetris stopped safely:', 'upcoming pieces missing', '']);
+});
+
+// Piece checks: the falling piece (playing or paused) and every upcoming piece
+// must be real pieces, by one shared rule.
+
+const BAD_PIECE_REASON = 'upcoming piece is not a valid piece';
+const BAD_CURRENT_REASON = 'piece is invalid or overlaps the board';
+
+const malformedUpcoming = [
+  ['a missing piece', game => { game.nextTetrominos[1] = undefined; }],
+  ['a null piece', game => { game.nextTetrominos[0] = null; }],
+  ['a piece with no color', game => { game.nextTetrominos[2] = { rotations: [] }; }],
+  ['a piece of an unknown color', game => { game.nextTetrominos[1].color = '#123456'; }],
+  ['a non-text color', game => { game.nextTetrominos[1].color = 7; }],
+  ['a piece with no rotations', game => { game.nextTetrominos[0].rotations = undefined; }],
+  ['a piece with a missing rotation', game => { game.nextTetrominos[0].rotations.pop(); }],
+  ['a piece with a hole in its rotations', game => { delete game.nextTetrominos[2].rotations[1]; }],
+  ['a piece with an empty shape', game => { game.nextTetrominos[0].rotations[0] = []; }],
+  ['a piece with an empty row', game => { game.nextTetrominos[0].rotations[0][1] = []; }],
+  ['a piece with a hole in a row', game => { delete game.nextTetrominos[0].rotations[0][1][2]; }],
+  ['a piece with a non-list row', game => { game.nextTetrominos[0].rotations[0][1] = 'XXXX'; }],
+  ['a piece with a block counted as 1', game => { game.nextTetrominos[0].rotations[0][1][0] = 1; }],
+  ['a piece with zero blocks', game => { game.nextTetrominos[1].rotations[0] = [[false, false], [false, false]]; }],
+  ['a yellow piece with the wrong four blocks', game => { game.nextTetrominos[1].rotations[0] = [[true, true, true, true]]; }],
+  ['a wrong block in a later rotation', game => { game.nextTetrominos[0].rotations[3][0][0] = true; }],
+  ['a hole in the list made up for by an extra property', game => { delete game.nextTetrominos[1]; game.nextTetrominos.extra = game.nextTetrominos[0]; }],
+  ['a hole in a rotation list made up for by an extra property', game => { delete game.nextTetrominos[2].rotations[1]; game.nextTetrominos[2].rotations.extra = []; }],
+  ['an extra rotation', game => { game.nextTetrominos[0].rotations.push(game.nextTetrominos[0].rotations[0]); }],
+  ['an extra rotation on a one-rotation piece', game => { game.nextTetrominos[1].rotations.push(game.nextTetrominos[1].rotations[0]); }],
+  ['an extra row in a shape', game => { game.nextTetrominos[0].rotations[2].push([false, false, false, false]); }],
+  ['an extra column in a row', game => { game.nextTetrominos[0].rotations[1][0].push(false); }],
+  ['a list of the right length that is not a list', game => { game.nextTetrominos = { length: 3 }; }]
+];
+
+for (const [name, corrupt] of malformedUpcoming) {
+  test(`the invariant monitor catches upcoming pieces with ${name} [SAF-4]`, () => {
+    const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.cyan) });
+    corrupt(game);
+    game.guard(() => {});
+    assertSafeStop(game, scheduler, reported, BAD_PIECE_REASON);
+  });
+}
+
+const malformedCurrent = [
+  ['no blocks', game => { game.currentTetromino.rotations[0] = [[false, false], [false, false]]; }],
+  ['one block', game => { game.currentTetromino.rotations[0] = [[true, false], [false, false]]; }],
+  ['five blocks', game => { game.currentTetromino.rotations[0] = [[true, true, true], [true, true, false]]; }],
+  ['the wrong four blocks for its color', game => { game.currentTetromino.rotations[0] = [[true, true, true, true]]; }],
+  ['no color', game => { game.currentTetromino.color = undefined; }],
+  ['an unknown color', game => { game.currentTetromino.color = 'red'; }],
+  ['no rotations', game => { game.currentTetromino.rotations = null; }],
+  ['a rotation index past its last rotation', game => { game.currentTetromino.rotationState = 4; }],
+  ['a negative rotation index', game => { game.currentTetromino.rotationState = -1; }],
+  ['a fractional rotation index', game => { game.currentTetromino.rotationState = 0.5; }],
+  ['a text rotation index', game => { game.currentTetromino.rotationState = '0'; }],
+  ['no position', game => { game.currentTetromino.position = undefined; }],
+  ['a fractional row', game => { game.currentTetromino.position = { row: 0.5, column: 4 }; }],
+  ['a fractional column', game => { game.currentTetromino.position = { row: 0, column: 4.5 }; }],
+  ['a text column', game => { game.currentTetromino.position = { row: 0, column: '4' }; }],
+  ['an empty-text row that would read as row 0', game => { game.currentTetromino.position = { row: '', column: 4 }; }],
+  ['an empty-text column that would read as column 0', game => { game.currentTetromino.position = { row: 0, column: '' }; }],
+  ['a row below the board', game => { game.currentTetromino.position = { row: 30, column: 4 }; }],
+  ['a row above the board', game => { game.currentTetromino.position = { row: -5, column: 4 }; }],
+  ['a position off the board', game => { game.currentTetromino.position = { row: 0, column: 40 }; }]
+];
+
+for (const paused of [false, true]) {
+  for (const [name, corrupt] of malformedCurrent) {
+    test(`the invariant monitor catches a ${paused ? 'paused' : 'falling'} piece with ${name} [SAF-4]`, () => {
+      const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.yellow) });
+      if (paused) game.togglePause();
+      corrupt(game);
+      game.guard(() => {});
+      assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
+    });
+  }
+}
+
+test('a piece with no blocks is caught even when it only waits to be dealt [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.yellow) });
+  game.nextTetrominos[2].rotations[0] = [[false, false], [false, false]];
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, BAD_PIECE_REASON);
+});
+
+test('the falling piece is not checked once the game is over [SAF-4]', () => {
+  const { game, reported } = recordingGame({ factory: fixedFactory(PieceColors.yellow) });
+  game.failSafe('test stop');
+  reported.length = 0;
+  game.currentTetromino.rotations = null;
+  game.guard(() => {});
+  assert.equal(reported.length, 0);
+});
+
+test('every piece in every rotation passes the check, playing and paused [SAF-4]', () => {
+  for (const color of Object.values(PieceColors)) {
+    for (const paused of [false, true]) {
+      const { game, reported } = recordingGame({ factory: fixedFactory(color) });
+      if (paused) game.togglePause();
+      for (let rotation = 0; rotation < game.currentTetromino.rotations.length; rotation++) {
+        game.currentTetromino.rotationState = rotation;
+        game.currentTetromino.position = { row: 3, column: 3 };
+        game.guard(() => {});
+      }
+      assert.deepEqual(reported, []);
+      assert.notEqual(game.state, GameState.gameOver);
+    }
+  }
+});
+
+test('the I piece lying on the top row of its box can sit on the first board row [SAF-4]', () => {
+  const { game, reported } = recordingGame({ factory: fixedFactory(PieceColors.cyan) });
+  game.currentTetromino.rotationState = 0;
+  game.currentTetromino.position = { row: -1, column: 3 };
+  game.guard(() => {});
+  assert.deepEqual(reported, []);
+});
+
+test('waiting pieces are valid wherever their stored position and rotation say [SAF-4]', () => {
+  const { game, reported } = recordingGame({ factory: fixedFactory(PieceColors.purple) });
+  game.nextTetrominos[0].position = { row: 99, column: -7 };
+  game.nextTetrominos[0].rotationState = 3;
+  game.guard(() => {});
+  assert.deepEqual(reported, []);
+});
+
+test('a valid check leaves the pieces, queue order and board untouched [SAF-4]', () => {
+  const { game } = recordingGame();
+  const current = game.currentTetromino;
+  const queue = [...game.nextTetrominos];
+  const rotations = JSON.stringify(current.rotations);
+  game.guard(() => {});
+  assert.equal(game.currentTetromino, current);
+  assert.deepEqual(game.nextTetrominos, queue);
+  game.nextTetrominos.forEach((piece, index) => assert.equal(piece, queue[index]));
+  assert.equal(JSON.stringify(current.rotations), rotations);
+});
+
+test('damaging a piece after it is made cannot change what the check expects [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.cyan) });
+  // Cutting the piece's own kick list and rotation list short must not make a
+  // shorter piece look right.
+  game.currentTetromino.rotationState = 2;
+  game.currentTetromino.wallKickData = [];
+  game.currentTetromino.rotations.length = 1;
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
+});
+
+test('a hole in a rotation the piece is not using is still caught, playing and paused [SAF-4]', () => {
+  for (const paused of [false, true]) {
+    const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.cyan) });
+    if (paused) game.togglePause();
+    game.currentTetromino.rotations = [...game.currentTetromino.rotations];
+    delete game.currentTetromino.rotations[2];
+    game.guard(() => {});
+    assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
+  }
+});
+
+test('a rotation index one past the last rotation is caught [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame({ factory: fixedFactory(PieceColors.yellow) });
+  game.currentTetromino.rotationState = 1; // the square has one rotation
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
 });
