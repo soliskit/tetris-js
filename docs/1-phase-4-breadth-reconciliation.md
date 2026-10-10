@@ -6,7 +6,7 @@ Working reconciliation for independent review. No finding promotion, approved li
 
 ## Current checkpoint
 
-Fresh main13702c297f3c05c082819f65e40cd71fd3e1117d includes PR120's selected Hard Drop witness and its 11-file evidence packet. PR121's selected synthetic-prior preservation packet is independently reviewed and open at headddc793d6e9002a85ebbe1fcdf184f41f997db708; its publication/check/merge receipts remain separate from its actual experiment.
+Fresh main includes PR120's selected Hard Drop witness and its 11-file evidence packet. PR121's selected synthetic-prior preservation packet is independently reviewed and open at head; its publication/check/merge receipts remain separate from its actual experiment.
 
 The public game source is unchanged. The frozen historical writer matrix still lists35 navigation IDs. writer-route-index.json represents all35 and links later scoped records without changing the matrix's original status. The W19 synthetic-prior basename refers to PR121 at that exact reviewed head, not current main; the index qualifies that reference explicitly. This is an inventory reconciliation checkpoint, not an exhaustive writer proof. Unlinked rows are explicit open work, not exclusions.
 
