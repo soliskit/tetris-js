@@ -6,7 +6,7 @@ This is a proposed writer-premise reconciliation and extension for independent r
 
 ## Source and criterion
 
-Pinned gameManager.js SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea and session.js SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b at main953f5a3ade2de24e0422f0dc7fd2f2e5d471a411. B11 requires a whole number of zero or more without divisibility restriction. B15 does not prohibit full rows in an R1-valid snapshot. The S10 numerical method's finite represented integer premise is narrower than the entire semantic representation problem.
+Pinned gameManager.js SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea and session.js SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b at main. B11 requires a whole number of zero or more without divisibility restriction. B15 does not prohibit full rows in an R1-valid snapshot. The S10 numerical method's finite represented integer premise is narrower than the entire semantic representation problem.
 
 ## Complete textual engine score assignments
 
