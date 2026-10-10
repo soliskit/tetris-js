@@ -10,7 +10,7 @@ Storage initially contains eligibility texttrue and a prior payload whose goodne
 
 ## Ordinary geometry and action admission
 
-Source main82a1c4f017e7462859b64113ca74fa236398146c has unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. Ordinary identity shuffled seven-bags under valid random results0.999 supply I,O,T,S,Z,J,L,I,O,T,S and then Z. Twenty-four results cover the constructor bag, NewGame bag and two gameplay refills, including queue prefetch. The adopted spawn geometry independently binds these kinds, not inventory labels alone.
+Source main has unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. Ordinary identity shuffled seven-bags under valid random results0.999 supply I,O,T,S,Z,J,L,I,O,T,S and then Z. Twenty-four results cover the constructor bag, NewGame bag and two gameplay refills, including queue prefetch. The adopted spawn geometry independently binds these kinds, not inventory labels alone.
 
 NewGame from the opening game-over state creates the empty dense board/current/queue, attempts eligibilityfalse and catches the provider refusal, then starts ordinary play. Without Pause, Continue, rotation, horizontal moves or held controls, perform eleven ordinary HardDrops at the pieces' spawn columns. Independent fixed-cell arithmetic gives these lock anchors:
 

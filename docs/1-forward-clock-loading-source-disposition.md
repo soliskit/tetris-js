@@ -12,7 +12,7 @@ The successful CacheStorage/Cache APIs and fetch contracts are stated trust prem
 
 ## Finite source history
 
-Source main13702c297f3c05c082819f65e40cd71fd3e1117d, public/sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Each version below independently contains all16 actual shell paths, with each response labelled by its generation. V1/V2/V3 mean versions, not arbitrary foreign bodies or only a selector's nonempty test. No other cache binding, pin or client changes interfere.
+Source main, public/sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Each version below independently contains all16 actual shell paths, with each response labelled by its generation. V1/V2/V3 mean versions, not arbitrary foreign bodies or only a selector's nonempty test. No other cache binding, pin or client changes interfere.
 
 1. At Date.now1000, only complete own version tetris-version-1-a exists. A navigation opens pageA. openPage selectsV1, successfully pinsclientA to V1 with at1000, and returns its opening HTMLV1. PageA has not yet requested script.js.
 2. Its ordinary background download completes ownV2 (tetris-version-2-b) while clockstill1000. atomic successful addAll produces all16 V2 responses. Cleanup keeps V2/V1, and the fresh pin also retainsV1.

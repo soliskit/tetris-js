@@ -12,7 +12,7 @@ Choose one same-origin foreign project's cache under name tetris, created by tha
 
 ## Exact source response
 
-main13702c297f3c05c082819f65e40cd71fd3e1117d, sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. OLD_CACHES is the fixed list[tetris,tetris-2]. The registered activate handler constructs Promise.all over caches.delete for both names, then claims clients when those deletes resolve. It performs no creator or owned-binding check and does not restrict these two deletions to a cache the current worker created.
+main, sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. OLD_CACHES is the fixed list[tetris,tetris-2]. The registered activate handler constructs Promise.all over caches.delete for both names, then claims clients when those deletes resolve. It performs no creator or owned-binding check and does not restrict these two deletions to a cache the current worker created.
 
 On the declared foreigntetris binding, successful CacheStorage.delete removes the name binding for a cache not made by the game. That violates the creator-only deletion facet of APP6. No predicate about number of files, versionprefix, serving, pinexpiry or actual backing-byte erasure is needed for that comparison. The separate absenttetris-2 delete does not create a violation by itself.
 
