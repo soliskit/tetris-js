@@ -482,7 +482,7 @@ test('damaging a piece after it is made cannot change what the check expects [SA
   // Cutting the piece's own kick list and rotation list short must not make a
   // shorter piece look right.
   game.currentTetromino.rotationState = 2;
-  game.currentTetromino.wallKickData.length = 1;
+  game.currentTetromino.wallKickData = [];
   game.currentTetromino.rotations.length = 1;
   game.guard(() => {});
   assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
