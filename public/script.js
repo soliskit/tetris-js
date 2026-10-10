@@ -9,7 +9,34 @@ import { InputController } from './game/inputController.js';
 /** @typedef {import('./game/position.js').Position} Position */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
-const gameManager = new GameManager({ onChange: requestDraw });
+const internalErrorMessage = 'The game stopped because of an internal error.';
+let engineFaultNotice = false;
+const gameManager = new GameManager({ onChange: engineChanged, onFault: reportEngineFault });
+
+// The guard finishes the operation and its checks before this callback.
+// A fault stays over (or never reaches this callback), so only a completed
+// New Game or accepted Continue clears the cause on the default page route.
+function engineChanged() {
+  if (gameManager.state !== GameState.gameOver) engineFaultNotice = false;
+  requestDraw();
+}
+
+/** @param {import('./game/gameManager.js').Fault} fault */
+function reportEngineFault(fault) {
+  // Neither a refused draw request nor a refused console report may suppress
+  // the other attempt. The manager separately keeps its existing fault record.
+  try {
+    engineFaultNotice = true;
+    requestDraw();
+  } catch {
+    // A later draw can still present the retained cause.
+  }
+  try {
+    console.error('Tetris stopped safely:', fault.reason, fault.error ?? '');
+  } catch {
+    // Reporting must not change the stopped game.
+  }
+}
 
 // Every id below exists in index.html; test/staticFiles.test.js checks that.
 /** @param {string} id */
@@ -212,9 +239,12 @@ function syncControls() {
   lastState = state;
   scoreLabel.textContent = `Score: ${gameManager.score}`;
   highScoreLabel.textContent = `High Score: ${highScore}`;
-  gameOverMessage.hidden = !gameEnded;
-  // Screen readers hear it from a status message, which reads out changes.
-  announcer.textContent = gameEnded ? 'Game Over' : '';
+  const message = engineFaultNotice ? internalErrorMessage : gameEnded ? 'Game Over' : '';
+  gameOverMessage.hidden = !message;
+  gameOverMessage.textContent = message;
+  gameOverMessage.classList.toggle('engine-fault', engineFaultNotice);
+  // Only update changed text, so repeated checks do not repeat announcements.
+  if (announcer.textContent !== message) announcer.textContent = message;
   // New Game also gives up a paused game, once confirmed; Continue only
   // follows game over.
   menuControls.hidden = !isGameOver && !paused;
@@ -316,7 +346,7 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drawnPreviews.set(canvas, tetromino);
   }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}`;
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
   if (snapshot !== lastSnapshot) {
     lastSnapshot = snapshot;
     syncControls();
@@ -355,10 +385,15 @@ let drawRequested = false;
 function requestDraw() {
   if (drawRequested) return;
   drawRequested = true;
-  requestAnimationFrame(() => {
+  try {
+    requestAnimationFrame(() => {
+      drawRequested = false;
+      drawSafely(drawIfChanged);
+    });
+  } catch (error) {
     drawRequested = false;
-    drawSafely(drawIfChanged);
-  });
+    throw error;
+  }
 }
 
 // Resizing a canvas clears it, so redraw in the same frame to avoid a flash.
