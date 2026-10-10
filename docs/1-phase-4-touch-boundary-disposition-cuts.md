@@ -10,7 +10,7 @@ REQUIREMENTS INP5 allows10 px finger wobble. D33C2 says rotation commits at touc
 
 Governing criterion records are D33C2 and D34E1. Their original owner exchanges were inspected privately; no owner provenance quotations or response times are included here.
 
-Fresh main13702c297f3c05c082819f65e40cd71fd3e1117d, public/script.js SHA25659fcb3343f35d0022c739cce82c5c9601a9e3bc354a9dc991eb1660c4e599ad4. Pointerdown431-438 records start, currentpiece and pointerid then capture. Pointermove440-483 uses the current start anchors and compares Math.hypot(dx,dy)<10; if not less, moved becomestrue. endDrag486-491 computes tap from !moved, pointerup and currentpiece identity. It never compares event.clientX/Y with the gesture start.
+Fresh main, public/script.js SHA25659fcb3343f35d0022c739cce82c5c9601a9e3bc354a9dc991eb1660c4e599ad4. Pointerdown431-438 records start, currentpiece and pointerid then capture. Pointermove440-483 uses the current start anchors and compares Math.hypot(dx,dy)<10; if not less, moved becomestrue. endDrag486-491 computes tap from !moved, pointerup and currentpiece identity. It never compares event.clientX/Y with the gesture start.
 
 Successful capture/browser transport and numeric values are stated premises, not blanket W1 trust for unlisted pointer capture. No failure, mode change, piece replacement, gravity delivery or intervening actor is admitted. These are selected handler event-value sequences, not a claim that a physical device necessarily emits them.
 

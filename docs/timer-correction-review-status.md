@@ -13,7 +13,7 @@ Timer-stop, Resume suppression and player notices are unimplemented proposals. T
 
 ## Exact retained candidate identities
 
-The following actual SHA-256 values identify the reviewed textual candidates, not the descriptive filename prefixes. Baseline production source is main0a05e96dc2e563a6d59be10b9eddb2d25da5efdc; subsequent documentation commits leave its public tree unchanged.
+The following actual SHA-256 values identify the reviewed textual candidates, not the descriptive filename prefixes. Baseline production source is main; subsequent documentation commits leave its public tree unchanged.
 
 | Candidate | SHA-256 |
 |---|---|

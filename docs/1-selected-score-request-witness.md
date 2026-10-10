@@ -14,7 +14,7 @@ The existing score-writer/request-order source argument predicts undefined table
 
 ## Source and actual execution
 
-Pinned main67d66398bee9cf2b5cc399f52c0e9526ae823fe3. Seven copied public/game JavaScript modules were compared byte-for-byte with that commit immediately before execution. Their SHA256 receipt is retained with the packet. GameManager hash31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea; session hash54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b.
+Pinned main. Seven copied public/game JavaScript modules were compared byte-for-byte with that commit immediately before execution. Their SHA256 receipt is retained with the packet. GameManager hash31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea; session hash54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b.
 
 Harness SHA256bf39c59ea68c187de3200bc1840a4e22a6334aa1bc1c9a5cccaeb14f080d1af4. It ran once in a separate scratch copy. It called handleAction(drop) once, used synthetic storage/scheduler and never delivered any callback. Node exit0 and explicit assertions passed. There was no retry or native gameplay activation.
 

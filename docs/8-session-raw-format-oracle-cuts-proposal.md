@@ -6,7 +6,7 @@ Preparation only. This register adds no requirement, format, new rejection rule,
 
 ## Sources and separation
 
-Fetched main8e73a4b7f66ceffd36ba0314dffb6db0ceadfb1f has unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. `test/session.test.js` SHA2565cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152 and `public/game/session.js` SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b bind source observations. Normative meaning comes from R1 B3/B5/B6/B8/B11/B16 and R5 S11, not parseSession predicates.
+Fetched main has unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. `test/session.test.js` SHA2565cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152 and `public/game/session.js` SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b bind source observations. Normative meaning comes from R1 B3/B5/B6/B8/B11/B16 and R5 S11, not parseSession predicates.
 
 The released fixture README supplies implementation-created historical format provenance, not an independently authored semantic classifier. It identifies JSON files and two released format examples. That can establish what those recorded releases wrote after checking exact release identities; it cannot exhaust all accepted hand-edited representations or license a new semantic limit.
 

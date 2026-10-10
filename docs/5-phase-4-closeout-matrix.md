@@ -6,7 +6,7 @@ Draft for independent exact-content review. This is a declaration and evidence-l
 
 ## Baseline and precedence
 
-Fetched main7666487321d148bf44d33e10ec9146560a233aef; public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. Declaration sources: audit-blueprint.txt4.1-4.8 and the stopping/exit rules; Phase2 integrated record and five partition inventories; historical Phase3 W01-W35 matrix. Later scoped records govern their specific findings over older Candidate snapshots. A file's historical preparation-time pending receipt is not a current failed gate, and a new publication does not silently rewrite its historical wording.
+Fetched main; public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. Declaration sources: audit-blueprint.txt4.1-4.8 and the stopping/exit rules; Phase2 integrated record and five partition inventories; historical Phase3 W01-W35 matrix. Later scoped records govern their specific findings over older Candidate snapshots. A file's historical preparation-time pending receipt is not a current failed gate, and a new publication does not silently rewrite its historical wording.
 
 Original Phase2 line references remain anchored to its recorded baseb3c177e, not re-labelled new measurements. W links below are copied from the published35-ID index and supplemented where newer records exist. A referenced record supplies only its own named evidence and limitations. No link means no reconciled evidence link in this matrix, not that no work ever occurred.
 
