@@ -185,7 +185,11 @@ const EXPECTED = new Map([
  * @returns {boolean} Whether it is an array with every index present.
  */
 function isDense(list) {
-  return Array.isArray(list) && Object.keys(list).length === list.length;
+  if (!Array.isArray(list)) return false;
+  for (let index = 0; index < list.length; index++) {
+    if (!Object.hasOwn(list, index)) return false;
+  }
+  return true;
 }
 
 /**
