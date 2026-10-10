@@ -128,6 +128,13 @@ body {
   pointer-events: none;
 }
 
+.board-message.engine-fault {
+  padding: 16px;
+  text-align: center;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
 .board-message[hidden] {
   display: none;
 }
