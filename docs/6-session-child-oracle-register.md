@@ -4,7 +4,7 @@ This child reconciliation inspects every named corruption entry in test/session.
 
 ## Source and selection
 
-Fetched main7666487321d148bf44d33e10ec9146560a233aef, unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. session.test SHA2565cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152. The generated corruption tests bind43 explicit source entries to expected null. Count is navigation only; this is the enumerated source object, not every hostile payload.
+Fetched main, unchanged public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. session.test SHA2565cb5e8bed805b3eb34fc340e7e2b5231e92991e74e421d36f4da668521175152. The generated corruption tests bind43 explicit source entries to expected null. Count is navigation only; this is the enumerated source object, not every hostile payload.
 
 validSave is production NewGame/Hold/move plus direct locked-block and score injection followed by production serializeSession. Therefore it is not an independently B16-good baseline. For rejection, an independently invalid local field can suffice without full baseline validity. For acceptance, last-good content, exact restore or provenance, every required field/history remains necessary. All rows below are source readings, not new actual outcomes.
 
