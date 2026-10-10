@@ -45,3 +45,25 @@ Not established here: ordinary malformed creation, all Q1 partitions, queue beha
 - `public/game/tetrominoFactory.js:91-110`: SHA256 `25e1da6c0b1992b0317aef7025fb7030803a8fd20e649a45eb2ddeaa166ae8b4`.
 - `public/game/session.js:123-126,163-169`: SHA256 `54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b`.
 - Criteria: `docs/queue-piece-check-decision.md`; R1 B3/B7; blueprint section 4.8 Q1. Source identities do not authenticate historical execution.
+
+## Later partitions: object, numbers and one detector group
+
+Independently reviewed source comparisons extend the same mechanism to more named inputs. They are additional source evidence for this disposition, not a new reproduction, a separate defect, an ordinary-writer creation claim or a certificate for all of Q1. The original dense-null and sparse inputs and their status are unchanged.
+
+### Object and number inputs
+
+Keep the same completed ordinary opening state, successful plain providers, unchanged board, score and null handles, and no outside actor. Replace only the upcoming queue with a plain `{ length: 3 }` or a dense `[1, 2, 3]`. Neither is an ordered list of three valid semantic pieces. Both expose ordinary numeric length 3, so by source control flow they pass the count-only monitor and the later predicates, with no iteration or piece method. No custom length getter, Proxy, replaced monitor, storage write or piece method is introduced. The current Continue parser rejects a non-array queue and rejects entries that are not objects, so these shapes are not reconstruction routes; parser rejection does not replace the runtime check.
+
+### One detector group
+
+With the ordinary opening state unchanged, every queue whose ordinary length access completes with numeric 3 takes the same branch and the same later predicates. That includes valid canonical lists, which are supposed to pass, so the shared result alone is not a defect. The group describes what the detector looks at, not semantic validity. Each invalid partition needs its own witness. Throwing length access, getters, Proxy, reentrancy and changed surrounding state are outside this argument.
+
+### Empty-geometry queue
+
+A dense queue of three ordinary generic recognized-yellow Tetromino values with zero-cell geometry (`[[[]]]` rotations, `[[]]` kicks) is a further malformed partition. Its length 3 passes the monitor. A recognizable color does not establish the adopted four-block O geometry. No constructor run, piece method call, current-piece history or earlier run receipt is borrowed. Current Continue reconstruction selects built-in geometry and does not install supplied rotation matrices.
+
+### Still open
+
+Other malformed canonical representations, ordinary creation, every mode and writer, failure histories, native execution and full Q1, R1 and SAF-4 remain open. No code, test, requirement, model, CI, settings, cache, storage or release change.
+
+Evidence: reviewed source packets `Q1-object-and-number-partition-extension.md` (SHA-256 `84088f02d83dfff80875e07142fdb002493770ebcb755665af723a0c3c8f11f4`) and `Q1-length-three-predicate-equivalence.md` (SHA-256 `cec8b73dbec439547904abd5c0027e7e21fbeb1e4da00a72fdf5f9540eede8d8`). Reads were not one atomic snapshot and no run receipt is claimed.
