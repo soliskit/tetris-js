@@ -372,8 +372,10 @@ const malformedUpcoming = [
   ['a piece with a non-list row', game => { game.nextTetrominos[0].rotations[0][1] = 'XXXX'; }],
   ['a piece with a block counted as 1', game => { game.nextTetrominos[0].rotations[0][1][0] = 1; }],
   ['a piece with zero blocks', game => { game.nextTetrominos[1].rotations[0] = [[false, false], [false, false]]; }],
-  ['a yellow piece with the wrong four blocks', game => { game.nextTetrominos[1].rotations[0] = [[true, true], [true, false]]; }],
+  ['a yellow piece with the wrong four blocks', game => { game.nextTetrominos[1].rotations[0] = [[true, true, true, true]]; }],
   ['a wrong block in a later rotation', game => { game.nextTetrominos[0].rotations[3][0][0] = true; }],
+  ['a hole in the list made up for by an extra property', game => { delete game.nextTetrominos[1]; game.nextTetrominos.extra = game.nextTetrominos[0]; }],
+  ['a hole in a rotation list made up for by an extra property', game => { delete game.nextTetrominos[2].rotations[1]; game.nextTetrominos[2].rotations.extra = []; }],
   ['a list of the right length that is not a list', game => { game.nextTetrominos = { length: 3 }; }]
 ];
 
@@ -390,7 +392,7 @@ const malformedCurrent = [
   ['no blocks', game => { game.currentTetromino.rotations[0] = [[false, false], [false, false]]; }],
   ['one block', game => { game.currentTetromino.rotations[0] = [[true, false], [false, false]]; }],
   ['five blocks', game => { game.currentTetromino.rotations[0] = [[true, true, true], [true, true, false]]; }],
-  ['the wrong four blocks for its color', game => { game.currentTetromino.rotations[0] = [[true, true], [true, false]]; }],
+  ['the wrong four blocks for its color', game => { game.currentTetromino.rotations[0] = [[true, true, true, true]]; }],
   ['no color', game => { game.currentTetromino.color = undefined; }],
   ['an unknown color', game => { game.currentTetromino.color = 'red'; }],
   ['no rotations', game => { game.currentTetromino.rotations = null; }],
