@@ -1,6 +1,6 @@
 # Phase 3 full-page focus and touch observations supplement
 
-Candidate observations, not findings disposition, complete input coverage, oracle acceptance or certification. Phase 3 remains open. No production, permanent-test or CI changes. Public bytes served locally from the fetched tree associated with main789fb7aa154ea54766435e45f037503123596390, unchanged from the D43 scoped source.
+Candidate observations, not findings disposition, complete input coverage, oracle acceptance or certification. Phase 3 remains open. No production, permanent-test or CI changes. Public bytes served locally from the fetched tree associated with main, unchanged from the D43 scoped source.
 
 ## Environment and scope
 Node22.23.3, actual Google Chrome154.0.8037.57, headless Linux, viewport1000x900, local Python static server. Browser version is from the result JSON. An earlier prose value150.0.7871.13 was wrong and corrected; it is not evidence. Full-page production loaded unmodified. Playwright keys/mouse and Chromium protocol emulated touch are browser-generated trusted events but not physical hardware, Safari, OS gestures or assistive technology. Synthetic DOM PointerEvents are untrusted and kept separate.
