@@ -480,7 +480,7 @@ boardCanvas.addEventListener('pointermove', event => {
   const piece = gameManager.currentTetromino;
   const dx = event.clientX - drag.startX;
   const dy = event.clientY - drag.startY;
-  if (!drag.moved && Math.hypot(dx, dy) < TAP_SLOP_PX) return;
+  if (!drag.moved && Math.hypot(dx, dy) <= TAP_SLOP_PX) return;
   drag.moved = true;
   const width = cellWidth();
 
