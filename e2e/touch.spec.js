@@ -31,6 +31,53 @@ test('tapping the board rotates the piece, even with a little finger wobble [INP
   await expect.poll(async () => shapeOf(await t())).not.toBe(second);
 });
 
+// Use native mouse pointer events for exact CSS-pixel coordinates on both
+// engines. The existing gesture tests separately exercise Chromium touch.
+for (const { name, distances, rotates, cancel = false } of [
+  { name: 'below 10 pixels', distances: [9], rotates: true },
+  { name: 'exactly 10 pixels', distances: [10], rotates: true },
+  { name: 'above 10 pixels', distances: [11], rotates: false },
+  { name: 'exactly 10 pixels and back', distances: [10, 0], rotates: true },
+  { name: 'beyond 10 pixels and back', distances: [11, 0], rotates: false },
+  { name: 'cancelled at exactly 10 pixels', distances: [10], rotates: false, cancel: true }
+]) {
+  test(`a pointer gesture ${name} preserves the tap boundary [INP-5]`, async ({ page }) => {
+    await playSaved(page, { piece: PieceColors.purple, position: { row: 5, column: 3 } });
+    const first = shapeOf(await cellsOf(page, PieceColors.purple));
+    const box = await page.locator('#tetris').boundingBox();
+    const start = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + box.height / 2) };
+    await page.evaluate(() => {
+      window.boundaryEvents = [];
+      const board = document.getElementById('tetris');
+      for (const type of ['pointerdown', 'pointermove']) {
+        board.addEventListener(type, event => {
+          window.boundaryEvents.push({ type, x: event.clientX, y: event.clientY, pointerId: event.pointerId });
+        });
+      }
+    });
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    for (const distance of distances) await page.mouse.move(start.x + distance, start.y);
+    const delivered = await page.evaluate(() => {
+      const down = window.boundaryEvents.find(event => event.type === 'pointerdown');
+      return window.boundaryEvents.filter(event => event.type === 'pointermove' && event.pointerId === down.pointerId)
+        .filter(event => window.boundaryEvents.indexOf(event) > window.boundaryEvents.indexOf(down))
+        .map(event => Math.hypot(event.x - down.x, event.y - down.y));
+    });
+    expect(delivered).toEqual(distances);
+    // Movement alone must not rotate. This also proves the boundary move
+    // reached the page before the up/cancel event.
+    expect(shapeOf(await cellsOf(page, PieceColors.purple))).toBe(first);
+    if (cancel) {
+      const pointerId = await page.evaluate(() => window.boundaryEvents.find(event => event.type === 'pointerdown').pointerId);
+      await page.locator('#tetris').dispatchEvent('pointercancel', { pointerId });
+    }
+    await page.mouse.up();
+    if (rotates) await expect.poll(async () => shapeOf(await cellsOf(page, PieceColors.purple))).not.toBe(first);
+    else expect(shapeOf(await cellsOf(page, PieceColors.purple))).toBe(first);
+  });
+}
+
 test('tapping the hold box holds the piece [INP-5] [PLY-7]', async ({ page }) => {
   await playSaved(page, { piece: PieceColors.purple });
   await page.locator('#heldPreview').tap();
