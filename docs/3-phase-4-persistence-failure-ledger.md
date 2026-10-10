@@ -6,7 +6,7 @@ Working source ledger for independent review. It records no new finding promotio
 
 ## Source and finite domain
 
-Freshly fetched main13702c297f3c05c082819f65e40cd71fd3e1117d. Manager SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea; session SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b. The three direct storage effects are high-score150, eligibility167 and payload221. The call chains below include direct and immediate nested manager callers found in this source pass. Their enumeration does not prove exhaustive admission through every history or callback composition.
+Freshly fetched main. Manager SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea; session SHA25654acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b. The three direct storage effects are high-score150, eligibility167 and payload221. The call chains below include direct and immediate nested manager callers found in this source pass. Their enumeration does not prove exhaustive admission through every history or callback composition.
 
 For source-only failure answers, the selected provider throw occurs before returning a read value or changing a stored value, and has no unrelated side effect. All other dependencies succeed unless named. This is a finite declared failure model, not a theorem for malicious providers, retain-then-throw writes, native quota, concurrent tabs or every getter/proxy interference. Effect success is a stated premise where used, not inferred from a swallowed return.
 
