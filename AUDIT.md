@@ -274,3 +274,19 @@ Independently reviewed conditional source composition distinguishes factory draw
 Independently reviewed source-only child-admission comparison separates helper-only factory.restart from production factory.resetBag. The sequence fixture's initial rewind is a test-control effect, not evidence that later public New Game resets that custom fixture. Built-in seeded GM-47 still exercises production resetBag, including its second public-started game; GM-48 is a selected remainder-preservation assertion. No runtime result, arbitrary custom-source reset requirement, test removal, finding change or certification follows.
 
 The manifest pins source bytes; the reads behind it were not one atomic commit snapshot. Existing dispositions are unchanged. Operative only after documentation review, required checks, authorized documentation merge and separate publication verification. No game, permanent-test, model, CI, requirement, storage or public-site change.
+
+## Current readiness note, October 9, 2026
+
+This dated note updates the current reading of the earlier preparation and status records. Their original text and evidence remain history. Phase 4 stays open; no phase exit or property certification is recorded here.
+
+The upcoming-piece and current-piece safety-check scopes are now selected. Required checks cover three valid semantic upcoming pieces, not only three slots, and a valid four-block current piece while it has semantic value. Upcoming pieces do not inherit the falling piece's board-fit, history or timer rules. The later queue and current-piece dispositions govern their exact injected boundaries; ordinary creation, other representations and whole-property evidence remain separate.
+
+The later serialization-failure disposition resolves the original declared injected nonstorage failure comparison. It does not require a naturally occurring unmodified-serializer cause for that narrow claim. Ordinary failure incidence, last-good saved-content admission and broader persistence claims remain separate.
+
+The owner has approved two corrections with regression tests: the default-page internal-error notice, and current/upcoming piece checking. The notice uses the existing game-over display and screen-reader announcement, keeps existing reports and clears only after successful recovery. The piece-check correction covers the current piece while playing or paused and all three upcoming pieces without treating them as falling, while preserving valid play and piece identities. Neither correction changes save, offline or architecture rules.
+
+Approval is not implementation or verification. The corrections are being prepared as separate pull requests. Code and tests still need exact-head independent review, actual before/after regression evidence, applicable checks, collateral review and separate merge approval. No fix is marked complete by this note. Full SAF-3, SAF-4 and the broader Phase 4 domains remain unestablished except where their own scoped evidence records say otherwise.
+
+F25 records the default page's missing internal-error explanation as a Confirmed defect by conditional source argument, for the player-message half only. The separate observable-signal half and other fault routes are not certified by that finding. Historical F18 and F19 stay unchanged.
+
+The earlier preparation rows that described these exact scope/admission questions as unresolved, or all notice/checker corrections as unapproved, are superseded only to the extent stated above. Other correction families, independent saved-content/history, timing, platform, cache, model, classification and final certification gates stay open. No tests or protections are retired, and no new implementation or review permission is created by this note.
