@@ -150,3 +150,115 @@ export class Tetromino {
     }
   }
 }
+
+// The piece part of the engine's safety check. One rule for what a piece is,
+// used for the falling piece (playing or paused) and for every upcoming piece.
+// The expected shapes are built here, apart from the pieces being checked, so
+// a damaged piece can never be compared against itself.
+/**
+ * @param {string[]} spawn The spawn shape, X for a block.
+ * @param {number} turns How many rotation states the piece has.
+ * @returns {boolean[][][]}
+ */
+function expectedRotations(spawn, turns) {
+  const rotations = [spawn.map(line => [...line].map(ch => ch === 'X'))];
+  while (rotations.length < turns) {
+    const last = rotations[rotations.length - 1];
+    rotations.push(last.map((_, row) => last.map((__, column) => last[last.length - 1 - column][row])));
+  }
+  return rotations;
+}
+
+// Keyed by the piece's fixed color.
+const EXPECTED = new Map([
+  ['#00C0E8', expectedRotations(['....', 'XXXX', '....', '....'], 4)],
+  ['#FFCC00', expectedRotations(['XX', 'XX'], 1)],
+  ['#AF52DE', expectedRotations(['.X.', 'XXX', '...'], 4)],
+  ['#34C759', expectedRotations(['.XX', 'XX.', '...'], 4)],
+  ['#FF3B30', expectedRotations(['XX.', '.XX', '...'], 4)],
+  ['#007AFF', expectedRotations(['X..', 'XXX', '...'], 4)],
+  ['#FF9500', expectedRotations(['..X', 'XXX', '...'], 4)]
+]);
+
+/**
+ * @param {unknown} list
+ * @returns {boolean} Whether it is an array with every index present.
+ */
+function isDense(list) {
+  if (!Array.isArray(list)) return false;
+  for (let index = 0; index < list.length; index++) {
+    if (!Object.hasOwn(list, index)) return false;
+  }
+  return true;
+}
+
+/**
+ * @param {unknown} actual
+ * @param {boolean[]} expected
+ * @returns {boolean}
+ */
+function sameRow(actual, expected) {
+  return isDense(actual) && /** @type {unknown[]} */ (actual).length === expected.length
+    && expected.every((filled, column) => /** @type {unknown[]} */ (actual)[column] === filled);
+}
+
+/**
+ * @param {unknown} actual
+ * @param {boolean[][]} expected
+ * @returns {boolean}
+ */
+function sameShape(actual, expected) {
+  return isDense(actual) && /** @type {unknown[]} */ (actual).length === expected.length
+    && expected.every((row, index) => sameRow(/** @type {unknown[]} */ (actual)[index], row));
+}
+
+/**
+ * @param {unknown} piece
+ * @returns {boolean[][][] | undefined} The expected rotations for this piece's kind, if it has one.
+ */
+function expectedFor(piece) {
+  const data = /** @type {{ color?: unknown } | null | undefined} */ (piece);
+  return typeof data?.color === 'string' ? EXPECTED.get(data.color) : undefined;
+}
+
+/**
+ * An upcoming piece is a real piece: a known kind with every rotation state
+ * as the game defines it. Where it waits does not matter.
+ * @param {unknown} piece
+ * @returns {boolean}
+ */
+export function isValidPiece(piece) {
+  const expected = expectedFor(piece);
+  if (!expected) return false;
+  const rotations = /** @type {{ rotations?: unknown }} */ (piece).rotations;
+  return isDense(rotations) && /** @type {unknown[]} */ (rotations).length === expected.length
+    && expected.every((shape, index) => sameShape(/** @type {unknown[]} */ (rotations)[index], shape));
+}
+
+/**
+ * @param {unknown[]} pieces
+ * @returns {boolean} Whether every entry is present and a valid piece.
+ */
+export function isValidPieceList(pieces) {
+  return isDense(pieces) && pieces.every(isValidPiece);
+}
+
+/**
+ * The falling piece is a real piece in a real rotation, with four blocks on
+ * empty cells of the board. Checks its own blocks, not what it reports.
+ * @param {unknown} piece
+ * @param {Board} board
+ * @returns {boolean}
+ */
+export function isValidFallingPiece(piece, board) {
+  const expected = expectedFor(piece);
+  if (!expected) return false;
+  const { rotationState, position, rotations } = /** @type {{ rotationState?: unknown, position?: { row?: unknown, column?: unknown }, rotations?: unknown }} */ (piece);
+  const row = position?.row;
+  const column = position?.column;
+  if (!Number.isInteger(row) || !Number.isInteger(column)) return false;
+  // A whole-number index only: expected has no entry for -1, 0.5 or 4.
+  const shape = Number.isInteger(rotationState) ? expected[/** @type {number} */ (rotationState)] : undefined;
+  if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
+  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[/** @type {number} */ (row) + r]?.[/** @type {number} */ (column) + c]?.isFilled === false));
+}
