@@ -24,7 +24,7 @@ This value is admitted as valid external stored-high content under S8. The game 
 
 ## Exact source response
 
-Source main0b52b8bde371f11026cfa8f4bf18aeeeb9fb2ff7 has public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. public/game/gameManager.js SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea contains the reader:
+Source main has public tree1e09ad61c19e0b235a231ad8810dae176be4ea77. public/game/gameManager.js SHA25631bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea contains the reader:
 
 1. readItem receives the exact text from a successful storage read, with no read exception or side effect.
 2. Number converts that text to exact finite integral2^53.
