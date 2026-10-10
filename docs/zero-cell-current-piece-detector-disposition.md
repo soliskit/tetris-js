@@ -50,3 +50,15 @@ All occupied cells and their one-row-down cells are empty and on the board, so t
 Paused-mode checking is a separate partition, not covered here. Injected lowest-row and history premises, full playing validity, ordinary writer reachability, fault-terminal contents, ordinary game over and every other malformed representation stay open. No action execution or timer firing is claimed. No code, test, requirement, model or CI change, and no fix is approved.
 
 Evidence: reviewed source packet `Q2-nonempty-malformed-geometry-partitions.md` (SHA-256 `8f08c3d42d2444f813c72fe6f24d88294217d8e31099d764d336ac780079d872`). The packet is not in the repo. Reads were not one atomic snapshot and no run receipt is claimed.
+
+## Later partition: paused mode
+
+An independently reviewed source comparison adds a partition to the same current-piece duty. It is additional source evidence, not a duplicate defect, not Reproduced and not a certificate for full Q2, R1 or SAF-4. Its scope is the exact injected paused direct-check boundary only. It is not a public Pause, Resume or save trace.
+
+R1 B6 gives paused play a semantic falling piece, so the current-piece duty applies in that mode too. Take a declared paused state: dense empty 20 x 10 board, canonical three-piece queue, score 0, null gravity and lock handles, no pending confirmation, successful plain dependency calls and no external actor. Replace only the current piece with the zero-cell piece already admitted above (yellow kind and color, `rotations: [[[]]]`, rotation state 0, position (0,4), `wallKickData: [[]]`, unmodified methods).
+
+The monitor checks board dimensions, queue length and score. It runs the current-piece fit and surface comparisons only in the playing branch. The paused branch only checks that both timer handles are null. With the fields above unchanged, it returns null without reading the current piece, so a guarded no-op takes the normal acceptance path by conditional source argument. The playing zero-cell case reads a supplied fit method and is fooled by empty-cell vacuity. The paused case skips current-piece validity altogether, so it would accept the same malformed piece even if a fit check rejected it. That is a statement about which fields the check reads, not permission to replace a method in a run.
+
+Kept open: ordinary writer reachability, lowest-row history, any successful Pause, Resume or save, fault-terminal contents, and every other malformed representation. Ordinary game over is not used as a counterexample, since it has no falling piece. No timer firing is claimed. No checker is selected and no code, test, requirement, model or CI change is made.
+
+Evidence: reviewed source packet `Q2-paused-current-piece-checkpoint-comparison.md` (SHA-256 `765f580ffc6aba087fefccba4381f1362f94795c1e26a892d27b344018c004e8`). The packet is not in the repo. Reads were not one atomic snapshot and no run receipt is claimed.
