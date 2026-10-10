@@ -237,3 +237,39 @@ D18 and D21's earlier checksums identify their historical source bytes. Their cu
 The exact 2^53 read and ordinary lower-write dispositions are superseded for current policy: 9007199254740992 is now invalid stored content, so returning zero is not the earlier valid-content read defect. The lower-write argument no longer establishes a current defect from replacing that invalid content with 100. Both disposition files retain their old conditional arguments as clearly marked history.
 
 Resolved SCO-3 interpretation: repairing invalid stored high-score content is not lowering a valid high score. The owner selected this reading on October 8, 2026; see `docs/invalid-high-score-repair-decision.md`. The only-higher rule still protects valid stored high scores. This closes the interpretation question, not SCO-3 implementation certification. REQUIREMENTS.md, production code, tests, models, CI and repository settings are unchanged. No finding outside these exact 2^53 premises is reclassified; Phase 4 remains open. Review, head checks, merge and publication verification are separate gates.
+
+## Reviewed factory research
+
+Independently reviewed source-only factory research binds the module-local default page route to the built-in factory and joins retained canonical-coordinate, bag, writer and test-child evidence at their stated scopes. Successful geometry preservation excludes arbitrary supplied outputs and outside mutation. Thrown writer prefixes follow the separate F2 fault-state criterion; a shortened retained queue is not itself a rollback/ordinary-validity defect, while SAF-4 after-every-action/timer obligations remain unchanged. No new execution, finding-status change, phase closure, correction or permanent-test removal approval.
+
+The review covers eight research packets and the 20-input source manifest for the first four. It is a source and criterion review, not certification or an execution receipt. The packets bind actual default page construction to the built-in factory, join conditional canonical-coordinate preservation to finite permanent assertions, separate successful writer induction from partial failure prefixes, and apply F2 without reducing SAF-4 checking. First and later Hold assignment order and the not-fit early return are explicit. No arbitrary hostile dependency domain, whole canonical/history theorem or test-replacement value is selected.
+
+| Packet | SHA-256 |
+|---|---|
+| `phase10-factory-page-entry-binding.md` | a51135c3698ed7cb860215a54cb1ce125d76d30dc97a291df16c2dba4c30a9a3 |
+| `factory-trust-assertion-join.md` | 4a7abc731314838f86f34c4dd354eaafd60d2d8ce486cd9ebe42ae464d0e7c59 |
+| `factory-writer-preservation-research.md` | 8b432cdb0c3582a492151260ff50c75cb01360421da7fdb83e3dbe79498723a2 |
+| `factory-failure-prefix-F2-disambiguation.md` | 269824147d85247e8305f04407af10157b81980fc4e08aed1dad2a34862e1d6a |
+| `factory-source-join-manifest.json` | 644f00b46b6f8f886ff18afc14e20694b576e8174a29c3b1fc8e45aa326256be |
+| `default-engine-fault-notice-source-cut.md` | fbea627f9ae1c36a5c9cf399651925a8fe50499233514a4c52ce458fe3bbd57e |
+| `ordinary-geometry-alias-consumer-preservation.md` | f0bc49ab8c8ad9ecd13a3afe95c6580b3ae31796ff5d0bb54a9aebb33c90a034 |
+| `seven-bag-draw-history-composition.md` | 4794b5ad66dbf5138d514e36b4aceed8c51137f1925669b554746c5ed6b30b52 |
+| `test-helper-restart-production-reset-separation.md` | 21bc615d9b1a2e1104913274ba25f7ad17ce765f5de119bc30ae3652d81b76ac |
+
+### Default engine-fault notice
+
+Independently reviewed source-only comparison isolates the default page's SAF-3 notice wiring with successful cancellation and page/drawing premises. If syncControls previously observed playing, its terminal text and announcer say Game Over, not that an internal error stopped the game. A fault before the pending playing draw can leave that terminal display unset; no display transition is inferred from engine mode alone. The adjacent InputController source supplies no alternate engine-fault notice carrier. This is a bounded message-half relation, not visual or transient evidence, certification of the observable-signal half, a universal notice-absence theorem, a finding-status change or correction approval. The successful-provider, finite-path, SAF-5 and constructor exclusions stay in force.
+
+### Ordinary geometry-alias consumer preservation
+
+Independently reviewed conditional source argument joins canonical geometry construction to the selected shipped page/engine nonwriting consumers. Shared rotations and kick references remain mutable, but successful ordinary plain-data consumers preserve or replace canonical geometry without editing those arrays. This supplies a conditional ordinary ownership premise, not immutable snapshots, arbitrary custom/hostile alias resistance, valid fit/history, runtime detector replacement, certification, finding promotion or removal approval. The finite module set and the successful-call, plain built-in and no-outside-mutation premises stay in force.
+
+### Draw-history composition
+
+Independently reviewed conditional source composition distinguishes factory draw history from current-display events when Hold redisplays earlier pieces. Successful refill/shuffle/shift preserves a permutation per aligned refill segment under canonical inventory, valid-random, plain-successful-call and no-outside-mutation premises. New Game resets the segment; later fitting Hold makes no draw. Continue's admitted remainder is a suffix/refill relation, not recovered prior history. Historical 5040 enumeration remains finite corroboration; no new execution, fairness claim, full PCE-5 certificate, finding change or test-removal approval.
+
+### Fixture restart versus production reset
+
+Independently reviewed source-only child-admission comparison separates helper-only factory.restart from production factory.resetBag. The sequence fixture's initial rewind is a test-control effect, not evidence that later public New Game resets that custom fixture. Built-in seeded GM-47 still exercises production resetBag, including its second public-started game; GM-48 is a selected remainder-preservation assertion. No runtime result, arbitrary custom-source reset requirement, test removal, finding change or certification follows.
+
+The manifest pins source bytes; the reads behind it were not one atomic commit snapshot. Existing dispositions are unchanged. Operative only after documentation review, required checks, authorized documentation merge and separate publication verification. No game, permanent-test, model, CI, requirement, storage or public-site change.
