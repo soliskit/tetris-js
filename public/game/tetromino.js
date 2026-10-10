@@ -254,11 +254,11 @@ export function isValidFallingPiece(piece, board) {
   const expected = expectedFor(piece);
   if (!expected) return false;
   const { rotationState, position, rotations } = /** @type {{ rotationState?: unknown, position?: { row?: unknown, column?: unknown }, rotations?: unknown }} */ (piece);
-  if (typeof rotationState !== 'number' || !Number.isInteger(rotationState) || rotationState < 0 || rotationState >= expected.length) return false;
   const row = position?.row;
   const column = position?.column;
-  if (typeof row !== 'number' || typeof column !== 'number' || !Number.isInteger(row) || !Number.isInteger(column)) return false;
-  const shape = expected[rotationState];
-  if (!isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[rotationState], shape)) return false;
-  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[row + r]?.[column + c]?.isFilled === false));
+  if (!Number.isInteger(row) || !Number.isInteger(column)) return false;
+  // A whole-number index only: expected has no entry for -1, 0.5 or 4.
+  const shape = Number.isInteger(rotationState) ? expected[/** @type {number} */ (rotationState)] : undefined;
+  if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
+  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[/** @type {number} */ (row) + r]?.[/** @type {number} */ (column) + c]?.isFilled === false));
 }
