@@ -10,6 +10,7 @@
 import { below, position } from './position.js';
 import { GameState, PlayerAction, UPCOMING_COUNT, createBoard } from './gameState.js';
 import { parseSession, serializeSession } from './session.js';
+import { isValidFallingPiece, isValidPieceList } from './tetromino.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
 /** @typedef {import('./gameState.js').Board} Board */
@@ -414,10 +415,12 @@ export class GameManager {
     if (!Array.isArray(board) || board.length !== this.rows || !board.every(row => Array.isArray(row) && row.length === this.columns)) {
       return 'board is not 20 by 10';
     }
-    if (this.nextTetrominos.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
+    const upcoming = this.nextTetrominos;
+    if (upcoming.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
+    if (!isValidPieceList(upcoming)) return 'upcoming piece is not a valid piece';
     if (!Number.isSafeInteger(this.score) || this.score < 0 || this.score % 100 !== 0) return 'score is invalid';
+    if (this.state !== GameState.gameOver && !isValidFallingPiece(this.currentTetromino, board)) return 'piece is invalid or overlaps the board';
     if (this.state === GameState.playing) {
-      if (!this.currentTetromino.fits(board)) return 'piece overlaps the board';
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
       if (this.lockDelayTask !== null && !this.isOnSurface) return 'lock delay running off the surface';
       if (this.lockDelayTask === null && this.isOnSurface) return 'piece resting with no lock delay';
