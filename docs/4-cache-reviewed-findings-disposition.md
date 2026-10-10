@@ -6,7 +6,7 @@ Proposed status for independent review: Confirmed defect by reviewed conditional
 
 ## Scope and inputs
 
-Current main230cd4b4693e8857a1072da1cfbc63b789ede56d has unchanged public/sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Exact reviewed source arguments are docs/1-forward-clock-loading-source-disposition.md SHA25696cbf086018ffc7c28a0864ab60bea13076c1d5f9e3e3820466e01e8011e486d and docs/2-foreign-fixed-cache-delete-source-disposition.md SHA256f24c13bb556d0eef25bbae2634a8fdc9df0a8cd3621b569e9a6fa4d6c652642c. PR124 carried these bytes without later edits; its postmerge receipt remains pending at this drafting point. Classification is a separate gate, not inherited from the publication title.
+Current main has unchanged public/sw.js SHA256c8bfb09536e73cf206270f3645bcee9e26ec3c3469b9893ae773b2339f861a96. Exact reviewed source arguments are docs/1-forward-clock-loading-source-disposition.md SHA25696cbf086018ffc7c28a0864ab60bea13076c1d5f9e3e3820466e01e8011e486d and docs/2-foreign-fixed-cache-delete-source-disposition.md SHA256f24c13bb556d0eef25bbae2634a8fdc9df0a8cd3621b569e9a6fa4d6c652642c. PR124 carried these bytes without later edits; its postmerge receipt remains pending at this drafting point. Classification is a separate gate, not inherited from the publication title.
 
 ## Proposed finding dispositions
 
