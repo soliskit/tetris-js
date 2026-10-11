@@ -2,7 +2,7 @@
 
 This index tells a reader which Phase 1 documents govern and which are review material. It is navigation only. The ledger in `AUDIT.md` governs status and provenance.
 
-Publication identities: the SHA-256 values in both tables are historical source hashes, including D30, D35, D36 and both PR54 candidates. They are not silently replaced after publication-only reductions. AUDIT.md gives the exact source commit, original and current published hashes, changed scope and precedence for reduced files. Governing decision status is unchanged.
+Publication identities: the SHA-256 values in both tables are historical source hashes, including D30, D35, D36 and the PR54 R1 candidate. They are not silently replaced after publication-only reductions. AUDIT.md gives the exact source commit, original and current published hashes, changed scope and precedence for reduced files. Governing decision status is unchanged.
 
 ## Governing
 
@@ -15,14 +15,14 @@ Publication identities: the SHA-256 values in both tables are historical source 
 | `docs/sources/2-srs_table.txt` (geometry reference, extracted table) | D18 | c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c |
 | `docs/phase-1-d16-amendment-2.md` (D16 Amendment 2, Continue state placements) | D20 | 957ba3926778c5c18fa3ff7796d29196f9cd954d1f58fc7fbc399d8a1eff3355 |
 | `docs/phase-1-r2-r5-decision.md` (R2, R3, R4 and R5) | D21 | 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8 |
-| `docs/phase-1-fault-timer-decision.md` (SAF-3 fault reporting and timer trust) | D22 | c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f |
+| `docs/phase-1-fault-timer-decision.md` (SAF-3 fault reporting and timer trust; deleted, bytes in git history) | D22 | c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f |
 | `docs/phase-1-trust-and-timer-scope-decision.md` (storage trust, SAF-5 reporting, failed cancellation, SAF-4 timer scope) | D23 | 0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b |
 | `docs/phase-1-trust-ledger-decision.md` (trust assumptions: hosting, service worker, GitHub Actions, random source) | D24 | 32f25db8bdc2f9ae62389dfd7dda90206132098f7f26f4540a03e048d3b7dab9 |
 | `docs/phase-1-property-mapping.md` (adopted properties mapped to requirements, conflict register) | D25 | dc9f04dfa53a3e2bff21cb3401595b4ffa03a4bdbc46035166f2b91f0f606674 |
-| `docs/phase-1-browser-trust-decision.md` (trust boundary for browser features) | D27 | cc51ba2ddb152bf2d0758a5220fb3666f633a9d7c3c5c950f544dc774af10a3b |
+| `docs/phase-1-browser-trust-decision.md` (trust boundary for browser features; deleted, bytes in git history) | D27 | cc51ba2ddb152bf2d0758a5220fb3666f633a9d7c3c5c950f544dc774af10a3b |
 | `docs/phase-1-sw-fetch-decision.md` (trust boundary for service worker registration and network requests) | D28 | 02097c3b991ce4c1ba8859ef352ea010aed0af9adc5d466a212f3b2ebf350e54 |
-| `docs/phase-1-clock-decision.md` (clock not trusted; clock jumps audited) | D29 | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d |
-| `docs/phase-1-dsp5-reading-decision.md` (DSP-5 reading for Continue availability; D29 provenance note) | D30 |  |
+| `docs/phase-1-clock-decision.md` (clock not trusted; clock jumps audited; deleted, bytes in git history) | D29 | aff63f710484df3a272e0ebcf8d0db8a332974cbacf30ca9e372feebca3f347d |
+| `docs/phase-1-dsp5-reading-decision.md` (DSP-5 reading for Continue availability; D29 provenance note; deleted, bytes in git history) | D30 |  |
 | `docs/phase-1-frame-principle-decision.md` (frame principle for legal operations) | D31 | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 |
 | `docs/phase-1-operations-record.md` (sourced assignments of state to operations; unspecified points) | D32 | 9e0a7db4b0423e8c831e265deca6ee2b66df4db1684995c9d070eaead0770101 |
 | `docs/phase-1-operations-choices-decision.md` (choices for the points D32 left unspecified) | D33 | a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa |
@@ -39,6 +39,4 @@ These were merged as records of how the decisions were reached. They contain alt
 | `docs/phase-1-state-model-proposal.md` (state model proposal, historical per D16) | before #51 |  |
 | `docs/phase-1-r1-valid-state-proposal.md` | #51 |  |
 | `docs/phase-1-r1-proposal-rev1.md` | #52 |  |
-| `docs/phase-1-d16-lowest-row-amendment-proposal.md` | #53 |  |
-| `docs/phase-1-d16-amendment-candidate.md` | #54 |  |
 | `docs/phase-1-r1-normative-candidate.md` | #54 |  |
