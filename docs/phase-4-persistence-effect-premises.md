@@ -33,7 +33,7 @@ A valid last-good witness needs exact raw bytes, unique independently justified 
 
 ## F24 reconciliation
 
-The existing Confirmed conditional-source S7 finding covers eligibility-read failure with no payload read (`docs/audit-status-and-dispositions-2026-10-06.md`, row at line 28). The failed-payload-read prefix is an additional cut within the already-open F24 family, not a new family or full F24 closure. The two prefixes do not authenticate one another's historical raw receipt.
+The existing Confirmed conditional-source S7 finding covers eligibility-read failure with no payload read (now recorded in AUDIT.md, eligibility-read failure disposition). The failed-payload-read prefix is an additional cut within the already-open F24 family, not a new family or full F24 closure. The two prefixes do not authenticate one another's historical raw receipt.
 
 ## Remaining work
 
