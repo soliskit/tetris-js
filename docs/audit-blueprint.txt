@@ -9,7 +9,7 @@ Supersedes: every earlier version and draft, including claudeVersion1.0 to claud
 Changelog. Drafted by the assistant. It records what changed and where each change came from; it is not evidence that the owner approved any change. The owner approves the blueprint as a whole. Nothing here has been run, and no code was changed.
 * Base: the supplied v5.11 text (chatgptVersion1.0), then claudeVersion1.0 (the same text with repository corrections), then the instinctVersion1.0 working drafts, then claudeVersion1.1 to claudeVersion1.4, as supplied by the owner with a decision record and step diffs. The decision record was written by a separate session; its quotations of owner answers are not independently authenticated here.
 * Carried from claudeVersion1.4 and the owner's statement in the final review that four positions stand: the safe terminal state is defined from SAF-3's own text; N1 is a separate record cross-referenced to F20; only a claim certified Proven closes an unexhausted falsification domain; the shipped score check is loosened only as REQUIREMENTS.md rule 2 allows. The same lineage supplies proof by exhaustive enumeration with its 5.2 status, "same outcome" in test removal, L1's evidence-gap framing, F22's WebIDL conversion, approval for stopping-rule limitations, scheduler trust in the Phase 1 exit, code formatting, and the Appendix C factual fixes.
-* Added after the claudeVersion1.4 base, from the owner's review messages in that review round and drafted by the assistant: R2 covers game-over forgetting (STA-3) and does not assume "forget" means deletion; the good-save definition is independent of the current validation sequence and counts saves already in storage at start; Phase 1 defines transitions as specified legal operations and decides commit-only versus intermediate-state validity; the Phase 1 requirement-scope table; F20 reproduction classes and the F23 folding rule; Phase 3 mapping appropriate to the claim and covering adopted properties; Phase 5 cannot close with a Candidate finding or a Not assessed property; ledger, Score and ID-list fixes; survey attribution in Appendix C.
+* Added after the claudeVersion1.4 base, from the owner's review messages in that review round and drafted by the assistant: R2 covers game-over forgetting (STA-3) and does not assume "forget" means deletion; the good-save definition is independent of the current validation sequence and counts saves already in storage at start; Phase 1 defines transitions as specified legal operations and decides commit-only versus intermediate-state validity; the Phase 1 requirement-scope table; F20 reproduction classes and the F23 folding rule; Phase 3 mapping appropriate to the claim and covering adopted properties; Phase 5 cannot close with a Candidate finding or a Not Assessed property; ledger, Score and ID-list fixes; survey attribution in Appendix C.
 * Added in the fourth review round (assistant drafting; the owner approves the blueprint as a whole): R4 decides whether a save written during a step that then faults counts as the last good save, and the good-save content definition does not settle it; F20 has a Correspondence question; "reported" is stated as an owner interpretation because REQUIREMENTS.md gives no method or audience (checked: only SAF-3 and SAF-5 use the word); Phase 1 fills only Scope and Owner decision in the scope table.
 * Added in the third review round (assistant drafting; the owner approves the blueprint as a whole): the Apple statement now says O1 to O8 are the owner's adopted properties with Apple material as inspiration only and no cited source; the scope-table rows are labelled illustrative; F20 has an applicability question; Phase 1 exit has an observable "fault reported" criterion; Phase 2 records a reason for each excluded file.
 * Added in the previous review round (assistant drafting; the owner approves the blueprint as a whole): "forgetting" replaces "deletion" in F20, 4.7 and N1, and the N1 record is corrected against gameManager.js:194; the good-save definition separates persisted-state validity from transition ordering; Phase 4.1 states that the implementation predicate cannot supply its own expected result; F20 separates the ordering question from the consequence question and states that the high-score write is not presumed to follow the saved-game rule; Phase 1 defines "reported" independently of the callback; a concrete requirement-scope table template; the status wording separates the persistence-ordering framework from the open R2 and R4 semantics. The three earlier history blocks were removed as superseded by this Changelog, and the "(drafted)" marker convention was dropped.
@@ -65,14 +65,14 @@ Before implementing any production change, architecture change, requirement chan
 4. the proof method or testing method proposed for the claim;
 5. the assumptions, covered code/model, evidence required, and known limitations;
 6. the declared falsification procedure, partitions, and stopping bound, where applicable;
-7. the disposition of every identified candidate finding, including Not reproduced where appropriate;
+7. the disposition of every identified candidate finding, including Not Reproduced where appropriate;
 8. the required requirement/security-scope decisions;
 9. the proposed correction and its regression test, for confirmed defects;
 10. explicit user/project-owner approval for any decision that changes requirements, security scope, production behavior, architecture, or the permanent test set.
 
 No-counterexample results, successful tests, reviewed arguments, and machine-checked proofs are not interchangeable forms of evidence.
 
-A phase is not complete merely because its work was attempted. It is complete only when its declared evidence and exit criteria are satisfied, or an explicit Not established or Out of scope disposition has been approved.
+A phase is not complete merely because its work was attempted. It is complete only when its declared evidence and exit criteria are satisfied, or an explicit Not Established or Out of Scope disposition has been approved.
 
 Requirement or security-scope decisions may be proposed during the phase responsible for resolving them, but may not be implemented without explicit user/project-owner approval.
 
@@ -102,7 +102,7 @@ The Audit Advancement Gate, numbered phase-exit criteria, mandatory candidate re
 
 Evidence vocabulary
 
-Proof method
+Proof Method
 
 The method by which a universal claim is established.
 
@@ -120,29 +120,29 @@ Proven means established by a stated deductive proof method over a stated domain
 
 The method must be named.
 
-A reviewed deductive argument and a machine-checked formal proof are different methods; only the latter is Formally verified.
+A reviewed deductive argument and a machine-checked formal proof are different methods; only the latter is Formally Verified.
 
-Formally verified
+Formally Verified
 
 Reserved for an actual machine-checked formal proof.
 
 A reviewed argument is not formally verified merely because it is detailed or rigorous.
 
-Not established
+Not Established
 
 Available evidence is insufficient to make either a proof or testing claim at the required scope.
 
-Not reproduced
+Not Reproduced
 
 A specified reproduction attempt did not reproduce the reported behavior.
 
-Not reproduced is not equivalent to Rejected and does not by itself establish correctness.
+Not Reproduced is not equivalent to Rejected and does not by itself establish correctness.
 
 Rejected
 
 The concern was evaluated and does not violate the applicable requirement or adopted property.
 
-Evidence gap
+Evidence Gap
 
 Required evidence for a finding or property claim has not yet been obtained. It does not determine finding status or property-certification status.
 
@@ -174,9 +174,9 @@ The authoritative project requirements are defined in REQUIREMENTS.md.
 
 For the requirements that govern the core safety and correctness proof, this blueprint reproduces the exact wording from REQUIREMENTS.md at commit 30e0085. The remaining requirements are cited by ID and remain governed by REQUIREMENTS.md. IDs cited elsewhere in this blueprint without reproduction (including STA-3, STA-6, PCE-1 to PCE-6, APP-2, APP-3, SCO-1, SCO-2, INP-1, INP-2, PLY-3 and PLY-6) were checked to exist in REQUIREMENTS.md at 30e0085 during this revision; only the IDs reproduced here are quoted.
 
-Applicable requirements are all REQUIREMENTS.md requirements within the declared audit scope, plus any security properties explicitly adopted by owner approval. Scope is declared in Phase 1 as an explicit requirement-scope table: every REQUIREMENTS.md ID is marked in scope, out of scope, or not yet scoped, and no requirement may be excluded merely because it is inconvenient to prove. A requirement outside scope is listed as not certified, not silently omitted.
+Applicable requirements are all REQUIREMENTS.md requirements within the declared audit scope, plus any security properties explicitly adopted by owner approval. Scope is declared in Phase 1 as an explicit requirement-scope table: every REQUIREMENTS.md ID is marked In Scope, Out of Scope, or Not Yet Scoped, and no requirement may be excluded merely because it is inconvenient to prove. A requirement outside scope is listed as Not Certified, not silently omitted.
 
-"In scope" means the audit undertakes to address and certify the requirement if sufficient evidence can be obtained. It does not mean the requirement is established or certified. Evidence that cannot be obtained, for example because it needs a particular device or browser, is recorded as an evidence gap against the requirement. It is not by itself a reason to exclude the requirement from scope.
+"In Scope" means the audit undertakes to address and certify the requirement if sufficient evidence can be obtained. It does not mean the requirement is established or certified. Evidence that cannot be obtained, for example because it needs a particular device or browser, is recorded as an evidence gap against the requirement. It is not by itself a reason to exclude the requirement from scope.
 
 Pre-audit repository verification record (this revision, not Phase 0): a script compared each of the nine reproduced requirement texts (SAF-1, SAF-2, SAF-3, SAF-4, PLY-2, PLY-7, STA-1, STA-4, APP-6) against the REQUIREMENTS.md row at 30e0085, and all nine matched exactly. The same check was run on the STA-6, PCE-* and APP-* IDs for existence. This is a pre-audit drafting-time check. It is not Phase 0 and not audit evidence; Phase 0 re-runs it and records the output.
 
@@ -461,7 +461,7 @@ Phase 1 closes only when:
 * the authoritative transition boundary definition is recorded;
 * the trust assumptions are recorded, including whether scheduler registration and cancellation are inside or outside the trusted boundary, starting from AUDIT.md D2, F5 and F6;
 * "fault reported" (SAF-3, SAF-5) has an observable criterion decided in Phase 1 with the owner's approval, because no requirement says how or to whom a fault is reported, such as a user-visible fault indication, a persistent fault record, a callback invocation, or a stated combination, recorded before O5 is certified and independent of the callback the implementation currently invokes;
-* the requirement-scope table has every REQUIREMENTS.md ID in one row with Scope (in scope or out of scope; none remains not yet scoped) and an owner-approved decision filled; the later columns are filled in Phases 3 and 5; no requirement is out of scope merely because it is inconvenient to prove; every requirement outside scope is listed as not certified (1.1);
+* the requirement-scope table has every REQUIREMENTS.md ID in one row with Scope (In Scope or Out of Scope; none remains Not Yet Scoped) and an owner-approved decision filled; the later columns are filled in Phases 3 and 5; no requirement is Out of Scope merely because it is inconvenient to prove; every requirement outside scope is listed as Not Certified (1.1);
 * the applicable requirements for each proof obligation are identified;
 * any conflicting, ambiguous, or apparently inconsistent requirements have been identified and resolved by existing requirement text or by an explicit owner-approved requirement clarification or change;
 * each approved Phase 1 decision is recorded as normative decision text, separate from implementation evidence: the text states the decision without code locations, test names, observed implementation behavior or finding history (an identifier of a persisted or user-visible field stays where the decision cannot be stated without it), so the owner-approved decision text can be used in the O8 model input pack without leaking implementation detail; evidence and findings are recorded in separate records;
@@ -469,7 +469,7 @@ Phase 1 closes only when:
 
 Requirement-scope table template. The rows below are illustrative only; they are not the artifact. Phase 1 fills the Scope and Owner decision columns for every row. Later phases fill the rest: Phase 3 the Applicable claim and Evidence method, Phase 5 the Certification status. Each REQUIREMENTS.md ID occupies exactly one row, and no ID may be missing or duplicated:
 
-Requirement | Scope (in scope / out of scope; not yet scoped only before closure) | Applicable claim | Evidence method | Owner decision | Certification status
+Requirement | Scope (In Scope / Out of Scope; Not Yet Scoped only before closure) | Applicable claim | Evidence method | Owner decision | Certification status
 SAF-1 | ... | ... | ... | ... | ...
 SAF-2 | ... | ... | ... | ... | ...
 
@@ -486,7 +486,7 @@ The phases are numbered by sections 2 to 10 of this blueprint. Each phase closes
 * Phase 2 (inventory) closes when every route in the section 2 inventory that can affect authoritative state is mapped to the independently defined boundary, and every outer-layer route is recorded as audited for containment or bypass, each with a code reference, and every file excluded from the inventory has a recorded reason it cannot affect an in-scope claim.
 * Phase 3 (correctness evidence) closes when every in-scope requirement and every adopted property has a proof-obligation record under 3.3 with a stated method and a complete mapping appropriate to the claim: requirement, applicable state property, transition class where applicable, production route or trusted component, model transition where applicable, evidence method and evidence. No artificial model or route relationship is created to fill the template. A row without the mapping appropriate to its claim does not close the phase.
 * Phase 4 (falsification) closes when every declared domain is exhausted, or covered by a claim certified Proven under 5.2, or each limitation is documented, justified and approved, and every candidate has a recorded disposition.
-* Phase 5 (classification and certification) closes when every finding has one finding status and every property one certification status, no finding remains Candidate, and no in-scope property remains Not assessed.
+* Phase 5 (classification and certification) closes when every finding has one finding status and every property one certification status, no finding remains Candidate, and no in-scope property remains Not Assessed.
 * Phase 6 (correction) closes when every confirmed defect has an owner-approved minimal correction and a defined regression test.
 * Phase 7 (implementation) closes when each approved change is made and its verification is recorded.
 * Phase 8 (re-prove and re-falsify) closes when the original counterexamples are re-falsified and the evidence relevant to the corrected property is repeated, together with any protection whose behavior the correction could have affected. A persistence correction repeats the O4 evidence, a boundary correction the boundary analysis, a timer correction the timer evidence; an unrelated correction does not trigger the others.
@@ -583,7 +583,7 @@ Each property must have an explicit record containing:
 * the production routes or trusted components for those transition classes;
 * the model transitions that correspond to them, where the model is applicable (no artificial model relationship is created to fill the template; where the model does not apply, the record names the actual independent evidence method);
 * claim;
-* proof method;
+* Proof Method;
 * assumptions;
 * covered production code;
 * covered model code, if applicable;
@@ -1113,18 +1113,18 @@ Allowed finding states:
 
 * Candidate
 * Reproduced
-* Not reproduced
+* Not Reproduced
 * Rejected
-* Requirement clarification
-* Confirmed defect
+* Requirement Clarification
+* Confirmed Defect
 * Fixed
 * Reverified
 
-Not reproduced means only that the specified reproduction did not reproduce the behavior.
+Not Reproduced means only that the specified reproduction did not reproduce the behavior.
 
 Rejected means the concern was evaluated and does not violate the applicable requirement or adopted property.
 
-A finding may require a requirement clarification while a related property remains Not established.
+A finding may require a requirement clarification while a related property remains Not Established.
 
 A confirmed defect may coexist with an unresolved requirement question if the defect does not depend on that question.
 
@@ -1134,20 +1134,20 @@ A confirmed defect may coexist with an unresolved requirement question if the de
 
 Allowed property statuses:
 
-* Not assessed
-* Not established
-* Tested within stated bounds
-* Proven by reviewed argument
-* Proven by exhaustive enumeration
-* Formally verified
-* Partially established
-* Out of scope
+* Not Assessed
+* Not Established
+* Tested Within Stated Bounds
+* Proven by Reviewed Argument
+* Proven by Exhaustive Enumeration
+* Formally Verified
+* Partially Established
+* Out of Scope
 
-Every Proven by reviewed argument claim must state its argument and assumptions.
+Every Proven by Reviewed Argument claim must state its argument and assumptions.
 
-Every Proven by exhaustive enumeration claim must state the complete domain, show that it was enumerated in full, and justify its oracle.
+Every Proven by Exhaustive Enumeration claim must state the complete domain, show that it was enumerated in full, and justify its oracle.
 
-Formally verified may be used only for an actual machine-checked formal proof.
+Formally Verified may be used only for an actual machine-checked formal proof.
 
 ⸻
 
@@ -1181,7 +1181,7 @@ No correction is implemented until:
 
 The correction must preserve all requirements not deliberately changed.
 
-Each change is classified under REQUIREMENTS.md, “Classifying changes”: Refactor, Bug fix, Intentional change and/or Clarification, with the evidence that section requires for each class. The class is decided only after the behavioral effect is established.
+Each change is classified under REQUIREMENTS.md, “Classifying changes”: Refactor, Bug Fix, Intentional Change and/or Clarification, with the evidence that section requires for each class. The class is decided only after the behavioral effect is established.
 
 One conceptual defect per PR, in the smallest commits and smallest PRs.
 
@@ -1345,7 +1345,7 @@ Status: Rejected
 
 A stored high score such as 150 is accepted and shown, while a saved game with a score of 150 is rejected.
 
-Disposition: Rejected, harmless.
+Disposition: Rejected, Harmless.
 
 The game only stores real scores, so such a high-score value requires manual storage editing.
 
@@ -1530,7 +1530,7 @@ R1 and SAF-4 determine the exact required timer-state predicate.
 
 L1
 
-Status: Candidate. Evidence gap: open.
+Status: Candidate. Evidence Gap: open.
 
 A prior random-play probe produced 3,738 locks with zero line clears.
 
@@ -1566,7 +1566,7 @@ R5 determines the applicable scope.
 
 Score
 
-Status: Candidate. Evidence gap: possible.
+Status: Candidate. Evidence Gap: possible.
 
 Replacing `Number.isSafeInteger(score)` with `Number.isInteger(score)` in a scratch mutation permits unsafe integer scores.
 
@@ -1788,7 +1788,7 @@ C1. Status and limits
 
 * This appendix is reference material. It is not a requirement, it adopts no rule, and it is not evidence that tetris-js satisfies any requirement or property. REQUIREMENTS.md at 30e0085 decides what counts as a defect.
 
-* A difference between tetris-js and a published game is not a finding. It becomes a finding only if it breaks a REQUIREMENTS.md requirement. Adopting a published rule as a new requirement is an Intentional change, made in REQUIREMENTS.md together with its code; it is not a finding.
+* A difference between tetris-js and a published game is not a finding. It becomes a finding only if it breaks a REQUIREMENTS.md requirement. Adopting a published rule as a new requirement is an Intentional Change, made in REQUIREMENTS.md together with its code; it is not a finding.
 
 * Coverage is a representative sample, not "all public versions of Tetris", which is not a finite list. Read in full or in the relevant parts: the 2009 Tetris Design Guideline (a leaked, unauthenticated copy read as archive.org OCR text, so it may contain OCR errors and may differ from later versions), community wiki summaries, the source of three public engines, one formally analyzed Tetris, and web-platform security guidance. README level only: tetr.js and tetrs. No engine was run, no other engine's tests or lock delay, hold and scoring code was read, and the Tetris Company's current rules are not public.
 
@@ -1842,9 +1842,9 @@ term-tetris (Rust) | src/tetromino.rs | 16 of 16 match | Restores the old rotati
 
 python-tetris (Python) | tetris/impl/rotation.py | 15 of 16 match | One I-piece entry (2 to R, fifth test) reads (row -1, col +2) where the wiki converts to (row -1, col -2). Looks like a sign typo. A lead, not a confirmed bug: not run, tests not read, not reported upstream.
 
-AdaCore SPARK Tetris (Ada) | Two blog posts only | Not checked | Proves absence of run-time errors (array bounds, ranges) on about 165 lines of game logic. The article does not claim rule correctness.
+AdaCore SPARK Tetris (Ada) | Two blog posts only | Not Checked | Proves absence of run-time errors (array bounds, ranges) on about 165 lines of game logic. The article does not claim rule correctness.
 
-tetr.js, tetrs | README only | Not checked | Guideline and SRS compliance claimed, not verified.
+tetr.js, tetrs | README only | Not Checked | Guideline and SRS compliance claimed, not verified.
 
 * The supplied research survey reports that the tables in tetris-js agree with the published tables (inherited, unverified). That would check the numbers only.
 
@@ -1932,3 +1932,7 @@ Candidate entries:
 * GitHub Actions and repository settings. On: dependency graph, Dependabot alerts (0 open), Dependabot security updates, secret scanning alerts, Copilot Autofix. Push protection appears enabled, inferred from a button label, and is unverified. Not set up: CodeQL, Dependabot version updates, dependabot.yml, private vulnerability reporting, SECURITY.md. Actions are referenced by tag, SHA pinning is not required, and the default token is read-only.
 
 Non-goals of this audit's trust accounting: CSP, a header proxy, CodeQL, Dependabot version updates, SHA pinning and storage persistence are not requirements and are not adopted here; each is a separate owner decision. CSRF, CORS and authentication are conditional on a real backend, an authenticated surface or cross-origin use, none of which this project has today. Apple material is not a guarantee for this project. A checksum detects accidental corruption and is not protection against a local player or a malicious change.
+
+Status-label publication migration
+
+Human-authored status labels use title case, with short prepositions such as by and of lowercase. Historical published status records have been restyled as well; status meanings and assignments are unchanged. Original source, review and model-input identities remain historical. AUDIT.md and docs/status-label-migration.md identify the successor publication bytes. Verbatim requirement quotations, runtime identifiers and raw external result strings retain their original spelling.

@@ -7,10 +7,10 @@
 <!-- See "Rules for changes" in REQUIREMENTS.md. Tick every class that applies. -->
 
 * [ ] **Refactor:** game code changes, behavior does not. Requirement entries are unchanged and the tests pass; tests change only to follow renamed or moved code.
-* [ ] **Bug fix:** game code is brought back in line with an existing requirement. Which requirement, and which test failed before the fix?
-* [ ] **Intentional change:** behavior is added, changed or removed. Which requirement entries changed in the same commit, and which tests now check them?
+* [ ] **Bug Fix:** game code is brought back in line with an existing requirement. Which requirement, and which test failed before the fix?
+* [ ] **Intentional Change:** behavior is added, changed or removed. Which requirement entries changed in the same commit, and which tests now check them?
 * [ ] **Clarification:** requirement entries now describe behavior the game already has. Which entries, and which tests check them?
-* [ ] **No class needed:** no game code (`public/`) and no requirement entries change. The three rules still apply.
+* [ ] **No Class Needed:** no game code (`public/`) and no requirement entries change. The three rules still apply.
 
 ## Review questions
 
