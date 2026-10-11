@@ -57,4 +57,4 @@ The fixed O factory repeats O, and the O/T sequence factory repeats that sequenc
 
 The local O kind/position map and exact expected wall/landing/support geometry are now explicit arguments available for review. White support fixtures remain unadmitted as semantic locked-kind values; no new mapping or requirement is invented to make them valid. Independent construction of a valid-kind replacement would be a different fixture and would need its own source/execution identity.
 
-This does not certify PCE-1/PCE-3/PCE-6, PLY-1/PLY-4/PLY-5, close W10/W14/W16/W35 or settle A-pieces/A-positions/A-cells as complete domains. It does not promote any candidate or supply an approved limitation. Full child admission, actual receipts, complete-domain discharge and every-candidate disposition remain separate. Phase4 stays OPEN.
+This does not certify PCE-1/PCE-3/PCE-6, PLY-1/PLY-4/PLY-5, close W10/W14/W16/W35 or settle A-pieces/A-positions/A-cells as complete domains. It does not promote any candidate or supply an approved limitation. Full child admission, actual receipts, complete-domain discharge and every-candidate disposition remain separate. Phase4 stays Open.

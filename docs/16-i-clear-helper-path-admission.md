@@ -42,4 +42,4 @@ SCO-1's literals are independent expected arithmetic, but this record does not p
 
 ## Stopping boundary
 
-IC-1 fills the selected I helper geometry and exact full-row/residual-coordinate premise. It joins GC-01..04/G-08 to the local lock and row-clear relations conditionally, without admitting white-kind/full-state/history. No all-state, all-kick or complete writer-domain discharge, new finding classification, property certificate, approved limit or Phase4 exit is asserted. Phase4 remains OPEN.
+IC-1 fills the selected I helper geometry and exact full-row/residual-coordinate premise. It joins GC-01..04/G-08 to the local lock and row-clear relations conditionally, without admitting white-kind/full-state/history. No all-state, all-kick or complete writer-domain discharge, new finding classification, property certificate, approved limit or Phase4 exit is asserted. Phase4 remains Open.

@@ -2,7 +2,7 @@
 
 The seven factory definitions produce the adopted piece geometry in all25 valid orientations. A source rotation identity, checked against the separate image and table, establishes the occupied offsets without asking production `cells`, `fits` or `dropDistance` for the answer. This supplies the canonical-coordinate premise of the landing argument, not admission of every caller or saved representation.
 
-Source argument for review. No game/test/model execution, new finding, property certificate, phase exit or production/test/model/CI change. Phase4 remains OPEN.
+Source argument for review. No game/test/model execution, new finding, property certificate, phase exit or production/test/model/CI change. Phase4 remains Open.
 
 ## Fixed sources and complete local domain
 

@@ -1,10 +1,10 @@
 # Phase 3 current claim-appropriate correspondence record
 
-Documentation-only current integration. The four original obligation documents retain their technical content. P3-C has nontechnical publication redactions; the other three remain unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
+Documentation-only current integration. The four original obligation documents retain their technical content. P3-C has nontechnical publication redactions. All four current publication copies now have title-case status and evidence-field labels. Their original source identities remain historical; technical meanings and status assignments are unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
 
 Pinned implementation main:. Public tree: 1e09ad61c19e0b235a231ad8810dae176be4ea77. Evidence identity is not execution, cached-phone identity, proof of all domains or compliance. Historical executed model revisions and caller choices retain their names. The current frozen reference model SHA256 is f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2; named applicable methods below are correspondence anchors, not an accepted universal oracle.
 
-Current source mapping is reviewed as complete appropriate to the original claims, including conditional premises, unresolved classifier outcomes and adverse source comparisons. Actual differentials retain their finite input/revision/choice/state/safe-failure scopes under blueprint 3.4. Source deductions are not promoted to executed comparisons. Candidate findings and Not assessed property statuses remain unchanged. Phase 4 exhaustion and Phase 5 disposition are separate. No production, requirement, permanent-test, model behavior or CI change is made by this document.
+Current source mapping is reviewed as complete appropriate to the original claims, including conditional premises, unresolved classifier outcomes and adverse source comparisons. Actual differentials retain their finite input/revision/choice/state/safe-failure scopes under blueprint 3.4. Source deductions are not promoted to executed comparisons. Candidate findings and Not Assessed property statuses remain unchanged. Phase 4 exhaustion and Phase 5 disposition are separate. No production, requirement, permanent-test, model behavior or CI change is made by this document.
 
 This candidate does not itself record an operative phase exit. Any formal gate record must bind these final published bytes, source identities, exact normal CI and existing owner authority; private preparation and independent review alone are not phase closure.
 
@@ -1431,7 +1431,7 @@ Declared fresh local browser fixtures used bound native setTimeout and performan
 
 SCO3 seed100 -> clear300 -> raw/getter300, highscore write precedes save payload; navigation raw300 only. Seed500 -> clear300 -> equal rewrite500, actual index navigation raw500/DOM500 with controlling serviceworker. Sameorigin navigation in fresh profile is not browser process restart, durable disk or physical phone evidence. Declared board filler is not whole-R1 validity or public reachability. All sixteen served source-body hashes equal pinned Git; server-sent bodies do not attest serviceworker cached response bytes.
 
-Four approved Not established relations remain exactly: delivery of both quick taps, double-tap recovery, zoomed-reload recovery and phone-cache identity. No fifth physical-wake/AT/persistence/canonical-color limitation is waived. Conditional methods and adverse candidates remain visible, not silently certified.
+Four approved Not Established relations remain exactly: delivery of both quick taps, double-tap recovery, zoomed-reload recovery and phone-cache identity. No fifth physical-wake/AT/persistence/canonical-color limitation is waived. Conditional methods and adverse candidates remain visible, not silently certified.
 
 ## Exact evidence identity ledger
 
@@ -1708,3 +1708,7 @@ Exact artifacts and source/assertion scope are in [grouped result identities](ph
 | manager-route-evidence/W34-V50-review.txt | 2d2ec3f6471c3b500f368becde7dbd74d481129c16ee173ac0b1e4c565e81265 | 4029 |
 | manager-route-evidence/shipped-manager-routes-v50.json | ea538add3147e391aefa05c374f05d8bbd289b0b725cf3ca9d127dbd60f3deb6 | 12301 |
 | manager-route-evidence/shipped-manager-routes-v50.mjs | f67545db75b00d84adc921641e37124b2f173f576521c425f0e7f9e76858c795 | 1624 |
+
+## Status-label publication migration
+
+The held-record and original-source identity tables above remain historical. They do not identify the new restyled publication copies unless a successor current identity is explicitly stated. Title-case labels change neither the 63 claim mappings nor any status assignment, limit, method or original evidence attribution. The migration receipt binds the restyled current publication.

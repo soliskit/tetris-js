@@ -93,10 +93,10 @@ None is adopted as a validity condition by this document. Each is classified, an
 
 | Property | Classification | Basis |
 | --- | --- | --- |
-| No row completely filled in a committed state | Derived legal-play property | SCO-1 clears full rows; holds only if lock and clear are one transition, which D16 section 4 does not decide. Not directly required of a state |
-| Score is a multiple of 100 | Derived legal-play property | SCO-1 awards fixed values; the table is not restated here. Not directly required of a state. Chosen once, in B11 |
-| Hold used implies a piece is held | Derived legal-play property | PLY-7. Not directly required. Hold-used with nothing held is not shown reachable, and is not shown invalid |
-| Bag, queue and current piece consistent with whole bags of seven | Derived history property | PCE-5. Cannot be evaluated from one state under B1 without history; not an R1 snapshot-validity condition, a later legal-play/history property |
+| No row completely filled in a committed state | Derived Legal-Play Property | SCO-1 clears full rows; holds only if lock and clear are one transition, which D16 section 4 does not decide. Not directly required of a state |
+| Score is a multiple of 100 | Derived Legal-Play Property | SCO-1 awards fixed values; the table is not restated here. Not directly required of a state. Chosen once, in B11 |
+| Hold used implies a piece is held | Derived Legal-Play Property | PLY-7. Not directly required. Hold-used with nothing held is not shown reachable, and is not shown invalid |
+| Bag, queue and current piece consistent with whole bags of seven | Derived History Property | PCE-5. Cannot be evaluated from one state under B1 without history; not an R1 snapshot-validity condition, a later legal-play/history property |
 
 ### A7. Persistence-content boundary (review notes; the normative rules are in B16)
 
@@ -199,3 +199,7 @@ Nothing in Part B is approved. Bracketed text is for the owner's choice. It hold
 **B16. Persisted content.** Arbitrary external data may be malformed, and invalid external data is not authoritative. A saved game is accepted whole or not at all. The pieces of an accepted saved game map to the built-in piece definitions. The gameplay contents of an accepted saved game are such that, when Continue restores them paused (STA-4), the resulting authoritative state is R1-valid; the saved payload's own representation of the mode is not decided here. Supported legacy formats are accepted. The level stored by the earlier format is ignored (STA-6). A saved game from before the bag was saved continues with a fresh bag (STA-4). An accepted stored high score is [owner: a value in the B11 score domain / a whole number of zero or more with no divisibility condition]; a stored high-score value outside the chosen domain is invalid and is ignored (SAF-2). Forgetting, discoverability, failure behavior, rollback, last-good-save and persistence ordering belong to R2 and R4 and are not stated here.
 
 **B17. Presentation state.** Presentation state (D16 1.5) is non-authoritative and outside the ordinary authoritative validity predicate. Its own requirements, which may also depend on viewport, device and browser state, are evidenced separately.
+
+Status-label publication identities
+
+The REQUIREMENTS.md source hash cited here identifies the historical source used by this record. It is not the hash of the later restyled publication copy. Normative requirement-ID rows are unchanged; the migration receipt records current publication identities separately. Other source hashes and byte counts in this record retain their original historical meanings.

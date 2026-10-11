@@ -1,6 +1,6 @@
 # Continue after a failed payload read
 
-Status: Confirmed defect by independently reviewed conditional source argument under the named premises, operative only after independent exact-head documentation review, checks, authorized merge and postmerge verification. Conditional source argument, not a new runtime reproduction, native storage failure, accepted correction, complete S7 property or Phase 4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument under the named premises, operative only after independent exact-head documentation review, checks, authorized merge and postmerge verification. Conditional source argument, not a new runtime reproduction, native storage failure, accepted correction, complete S7 property or Phase 4 closure.
 
 ## Independent criterion
 
@@ -35,6 +35,6 @@ The published `audit-status-and-dispositions-2026-10-06.md` already confirms the
 
 The published Phase3 storage/scoring observations already report a payload-read-throw case with old bytes retained and a false flag write. Its historical raw process/source receipts have not been recovered in this continuation, so it remains attributed corroboration, not fresh reproduction. The argument above uses the freshly fetched unchanged source and independently stated S7 criterion.
 
-Disposition: Confirmed defect by conditional source argument for successful false-eligibility write following a failed payload read under the named premises. Independent review passed the bounded source/criterion argument. Full read-failure compositions, false/unknown eligibility, flag-read failure, failed withdrawal write, current session-history mapping, native storage, UI discoverability and B16/S6/F20 remain separate. No implementation, permanent test, model, CI, requirement or public-site change is proposed.
+Disposition: Confirmed Defect by conditional source argument for successful false-eligibility write following a failed payload read under the named premises. Independent review passed the bounded source/criterion argument. Full read-failure compositions, false/unknown eligibility, flag-read failure, failed withdrawal write, current session-history mapping, native storage, UI discoverability and B16/S6/F20 remain separate. No implementation, permanent test, model, CI, requirement or public-site change is proposed.
 
 A later minimal correction must preserve the distinction between read failure and invalid returned content; it must not remove invalid-content withdrawal or create a retry/format policy without authority. Correction approval and failing-before/passing-after regression are separate from this finding draft.

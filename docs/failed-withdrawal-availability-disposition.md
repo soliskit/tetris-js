@@ -1,6 +1,6 @@
 # Failed withdrawal: ordinary Continue availability disposition
 
-Status: Confirmed defect by independently reviewed conditional source argument for the ordinary no-fit route below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native UI evidence, actual restoration, full R1/S6 or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the ordinary no-fit route below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native UI evidence, actual restoration, full R1/S6 or Phase4 closure.
 
 ## Criterion and starting content
 

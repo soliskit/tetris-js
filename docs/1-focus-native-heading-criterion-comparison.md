@@ -20,7 +20,7 @@ Do not conflate absence of a highlighted answer with a standalone violation of "
 
 ## Remaining gate
 
-The independent reviewer accepted the raw receipt, source identity, visibility, target and pixels. Content/classification review remains separate. Once that review and publication gates are satisfied, the historical Not established native-formation statement can be narrowed for this one local heading route only. The unresolved production/correspondence target still needs either a justified native-controller delivery relation with the named suffix, or a claim-specific source certification that explicitly states its input and commit/adaptation premises. Another broad focus probe or the same injected blur rerun does not settle that gate.
+The independent reviewer accepted the raw receipt, source identity, visibility, target and pixels. Content/classification review remains separate. Once that review and publication gates are satisfied, the historical Not Established native-formation statement can be narrowed for this one local heading route only. The unresolved production/correspondence target still needs either a justified native-controller delivery relation with the named suffix, or a claim-specific source certification that explicitly states its input and commit/adaptation premises. Another broad focus probe or the same injected blur rerun does not settle that gate.
 
 ## Proposed recorded disposition and ordinary-input consequence
 

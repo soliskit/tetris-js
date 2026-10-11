@@ -12,7 +12,7 @@ The source response, finite route calculations and historical evidence retain th
 
 The following text is retained as the historical conditional argument, not the current disposition or permission to act. Its unbounded-domain and Confirmed statements apply only to the earlier criterion. The current decision above supersedes that criterion without rewriting the old evidence.
 
-Status: Confirmed defect by independently reviewed conditional source argument for the exact stored number below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, all-format certification, a native storage claim or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the exact stored number below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, all-format certification, a native storage claim or Phase4 closure.
 
 ## Independent criterion and admission
 
@@ -46,6 +46,6 @@ The plain300 read-failure branch attempted and stored100, while the plain300 wri
 
 ## Disposition and remaining work
 
-Confirmed defect by conditional source argument: exact valid stored high9007199254740992 is read as0. Ordinary writer creation is not an admission gate for this external stored-content rule. Broader integer/format domains, legal-clear lower overwrite, native/cross-tab persistence, full SCO3/S8 and Phase4 remain open.
+Confirmed Defect by conditional source argument: exact valid stored high9007199254740992 is read as0. Ordinary writer creation is not an admission gate for this external stored-content rule. Broader integer/format domains, legal-clear lower overwrite, native/cross-tab persistence, full SCO3/S8 and Phase4 remain open.
 
 No correction, permanent test, reference-model feedback, requirement, CI or public-site change is authorized. No new upper limit or text grammar is adopted. Pending Q2 detector extent and separate Q1 interpretation are unchanged. A later correction needs its own approval and regression review without silently choosing a numeric-format boundary.

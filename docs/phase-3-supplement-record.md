@@ -2,7 +2,7 @@
 
 Status: prepared documentation record only. Phase 3 remains open. No finding classification, certification, requirements change or production/test/CI change.
 
-The unedited `phase-3-O1-O8-obligations.txt` supplies eight adopted-property records with the 13 blueprint3.3 fields, scoped dependency ledger and nine mapping gaps. It is implementation-exposed and never clean-author input. Its author's statements that no differential execution was performed refer to that worker's work, not the later coordinator scratch record. Later evidence is separate and does not retroactively replace or certify those original records.
+The restyled publication copy of `phase-3-O1-O8-obligations.txt` supplies eight adopted-property records with the 13 blueprint3.3 fields, scoped dependency ledger and nine mapping gaps. It is implementation-exposed and never clean-author input. Its author's statements that no differential execution was performed refer to that worker's work, not the later coordinator scratch record. Later evidence is separate and does not retroactively replace or certify those original records.
 
 `phase-3-model-method-mapping.md` supplies one row for each of the55 requirement IDs, with exact frozen revision4 model function anchors or explicit non-applicability, actual/planned independent methods, evidence held and limits. The original P3-C/D/E records retain claim/state/route/assumption details. Planned method is not executed evidence and function correspondence is not proof.
 
@@ -20,3 +20,7 @@ The scope table's55 claim/method cells cross-reference their underlying records 
 - Independent browser/input/display/app/QA/device methods where semantic model is not applicable.
 
 No closure or advancement is claimed until the governing criteria are met and their approval gate is satisfied. The owner automatic-through10 instruction retains those criteria and separate scope/safety gates.
+
+## Status-label publication migration
+
+The original adopted-property record was unedited at the time of this supplement. Its published status and evidence-field labels were later changed to title case. Original source identities and evidence attribution remain historical; technical meanings, limits and status assignments are unchanged. The migration receipt records the new publication identity.

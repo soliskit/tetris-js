@@ -22,4 +22,4 @@ This rules out that specific unfinished-open reuse and the simple retainedCancel
 
 ## Narrow disposition
 
-No new owner semantic choice is needed for the named rejected explanation. Remaining candidate admission is an evidence/domain question: whether the specified external blur+A class is admitted by the original outer-focus falsification target, with completed action semantics, rather than an invented history. Native blur frequency, whole STA1/INP4 and arbitrary-abstraction impossibility remain Not established. The generic missing overlap/abort policy is not being used as a blanket blocker or as permission to add one.
+No new owner semantic choice is needed for the named rejected explanation. Remaining candidate admission is an evidence/domain question: whether the specified external blur+A class is admitted by the original outer-focus falsification target, with completed action semantics, rather than an invented history. Native blur frequency, whole STA1/INP4 and arbitrary-abstraction impossibility remain Not Established. The generic missing overlap/abort policy is not being used as a blanket blocker or as permission to add one.

@@ -2,7 +2,7 @@
 
 The reviewed conditional source argument shows a fresh controller A request with no required selected-Cancel response. This proposes that one finding's classification. It does not claim physical controller reproduction, an invalid B12 state, a completed conceptual answer, or correctness of every focus history.
 
-Status: proposed Confirmed defect by conditional source argument, for independent classification review. Current formal finding remains Candidate/unresolved until this exact proposed disposition passes its independent classification and publication gates. Broad focus property Not established; Phase4 OPEN. No correction, permanent test, rule or owner choice is adopted.
+Status: proposed Confirmed Defect by conditional source argument, for independent classification review. Current formal finding remains Candidate/unresolved until this exact proposed disposition passes its independent classification and publication gates. Broad focus property Not Established; Phase4 Open. No correction, permanent test, rule or owner choice is adopted.
 
 ## Exact claim and criterion
 
@@ -27,7 +27,7 @@ The unfinished-answer alternative does not establish compliance with the require
 
 ## Proposed disposition and remaining obligations
 
-Proposed blueprint5.1 status: Confirmed defect for the exact conditional INP-4 missing-response source class. Not newly Reproduced: no physical-pad or new synthetic run occurred. The accepted heading measurement remains only the local pointer-prefix receipt. The broader original focus/commit candidate, all adapters, initial opening progress, highlight/style, Tab/default keys, failures and competing/native histories retain their own unresolved residues. This one child disposition must not close the W22-W24 or entire focus family.
+Proposed blueprint5.1 status: Confirmed Defect for the exact conditional INP-4 missing-response source class. Not newly Reproduced: no physical-pad or new synthetic run occurred. The accepted heading measurement remains only the local pointer-prefix receipt. The broader original focus/commit candidate, all adapters, initial opening progress, highlight/style, Tab/default keys, failures and competing/native histories retain their own unresolved residues. This one child disposition must not close the W22-W24 or entire focus family.
 
 No covering Proven whole-property claim is asserted. The method is a requirements-derived conditional source argument with independently reviewed request/response meaning, not an executable independent O8 model or machine-checked proof. Its assumptions and remaining gaps stay attached to the finding. Phase4 exit still needs full original-domain/candidate reconciliation or exact approved alternatives.
 

@@ -10,7 +10,7 @@ The game already exists. This publication changes its audit documentation, not t
 
 An audit phase is one stage of work with its own completion criteria. Phase 3 connects each rule to the code and a way to check it without simply trusting the code's own answer. Some checks compare one worked example. Others inspect every listed code path under stated assumptions. Independent reviews have checked bounded comparisons; they have not certified every rule.
 
-Phone recordings show installation, launch, portrait gameplay and Safari magnification followed by a reported pinch returning the page to normal size. The owner approved moving forward with four checks marked Not established, meaning the evidence does not establish them. That decision was not published promptly. This record preserves it, without pretending it certifies the whole game or completes every mapping review.
+Phone recordings show installation, launch, portrait gameplay and Safari magnification followed by a reported pinch returning the page to normal size. The owner approved moving forward with four checks marked Not Established, meaning the evidence does not establish them. That decision was not published promptly. This record preserves it, without pretending it certifies the whole game or completes every mapping review.
 
 ## What looked wrong, and under what conditions
 
@@ -20,7 +20,7 @@ A resize experiment did not reach its required starting condition. It has no com
 
 ## What remains unverified
 
-The recordings do not identify every finger contact or the exact files run from the phone's stored copies. Delivery of both quick taps, double-tap recovery, recovery after reloading while enlarged, and exact cached-file identity remain Not established. Other hardware, accessibility, color and timing relations still need claim-specific review; the four approved limits do not settle them.
+The recordings do not identify every finger contact or the exact files run from the phone's stored copies. Delivery of both quick taps, double-tap recovery, recovery after reloading while enlarged, and exact cached-file identity remain Not Established. Other hardware, accessibility, color and timing relations still need claim-specific review; the four approved limits do not settle them.
 
 ## What happens next
 

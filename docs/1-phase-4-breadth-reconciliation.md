@@ -50,6 +50,6 @@ No new owner decision is needed simply to do those research/evidence tasks. A ge
 
 ## Phase exit check
 
-Phase4 requires declared-domain exhaustion, a relevant Proven claim or a justified approved limit, and dispositions for every candidate. None of those whole-phase alternatives is established here. Phase5 cannot close while findings remain Candidate or in-scope properties Not assessed. Phase6 onward cannot be promoted by documentation or synthetic-provider success.
+Phase4 requires declared-domain exhaustion, a relevant Proven claim or a justified approved limit, and dispositions for every candidate. None of those whole-phase alternatives is established here. Phase5 cannot close while findings remain Candidate or in-scope properties Not Assessed. Phase6 onward cannot be promoted by documentation or synthetic-provider success.
 
 The next completion outcome is the exact covered/uncovered failure ledger and criterion dispositions, not a date estimate or an additional broad completion claim.

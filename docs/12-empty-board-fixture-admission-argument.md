@@ -60,7 +60,7 @@ For(-1,0),(20,0),(25,25), the relevant row property has no own entry and, by the
 
 GameManager constructor sets `rows=20`, `columns=10`, then assigns a completed createBoard result. MP-03 directly uses those same dimensions. `resetGameSession` also calls createBoard with manager dimensions; the local result applies only if dimensions remain20/10 and the call completes. The reset route still has other state writes, factory, resource and persistence obligations. A board returned by parsing is not this construction path and is not admitted by EB-1. New rows created during line clearing use a variable row count; this argument does not silently discharge that writer.
 
-This can close the local missing MP-03 construction/density/all-pairs alias argument and MP-04's exact expected access relation after review. It does not close A-dimensions/A-cells or W01/W06/W16/W35 as whole domains, assert ordinary full-game fixture admission, settle malformed/prototype inputs, classify a candidate, or certify PCE-1. Full semantic-kind mapping for locked cells remains separate. Phase4 stays OPEN.
+This can close the local missing MP-03 construction/density/all-pairs alias argument and MP-04's exact expected access relation after review. It does not close A-dimensions/A-cells or W01/W06/W16/W35 as whole domains, assert ordinary full-game fixture admission, settle malformed/prototype inputs, classify a candidate, or certify PCE-1. Full semantic-kind mapping for locked cells remains separate. Phase4 stays Open.
 
 ## Language-semantics sources
 
@@ -71,3 +71,7 @@ These current references support operational language facts, not new owner-adopt
 - [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining): nullish short-circuit and bracket access.
 - [Property accessors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Property_accessors): bracket keys/property lookup inputs.
 - [Inheritance and prototype chain](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain): inherited lookup explains why the prototype premise is required.
+
+Status-label publication identities
+
+The REQUIREMENTS.md source hash cited here identifies the historical source used by this record. It is not the hash of the later restyled publication copy. Normative requirement-ID rows are unchanged; the migration receipt records current publication identities separately. Other source hashes and byte counts in this record retain their original historical meanings.

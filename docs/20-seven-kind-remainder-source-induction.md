@@ -2,7 +2,7 @@
 
 A built-in factory refill starts with one of each canonical kind. Every shuffle step swaps two entries in that same seven-item list. Drawing removes its first entry, so a complete refill segment deals each kind once and the remaining bag is its ordered suffix. This holds for every valid received random value, not only a seed or midpoint sample. It does not claim unbiasedness, unpredictability, every sliding seven-piece window or every manager history.
 
-Source argument for independent review. No game/test/model execution, new finding, property certificate, phase exit or production/test/model/CI change. Phase4 remains OPEN.
+Source argument for independent review. No game/test/model execution, new finding, property certificate, phase exit or production/test/model/CI change. Phase4 remains Open.
 
 ## Sources, independent inventory and domain
 
@@ -51,4 +51,4 @@ Continue's resetBag(session.bag) carries the supplied remainder by reference. BR
 
 FB02's50 aligned groups can compare against K after the CF-1 token relation, rather than only seven arbitrary colors. FB04's constant0 swaps the initial source order into O,T,S,Z,J,L,I; that finite algorithm order is descriptive, not PCE5's prescribed order. FB08's constant0.999 selects self-swaps at each step and retains I,O,T,S,Z,J,L. FB07's supplied source indices0/4 denote I/Z and retain that order before refill. No new execution receipt for these children is claimed.
 
-BR-1 closes conditional seven-kind permutation, ordered suffix and successful draw accounting. It does not close hostile RNG/provider effects, alias mutation, exceptional prefixes, arbitrary custom factories, fairness, all manager histories, raw-save acceptance or the full factory child-domain. Existing private midpoint/seed runs retain their historical scope; no packet recovery or result promotion is implied. Phase4 remains OPEN.
+BR-1 closes conditional seven-kind permutation, ordered suffix and successful draw accounting. It does not close hostile RNG/provider effects, alias mutation, exceptional prefixes, arbitrary custom factories, fairness, all manager histories, raw-save acceptance or the full factory child-domain. Existing private midpoint/seed runs retain their historical scope; no packet recovery or result promotion is implied. Phase4 remains Open.

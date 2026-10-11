@@ -15,7 +15,7 @@ The coordinator ran the scratch under Node 26.10.0. Independent reviewers reran 
 - Model: frozen `GEOM`, expected predicate independently written as every occupied block in 20x10 with no equality to an occupied blocker. Neither production nor model `fits()` supplies expected results.
 - Evidence/method: 25 legal kind/orientation geometry pairs agree. Finite acceptance/rejection domain has 9375 positions: 25 orientations x rows -4..20 x columns -4..10. Empty board plus each in-board overlapping block gives 29375 cases (9375 empty,20000 blocker); 3931 true. Two first/last row-major free blockers per position add18750 cases,7862 true. Total48125,zero mismatches. Piece/play reviewer independently reproduced outputs and recomputed the incremental expected values; original geometry table comparison also agreed.
 - Assumptions: approved B2 table, ordinary JavaScript array/cell semantics; adapter maps kinds correctly. The separate table/image relationship is not settled by runtime agreement.
-- Limits: single blocker,fixed color,only10 distinct non-overlap blocker locations in extension,limited integer position range,no malformed types/multiple blockers/full-row boards,not kicks/spawn/rendering/color requirement or gameplay proof. Certification: Not assessed; claim/evidence Candidate.
+- Limits: single blocker,fixed color,only10 distinct non-overlap blocker locations in extension,limited integer position range,no malformed types/multiple blockers/full-row boards,not kicks/spawn/rendering/color requirement or gameplay proof. Certification: Not Assessed; claim/evidence Candidate.
 
 ## 2. Pause/resume and reset limit
 
@@ -26,7 +26,7 @@ The coordinator ran the scratch under Node 26.10.0. Independent reviewers reran 
 - Method/evidence: 49 invariant-valid O states,emptyboard,row18,col4,count0..15 across resume/move/pause plus paused16 resume. Compare mode,count,piece,locked-cellcount,gravity/lock resources. B9.2 explicitly says a paused, resting piece at count15 resumes with a new delay. Only paused15 resume differs: model retains piece/count15 and startsdelay;production locksfourcells,spawns,resetcount0. Direct paused16 resume agrees. This differs from the separate Continue trace, where restored count is incorrectly0 before resume.
 - Public reachability: NewGame,18softDrops,13/14/15surface moves,pause,resume. Count14 schedulesnew500msdelay;count15 locks immediately (candidate discrepancy);count16 locks (expected). No field injection in these three traces. Independent piece/play reviewer reproduced the49rows and public traces.
 - Requested-deadline evidence: clock123ms,one further move from13/14/15. Below15 newdue623;at15 keepsdue500. All three agree with B9.2. Requested scheduler effects only,not actual elapsedbrowser time.
-- Limits: injected initialstates are not all reachable;count0paused is invariant-valid but not ordinary restingpause result. Public traces prove only those concrete paths. Oonly/no rotations/no timercallbackinterleavings,inputresources,real deadlines or universalvalidity. Certification Not assessed; candidate discrepancy needs Phase4/5 disposition.
+- Limits: injected initialstates are not all reachable;count0paused is invariant-valid but not ordinary restingpause result. Public traces prove only those concrete paths. Oonly/no rotations/no timercallbackinterleavings,inputresources,real deadlines or universalvalidity. Certification Not Assessed; candidate discrepancy needs Phase4/5 disposition.
 
 ## 3. Pause-save,Continue and later resume
 
@@ -36,7 +36,7 @@ The coordinator ran the scratch under Node 26.10.0. Independent reviewers reran 
 - Model: `pause()`, `snapshot()`, `_save()`, `validate_save()`, `continue_game()`, `resume()` with explicit O geometry/queue. Semantic fields are compared,not invented released-format syntax.
 - Evidence:16 invariant-valid playing/resting Oinitialcounts0..15;pausecounts1..16 agree,Continueproductioncount0allcases,modelrestoresexact1..16. Piece/mode/stoppedresources agree. Independent piece/play reviewer reproduced model/save half;state/safety reviewer independently reproduced the production half only of the16-case save-and-Continue scratch.
 - Three public-action traces: NewGame,18softdrops,13/14/15surface moves,pause;newmanager,samestorage,Continue,resume. Savedcounts14/15/16;payloadkeys board,score,currentpiece,queue,held,holdavailable,bag withno count/lowest. Continueallcount0;resumeallstartdelay. Count16shouldlockinstantlyunderB9.2,so this shows abehavioraldifference independentofthe Olowestoffset. The independent piece/play reviewer reproduced this extension byte-identically on Node 22. Counts14/15 show state loss only in these traces; the count16 trace demonstrates the different lock outcome.
-- Limits: currentformatonly,nolegacycompatibilityclaim;Oonly,inmemorysuccessstorage,queue/bagnotfullsemanticpostcomparison. Lowest18production versus19model is aconstant Obox/blockoffset and alone is not abehavioraldefect. Newmanagertrace notactualreload/device. CertificationNotassessed;candidatecountloss,not approvedcorrection.
+- Limits: currentformatonly,nolegacycompatibilityclaim;Oonly,inmemorysuccessstorage,queue/bagnotfullsemanticpostcomparison. Lowest18production versus19model is aconstant Obox/blockoffset and alone is not abehavioraldefect. Newmanagertrace notactualreload/device. Certification Not Assessed;candidatecountloss,not approvedcorrection.
 
 ## 4. Failed withdrawal/save
 
@@ -46,7 +46,7 @@ The coordinator ran the scratch under Node 26.10.0. Independent reviewers reran 
 - Independentmethod: declared public-action traces withsuccessfulgoodsave,then injectedwrites throwing/readsworking. No productionvalidator or modelneeded for expectedS4/S5availability.
 - Evidence: goodOsaveatrow3 via3publicsoftDrops/pause;Trace A: only eligibility-indicator writes fail, then confirmed NewGame and top-out. Trace B: all writes fail, then an extra softDrop, failed pause-save, resume and top-out. Continueatgameoverrestoresoldrow3paused,0faults. Anewgamewasrow0;Bunsavedgamewasrow4. Oldbytesremainunchanged. Independent state/safety reviewer reproducedexact outputs onNode22;coordinatorNode26.
 - Earlier mixedNewGamefailure includedfailedpause-savefirst and is historical,not anisolatedwithdrawaltest. Reviewer'sownisolatedscripts clearfailurebeforeContinue;coordinator'sleavefailureactive,readsworking. Bothrestoreoldsave.
-- Limits: Oonly,inmemorystorage,fakescheduler,10harddrops boundedat100,noreadfailureS7,real localStorage,crosstab,reload,UIorallstoragefailurecombinations. CertificationNotassessed;S4/S5engine-levelcandidateonly.
+- Limits: Oonly,inmemorystorage,fakescheduler,10harddrops boundedat100,noreadfailureS7,real localStorage,crosstab,reload,UIorallstoragefailurecombinations. Certification Not Assessed;S4/S5engine-levelcandidateonly.
 
 ## 5. Timer registration fault subset
 
@@ -55,7 +55,7 @@ The coordinator ran the scratch under Node 26.10.0. Independent reviewers reran 
 - Production: guardedsoftDrop`527-529`,faultstop/loopcleanup in `gameManager.js`;source T3 trusted scheduler cancellation and S6 preservegoodsave.
 - Method: failureinjection withschedulerrecordedresources andobservablefaultsignal;notcallbackexistencealone.
 - Evidence: gameOver,0injectedtimers,1signal,goodsavebytesunchanged. Independent state/safety reviewer reproducedexact productionresult.
-- Limits: gravityregistrationonly;noinputtimer,clearTimeoutthrow,postcancelcallback,partialwrite,realbrowserresources. T1 requires a separate plain on-screen player message; its display was not observed. One test-observable signal is not the whole SAF-3 report criterion or safe-state proof. CertificationNotassessed;boundedsubsetcandidate.
+- Limits: gravityregistrationonly;noinputtimer,clearTimeoutthrow,postcancelcallback,partialwrite,realbrowserresources. T1 requires a separate plain on-screen player message; its display was not observed. One test-observable signal is not the whole SAF-3 report criterion or safe-state proof. Certification Not Assessed;boundedsubsetcandidate.
 
 ## 6. Fixed-orientation movement and soft-drop correspondence
 
@@ -63,7 +63,7 @@ Requirements/properties: PLY-1, defined PLY-3 semantic fall subset, PCE-6, O5/O8
 
 Declared before execution:25 legal orientations x3rows(0,8,floor row) x3columns(left bound,source-derived middle,right bound) x3actions(left,right,softdrop)=675 empty-board cases,count0. Initial and post model states valid,noUndefined. Compared mode,piece,count,semantic-lowest projection,full board,gravity/lock scheduler presence and fault count. Node26:675 agree,0faults. Independent piece/play reviewer regenerated inputs and reproduced both outputs exactly onNode22.
 
-Production lowest box row is normalized by fixed orientation's greatest local block row. This constant-offset conversion is valid only in the declared fixed-orientation domain; it cannot establish correctness of rotation/history or the meaning of the underlying lowest field. Rows0/8/floor give no landing-by-fall. No ledge,landing,nonemptyboard,new-lowest-by-move,count15/16,deadline or gravity-restart-counter comparison is claimed. Blockedsoftdrop compares unchanged semantics/resourcepresence,not restart timing. These are invariant-valid injected states,not all reachable states. Candidate correspondence only;certificationNotassessed.
+Production lowest box row is normalized by fixed orientation's greatest local block row. This constant-offset conversion is valid only in the declared fixed-orientation domain; it cannot establish correctness of rotation/history or the meaning of the underlying lowest field. Rows0/8/floor give no landing-by-fall. No ledge,landing,nonemptyboard,new-lowest-by-move,count15/16,deadline or gravity-restart-counter comparison is claimed. Blockedsoftdrop compares unchanged semantics/resourcepresence,not restart timing. These are invariant-valid injected states,not all reachable states. Candidate correspondence only;certification Not Assessed.
 
 ## 7. Reproducibility and authority
 

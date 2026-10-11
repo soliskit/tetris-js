@@ -1,6 +1,6 @@
 # Held soft drop after resume: ordinary callback disposition
 
-Status: Confirmed defect by independently reviewed conditional source argument for the physical S lineage below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native device evidence, full INP/U4/R1 or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the physical S lineage below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native device evidence, full INP/U4/R1 or Phase4 closure.
 
 ## Independent criterion and admission
 

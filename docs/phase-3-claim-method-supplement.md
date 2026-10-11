@@ -24,7 +24,7 @@ Implementation-exposed audit documentation. Not an accepted complete oracle or a
 | INP6/DSP8 AT | Role/name/focus/native activation/DOM/pixel/status method and scoped existing assertion evidence | Meaningful partial relation mapped; full heardAT/native focus execution not held. Evidence sufficiency for full native claim must stay explicit |
 | DSP1/4/6/7 | Layout/scale/gesture/default/context/component/wake policy methods, actual source/configured assertions/pixels/sentinels | Partial/source conditional relation mapped; later native Safari magnification and pinch return are recorded; paired-tap identity, zoomed reload, gamut measurement and broader screen behavior remain unheld, not waived by provider trust |
 | DSP5 | Source state→DOM/history/cross-tab/item16/highscore methods and actual source/finite comparisons | Mapped state/presentation relation with session/highscore candidates, not allrapidframes/canonicalcolors |
-| APP1/4 | Metadata/icons/CDP/layout/native target/install method with exact proxy assertions and icon pixels | Later recordings supply native installation, icon launch and named-device portrait gameplay evidence. Exact cached bytes remain Not established; full-screen meaning, other devices, future versions and exact engine are not inferred |
+| APP1/4 | Metadata/icons/CDP/layout/native target/install method with exact proxy assertions and icon pixels | Later recordings supply native installation, icon launch and named-device portrait gameplay evidence. Exact cached bytes remain Not Established; full-screen meaning, other devices, future versions and exact engine are not inferred |
 | APP2/6 | Independent labelled complete resource/creator/pin/cache effect method; actual private held evidence, not yet published and key/source inventories | Mapped own-content/version/creator comparisons including candidates; native cache/concurrency/clock/provider limits explicit |
 | APP3/5 | Literal graph/path algebra/rootHTTP/MIME/request initiator and static preload/import methods with actual samples | Mapped current shipped literalgraph/discovery relation, not dynamicallgrammar/performance guarantee |
 | QA1 | Actualregistration/assertion/source twojoin relation and meaningful witness/insufficiency records held privately, not yet published | Mapped method/applicability, not alltags success or everyrequirement full verification |
@@ -35,7 +35,7 @@ Implementation-exposed audit documentation. Not an accepted complete oracle or a
 
 ## Native evidence update and limits
 
-The earlier unsupported native installation and named-device observations subsequently received recording evidence: installation/icon launch, native portrait gameplay on the privately identified recorded target, and Safari magnification followed by pinch-associated return. Finger-contact identity and executed cache bytes remain uncertain. The exact four owner-approved Not established relations are listed in the limited-advancement record. Conditional platform contracts are not target execution, and target execution is not a universal compatibility proof.
+The earlier unsupported native installation and named-device observations subsequently received recording evidence: installation/icon launch, native portrait gameplay on the privately identified recorded target, and Safari magnification followed by pinch-associated return. Finger-contact identity and executed cache bytes remain uncertain. The exact four owner-approved Not Established relations are listed in the limited-advancement record. Conditional platform contracts are not target execution, and target execution is not a universal compatibility proof.
 
 ## Evidence interpretation
 
@@ -43,13 +43,13 @@ Independent geometric methods use the adopted fixed piece reference and explicit
 
 Shipped call-site inventories bound inspected source routes, not reflection, hostile aliases or public-helper protection. Tests sharing production predicates do not independently establish those predicates. Historical fixture/writer provenance is stated separately from original capture and runtime receipts. Model self-tests are self-consistency only; undefined choices remain undefined and implementation findings are not supplied to the clean model author.
 
-Every wider hostile, timing, native, grammar, interleaving and history domain remains a Phase 4 obligation unless separately disposed under its gate. Candidate findings and Not assessed certifications remain for Phase 5; none is upgraded by this supplement.
+Every wider hostile, timing, native, grammar, interleaving and history domain remains a Phase 4 obligation unless separately disposed under its gate. Candidate findings and Not Assessed certifications remain for Phase 5; none is upgraded by this supplement.
 
 ## Existing published record anchors
 
 The original per-requirement records are retained in `phase-3-proof-obligation-record.md` and `phase-3-obligations-P3-C.txt`, `-P3-D.txt`, `-P3-E.txt`. Adopted-property records are in `phase-3-O1-O8-obligations.txt`; model/method relationships and original bounded comparisons are in `phase-3-model-method-mapping.md` and `phase-3-differential-evidence.md`. D41 retains the original model freeze. D43-D49 identify later writer, storage, input, rendering and confirmation supplements by exact SHA-256. These historical records do not themselves claim closure.
 
-This family-level summary is not a replacement for the original 63 obligations or the later exact supporting artifacts. Before a final Phase 3 closure entry, review must bind each claim's later method/evidence update to a public evidence record, distinguish genuinely incomplete mappings from Phase 4 domains, and verify the four approved Not established limits. The summary alone is insufficient to certify that every such binding has been published.
+This family-level summary is not a replacement for the original 63 obligations or the later exact supporting artifacts. Before a final Phase 3 closure entry, review must bind each claim's later method/evidence update to a public evidence record, distinguish genuinely incomplete mappings from Phase 4 domains, and verify the four approved Not Established limits. The summary alone is insufficient to certify that every such binding has been published.
 
 ## Relation-specific native dispositions
 
@@ -63,8 +63,8 @@ No additional owner-approved limit is created here. Conditional source-contract 
 | INP-6 role/name/keyboard activation | Conditional accessibility/button-contract argument plus actual role/tab/handler/Hold assertions. | Browser/assistive-technology cooperation is a named premise. Actual reader recognition and native activation are not observed. Public binding/review pending. |
 | DSP-8 status announcement | Conditional ARIA status-contract argument composed with the initial exposed status node and text-update path. | No measured VoiceOver speech, exact announcement timing or all-settings result. Public binding/review pending. |
 | APP-1 installation/icon launch and APP-4 named device integration | Later recordings supply actual installation, icon launch and portrait gameplay on the named device/OS. | Literal full-screen relation and broader application integration still require claim-appropriateness review. System UI remaining visible is not silently accepted or called a classified defect. |
-| DSP-4 Safari magnification/pinch | Later recording and owner gesture report provide bounded target evidence. | Home Screen pinch candidate remains open. Paired-tap delivery, double-tap recovery and zoomed-reload recovery are the three approved Not established relations. |
-| Exact cached phone build | Served-file checks before/after are not cache execution attestation. | The fourth approved Not established relation. |
+| DSP-4 Safari magnification/pinch | Later recording and owner gesture report provide bounded target evidence. | Home Screen pinch candidate remains open. Paired-tap delivery, double-tap recovery and zoomed-reload recovery are the three approved Not Established relations. |
+| Exact cached phone build | Served-file checks before/after are not cache execution attestation. | The fourth approved Not Established relation. |
 | INP-1 to INP-4 hardware/simultaneous edges/elapsed time | Source dispatch, physical-token mappings and controlled-event/resource comparisons are held. | Whole-claim source/adapter correspondence still needs exact public binding/review; fake-event timing is not hardware elapsed time. |
 | INP-5 native touch frequency | Independent gesture equations and source touch-adapter composition are held; mouse/event traces are bounded evidence. | Exact public binding/review pending. Mouse traces alone do not establish native touch correspondence. |
 
