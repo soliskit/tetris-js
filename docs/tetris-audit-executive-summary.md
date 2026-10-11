@@ -36,6 +36,6 @@ Phase 4 remains open. Wider failure, timing, input, saved-content and native-dev
 
 ## Current status consolidation
 
-The later [status and disposition record](audit-status-and-dispositions-2026-10-06.md) separates the old Candidate reports from later narrow defect decisions. It also records Phase3's completed publication checks. That is not proof that the whole game is correct.
+A dated status and disposition record separated the old Candidate reports from later narrow defect decisions and recorded Phase3's completed publication checks. That page is deleted; of its records, only the Continue eligibility-read failure disposition is kept, now in AUDIT.md. That is not proof that the whole game is correct.
 
 The repository stayed quiet after PR90 while private evidence was reconciled. That work corrected real mistakes in the evidence, but did not finish Phase4. The next step is to close a specific remaining evidence or interpretation gate, rather than keep producing repeated source summaries. No fix is approved by this update, and there is no grounded finish date.
