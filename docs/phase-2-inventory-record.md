@@ -8,7 +8,7 @@ Boundary used: D16 section 4 (the conceptual commit of a specified legal operati
 
 ## 1. Partition evidence
 
-Five read-only partition inventories were produced at the base and are kept unedited under `docs/phase-2-inventory/` (SHA-256 below). They hold the route tables with code references. This record integrates them. Remarks inside those files about assignment text or phase status are the readers' own and carry no authority; the ledger governs.
+Five read-only partition inventories were produced at the base and are kept unedited under `docs/phase-2-inventory/` (SHA-256 below). They hold the route tables with code references. This record integrates them. Remarks inside those files about assignment text or phase status are the readers' own and carry no authority; the ledger governs. The five partition inventory files were later deleted; their bytes remain in git history, and the route tables survive only as integrated in this record.
 
 | Partition | Scope | File | SHA-256 |
 | --- | --- | --- | --- |
