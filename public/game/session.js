@@ -153,6 +153,8 @@ export function parseSession(text, { rows, columns }) {
     // Not JSON: data stays null and is rejected below.
   }
   if (!isObject(data)) return null;
+  // Older layouts stored a level or left out the remaining bag.
+  if (Object.hasOwn(data, 'level')) return null;
 
   const gameBoard = parseBoard(data.gameBoard, rows, columns);
   if (!gameBoard) return null;
@@ -173,8 +175,7 @@ export function parseSession(text, { rows, columns }) {
     if (!heldTetromino) return null;
   }
   if (typeof data.canHoldTetromino !== 'boolean') return null;
-  // Saves from before the bag was saved carry on with a fresh one.
-  const bag = data.bag === undefined ? [] : parseBag(data.bag);
+  const bag = parseBag(data.bag);
   if (!bag) return null;
 
   return {
