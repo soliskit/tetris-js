@@ -58,7 +58,7 @@ assertSafeStop checks literal gameOver, zero fake outstanding timers, null two e
 
 The named last-good-save test first creates its supposed good save through production Pause, captures the bytes, injects a factory exception and compares retained bytes/flag, then Continues. This tests byte preservation and selected restoration, but not independent prior-good B16/S6 content/history. The comment good save does not establish that premise. Successful fake cancellation does not cover failed cancellation U3, provider retain-then-throw or native lifecycle. Later reporter-failure tests cover selected compositions, not every notice/signal/storage/timer combination.
 
-Remaining: per-route cut and property ledger, distinguishing fault-only S3 from failed-save S5 and confirmed-New-Game S2. Existing serialization failure disposition is already Confirmed by its reviewed conditional source method; ordinary native serialization causes remain Not established and no correction permission follows.
+Remaining: per-route cut and property ledger, distinguishing fault-only S3 from failed-save S5 and confirmed-New-Game S2. Existing serialization failure disposition is already Confirmed by its reviewed conditional source method; ordinary native serialization causes remain Not Established and no correction permission follows.
 
 ## Next work
 

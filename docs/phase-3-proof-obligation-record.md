@@ -2,7 +2,7 @@
 
 Status: record recorded by ledger row D40 in `AUDIT.md`. The ledger row governs the status and provenance of this text. This record is implementation-exposed: its sources cite production code and tests, so it must never be given to a clean O8 model author. It adds no finding status, no certification status, no requirement change and no code change.
 
-Base: main. The three partition files preserve the original technical records. P3-C has nontechnical publication redactions; P3-D and P3-E remain unedited. The table records original source hashes, not a claim that all current published bytes are unchanged.
+Base: main. The three partition files preserve the original technical records. P3-C has nontechnical publication redactions. The current publication copies also have title-case status and evidence-field labels. P3-D and P3-E were unedited before that spelling migration. The original records and their source identities remain historical; technical meanings and status assignments are unchanged. The table records original source hashes, not a claim that all current published bytes are unchanged.
 
 ## 1. Partition files and requirement coverage
 
@@ -12,7 +12,7 @@ Base: main. The three partition files preserve the original technical records. P
 | P3-D | STA-1 to STA-6, SAF-1 to SAF-6, INP-1 to INP-6 | 18 | `docs/phase-3-obligations-P3-D.txt` |  |
 | P3-E | APP-1 to APP-6, DSP-1 to DSP-8, QA-1 to QA-6 | 20 | `docs/phase-3-obligations-P3-E.txt` |  |
 
-The integrator checked that each of the 55 requirement IDs in `docs/phase-1-requirement-scope.md` has exactly one record across the three files, with no ID missing or duplicated, and that each record carries the blueprint 3.3 fields. Every record has the status Candidate or Not assessed. Candidate means the record can carry evidence and lists its limits. Not assessed means a stated sub-claim has no method yet. No record is marked certified.
+The integrator checked that each of the 55 requirement IDs in `docs/phase-1-requirement-scope.md` has exactly one record across the three files, with no ID missing or duplicated, and that each record carries the blueprint 3.3 fields. Every record has the status Candidate or Not Assessed. Candidate means the record can carry evidence and lists its limits. Not Assessed means a stated sub-claim has no method yet. No record is marked certified.
 
 Current published P3-C SHA-256 after nontechnical redaction: . Its requirements, properties, transitions, routes, candidate statuses and technical limitations are unchanged.
 
@@ -38,3 +38,7 @@ Phase 3 is not closed. The exit needs, in addition to these records, the indepen
 
 - Any finding or certification status, any requirement or scope change, any code change.
 - Closure of Phase 3 or of any Phase 3 exit item.
+
+## Status-label publication migration
+
+Original partition source hashes and earlier disclosure-reduction identities remain historical. The current publication copies have title-case status and evidence-field labels; technical meanings, all requirement IDs and assigned statuses are unchanged. Current hashes are recorded in the migration receipt, not substituted for original reader inputs.

@@ -1,6 +1,6 @@
 PHASE 3 PARTITION P3-C: PROOF-OBLIGATION RECORDS (READ-ONLY PREPARATION, NOT CERTIFICATION)
 Repository: soliskit/tetris-js   Base: (main; verified by checkout, git log -1)
-Read-only preparation. Nothing was written to the repository. No O8 model input pack, model or model code was read or written. Statuses below are only Candidate or Not assessed. No finding status, certification status or requirement change is asserted.
+Read-only preparation. Nothing was written to the repository. No O8 model input pack, model or model code was read or written. Statuses below are only Candidate or Not Assessed. No finding status, certification status or requirement change is asserted.
 
 0. OWNED IDs (17), as written in REQUIREMENTS.md
 PCE-1 PCE-2 PCE-3 PCE-4 PCE-5 PCE-6 | PLY-1 PLY-2 PLY-3 PLY-4 PLY-5 PLY-6 PLY-7 PLY-8 | SCO-1 SCO-2 SCO-3
@@ -20,8 +20,8 @@ This read-only preparation creates no approval. D36/D38 record the owner scope, 
 
 0.3 Common field notes
 - "Model transitions": the O8 model was not read. Each record names the conceptual D16 section 5 or D32 operation the model must cover and marks "model correspondence pending model". Where a claim is not a transition property, the record names the independent method proposed.
-- "Proof method" values are proposals from the blueprint evidence vocabulary. Nothing is Proven.
-- "Status": Candidate means the record can carry evidence, with limitations listed. Not assessed means a stated sub-claim has no method that can run yet; the record says which.
+- "Proof Method" values are proposals from the blueprint evidence vocabulary. Nothing is Proven.
+- "Status": Candidate means the record can carry evidence, with limitations listed. Not Assessed means a stated sub-claim has no method that can run yet; the record says which.
 - Scratch checks (local clone in /tmp, no repository write) are leads, not evidence:
   S1: production rotation states compared cell by cell with the adopted table docs/sources/2-srs_table.txt (SHA-256 c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c, equal to D18): 0 mismatches for 7 kinds; O builds 1 state. The image 1-SRS-pieces.png (SHA-256 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236, equal to D18) was not compared. D18 B2 says a table/image disagreement stops for an owner decision, so the consistency check is an open Phase 3 step.
   S2: the gravity request interval*1000 for levels 1 to 26 differs from the exact rational value by at most about 1.4e-13 ms, below the 1e-9 ms tolerance of D21 S10. From level 24 on it is exactly 250.
@@ -44,13 +44,13 @@ G10 Every "model transitions" field is pending the frozen O8 model.
 
 --- RECORD PCE-1 ---------------------------------------------------
 Requirement: "The board is 10 columns by 20 rows. Positions outside it hold nothing."
-Scope row: in scope, owner approved (D15, docs/phase-1-requirement-scope.md).
+Scope row: In Scope, owner approved (D15, docs/phase-1-requirement-scope.md).
 State property: D16 1.1 item 1 (locked blocks); R1 B5 (exactly 20 rows of 10 positions, each empty or a locked block identifying one of seven kinds), B3 (a representation denotes exactly one value; no missing, extra or sparse entries). D25: O2.
 Transition classes: opening state; New Game (D32 op 3); lock and line clear (D32 Lock row); Continue; engine fault stop (own definition, D16 section 8).
 Production routes / trusted components: GM:93-94 (rows 20, columns 10); GS:42-44 createBoard; GM:115 constructor; GM:184 resetGameSession; GM:327-332 lockTetrominoInPlace; GM:334-351 clearFullRows (splice n rows, unshift n new rows of this.columns, GM:342-346); GM:208 loadGameSession with SS:76-97 parseBoard (exact 20 and 10, boolean isFilled, color a piece color or null); GS:55-57 cellAt and TM:27-29 isFree (outside position gives undefined, not free). Trusted: JS array semantics only.
 Model transitions: lock, line clear, new game, continue (pending model).
 Claim: In every committed non-fault state the board has exactly 20 rows of 10 cells, each empty or holding the color of one of the seven kinds. No operation puts anything outside it, and a position outside holds nothing.
-Proof method (proposed): reviewed deductive argument by induction over the board writers (dimension-preserving; lock writes only cells of a piece that fits, TM:95-97) plus exhaustive enumeration of the per-cell domain (empty or 7 colors) for parseBoard's cell test against an independently stated B5 predicate. Dimension attacks belong to Phase 4.1.
+Proof Method (proposed): reviewed deductive argument by induction over the board writers (dimension-preserving; lock writes only cells of a piece that fits, TM:95-97) plus exhaustive enumeration of the per-cell domain (empty or 7 colors) for parseBoard's cell test against an independently stated B5 predicate. Dimension attacks belong to Phase 4.1.
 Assumptions: the lock precondition (piece fits, see PCE-6); untrusted storage is validated (D23 U1).
 Production code covered: GM:93-94, 115, 184, 208, 327-351; GS:42-44, 55-57; SS:76-97; TM:27-29, 95-97.
 Model code: pending (not read).
@@ -65,7 +65,7 @@ Transition classes: none change the definitions. Users: spawn, copy, load (piece
 Production routes: TF:12-20 PieceColors (frozen); TF:50-58 piece() (spawn shape then clockwise matrix rotations, one state for O); TF:61-71 allPieces; TM:45-53 copy (shares rotations); SS:66-68 pieceWithColor, SS:106-115, SS:123-126 (stored shapes ignored).
 Model transitions: none. Independent method: comparison with the owner-adopted geometry reference (the oracle).
 Claim: Each of the seven kinds has implementation rotation states equal to the adopted reference (four blocks each; 4 states, O 1), one fixed color, and the seven colors are pairwise distinct so color identifies kind.
-Proof method (proposed): exhaustive enumeration of the finite domain (7 kinds, 25 state shapes, 7 colors) against the adopted table and image, with an enumerator and expectation independent of production code (Proven by exhaustive enumeration only if so). Distinctness and constancy of colors: reviewed argument (frozen constant, copy() copies color).
+Proof Method (proposed): exhaustive enumeration of the finite domain (7 kinds, 25 state shapes, 7 colors) against the adopted table and image, with an enumerator and expectation independent of production code (Proven by Exhaustive Enumeration only if so). Distinctness and constancy of colors: reviewed argument (frozen constant, copy() copies color).
 Assumptions: the two files are the oracle fixed by checksum (D18). Color values are not oracle-defined; the requirement gives none.
 Production code covered: TF:12-71; TM:45-53; SS:66-68, 106-126.
 Model code: none expected.
@@ -80,7 +80,7 @@ Transition classes: next piece after lock (D32 Lock row); Hold (D32 Hold row, he
 Production routes: TM:59-66 spawned(columns): rotationState 0, row 0, column max(0, trunc((columns - boxWidth)/2)), boxWidth = rotations[0][0].length (I 4, O 2, others 3); GM:231 generateNextTetromino; GM:563-565 hold; GM:189 resetGameSession; GM:113 constructor. Queue pieces are spawned at use (GM:230-231).
 Model transitions: spawn within lock, hold, new game (pending model).
 Claim: Every newly current piece has rotation state 0 at row 0 and column 3 for I, 4 for O, 3 for the 3-wide kinds. Its blocks lie in rows 0 to 1. If it does not fit, the game ends (STA-3, not owned here).
-Proof method (proposed): exhaustive enumeration over the 7 kinds against B2 geometry plus a stated centering rule. The "centered" part can be Proven only after G5 is settled.
+Proof Method (proposed): exhaustive enumeration over the 7 kinds against B2 geometry plus a stated centering rule. The "centered" part can be Proven only after G5 is settled.
 Assumptions: B2 geometry.
 Production code covered: TM:59-66; GM:113, 189, 231, 563-565.
 Model code: pending.
@@ -95,7 +95,7 @@ Transition classes: rotate clockwise, rotate counterclockwise (D32 "Move left or
 Production routes: GM:511-516 -> GM:583-590 rotateTetromino -> TM:131-151 rotate. Input (cross-reference): IC:41-42, IC:54-56, SC:489. Kick data TF:28-42 (JLSTZ table, I table, O table with one row).
 Model transitions: rotate-CW, rotate-CCW (pending model).
 Claim: Rotate in a direction tries that direction's target state with that direction's kicks in table order and takes the first fit; if none fits it tries the other direction; if none fits state and position are unchanged; O never changes. CCW kicks are the CW kicks of the destination state negated (TM:140-143).
-Proof method (proposed): (1) reviewed deductive argument for the control flow of TM:131-151; (2) exhaustive enumeration over 7 kinds x 4 states x 2 directions x blocking patterns of the candidate placements, classified by an independent kick oracle; (3) differential tests (pending). Step (2) cannot be Proven until G2 is closed.
+Proof Method (proposed): (1) reviewed deductive argument for the control flow of TM:131-151; (2) exhaustive enumeration over 7 kinds x 4 states x 2 directions x blocking patterns of the candidate placements, classified by an independent kick oracle; (3) differential tests (pending). Step (2) cannot be Proven until G2 is closed.
 Assumptions: the kick table is the SRS table the requirement names; an oracle must first be adopted.
 Production code covered: GM:511-516, 583-590; TM:95-97, 131-151; TF:28-42.
 Model code: pending.
@@ -110,7 +110,7 @@ Transition classes: refill and shuffle (random input); next piece; Hold with no 
 Production routes / trusted components: TF:98-103 generate; TF:80-87 shuffle (Fisher-Yates); TF:108-110 resetBag (takes the array by reference); TF:91-92 and GM:80 injectable random; GM:122-124 generateUpcoming; GM:187-190 resetGameSession; GM:215 loadGameSession; GM:228-233; SS:38 (bag saved by color), SS:133-137 parseBag, SS:177 (missing bag key -> empty bag). Trusted: random returns values in [0,1) (D24 V3).
 Model transitions: refill/shuffle (random as input), deal, new game, continue (pending model).
 Claim: (a) between refills each kind is dealt once per seven consecutive deals; (b) after New Game the first seven pieces dealt (current, three queued, three more) are all different; (c) Continue deals the saved remaining bag, or a fresh full bag when none was saved; (d) the random source is replaceable.
-Proof method (proposed): (a) exhaustive enumeration of the shuffle choice space (j choices for i = 6 down to 1, 7! = 5040) against a permutation predicate, plus a reviewed argument that generate refills only when empty and deals one piece per call; (b) reviewed argument (resetBag() empties the bag, the next 7 deals come from one bag); (c) Tested plus reviewed argument; (d) inspection and Tested.
+Proof Method (proposed): (a) exhaustive enumeration of the shuffle choice space (j choices for i = 6 down to 1, 7! = 5040) against a permutation predicate, plus a reviewed argument that generate refills only when empty and deals one piece per call; (b) reviewed argument (resetBag() empties the bag, the next 7 deals come from one bag); (c) Tested plus reviewed argument; (d) inspection and Tested.
 Assumptions: D24 V3.
 Production code covered: TF:80-111; GM:80, 113-114, 122-124, 187-190, 215, 228-233; SS:38, 133-137, 177.
 Model code: pending.
@@ -125,7 +125,7 @@ Transition classes: move, rotate, gravity fall, soft drop, hard drop, lock then 
 Production routes: GM:550-557 (fit check before assign); TM:131-151; GM:245-252 and GM:259-261; GM:539-547 with GM:353-357 and TM:115-123 (hard drop to ghost); GM:228-243 (new piece fit or game over); GM:559-580 (held piece fit or game over); SS:106-115 (integer position, valid rotation index, fits); GM:412-428 (post-operation check, playing only, GM:419-420). Scheduler trusted for cancellation only (T3).
 Model transitions: every legal operation in D32 that changes item 2 (pending model).
 Claim: In every committed state with a current piece (playing or paused) the piece is on the board and on empty positions. In an ordinary game over the retained overlapping attempted piece has no semantic value (B6). The claim concerns committed states, not intermediate microsteps (V1).
-Proof method (proposed): reviewed deductive argument by induction over writers of currentTetromino, its position and rotationState (each checks fit at the target, derives the target from fit, or is a spawn guarded by fit-or-game-over), plus Phase 4.1 and 4.2 attacks and differential tests (pending).
+Proof Method (proposed): reviewed deductive argument by induction over writers of currentTetromino, its position and rotationState (each checks fit at the target, derives the target from fit, or is a spawn guarded by fit-or-game-over), plus Phase 4.1 and 4.2 attacks and differential tests (pending).
 Assumptions: V1; the prior committed state fits.
 Production code covered: GM:228-243, 245-261, 353-357, 412-428, 539-590; TM:95-123, 131-151; SS:106-115.
 Model code: pending.
@@ -140,7 +140,7 @@ Transition classes: move left, move right (D32 "Move left or right, rotate"). Re
 Production routes: GM:502-507 -> GM:550-557 moveTetromino (only while playing; fits at column +/- 1, same row; then resetLockDelay GM:287-298). Input (cross-reference): IC:155, IC:246-271 (keys, repeat), IC:193-205 (gamepad), SC:427 (touch drag). All reach handleAction.
 Model transitions: move-left, move-right (pending model).
 Claim: While playing, a move changes only the column by one in the given direction when the target cells are on the board and empty; otherwise nothing changes and no lock-delay reset happens. Row, rotation, board and other items are unchanged except the lock-delay items B9.2 assigns (PLY-6).
-Proof method (proposed): reviewed argument over the 8 lines of moveTetromino plus exhaustive enumeration of the local domain (kind x state x column x occupancy of the adjacent cells) against an independent geometric predicate; differential tests (pending).
+Proof Method (proposed): reviewed argument over the 8 lines of moveTetromino plus exhaustive enumeration of the local domain (kind x state x column x occupancy of the adjacent cells) against an independent geometric predicate; differential tests (pending).
 Assumptions: PCE-6 for the prior state.
 Production code covered: GM:287-298, 502-507, 550-557.
 Model code: pending.
@@ -155,7 +155,7 @@ Transition classes: gravity timer firing (D32 "Gravity tick, soft drop"); every 
 Production routes / trusted components: GM:118-120; GM:178-180; GM:359-367 startGameLoop (requests interval*1000; on fire sets handle null, calls dropTetromino); GM:369-372; GM:382-384 schedule -> guard; starts at GM:480, 500, 255, 268, 545, 579; default scheduler GM:64-68. Trusted: scheduler registration and cancellation (D22 T3).
 Model transitions: gravity tick, timer start/restart (pending model).
 Claim: (a) every gravity request equals max(0.25, 0.7 - 0.02 x (level - 1)) x 1000 ms within 1e-9 ms for the level at the time of the request; (b) score, hence level, changes only in a lock, and each lock path restarts the timer afterwards, so a pending timer always carries the current level's interval; (c) when it fires while playing the piece moves down one row unless it rests; (d) the timer is not running when not playing (STA-2/U4, SAF partition).
-Proof method (proposed): (a) exhaustive enumeration over the complete finite level partition (1 to 23 individually; 24 and up as one class, exactly 250 ms) against an exact rational oracle; Proven by exhaustive enumeration if the partition argument (formula monotone) is accepted. (b) reviewed deductive argument over every caller of lockAndSpawnNext and startGameLoop (GM:266-269, 281, 321, 499-500, 543-546). (c) differential tests (pending).
+Proof Method (proposed): (a) exhaustive enumeration over the complete finite level partition (1 to 23 individually; 24 and up as one class, exactly 250 ms) against an exact rational oracle; Proven by Exhaustive Enumeration if the partition argument (formula monotone) is accepted. (b) reviewed deductive argument over every caller of lockAndSpawnNext and startGameLoop (GM:266-269, 281, 321, 499-500, 543-546). (c) differential tests (pending).
 Assumptions: D21 S10 scope; D22 T3; D23 U4.
 Production code covered: GM:118-120, 178-180, 245-257, 359-372, 382-384, 480, 500, 545, 579.
 Model code: pending.
@@ -170,7 +170,7 @@ Transition classes: soft drop (D32 "Gravity tick, soft drop").
 Production routes: GM:527-530 softDrop (clears isConfirmingNewGame outside guard, then guard(dropTetromino)); GM:245-257 dropTetromino (playing only; down one row if not resting; noteLowestRow; landIfResting; restart gravity if playing). Input (cross-reference): IC:159-162, IC:281-302, SC:480.
 Model transitions: soft drop (pending model).
 Claim: While playing, soft drop moves the piece one row down when the cell below is free, applies B9.2 for a new lowest row, and restarts the gravity timer at the current level's interval. A resting piece does not move.
-Proof method (proposed): reviewed argument of dropTetromino (13 lines) plus finite enumeration of (resting x timer state) cases; differential tests (pending).
+Proof Method (proposed): reviewed argument of dropTetromino (13 lines) plus finite enumeration of (resting x timer state) cases; differential tests (pending).
 Assumptions: the PLY-2 request claim; scheduler trust T3.
 Production code covered: GM:245-261, 359-372, 527-530.
 Model code: pending.
@@ -185,7 +185,7 @@ Transition classes: hard drop, lock (D32); line-clear save timing (D33 C1); ordi
 Production routes: GM:517-518 -> GM:539-547 hardDrop (position := ghost position GM:542 via TM:115-123; lockAndSpawnNext GM:317-324; restart gravity if playing). Input (cross-reference): IC:43, IC:58-59.
 Model transitions: hard drop (land at ghost, lock) (pending model).
 Claim: While playing, the piece goes to the lowest free position straight down and locks at once (lock, full-row clear, next piece, possible game over). When lines cleared and the game goes on, the save captures the completed turn; if the turn ends the game, no save is written (D33 C1; GM:321-323, GM:236-239).
-Proof method (proposed): reviewed argument plus exhaustive enumeration of the landing computation over the local domain (shared with PLY-5); differential tests (pending).
+Proof Method (proposed): reviewed argument plus exhaustive enumeration of the landing computation over the local domain (shared with PLY-5); differential tests (pending).
 Assumptions: PCE-6 prior state; D33 C1.
 Production code covered: GM:317-332, 353-357, 539-547; TM:115-123.
 Model code: pending.
@@ -200,13 +200,13 @@ Transition classes: none change it directly; every board or current-piece change
 Production routes: GM:353-357 ghostTetromino (copy, row + dropDistance); TM:115-123; SC:138 and SC:140-175 drawBoard (ghost cells drawn when mode is not game over, SC:167-172); SC:288-295 boardChanged; board writers bump boardVersion (GM:185, 209, 331, 347).
 Model transitions: none (derived). Independent method: the B14 definition.
 Claim: (a) engine: ghostTetromino's position equals B14's landing position; (b) display: the drawn ghost cells are those cells, drawn as outlines distinct from the piece.
-Proof method (proposed): (a) reviewed argument (dropDistance counts consecutive free rows under all four cells, so it stops at the first obstruction) plus exhaustive enumeration over kinds x states x column-height profiles; (b) browser test with visual inspection (e2e/helpers.js:65 treats ghost cells as outlines).
+Proof Method (proposed): (a) reviewed argument (dropDistance counts consecutive free rows under all four cells, so it stops at the first obstruction) plus exhaustive enumeration over kinds x states x column-height profiles; (b) browser test with visual inspection (e2e/helpers.js:65 treats ghost cells as outlines).
 Assumptions: PCE-6 for the current piece.
 Production code covered: GM:353-357; TM:115-123; SC:138-175, 288-295.
 Model code: only the model's landing function (pending).
 Evidence: test/gameManager.test.js:255; test/game.test.js:58; test/tetromino.test.js:92. No e2e test is tagged PLY-5. Tested, not independent.
-Limitations: sub-claim (b) is Not assessed: no browser evidence exists or was gathered (G7). The ghost also shows while paused; the requirement is silent. Whether the redraw gating can miss a board change is Phase 4.
-Status: Candidate (engine claim). Display sub-claim Not assessed.
+Limitations: sub-claim (b) is Not Assessed: no browser evidence exists or was gathered (G7). The ghost also shows while paused; the requirement is silent. Whether the redraw gating can miss a board change is Phase 4.
+Status: Candidate (engine claim). Display sub-claim Not Assessed.
 
 --- RECORD PLY-6 ---------------------------------------------------
 Requirement: "A piece locks 0.5 seconds after it comes to rest on the floor or a block, however it got there: falling, moving, turning, appearing, or play resuming. Moving or rotating it while it rests restarts that delay, at most 15 times; reaching a lower row than before resets the count; moving off a ledge cancels the delay; once the 15 are used, landing locks at once."
@@ -215,7 +215,7 @@ Transition classes: move, rotate, gravity fall, soft drop, new piece appears, ho
 Production routes / trusted components: GM:263-270 startLockDelay (500 ms request; callback lockAndSpawnNext then restart gravity); GM:274-285 landIfResting, pieceLanded (no new delay while one runs; at count >= 15 lock at once); GM:287-298 resetLockDelay; GM:300-304 noteLowestRow; GM:306-315; GM:486-501 pause (count + 1 if a delay runs, cancel) and resume (landIfResting); GM:587-589; GM:555; GM:572-573; GM:241; GM:199-217 (Continue). Trusted: scheduler (T3, U3, U4).
 Model transitions: the lock-delay part of move, rotate, fall, pause, resume, spawn, hold, expiry (pending model).
 Claim (B9.2): the delay starts when a piece comes to rest by any route; a move or rotation on a resting piece below count 15 that reaches no new lowest row adds 1 and restarts the delay; reaching a new lowest row sets the count to 0 without incrementing; at 15 a move or rotation does not restart the running delay; moving off a ledge cancels the delay (no count change is stated); at 15 a piece whose delay was cancelled and that rests again locks at once; a pause during the delay counts as one reset (14 or less: +1 and the delay restarts on resume; 15: becomes 16 and resume locks at once); 16 exists only paused and resting.
-Proof method (proposed): finite-abstraction argument. The lock-delay behavior is an automaton over (resting?, delay running?, reset count 0..16, lowest-row event, mode) with events move, rotate, fall, pause, resume, expiry, spawn. Exhaustive enumeration of that automaton against an independent specification written from B9 (Proven by exhaustive enumeration only if the abstraction from code state is argued), plus differential tests (pending). Timing: inspection of the requested delay (G4).
+Proof Method (proposed): finite-abstraction argument. The lock-delay behavior is an automaton over (resting?, delay running?, reset count 0..16, lowest-row event, mode) with events move, rotate, fall, pause, resume, expiry, spawn. Exhaustive enumeration of that automaton against an independent specification written from B9 (Proven by Exhaustive Enumeration only if the abstraction from code state is argued), plus differential tests (pending). Timing: inspection of the requested delay (G4).
 Assumptions: D22 T3; B9.2; no decision yet on judging the 0.5 s delay (G4).
 Production code covered: GM:199-217, 241, 263-315, 486-501, 555, 572-573, 587-589.
 Model code: pending.
@@ -236,7 +236,7 @@ Transition classes: Hold (D32 Hold row), lock (restores availability, GM:233), N
 Production routes: GM:508-510 -> GM:559-580 holdTetromino; TM:59-66; GM:228-243 (no-held case); GM:572-573. Input (cross-reference): IC:44, IC:57, SC:496, SC:507.
 Model transitions: hold (pending model).
 Claim: While playing and available, Hold stores the current piece in its spawn state, brings in the held piece (spawn state) or the next piece, makes Hold unavailable until the next lock cycle, and gives the brought-in piece a fresh count and lowest row.
-Proof method (proposed): reviewed argument over holdTetromino (22 lines, two branches) plus finite enumeration of (held none or kind x availability x room for the incoming piece); differential tests (pending).
+Proof Method (proposed): reviewed argument over holdTetromino (22 lines, two branches) plus finite enumeration of (held none or kind x availability x room for the incoming piece); differential tests (pending).
 Assumptions: B8 reading of "once per piece".
 Production code covered: GM:228-243, 306-310, 559-580; TM:59-66.
 Model code: pending.
@@ -251,13 +251,13 @@ Transition classes: next piece (shift then deal), Hold without a held piece, New
 Production routes: GS:4 UPCOMING_COUNT = 3; GM:114, 122-124, 190, 212; GM:230-232; SS:163-169 (loaded queue exactly 3 known kinds); GM:417 (count check). Display: SC:309-318 drawIfChanged previews, SC:138 showsPieces (mode not game over), SC:181-198 drawPreview, SC:22 nextCanvases, index.html:34-37 (three next canvases).
 Model transitions: next piece, hold, new game, continue (pending model).
 Claim: (a) engine: after every committed state the queue holds exactly three pieces, each a valid kind; (b) display: while playing or paused the three queued pieces are drawn in order in the three next boxes, and not at game over.
-Proof method (proposed): (a) reviewed argument over queue writers (one shift and one push per consumption; three deals at start; loader checks count and kinds); (b) browser test with visual inspection.
+Proof Method (proposed): (a) reviewed argument over queue writers (one shift and one push per consumption; three deals at start; loader checks count and kinds); (b) browser test with visual inspection.
 Assumptions: PCE-5 for the dealt kinds.
 Production code covered: GS:4; GM:114, 122-124, 190, 212, 228-233, 417; SS:163-169; SC:22, 138, 181-198, 309-318.
 Model code: pending.
 Evidence: test/game.test.js:43; test/gameManager.test.js:51, :264; e2e/game.spec.js:41. Tested, not independent.
-Limitations: sub-claim (b) is Not assessed: one e2e test, no visual verification here (G7). The preview cache is keyed by piece object identity (SC:310-317). The engine check covers the count only (GM:417). The element-validity reading of B7 is open.
-Status: Candidate (engine). Display sub-claim Not assessed.
+Limitations: sub-claim (b) is Not Assessed: one e2e test, no visual verification here (G7). The preview cache is keyed by piece object identity (SC:310-317). The engine check covers the count only (GM:417). The element-validity reading of B7 is open.
+Status: Candidate (engine). Display sub-claim Not Assessed.
 
 --- RECORD SCO-1 ---------------------------------------------------
 Requirement: "Clearing 1, 2, 3 or 4 lines at once scores 100, 300, 500 or 800. Cleared rows disappear and everything above moves down."
@@ -266,7 +266,7 @@ Transition classes: lock including line clear (D32 Lock row: item 1 gains the pi
 Production routes: GM:317-324 lockAndSpawnNext -> GM:334-351 clearFullRows; GM:38 LINE_SCORES; callers hardDrop GM:543, lock-delay expiry GM:266-269, pieceLanded GM:281 (reached from gravity, resume, hold, spawn paths).
 Model transitions: lock-with-clear (pending model).
 Claim: After a lock every completely filled row is removed, the remaining rows keep their order and move down by the number of removed rows below them, empty rows are added at the top, and the score rises by 100, 300, 500 or 800 for 1 to 4 rows.
-Proof method (proposed): (a) exhaustive enumeration of the finite row-pattern domain (which of the 20 rows are full: 2^20 patterns, row contents abstracted to full or not) against an independent list model, for removal, shift and the points table for counts 1 to 4; (b) reviewed deductive argument that the count never exceeds 4: invariant NF (no full row in a committed board) holds for the opening board, after every lock-and-clear, and for loaded boards (SS:92-93), and one piece completes at most 4 rows.
+Proof Method (proposed): (a) exhaustive enumeration of the finite row-pattern domain (which of the 20 rows are full: 2^20 patterns, row contents abstracted to full or not) against an independent list model, for removal, shift and the points table for counts 1 to 4; (b) reviewed deductive argument that the count never exceeds 4: invariant NF (no full row in a committed board) holds for the opening board, after every lock-and-clear, and for loaded boards (SS:92-93), and one piece completes at most 4 rows.
 Assumptions: NF as an inductive invariant. Without it, five or more full rows would give LINE_SCORES[n] undefined and a NaN score (GM:348), which the score check would stop (GM:418).
 Production code covered: GM:38, 317-351; SS:92-93.
 Model code: pending.
@@ -281,7 +281,7 @@ Transition classes: none directly. Every score change (lock with clear), Continu
 Production routes: GM:118-120 level getter (computed on each read, not stored); GM:178-180; SS:29-39 serializeSession omits level; SS:146-189 parseSession ignores any stored level.
 Model transitions: none (derived). Independent method: the B14 definition.
 Claim: For every score the engine can hold, level = floor(score/1000) + 1.
-Proof method (proposed): reviewed deductive argument that IEEE division of a safe integer by 1000 never rounds a non-multiple up to the next integer (the nearest fraction margin 0.001 exceeds the half-spacing of about 4.9e-4 at 2^53; for multiples of 100 the margin is 0.1), plus boundary enumeration (0, 999, 1000, 1999, 2000, 2^53 - 1).
+Proof Method (proposed): reviewed deductive argument that IEEE division of a safe integer by 1000 never rounds a non-multiple up to the next integer (the nearest fraction margin 0.001 exceeds the half-spacing of about 4.9e-4 at 2^53; for multiples of 100 the margin is 0.1), plus boundary enumeration (0, 999, 1000, 1999, 2000, 2^53 - 1).
 Assumptions: score is a non-negative safe integer (GM:418, B11).
 Production code covered: GM:118-120, 178-180; SS:29-39, 146-189.
 Model code: only the model's level function.
@@ -296,7 +296,7 @@ Transition classes: line clear (D32 Lock row; the persistence effect is the high
 Production routes / trusted components: GM:34 key "tetris.highScore"; GM:133-140 readItem (read error counts as empty); GM:142-145 getter (Number(raw); a safe integer is kept with max(value, 0), else 0); GM:147-154 setter (write error swallowed); GM:349 write of max(highScore, score) in clearFullRows; SC:206-214 display and SC:319-323 snapshot gating; storage-event listener (P2-D, cross-reference). Trusted: localStorage (U1).
 Model transitions: persistence effect of lock-with-clear (pending model).
 Claim: (a) the engine's own writes never lower the stored value (each write stores max(valid stored value or 0, score)); (b) a stored value that is not a whole number >= 0 counts as 0 and is replaced by the first higher score; (c) the value persists across New Game and game over; (d) a failed write or read does not stop play.
-Proof method (proposed): reviewed deductive argument for (a) to (c) (single writer GM:349); Tested for (d); Phase 4 attacks on stored text forms.
+Proof Method (proposed): reviewed deductive argument for (a) to (c) (single writer GM:349); Tested for (d); Phase 4 attacks on stored text forms.
 Assumptions: D23 U1.
 Production code covered: GM:34, 133-154, 334-351; SC:206-214, 319-323.
 Model code: pending.
@@ -344,5 +344,5 @@ Each needs reproduction against the governing text.
 - No repository write, pull request, certification or finding status.
 - No O8 model input pack or model was read or written, and no model correspondence is claimed.
 - No test was run and no mutation was made. Scratch checks S1 and S2 used a local clone only.
-- No browser evidence was gathered (PLY-5 and PLY-8 display parts are Not assessed).
+- No browser evidence was gathered (PLY-5 and PLY-8 display parts are Not Assessed).
 - STA/SAF/INP and APP/DSP/QA records are not duplicated.
