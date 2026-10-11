@@ -2,7 +2,7 @@
 
 Status: decision text recorded by ledger row D18 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
 
-Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182), together with D16 Amendment 1, `docs/phase-1-d16-amendment-1.md` (ledger row D17), which adds the lowest row reached as item 15 of D16 section 1.1. Both are unchanged by this file.
+Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad), together with D16 Amendment 1, `docs/phase-1-d16-amendment-1.md` (ledger row D17), which adds the lowest row reached as item 15 of D16 section 1.1. Both are unchanged by this file.
 
 Geometry reference: `docs/sources/1-SRS-pieces.png` (SHA-256 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236) and `docs/sources/2-srs_table.txt` (SHA-256 c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c).
 
