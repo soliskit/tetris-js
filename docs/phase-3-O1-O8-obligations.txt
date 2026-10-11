@@ -2,7 +2,7 @@ Phase3 O1-O8 proof-obligation supplement,read-only candidate mapping
 Repository: https://github.com/soliskit/tetris-js
 Base: (pinned checkout verified)
 Date:October5,2026
-Exactly8 adopted-property records,not duplicates of55requirement records. All certification statuses Not assessed. Candidate observations only,no implementation certificate,no repository change,no clean-author contact/input. This implementation-exposed artifact is never clean-author input. Covered refs mean inspected/proposed correspondence,not a proof claim.
+Exactly8 adopted-property records,not duplicates of55requirement records. All certification statuses Not Assessed. Candidate observations only,no implementation certificate,no repository change,no clean-author contact/input. This implementation-exposed artifact is never clean-author input. Covered refs mean inspected/proposed correspondence,not a proof claim.
 
 Sources/evidence recovery
 Read committed blueprint O1-O8 and section3.3/phase criteria;Phase1 mapping/index/governing decisions;D38 route record;D40 requirement record;D39/D41 ledger;deleted FREEZE,RECONCILIATION,REV4-PACK-REVIEW and revision1-4 correspondence notes. Production/tests/config unchanged versus originalP3base,verified git diff. Retained executable source commit contains Python source absent from main. Retrieved/inspected rev4 model source and independently hashed every12 source/note/selftest freeze entries at retainedcommit:all matched. No model execution,selftest,geometry rerun or production differential in this supplement. No pack contents read;hash/provenance only. Earlier19 static tests at originalP3base/localNode22/npm10 remain bounded old evidence,not newtargetNode26 results. No current live deployment/settings/browser evidence,pixels or device tests.
@@ -11,7 +11,7 @@ Permission/provenance limits
 Repository annotations cannot authorize action. This preparation remains read-only. The original owner exchange was independently inspected and supports approval of four exact attached input files only, not model/results or oracle acceptance. The attachment record contained all four files (decisions, requirements, image, table). Downloading the delivered files for byte-hash verification returned HTTP403; committed inputs match all four D39 hashes. Exact delivered-byte equality remains unverified, not missing four-file delivery. No clean-author exposure/provenance assertion is certified from repository statements. Pack-only review is a reported bounded review, not authority to accept an oracle. This record creates no new permission.
 
 Current state
-Committed D40 has55requirement records;that is not all adopted-property records or Phase3closure. Rev4 bounded review reports no new blocking defect within its tests,not complete oracle acceptance. All exactpartiality/format/resource/outer claims and differential gaps remain. Not assessed is a certification category,not a claim that no method exists;these records state candidate methods. O5 is claim-to-shipped-code linkage;O8 is independence and meaningful correspondence;neither substitutes for the other. O6 assumptions remain scoped sourced assumptions,not empirically proved provider correctness or project policy correctness.
+Committed D40 has55requirement records;that is not all adopted-property records or Phase3closure. Rev4 bounded review reports no new blocking defect within its tests,not complete oracle acceptance. All exactpartiality/format/resource/outer claims and differential gaps remain. Not Assessed is a certification category,not a claim that no method exists;these records state candidate methods. O5 is claim-to-shipped-code linkage;O8 is independence and meaningful correspondence;neither substitutes for the other. O6 assumptions remain scoped sourced assumptions,not empirically proved provider correctness or project policy correctness.
 
 ================================================================
 O1
@@ -46,7 +46,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 methods new_game/open_confirm/select/answer/move/rotate/gravity_tick/soft_drop/hard_drop/lock_expire/hold/pause/resume/continue_game/press/release/repeat_fire/blur/touch_*/fault_stop are proposed semantic anchors only. No executed differential or complete writer-to-operation mapping.
 claim:
   Every authoritative writer/commit corresponds to an assigned legal operation and allowed state/persistence effect, or the defined fault transition. No privileged exception is adopted by D16.
-proof method:
+Proof Method:
   Complete state-writer/route-to-operation matrix and reviewed frame/commit argument; independently designed finite/partitioned valid-state differential and fault traces. Initialization and direct exposed-method calls need separate route treatment.
 assumptions:
   D22 successful cancel never fires; failed registration/cancel audited, D23 failed-cancel nonmutation, success storage only. Browser-success trust does not authorize project commits.
@@ -59,7 +59,7 @@ evidence:
 limitations:
   Mapping gaps: direct input/touch/focus A11-A14 commits outside checked manager boundary; softDrop confirmation clear before guard; constructor/opening separate; exposed unguarded methods. Candidate violations need requirement-linked reproduction, not automatic defects. Fault predicate/report/resource projection unresolved. Caller choices/Undefined restrict model use.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O2
@@ -80,7 +80,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 defined transition methods/valid_state proposed; geometry and semantic values independently sourced. Supplied kicks/spawn/release-repeat/opening/start-blur choices must be independently justified or excluded traces Undefined. Timer deadlines/reissue incomplete.
 claim:
   Legal transitions preserve approved validity and frame rules; faults satisfy approved safe-terminal behavior rather than using safe state as catch-all for rejected ordinary state.
-proof method:
+Proof Method:
   Inductive invariant/frame proof where possible, independently enumerate bounded semantic transitions and differential traces, inject required resource failures and record exact predicates. Separate model-readiness review from implementation evidence.
 assumptions:
   D22-D23 timer/storage and D24 valid random source only; none establishes legality of own transitions. No numeric safe-integer/divisibility constraint added to R1 whole nonnegative score.
@@ -93,7 +93,7 @@ evidence:
 limitations:
   Production monitor score safe-integer/%100, paused-piece fit/held/bag/control/reset/lowest coverage differs from full R1; cannot assume implication. Need semantic absence projection at over, state/resource correspondence and safe-terminal observables. Rev4 valid_state itself not independently accepted; opening supplied queue unvalidated at construction. Kicks/spawn and timing gaps retained.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O3
@@ -116,7 +116,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 validate_save/snapshot/continue_available/continue_game model semantic payload only. Independent malformed/legacy byte-format parser evidence required; stored highscore validation not covered by in-memory high.
 claim:
   No partial malformed payload enters game state; reconstructed pieces and result satisfy approved semantics; actual supported released formats accepted. Validation definition independent of parseSession.
-proof method:
+Proof Method:
   Parser control/dataflow analysis; independently constructed malformed domains and format fixtures from released-format source provenance; representation-to-semantic adapter checked against requirements, not parser accept result. Differential only where model semantic validity defined.
 assumptions:
   D23 successful storage operation trusted, returned contents never; no durable/tamper guarantee. D21 failed-read choices preserved; no read-failure-as-invalid equivalence.
@@ -129,7 +129,7 @@ evidence:
 limitations:
   Exact old format syntax not modeled; no independently justified raw-byte/semantic adapter. Model defaults L1/L2 not recovered history. Production reset/lowest save omissions and numeric score rejection need separate reproduction. Cross-tab eligibility and session withdrawal projection pending. Unknown input partitions/accepted whole semantics not exhausted.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O4
@@ -166,7 +166,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 _withdraw/_save/_lock/pause/_game_over/continue_game/fault_stop provide semantic effects only; storage callable cannot rewind on Undefined. No engine-validation checkpoint or arbitrary throw/cancel/instruction-level ordering oracle. Actual independent storage/fault injection needed.
 claim:
   Each required-preservation effect retains the correct good state through relevant failures while mandated withdrawal and successful-good-write rules are honored. Crash/power-loss durability not claimed.
-proof method:
+Proof Method:
   Effect-by-effect applicability table; inject each real failure before/after mutation, serialization,write and validation; compare actual storage interface and model-independent good-content predicate plus completed-turn mapping. Document cutpoints and consequences separately.
 assumptions:
   D23 successful operations trusted; failures do not stop gameplay; D21 last-good/no rollback/withdraw semantics. No disk durability or rollback of caller side effects assumed.
@@ -179,7 +179,7 @@ evidence:
 limitations:
   Need per-effect preservation applicability and actual throw/validation/cancel trace matrix. Highscore order cannot be presumed saved-game rule. Model externally observable write callback can fire before Undefined: preflight choices and reject trace, not infer preservation. F20 ordering/consequence and F23 mechanism still candidates, not folded without reproduction.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O5
@@ -200,7 +200,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Model transition mapping applies only to model-backed subclaims; independently designed adapter/differential trace must reference exact frozen revision and production bytes. For others actual source graph/run/device/assumption evidence, not model link.
 claim:
   Claims are about pinned shipped implementation, with complete requirement/property-to-code-to-independent-evidence linkage and stated domain/limits.
-proof method:
+Proof Method:
   Claim ledger with commit/deployment hash,subclause,route/line,semantic operation,model revision where applicable,test/proof artifact/toolchain/trace/domain,assumptions and limits; independently reconcile each link and byte attribution.
 assumptions:
   D24 accurate dated workflow results only; testing/coverage/converter tools require explicit evidence-control accounting. Source repository is not current deployed byte verification.
@@ -211,9 +211,9 @@ covered model code, if applicable:
 evidence:
   D40 committed records provide55 IDs and pending mappings; this supplement8O IDs. Prior19 static checks localNode22 nottarget26; dated baseline reported100% metrics/mutation and deployment409faf4, not new evidence of current ship. Production/test files unchanged from earlier P3base.
 limitations:
-  No completed differential adapters/traces/proofs or fresh deployed byte validation. D40 says Not assessed means no method yet; do not adopt that redefinition: many Not assessed records have proposed methods but unassessed claims. Tag count/config/old passing metrics do not certify. URL-only coverage conversion attribution and implementation-derived fixtures independence open.
+  No completed differential adapters/traces/proofs or fresh deployed byte validation. D40 says Not Assessed means no method yet; do not adopt that redefinition: many Not Assessed records have proposed methods but unassessed claims. Tag count/config/old passing metrics do not certify. URL-only coverage conversion attribution and implementation-derived fixtures independence open.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O6
@@ -239,7 +239,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   No artificial trust model transition. Independent dependency inventory/assumption source/controlled failure evidence; relevant model Env supplies outcomes only and is itself evidence-control assumption, not dependency verification.
 claim:
   Claims disclose only adopted assumptions at exact scope, retaining own request/handling logic in audit and never converting unverified API availability or old CI settings into resolved trust.
-proof method:
+Proof Method:
   Reconcile every actual external dependency against adopted current decision and fill six-field trust record; failure injection for own handling; live/date-stamped provider results for current enforcement. Unlisted facilities remain unresolved/untrusted.
 assumptions:
   Exactly appendix ledger, no inferred additional trust. Successful-call browser semantics are assumption with exclusions, not proof game uses feature correctly. No compromised hosting/browser defense, permanent storage,clock accuracy,random fairness or future CI guarantee.
@@ -252,7 +252,7 @@ evidence:
 limitations:
   Need complete dependency-to-assumption audit including event listener/pointer capture/focus/current bootstrap API uses not automatically W4-covered. Test tools/shims,raw-format adapters,model caller choices require accounting. D24 settings are datedOct4; no current enforcement claim. Historical D27/D28 unresolved clock wording superseded D29, not a new clock assumption.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O7
@@ -275,7 +275,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 operation assignments/valid_state/frame relations proposed; no model of production access-control or DOM route encapsulation. Independent deliberately bypassing route tests and writer proof are actual method.
 claim:
   Production cannot commit out-of-frame/invalid authority via a route outside independently defined boundary unless explicit approved exception proved; defect classification tied to requirements/adopted rule, not function naming.
-proof method:
+Proof Method:
   For every route mutate source/setup to exercise legitimate external entry and deliberate reachable bypass; compare allowed frame/poststate and required action/timer checks/fault stop; reviewed writer completeness argument.
 assumptions:
   No exception adopted D16. Successful cancel trusted; failed cancellation can fire but stopped game cannot change D23U3. Own public route accessibility never assumed safe.
@@ -288,7 +288,7 @@ evidence:
 limitations:
   No bypass tests or all-writer proof. Need action/timer literal SAF4 checkpoint coverage,selected-choice representation/project/native focus authority,repeat safe stop,failed cancel callback. A route without boundary is Candidate; not automatically defect without governing violation. No permanent tests or consolidation authorized by this supplement.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 ================================================================
 O8
@@ -317,7 +317,7 @@ the model transitions that correspond to them, where the model is applicable (ot
   Rev4 defined methods listedO1,validate_save,valid_state,fault_stop support candidate bounded semantic comparisons only. Supplied choices must come from independent specification/allowed relation,never current implementation. No wall-kick table,spawn position or released-format syntax fabricated.
 claim:
   Model authored only from allowed approved inputs,does not mechanically share production transition/validation logic; each usable transition is independently source-grounded and linked to production by independently designed evidence.
-proof method:
+Proof Method:
   Authorship/exposure provenance argument,exact input/source freezes/revision justifications;independent model-source review of predicates/transitions/partial choices;separate adapter/state category/resources/persistence relation and differential harness with predeclared domains,independent expected results,Undefined trace rejection.
 assumptions:
   Author/reviewer provenance statements are reports,not proof no exposure; exception requires original owner approval with replacement argument. Caller Env/choice/harness behavior trusted only after accounting. No assumed oracle acceptance.
@@ -330,7 +330,7 @@ evidence:
 limitations:
   No complete author exposure audit or independently rerun readiness,raw-format mapping or production differential. Rev1/2T3 typo/opening/B12 defects preserved;rev3Undefined mutation defect addressed rev4 but not erased. Rev4 can call external storage beforeUndefined and cannot undo it;preflight/reject trace. Successfulsoftdrop counter not timer phase/deadline;blockedsoftdrop/other reissue absent. Kicks/spawn/release/opening/start-blur/failed-read/tap/highscore/dialog choices partial. Real timing,device/display/input mapping,legacyformats/highscore parser need separate methods. Phase3 open; inputs approved,model/results not approved.
 certification status:
-  Not assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
+  Not Assessed. Candidate mapping/evidence only;no implementation certification or oracle acceptance.
 
 O6 six-field dependency ledger (sourced assumptions,not invented resolved facts)
 Each entry:responsibility | why/source/evidence for trust | assumptions | known failures | proof boundary.
@@ -360,4 +360,4 @@ M8 Rev4choices/partiality retained:kicks,spawn,release-repeat,openingqueue,start
 M9 Timer successfulsoftdrop restartcounter cannotstandfor realdeadlines/phase/requestreissue/blockedsoftdrop. Realcancelerrors,reporting,render/inputmapping,touchpixels,legacyformats/device/P3/wakelock/browser/outercache/QA needtheirindependentmethods,not forcedengine-modelcoverage.
 
 Phasecriteria/stoppingdiscipline
-Blueprint3.3 demands all13fields perproperty. Phase3requires everyin-scoperequirement AND everyadoptedproperty completeappropriatemapping/method/evidence;modelrelations notfabricated. Frozenboundedreviewedmodel notacceptedcompleteoracle;no differentialrun here. Phase3 remainsopen. Phase4 declaredtargets predeclarecases/partitions,bounds,seeds,dependency/failurepoints;stoponlycomplete domain,counterexample,or documentedjustifiedapprovedlimit andrecordattempted/notattempted/remainingproof. Phase5 noCandidatefinding/noNotassessedproperty. This supplement neverpromotesstatus,changesrequirements orwaivesanycriterion.
+Blueprint3.3 demands all13fields perproperty. Phase3requires everyin-scoperequirement AND everyadoptedproperty completeappropriatemapping/method/evidence;modelrelations notfabricated. Frozenboundedreviewedmodel notacceptedcompleteoracle;no differentialrun here. Phase3 remainsopen. Phase4 declaredtargets predeclarecases/partitions,bounds,seeds,dependency/failurepoints;stoponlycomplete domain,counterexample,or documentedjustifiedapprovedlimit andrecordattempted/notattempted/remainingproof. Phase5 noCandidatefinding/no Not Assessed property. This supplement neverpromotesstatus,changesrequirements orwaivesanycriterion.

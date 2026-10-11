@@ -189,7 +189,7 @@ R1 gives only content-validity and acceptance rules. R2 and R4 own when a save i
 
 This table says only which proposed rule will later answer each question. It classifies no finding and cites no implementation behavior.
 
-| Pending question | Answered later by |
+| Pending Question | Answered later by |
 | --- | --- |
 | F21: sparse or holey board | B3 (board is a total grid of 200 present positions; a missing position is not an empty cell) |
 | Q1: malformed queue | B5 (exactly three present entries, each one of the seven kinds) |
