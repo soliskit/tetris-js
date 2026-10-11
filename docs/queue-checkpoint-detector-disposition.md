@@ -37,7 +37,7 @@ These named writers supply conditional successful-path preservation evidence. Th
 
 Confirmed by conditional source argument, if independent review accepts these premises: the explicitly admitted dense-null and empty sparse length-three queue inputs pass the selected ordinary-over invariant boundary despite the requirement to check three valid upcoming pieces.
 
-Not established here: ordinary malformed creation, all Q1 partitions, queue behavior in every mode, every writer/checkpoint/failure composition, native execution, complete R1 or SAF-4 certification. F21's separate board-reachability gate and the current-piece Q2 disposition are unchanged. A correction and its regression/collateral review require their own approval; this finding cannot authorize them.
+Not Established here: ordinary malformed creation, all Q1 partitions, queue behavior in every mode, every writer/checkpoint/failure composition, native execution, complete R1 or SAF-4 certification. F21's separate board-reachability gate and the current-piece Q2 disposition are unchanged. A correction and its regression/collateral review require their own approval; this finding cannot authorize them.
 
 ## Source pins
 

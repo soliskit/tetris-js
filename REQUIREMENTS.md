@@ -19,9 +19,10 @@ Each change to game code (anything under public/) or to a requirement row is one
 | Class | What changes | Evidence |
 | --- | --- | --- |
 | Refactor | Code, not behavior | Requirement rows stay unchanged and tests pass. Tests change only to follow renamed or moved code, never to expect different behavior. |
-| Bug fix | Code, to match an existing requirement | A test for that requirement that failed before the fix |
-| Intentional change | Code and requirements | Requirement rows edited in the same commit, with tests updated to match |
+| Bug Fix | Code, to match an existing requirement | A test for that requirement that failed before the fix |
+| Intentional Change | Code and requirements | Requirement rows edited in the same commit, with tests updated to match |
 | Clarification | Requirements, to describe what the game already does | The new rows and their tests |
+
 
 A change to neither code nor requirement rows needs no kind. The three rules still apply: weakening a test falls under rule 2, and the gates QA-1 to QA-6 are never lowered or removed.
 
