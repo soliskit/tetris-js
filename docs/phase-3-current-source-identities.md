@@ -1,6 +1,6 @@
 # Pinned source identity ledger
 
-File hashes identify exact source files at main. PR87 later main changes one documentation file only; the public tree remains1e09ad61c19e0b235a231ad8810dae176be4ea77. Source identity is not historical execution, live served body or phone-cache attestation.
+File hashes identify the historical source snapshot recorded here, not the later restyled publication copies. PR87 later main changes one documentation file only; the public tree remains1e09ad61c19e0b235a231ad8810dae176be4ea77. Source identity is not historical execution, live served body or phone-cache attestation.
 
 | Source file | SHA256 | Bytes |
 |---|---|---|
@@ -72,3 +72,9 @@ File hashes identify exact source files at main. PR87 later main changes one doc
 | test/staticFiles.test.js | eca4a6f59e8255149ef1798dcedc80bd1fd176f14486caae013bed67eac89224 | 5915 |
 | test/tetromino.test.js | 248f10e8600c030d4aca2723742f202b47d05ce9ccb317d8e69b3a579d9a95f0 | 10587 |
 | test/traceability.test.js | d6a3976269bfd4243f23b699b79d783b0cb7e369858ea116c3cdfec33d34127e | 5833 |
+
+## Status-label publication migration
+
+The source hashes and byte counts above remain historical snapshot identities. They are not refreshed to imply the earlier evidence used restyled documents. The migration receipt records new current-publication identities for changed paths. Production, model, test and fixture source identities are unchanged.
+
+Adjacent historical manifest note: docs/phase-4-selected-source-manifest.json retains its original schema, keys and source hash values. Its sources map describes the historical captured snapshot, not later title-case publication copies. Successor current-publication identities are recorded in docs/status-label-migration.md.

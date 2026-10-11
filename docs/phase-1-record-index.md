@@ -42,3 +42,7 @@ These were merged as records of how the decisions were reached. They contain alt
 | `docs/phase-1-d16-lowest-row-amendment-proposal.md` | #53 |  |
 | `docs/phase-1-d16-amendment-candidate.md` | #54 |  |
 | `docs/phase-1-r1-normative-candidate.md` | #54 |  |
+
+## Status-label publication migration
+
+The source hashes in this index retain their historical meanings after title-case publication restyling. Original decisions and status assignments are unchanged. The migration receipt identifies current restyled publication copies separately; no historical approval or source hash is reassigned to new bytes.
