@@ -239,6 +239,10 @@ The exact 2^53 read and ordinary lower-write dispositions are superseded for cur
 
 Resolved SCO-3 interpretation: repairing invalid stored high-score content is not lowering a valid high score. The owner selected this reading on October 8, 2026; see `docs/invalid-high-score-repair-decision.md`. The only-higher rule still protects valid stored high scores. This closes the interpretation question, not SCO-3 implementation certification. REQUIREMENTS.md, production code, tests, models, CI and repository settings are unchanged. No finding outside these exact 2^53 premises is reclassified; Phase 4 remains open. Review, head checks, merge and publication verification are separate gates.
 
+## Gravity timing limits
+
+Gravity follows PLY-2: max(0.25, 0.7 - 0.02 x (level - 1)) seconds per row, which reaches the 0.25 second floor at level 24. Two limits apply. A gravity timer that is already waiting keeps the delay it was given and need not reflect the latest level until it fires or restarts. The step from score to level is not proved for scores beyond the largest safe integer, 9,007,199,254,740,991.
+
 ## Reviewed factory research
 
 Independently reviewed source-only factory research binds the module-local default page route to the built-in factory and joins retained canonical-coordinate, bag, writer and test-child evidence at their stated scopes. Successful geometry preservation excludes arbitrary supplied outputs and outside mutation. Thrown writer prefixes follow the separate F2 fault-state criterion; a shortened retained queue is not itself a rollback/ordinary-validity defect, while SAF-4 after-every-action/timer obligations remain unchanged. No new execution, finding-status change, phase closure, correction or permanent-test removal approval.
