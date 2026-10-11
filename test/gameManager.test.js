@@ -711,7 +711,7 @@ test('continue carries on with the saved bag, so each piece still comes once per
   }
 });
 
-test('continuing a save from before the bag was saved starts a fresh bag [PCE-5] [STA-4]', () => {
+test('Continue refuses a save without a bag and leaves the current bag alone [PCE-5] [STA-6]', () => {
   const storage = createMemoryStorage();
   const { game } = newGame({ storage, factory: new TetrominoFactory(seededRandom(5)) });
   game.handleAction(PlayerAction.pause);
@@ -721,9 +721,11 @@ test('continuing a save from before the bag was saved starts a fresh bag [PCE-5]
 
   // Its constructor has already dealt from this bag.
   const restored = new GameManager({ scheduler: createFakeScheduler(), storage, factory: new TetrominoFactory(seededRandom(6)) });
+  const bag = [...restored.factory.bag];
   restored.handleAction(PlayerAction.continueGame);
-  assert.equal(restored.state, GameState.paused);
-  assert.deepEqual(restored.factory.bag, []);
+  assert.equal(restored.state, GameState.gameOver);
+  assert.equal(restored.isSessionSaved, false);
+  assert.deepEqual(restored.factory.bag, bag);
 });
 
 test('continue without a saved game stays at game over [STA-4]', () => {

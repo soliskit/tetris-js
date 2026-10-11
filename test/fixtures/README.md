@@ -2,18 +2,18 @@
 
 A fixture is a saved game file the tests load.
 These two fixtures preserve saved positions written by released game code.
-The session tests load each file and check that the game can continue it.
+The session tests continue the current layout and refuse the older layout.
 They stand for saves already on players' devices.
 
 - `saved-game-current.json` stores the remaining bag pieces without a saved level.
 - `saved-game-with-level.json` stores the remaining bag pieces and a level.
 
-Both formats are still covered by the current session tests.
-The selected current-only save layout is a future target, not an implemented compatibility change.
-Keep that distinction clear until the behavior, requirements, and tests change together.
+The reader refuses a save with a stored level or a missing bag. Continue then attempts withdrawal: it writes the existing availability flag without deleting the saved data or changing the high score. If that write fails, the flag can remain available. A failed read or a missing save does not write to storage.
+
+These tests cover the two older layouts. They do not establish that the entire current save schema is finalized.
 
 Never edit or regenerate these fixtures.
-Dropping a format removes its fixture in the same commit, together with the compatibility requirement and its tests.
+Keep the older fixture as a refused case so its original bytes continue to test the reader.
 
 Each fixture was recorded after a seeded game cleared a line, held a piece, moved and rotated the falling piece, and paused.
 The line breaks make the data easier to inspect without changing its saved position.
