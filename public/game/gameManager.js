@@ -195,12 +195,14 @@ export class GameManager {
     this.isSessionSaved = false;
   }
 
-  // Loads the saved game only if every part of it is valid; otherwise the
-  // save is forgotten and the game stays at game over.
+  // Loads a valid saved game. A refused save stays stored, but Continue
+  // attempts to mark it unavailable. A missing or unreadable save is left alone.
   loadGameSession() {
-    const session = this.isSessionSaved
-      ? parseSession(this.readItem(SAVED_SESSION_KEY), { rows: this.rows, columns: this.columns })
-      : null;
+    if (!this.isSessionSaved) return;
+    const text = this.readItem(SAVED_SESSION_KEY);
+    // A failed read or a missing save does not change storage.
+    if (text === null) return;
+    const session = parseSession(text, { rows: this.rows, columns: this.columns });
     if (!session) {
       this.isSessionSaved = false;
       return;
