@@ -1,14 +1,24 @@
 # Saved game fixtures
 
-Each file is a saved game exactly as a released version of the game stored it, one for every save format the game supports (STA-6 in [REQUIREMENTS.md](../../REQUIREMENTS.md)). `test/session.test.js` puts each one where the game keeps its save and continues it, so a change that stops a supported format loading fails the tests.
+A fixture is a saved game file the tests load.
+These two fixtures preserve saved positions written by released game code.
+The session tests load each file and check that the game can continue it.
+They stand for saves already on players' devices.
 
-These are compatibility guarantees: they stand for saves already on players' devices. Never edit or regenerate them. Dropping a format is an Intentional change (see "Rules for changes" in REQUIREMENTS.md) that updates STA-6 and removes its fixture in the same commit. The files are laid out one field and one board row per line to be readable; JSON ignores that whitespace, and the data is exactly what was stored.
+- `saved-game-current.json` stores the remaining bag pieces without a saved level.
+- `saved-game-with-level.json` stores the remaining bag pieces and a level.
 
-| File | Format | Stored by |
-| --- | --- | --- |
-| `saved-game-current.json` | The pieces left in the bag, no level | Releases from PR #27 (October 3, 2026) on |
-| `saved-game-with-level.json` | The pieces left in the bag, and the level | Releases from PR #26 to PR #27 (October 2 to 3, 2026) |
+Both formats are still covered by the current session tests.
+The selected current-only save layout is a future target, not an implemented compatibility change.
+Keep that distinction clear until the behavior, requirements, and tests change together.
 
-Earlier releases stored their saves under other names, which the game no longer reads.
+Never edit or regenerate these fixtures.
+Dropping a format removes its fixture in the same commit, together with the compatibility requirement and its tests.
 
-Each was made by playing a seeded game with that release's own code until a line was cleared, then holding a piece, turning and moving the current one, and pausing, which is when the game saves.
+Each fixture was recorded after a seeded game cleared a line, held a piece, moved and rotated the falling piece, and paused.
+The line breaks make the data easier to inspect without changing its saved position.
+The game no longer reads the storage names used by earlier releases.
+The capture record attributes the current fixture to releases from PR 27 onward.
+It attributes the fixture with a saved level to releases from PR 26 through PR 27.
+These are documented capture accounts, not independently replayed original captures.
+The current loading tests check selected restored fields; they do not establish that historical capture.
