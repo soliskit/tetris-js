@@ -230,6 +230,28 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
   });
 }
 
+test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const text = fs.readFileSync(new URL('./fixtures/saved-game-current.json', import.meta.url), 'utf8');
+  storage.setItem('tetris.savedGameSession', text);
+  storage.setItem('tetris.isSessionSaved', 'false');
+  const read = storage.getItem;
+  const reads = [];
+  const writes = [];
+  storage.getItem = key => { reads.push(key); return read(key); };
+  storage.setItem = (key, value) => { writes.push([key, value]); };
+  const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+  const before = { board: game.gameBoard, piece: game.currentTetromino, bag: [...game.factory.bag] };
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.gameBoard, before.board);
+  assert.equal(game.currentTetromino, before.piece);
+  assert.deepEqual(game.factory.bag, before.bag);
+  assert.deepEqual(reads, ['tetris.isSessionSaved']);
+  assert.deepEqual(writes, []);
+  assert.equal(read('tetris.savedGameSession'), text);
+});
+
 test('refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]', () => {
   const storage = createMemoryStorage();
   const text = fs.readFileSync(new URL('./fixtures/saved-game-with-level.json', import.meta.url), 'utf8');
