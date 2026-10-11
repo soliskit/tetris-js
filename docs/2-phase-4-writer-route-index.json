@@ -56,10 +56,7 @@
       "source_anchor": "GM load199-217,calledContinue483-485",
       "historical_open_gap": "Reset/lowest exactrestore candidate;legacydefaults andfailureclasses notproved;no item16representation;accepteddata adapter/R1validity/highscore separate. ContinueA12/A13/A14 frame relation notfullymapped.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "new-save-reset-count-disposition.md",
-        "continue-payload-read-failure-scoped-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W08",
@@ -67,7 +64,6 @@
       "historical_open_gap": "Outstanding IC timers untilnexttick mayexistpaused;no full resourceprojection. Need failingcancel/mode/count14/15 traces andhiddenpauseddrag reset mapping. PendingUIA11close async.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "new-save-reset-count-disposition.md",
         "serialization-failure-scoped-disposition.md"
       ]
     },
@@ -76,9 +72,7 @@
       "source_anchor": "GM resume496-501",
       "historical_open_gap": "Count15versus16behaviorcandidate;heldcontrolsuppression missingmap;R1resourcechecks/ICtimers unobserved.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "paused-count15-resume-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W10",
@@ -92,9 +86,7 @@
       "source_anchor": "GM rotate583-590->Tetromino.rotate131-151",
       "historical_open_gap": "Independentkickoracle gap;allaliaswriters/frame preservation notproved;no errorbetween writes tests. sharedrotations/wallkick arrays notsemantic mutations byshippedcode.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "lowest-row-rotation-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W12",
@@ -156,10 +148,7 @@
       "source_anchor": "GM noteLowest300-304/resetLockDelay287-298/resetNew306-310",
       "historical_open_gap": "Formalmax-cellrow andcount16 meanings notmatchedbyname;Continue resetnotrestoration;newlowest increment order sourcecandidate.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "lowest-row-rotation-disposition.md",
-        "new-save-reset-count-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W19",
@@ -181,8 +170,7 @@
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
         "phase-4-persistence-effect-premises.md",
-        "serialization-failure-scoped-disposition.md",
-        "exact-high-score-ordinary-write-disposition.md"
+        "serialization-failure-scoped-disposition.md"
       ]
     },
     {
@@ -190,10 +178,7 @@
       "source_anchor": "GM rejectedContinue204;reset194;spawnover238;savefailure224;holdover568;storage eventSC552-556",
       "historical_open_gap": "Need semanticcounterpart/equivalenceorboundedcounterexample. No inferred authorityfromsame names;DOMContinue checksflagonlySC221,notpayload/A16map.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "failed-withdrawal-availability-disposition.md",
-        "continue-payload-read-failure-scoped-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W22",
@@ -221,9 +206,7 @@
       "source_anchor": "IC handleKey119-168;KEY_ALIASES:IC31-37;aliasuse119-120",
       "historical_open_gap": "Need perphysicalcode-to-token representationincludingA+Leftsamealias,modifierkeyup/repeat/dialogpress/release;exactlegalcombinedpress/gameplayframe andfaultpoints evidence.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "held-soft-drop-resume-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W26",
@@ -256,9 +239,7 @@
       "historical_open_gap": "Modechange doesnot synchronouslyclear untilcallback;pausedresourceoutstanding;failedsetInterval/clearInterval outsideguard;stopfiringno explicitinvariantcheck. D23U4 includesrepeat.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "paused-held-repeat-resource-disposition.md",
-        "soft-repeat-registration-refusal-disposition.md",
-        "held-soft-drop-resume-disposition.md"
+        "soft-repeat-registration-refusal-disposition.md"
       ]
     },
     {
