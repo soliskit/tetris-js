@@ -2,7 +2,7 @@
 
 Status: decision text recorded by ledger row D17 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code.
 
-Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182). Its bytes are unchanged. This file adds to section 1.1 of D16 and alters nothing else in it. The authority for the Phase 1 state model is D16 together with this amendment.
+Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad). Its bytes are unchanged. This file adds to section 1.1 of D16 and alters nothing else in it. The authority for the Phase 1 state model is D16 together with this amendment.
 
 ## 1. Amendment
 

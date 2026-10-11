@@ -12,11 +12,11 @@ Five read-only partition inventories were produced at the base and are kept uned
 
 | Partition | Scope | File | SHA-256 |
 | --- | --- | --- | --- |
-| P2-A | engine gameplay and timers | `docs/phase-2-inventory-P2-A.txt` |  |
-| P2-B | persistence and session | `docs/phase-2-inventory-P2-B.txt` |  |
-| P2-C | input and control | `docs/phase-2-inventory-P2-C.txt` |  |
-| P2-D | page and outer layer | `docs/phase-2-inventory-P2-D.txt` |  |
-| P2-E | service worker, app, static exclusion | `docs/phase-2-inventory-P2-E.txt` |  |
+| P2-A | engine gameplay and timers | `docs/phase-2-inventory-P2-A.txt` (deleted, kept in git history) |  |
+| P2-B | persistence and session | `docs/phase-2-inventory-P2-B.txt` (deleted, kept in git history) |  |
+| P2-C | input and control | `docs/phase-2-inventory-P2-C.txt` (deleted, kept in git history) |  |
+| P2-D | page and outer layer | `docs/phase-2-inventory-P2-D.txt` (deleted, kept in git history) |  |
+| P2-E | service worker, app, static exclusion | `docs/phase-2-inventory-P2-E.txt` (deleted, kept in git history) |  |
 
 ## 2. Coverage of the blueprint's section 2 list
 

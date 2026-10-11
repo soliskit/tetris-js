@@ -126,7 +126,7 @@ Independent citation review reported no error and hashed all nine snapshot files
 
 ## Source identities
 REQUIREMENTS.md SHA256 fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc
-docs/phase-1-state-decision.md SHA256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182
+docs/phase-1-state-decision.md SHA256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad
 docs/phase-1-r1-decision.md SHA256 aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec
 docs/phase-1-r2-r5-decision.md SHA256 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8
 docs/phase-1-frame-principle-decision.md SHA256 f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41
