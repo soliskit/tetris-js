@@ -1,6 +1,6 @@
 # October 9, 2026 - design decision priority order
 
-David's order for design decisions is now: simplest app first, then avoid an invalid state. This replaces the earlier order of avoiding an invalid state first and choosing the simplest app within that.
+The owner's order for design decisions is now: simplest app first, then avoid an invalid state. This replaces the earlier order of avoiding an invalid state first and choosing the simplest app within that.
 
 This is a priority change, not a rewrite of R1's state-validity predicates, a certification of any implementation, or authorization to ship invalid states. Existing requirement and behavior changes still require their own reviewed authorization. No particular save compatibility, no-label design, field list, marker set, history replacement rule, deletion, storage withdrawal or implementation is selected by this order alone.
 
