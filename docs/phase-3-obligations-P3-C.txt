@@ -9,7 +9,7 @@ PCE-1 PCE-2 PCE-3 PCE-4 PCE-5 PCE-6 | PLY-1 PLY-2 PLY-3 PLY-4 PLY-5 PLY-6 PLY-7 
 0.1 Sources grounded (all read at the base)
 - REQUIREMENTS.md rows for the 17 IDs (lines 30-35, 41-48, 54-56).
 - Phase 1 governing decisions: D16 (docs/phase-1-state-decision.md, sections 1, 4, 6, 7, 8), D17 (item 15 lowest row), D20 (item 16), D18 R1 (B1 to B17), D21 (S1 to S11), D22 (T1 to T3), D23 (U1 to U4), D24 (V1 to V3), D25 property mapping, D29 clock, D31 frame principle Z1, D32 operation assignments, D33 C1 to C4, D34 E1 to E3, D35 register, D36 closure record. AUDIT.md rows D30 to D38 were read.
-- Phase 2: docs/phase-2-inventory-record.md (D38) and docs/phase-2-inventory-P2-A.txt, P2-B.txt, P2-C.txt, P2-D.txt (read for hand-offs; the partition inventory files were later deleted and their bytes remain in git history).
+- Phase 2: docs/phase-2-inventory-record.md (D38) and docs/phase-2-inventory-P2-A.txt, P2-B.txt, P2-C.txt, P2-D.txt (all deleted, kept in git history) (read for hand-offs; the partition inventory files were later deleted and their bytes remain in git history).
 - Blueprint docs/audit-blueprint.txt (title line "instinctVersion1.0"): section 3.3 (record fields), 3.4, evidence vocabulary, Phase 3 exit criterion, O1 to O8. I read "blueprint 3.3" as section 3.3 of this file. Please confirm if another artifact was meant.
 - Production code read in full: public/game/gameManager.js (GM), gameState.js (GS), position.js, tetromino.js (TM), tetrominoFactory.js (TF), session.js (SS). Read for routes and drawing: public/script.js (SC), public/game/inputController.js (IC).
 - Production tests were read only to cite existing evidence. They are "Tested" evidence at best and are not independent of the implementation (no O8 independence argument yet).

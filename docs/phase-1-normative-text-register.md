@@ -6,7 +6,7 @@ Purpose: the blueprint requires each Phase 1 decision to be recorded as normativ
 
 ## 1. What counts as normative decision text
 
-For each governing file listed in `docs/phase-1-record-index.md`, the normative decision text is the numbered or lettered decision statements (for example R1 predicates B1 to B17; R2 to R5 statements S1 onward; T1 to T3; U1 to U4; V1 to V3; W1 to W3 and W5; X1 to X2; K1 to K4 as restated in section 2; Z1; the operation assignments and choices C1 to C4 and E1 to E3). Everything else in a governing file is an annotation: status lines, baseline lines, "Not decided here" and "What is still not specified" sections, provenance notes, and the lines named in section 3. Annotations are not decision text and are excluded from any model input pack built under blueprint O8. The ledger in `AUDIT.md` governs provenance and approval; no annotation changes it.
+For each governing file listed in `docs/phase-1-record-index.md` (deleted, kept in git history), the normative decision text is the numbered or lettered decision statements (for example R1 predicates B1 to B17; R2 to R5 statements S1 onward; T1 to T3; U1 to U4; V1 to V3; W1 to W3 and W5; X1 to X2; K1 to K4 as restated in section 2; Z1; the operation assignments and choices C1 to C4 and E1 to E3). Everything else in a governing file is an annotation: status lines, baseline lines, "Not decided here" and "What is still not specified" sections, provenance notes, and the lines named in section 3. Annotations are not decision text and are excluded from any model input pack built under blueprint O8. The ledger in `AUDIT.md` governs provenance and approval; no annotation changes it.
 
 ## 2. Code-free restatements
 
