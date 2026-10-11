@@ -102,7 +102,6 @@
       "historical_open_gap": "No timerphase correspondence;latefaultcallback/readmalformedstate mayfault again. Scheduler throws insideoperation mostlycaught,butfailSafe cancellation canthrow.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "gravity-request-route-method.md",
         "timer-handle-detector-disposition.md"
       ]
     },
@@ -111,9 +110,7 @@
       "source_anchor": "GM softdropto drop245-257;IC161/296;SC480",
       "historical_open_gap": "Blockedsoftdrop/reissue/sourcepartiality retained;ICcallback/checkpoint after ownstate missing;SCrowOffsetincrements evenifdropno movement.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "gravity-request-route-method.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W14",
