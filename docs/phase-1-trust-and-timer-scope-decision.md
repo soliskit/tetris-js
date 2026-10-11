@@ -2,7 +2,7 @@
 
 Status: decision text recorded by ledger row D23 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
 
-Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182), whose section 9 left the meaning of "timer" for SAF-4 open, the R2 to R5 decision (`docs/phase-1-r2-r5-decision.md`, D21, SHA-256 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8), and the fault reporting and timer trust decision (`docs/phase-1-fault-timer-decision.md`, D22, SHA-256 c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f), which left SAF-5 reporting and the failed cancellation case undecided. This file decides those points and the storage trust boundary. It changes no bytes of those files.
+Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182), whose section 9 left the meaning of "timer" for SAF-4 open, the R2 to R5 decision (`docs/phase-1-r2-r5-decision.md`, D21, SHA-256 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8), and the fault reporting and timer trust decision (`docs/phase-1-fault-timer-decision.md`, D22, SHA-256 c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f; deleted, bytes in git history), which left SAF-5 reporting and the failed cancellation case undecided. This file decides those points and the storage trust boundary. It changes no bytes of those files.
 
 ## Decision text
 
