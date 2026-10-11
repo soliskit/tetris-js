@@ -6,7 +6,7 @@ Candidate completion decision for independent review. No absent-count default, s
 
 ## Current source and independent criteria
 
-main230cd4b, manager31bb2160, session54acbea4. B16 new writes preserve exact reset count/lowest; B3 fixes one denotation per representation; S6 last-good requires both valid content and successful writing. S8 exact eligibility is separate. D21S11 hand-edited validity does not prove a legal production history. Existing new-save-reset-count-disposition confirms equal ordinary serialized fields with count1/count3 after admitted Pause histories. That finding is separate from a specific last-good witness.
+main230cd4b, manager31bb2160, session54acbea4. B16 new writes preserve exact reset count/lowest; B3 fixes one denotation per representation; S6 last-good requires both valid content and successful writing. S8 exact eligibility is separate. D21S11 hand-edited validity does not prove a legal production history. AUDIT.md F20 confirms equal ordinary serialized fields with count1/count3 after admitted Pause histories. That finding is separate from a specific last-good witness.
 
 serializeSession emits board/score/current/queue/held/hold-available/bag only. Current fixtures have no count/lowest; historical writer identity binds schema but not original capture/actions/count. The existing partial fixture classifier explicitly leaves wholeB16 unresolved. Running production parse/Continue and observing count0 does not independently authorize absent-count=0. Selecting a zero-count route similarly proves source history0, not a fixed payload denotation0.
 
