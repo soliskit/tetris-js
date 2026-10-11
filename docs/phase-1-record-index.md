@@ -2,7 +2,7 @@
 
 This index tells a reader which Phase 1 documents govern and which are review material. It is navigation only. The ledger in `AUDIT.md` governs status and provenance.
 
-Publication identities: the SHA-256 values in both tables are historical source hashes, including D30, D35, D36 and both PR54 candidates. They are not silently replaced after publication-only reductions. AUDIT.md gives the exact source commit, original and current published hashes, changed scope and precedence for reduced files. Governing decision status is unchanged.
+Publication identities: the SHA-256 values in both tables are historical source hashes, including D30, D35, D36 and the PR54 R1 candidate. They are not silently replaced after publication-only reductions. AUDIT.md gives the exact source commit, original and current published hashes, changed scope and precedence for reduced files. Governing decision status is unchanged.
 
 ## Governing
 
@@ -39,6 +39,4 @@ These were merged as records of how the decisions were reached. They contain alt
 | `docs/phase-1-state-model-proposal.md` (state model proposal, historical per D16) | before #51 |  |
 | `docs/phase-1-r1-valid-state-proposal.md` | #51 |  |
 | `docs/phase-1-r1-proposal-rev1.md` | #52 |  |
-| `docs/phase-1-d16-lowest-row-amendment-proposal.md` | #53 |  |
-| `docs/phase-1-d16-amendment-candidate.md` | #54 |  |
 | `docs/phase-1-r1-normative-candidate.md` | #54 |  |
