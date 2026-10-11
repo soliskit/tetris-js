@@ -128,7 +128,11 @@ D50 and `docs/phase-3-formal-criterion-gate.md` record the later completed claim
 
 ## Later status consolidation and scoped dispositions
 
-D51 remains the historical Candidate record at its published scope. The later review draft `docs/audit-status-and-dispositions-2026-10-06.md` supplies the specific D50 publication followthrough receipt, separately scoped later finding dispositions and critical remaining gates. It is not Phase4 completion, property certification or approval of source/test/CI/model changes. This consolidation becomes the later documentation record only after independent review, exact-head checks, authorized documentation-only merge and postmerge publication verification. No D52 adopted decision is recorded by this draft.
+D51 remains the historical Candidate record at its published scope. The dated October 6 status and dispositions page, which supplied the specific D50 publication followthrough receipt, the separately scoped later finding dispositions and the critical remaining gates, is deleted. Of those records, only the eligibility-flag read failure record is kept, in the eligibility-read failure disposition below; the rest are accepted as lost. The page was not Phase4 completion, property certification or approval of source, test, CI or model changes. No D52 adopted decision is recorded by this consolidation.
+
+## Eligibility-read failure: Continue withdrawal disposition
+
+Public Continue converts an eligibility-read failure alone into a persisted withdrawal. Confirmed defect, by source argument plus qualified historical reproduction. S7 forbids stored mutation or withdrawal from a read failure alone. Original119 and current source show the flag read throwing, no payload read, then a successful false-flag write. The premises are a fresh cache, a side-effect-free read throw and normal writes; the historical launches are repeated, not one fresh measurement. Unread payload goodness is unnecessary for this narrow rule but is needed for stronger S6 loss claims. The whole F24 property remains Not established. This record moves here from the deleted October 6 status and dispositions page. No fix, test, model, CI or requirement change is approved.
 
 ## New-save reset-count preservation disposition
 
@@ -194,7 +198,7 @@ The narrow disposition in `docs/zero-cell-current-piece-detector-disposition.md`
 
 ## Phase 4 register migration and correction preparation
 
-The earlier private snapshot's missing domain ledger, unimplemented correction-package status and later publication/PR75 readiness followthrough are recorded in `docs/phase-4-domain-work-ledger.md`, `docs/timer-correction-review-status.md` and `docs/audit-register-migration-status.md`. Existing individual dispositions remain governing. Migration does not recreate lost raw archives, accept a complete model oracle, approve implementation or delete a private record. The eight work families and remaining regression/policy/reporting/phase gates stay open. Operative only after independent review, exact-head checks, authorized documentation merge and separate publication verification.
+The earlier private snapshot's missing domain ledger and unimplemented correction-package status are recorded in `docs/phase-4-domain-work-ledger.md` and `docs/timer-correction-review-status.md`. The later publication and pull request 75 readiness followthrough was recorded in the dated migration status page, which is deleted, and is accepted as lost. Existing individual dispositions remain governing. Migration does not recreate lost raw archives, accept a complete model oracle, approve implementation or delete a private record. The eight work families and remaining regression/policy/reporting/phase gates stay open. Operative only after independent review, exact-head checks, authorized documentation merge and separate publication verification.
 
 ## Historical executable model publication fidelity
 
