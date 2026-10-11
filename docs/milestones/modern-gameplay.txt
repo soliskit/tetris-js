@@ -612,7 +612,7 @@ Expected decision supersession/restatement:
   (not the case under the proposed stage default).
 
 Facts: today PLY-2 is max(0.25, 0.7 - 0.02 x (level - 1)) seconds per row (250 ms
-floor from level 17). The Guideline-style curve is (0.8 - 0.007 x (level - 1))^(level
+floor from level 24). The Guideline-style curve is (0.8 - 0.007 x (level - 1))^(level
 - 1) seconds per row. Computed: L1 1000 ms, L2 793 ms, L3 618 ms, L5 355 ms, L8 135
 ms, L10 64 ms, L12 28 ms, L13 18 ms, L15 7.1 ms, L20 0.5 ms. Source:
 https://tetris.wiki/Marathon (third party).

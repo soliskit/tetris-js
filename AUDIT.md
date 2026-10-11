@@ -261,6 +261,10 @@ The exact 2^53 read and ordinary lower-write dispositions are superseded for cur
 
 Resolved SCO-3 interpretation: repairing invalid stored high-score content is not lowering a valid high score. The owner selected this reading on October 8, 2026; see `docs/invalid-high-score-repair-decision.md`. The only-higher rule still protects valid stored high scores. This closes the interpretation question, not SCO-3 implementation certification. REQUIREMENTS.md, production code, tests, models, CI and repository settings are unchanged. No finding outside these exact 2^53 premises is reclassified; Phase 4 remains open. Review, head checks, merge and publication verification are separate gates.
 
+## Gravity timing limits
+
+Gravity follows PLY-2: max(0.25, 0.7 - 0.02 x (level - 1)) seconds per row, which reaches the 0.25 second floor at level 24. Two limits apply. A gravity timer that is already waiting keeps the delay it was given and need not reflect the latest level until it fires or restarts. The step from score to level is not proved for scores beyond the largest safe integer, 9,007,199,254,740,991.
+
 ## Findings carried from deleted disposition papers
 
 Each row below summarizes a finding that had its own paper in `docs/`. Those papers are deleted. Their full step sequences and geometry are in the repository history before this change. Every row was checked again on main (commit 4250207) by running the shipped game code (`GameManager` and `InputController`) with in-memory storage, a manual clock and stand-in browser functions. These runs are not runs on a real device or in a real browser. No fix, test, requirement or CI change is made here.
