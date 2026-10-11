@@ -1,6 +1,6 @@
 # Phase 1 decision: state categories and authoritative transition boundary
 
-Status: **CANDIDATE normative decision text, for fidelity review. Not yet an adopted owner decision.** This text encodes the owner-choice package prepared from the completed proposal and reconciliation process. It awaits fidelity review of this exact text and then explicit owner approval of it. Until that approval it is not recorded in `AUDIT.md`, and it is a candidate for D16 only. The proposal that preceded it is `docs/phase-1-state-model-proposal.md`, kept as historical review material and not normative.
+Status: **CANDIDATE normative decision text, for fidelity review. Not yet an adopted owner decision.** This text encodes the owner-choice package prepared from the completed proposal and reconciliation process. It awaits fidelity review of this exact text and then explicit owner approval of it. Until that approval it is not recorded in `AUDIT.md`, and it is a candidate for D16 only. The proposal that preceded it is `docs/phase-1-state-model-proposal.md` (deleted, kept in git history), kept as historical review material and not normative.
 
 Limits of this text: it certifies nothing and establishes no implementation property. APP-2 and APP-6 remain in audit scope although outside this state model. R1 and the later Phase 1 decisions remain open. These are limits on the semantics below, not implementation evidence.
 
