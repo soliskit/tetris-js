@@ -13,8 +13,6 @@ Later deletion: on October 11, 2026 the four Phase 1 decision files for the cloc
 | docs/phase-1-closure-record.md |  | 3781 |
 | docs/phase-1-d16-amendment-1.md | 0e0775998098c827a5fb3dddb89c432d3d88b99c5cfcab07c7d836cef8af5bba | 2289 |
 | docs/phase-1-d16-amendment-2.md | 957ba3926778c5c18fa3ff7796d29196f9cd954d1f58fc7fbc399d8a1eff3355 | 2441 |
-| docs/phase-1-d16-amendment-candidate.md |  | 3812 |
-| docs/phase-1-d16-lowest-row-amendment-proposal.md |  | 32572 |
 | docs/phase-1-dsp5-reading-decision.md |  | 2470 |
 | docs/phase-1-fault-timer-decision.md | c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f | 3243 |
 | docs/phase-1-frame-principle-decision.md | f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41 | 1977 |
