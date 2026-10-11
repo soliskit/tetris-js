@@ -2,8 +2,6 @@
 
 Tetris for your web browser. Built with plain JavaScript and served as static files by a small Express server.
 
-**Play it now: https://soliskit.github.io/tetris-js/**
-
 ## Getting started
 
 Requires Node.js 26 and npm 12.2 or newer. Node 26 comes with npm 11, so the first command updates npm.
@@ -18,7 +16,7 @@ Then open http://localhost:3000. Set the `PORT` environment variable to use a di
 
 ## Deployment
 
-The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the unit and browser tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**. The game is then served at https://soliskit.github.io/tetris-js/.
+The game is fully static, so the `public` folder is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`, after the unit and browser tests pass. To enable it, set **Settings > Pages > Source** to **GitHub Actions**.
 
 ## Features
 
