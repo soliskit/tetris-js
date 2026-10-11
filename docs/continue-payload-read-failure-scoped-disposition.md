@@ -29,7 +29,7 @@ The source sets confirmation false before the switch. That write is distinct and
 
 ## Existing F24 relation
 
-The published `audit-status-and-dispositions-2026-10-06.md` already confirms the separate eligibility-read failure prefix with no payload read. This payload-read failure is an additional cut within the already-open F24 family, not a new defect family or full F24 closure. The historical receipts of the two cuts remain distinct.
+AUDIT.md's eligibility-read failure disposition confirms the separate eligibility-read failure prefix with no payload read. This payload-read failure is an additional cut within the already-open F24 family, not a new defect family or full F24 closure. The historical receipts of the two cuts remain distinct.
 
 ## Historical evidence and boundary
 

@@ -6,7 +6,7 @@ The clean author was supplied only the four owner-approved input files recorded 
 
 ## Historical status scope
 
-The "Phase 3 remains open" status above and in the reconciliation record describes preparation of these historical freezes, not current audit readiness. Later advancement and closure records are `docs/phase-3-limited-advancement-record.md` and `docs/phase-3-formal-criterion-gate.md`; completed publication followthrough is recorded in `docs/audit-status-and-dispositions-2026-10-06.md`. Their stated limits remain. Publishing this archive does not reopen or close a phase.
+The "Phase 3 remains open" status above and in the reconciliation record describes preparation of these historical freezes, not current audit readiness. Later advancement and closure records are `docs/phase-3-limited-advancement-record.md` and `docs/phase-3-formal-criterion-gate.md`; completed publication followthrough was recorded in the dated October 6 status page, which is deleted; that record is accepted as lost. Their stated limits remain. Publishing this archive does not reopen or close a phase.
 
 ## Frozen source identities
 

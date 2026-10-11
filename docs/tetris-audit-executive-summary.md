@@ -18,7 +18,7 @@ Others reason about listed code paths under explicit assumptions.
 Publishing those records completed a documentation step, not product certification.
 
 The summary records candidate findings involving saved-game withdrawal, held controls, callback cleanup, and offline caches.
-Its [status record](audit-status-and-dispositions-2026-10-06.md) distinguishes those candidates from later narrow confirmed-defect decisions.
+The dated status page that separated those candidates from later narrow confirmed-defect decisions is deleted. Its one retained disposition, the Continue eligibility-read failure, is now in AUDIT.md under "Eligibility-read failure: Continue withdrawal disposition".
 Each result has its own input conditions and limits.
 A controlled failure does not show how often players encounter it.
 A source argument does not become a physical-device measurement.

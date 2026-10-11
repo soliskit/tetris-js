@@ -47,9 +47,7 @@
       "source_anchor": "GM performAction470-481->reset182-195",
       "historical_open_gap": "No item16writeidentified;selectedchoicecloseasync;startwhilepadheld/repeat/touchstate andframepreservation need relation;R1check notallfields;failcutpoints/persistence separate.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W07",
@@ -237,18 +235,14 @@
       "source_anchor": "IC resumeHeldMovement245-253/startMoving257-271",
       "historical_open_gap": "No fullA13phase/resourceadapter;pausedstart timer allowedbycode;timerregistration/cancel throw outsidefaultguard;everyU4repeatfiringstopbranchcheck missingmap.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W28",
       "source_anchor": "IC stopMoving273-277/blur305-312/disconnect88",
       "historical_open_gap": "Failedcancel chain/report/safe-state andfullframemapping notproved;releaseAllcanpartiallyclear then throw. Browserblurtrustednotownhandling.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W29",
