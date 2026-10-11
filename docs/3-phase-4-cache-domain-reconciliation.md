@@ -34,7 +34,7 @@ Their historical METHOD labels say prepared/noexecution because they are the fro
 
 Earlier broader U/P/clock/order summaries remain unauthenticated predecessor leads where exact original artifacts are not recovered. They are not substituted for the recovered named rows, whose U labels differ from earlier shorthand. Remaining unrecovered U/P variants and clock/order/fixedforeign archives still need recovery/verification.
 
-The current published V60 relation is docs/phase-3-current-restored-domain-relations.md section "V60 all-resource opening version relation". NEW362's actual replacement and confirmed disposition are docs/audit-status-and-dispositions-2026-10-06.md cache row. Selected browser-oracle limits are docs/phase-4-outer-browser-expectations.md Cache tests section. These specific records support their own claims, not the remaining unrecovered U/P variants and clock/order archives.
+The current published V60 relation is docs/phase-3-current-restored-domain-relations.md section "V60 all-resource opening version relation". NEW362's actual replacement and confirmed disposition were recorded in the cache row of the dated October 6 status page, which is deleted; that record is accepted as lost. Selected browser-oracle limits are docs/phase-4-outer-browser-expectations.md Cache tests section. These specific records support their own claims, not the remaining unrecovered U/P variants and clock/order archives.
 
 ## Next completion work
 
