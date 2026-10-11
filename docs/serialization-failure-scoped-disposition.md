@@ -1,6 +1,6 @@
 # Serialization-failure handling: scoped disposition
 
-Status: Confirmed defect by independently reviewed source argument in the declared injected-serialization-failure domain. This record becomes operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. No new runtime reproduction, native-cause claim, property certification or Phase4 closure.
+Status: Confirmed Defect by independently reviewed source argument in the declared injected-serialization-failure domain. This record becomes operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. No new runtime reproduction, native-cause claim, property certification or Phase4 closure.
 
 ## Admission and criterion
 
@@ -30,6 +30,6 @@ That historical evidence was repeated: two worker launches plus a coordinator re
 
 ## Disposition and remaining work
 
-F23 is Confirmed defect by the conditional source argument above, with qualified historical corroboration, for swallowed injected nonstorage serialization exceptions with a normal post-operation invariant result. It is separate from the new-save reset-count information-loss finding and from storage-error handling. It is not folded into F20: the stop/signal failure does not require an O4 ordering violation or good-prior payload.
+F23 is Confirmed Defect by the conditional source argument above, with qualified historical corroboration, for swallowed injected nonstorage serialization exceptions with a normal post-operation invariant result. It is separate from the new-save reset-count information-loss finding and from storage-error handling. It is not folded into F20: the stop/signal failure does not require an O4 ordering violation or good-prior payload.
 
-Natural/native causes on fully canonical ordinary objects remain Not established. Full T1 player messaging, all failure compositions, successful last-good preservation, R1/B16/F20/S6 properties and Phase4 remain open. No owner rule or absent-field default is adopted. No correction, permanent test, executable model, requirement, CI or public-site change is authorized by this record. The next correction proposal must preserve S5 withdrawal and SAF2 storage-error continuation while separating nonstorage engine exceptions, with its own approval and regression/collateral review.
+Natural/native causes on fully canonical ordinary objects remain Not Established. Full T1 player messaging, all failure compositions, successful last-good preservation, R1/B16/F20/S6 properties and Phase4 remain open. No owner rule or absent-field default is adopted. No correction, permanent test, executable model, requirement, CI or public-site change is authorized by this record. The next correction proposal must preserve S5 withdrawal and SAF2 storage-error continuation while separating nonstorage engine exceptions, with its own approval and regression/collateral review.

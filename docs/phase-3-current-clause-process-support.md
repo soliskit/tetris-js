@@ -61,7 +61,7 @@ Private claim-appropriate evidence assessment, not wholeclaim compliance/phaseex
 
 ## APP1 literalfullscreen and APP4 namedtarget
 
-V95 actual owner-recording assessment supplies real AddHome/ownicon/installedlaunch with systemUI visible and nominaliPhone14ProMax/iOS27.0.1 Safari portrait. Expectedfullscreen can be compared to actual browserchrome/systemregions, retaining literalphysicalextent unresolved reading/candidate; no success assumption erases those regions. APP4 requirement identifies a minimumplatform family; nominal recording is appropriate finite namedtargetintegration evidence, not futuredevice proof or exactSafarienginebuild, and exactcachedexecution identity remains one of four ownerapproved Notestablishedrelations. The current records below are actualmethod/evidence assessment with attributed pixelinspection, not newpixelproof. No new full-screen definition is selected.
+V95 actual owner-recording assessment supplies real AddHome/ownicon/installedlaunch with systemUI visible and nominaliPhone14ProMax/iOS27.0.1 Safari portrait. Expectedfullscreen can be compared to actual browserchrome/systemregions, retaining literalphysicalextent unresolved reading/candidate; no success assumption erases those regions. APP4 requirement identifies a minimumplatform family; nominal recording is appropriate finite namedtargetintegration evidence, not futuredevice proof or exactSafarienginebuild, and exactcachedexecution identity remains one of four ownerapproved Not Established relations. The current records below are actualmethod/evidence assessment with attributed pixelinspection, not newpixelproof. No new full-screen definition is selected.
 
 ## DSP1 whole-page all-mode composition
 
@@ -69,7 +69,7 @@ Independent source geometry method: document.app height = dynamicviewportheight 
 
 ## DSP4 consequences
 
-V95/V98/V99 nativeactualrapidrotation/changinggeometry and ownerreportedpinchfailure/Safari boundednonreproduction are retained; absentfingertelemetry doesnotbecometwo-tap delivery. SCviewport.scale branch, touch-action/user-select/preventDefault source methods map expected suppression/recovery versus actualsource consequences. Exactly four remaining points approvedNotestablished: bothquicktapsdelivery, doubletaprecovery, zoomedreloadrecovery, phonecachedexactbytes. That approval doesnotwaive scroll/textselection/anyother nativeclause. Browserpinchpositive and installedpinchadverse remain separate conditional applicability records; no repeatednewrecordingselected. Wider platform/interleaving domain and candidate classification later, not falsepass.
+V95/V98/V99 nativeactualrapidrotation/changinggeometry and ownerreportedpinchfailure/Safari boundednonreproduction are retained; absentfingertelemetry doesnotbecometwo-tap delivery. SCviewport.scale branch, touch-action/user-select/preventDefault source methods map expected suppression/recovery versus actualsource consequences. Exactly four remaining points approved Not Established: bothquicktapsdelivery, doubletaprecovery, zoomedreloadrecovery, phonecachedexactbytes. That approval doesnotwaive scroll/textselection/anyother nativeclause. Browserpinchpositive and installedpinchadverse remain separate conditional applicability records; no repeatednewrecordingselected. Wider platform/interleaving domain and candidate classification later, not falsepass.
 
 ## DSP6 usualcolor, save and contender
 
@@ -77,7 +77,7 @@ Fixedusualcolor values: independently adoptedgeometry/reference names kind, but 
 
 ## DSP7 literalawake versus ownpolicy
 
-Actualwanted/mode/acquire/release/stale/revoke/refusemethod+controlledsentinel evidence maps own policy. The literalawakeclause requires eligiblevisible document and cooperatingplatform/OS actually honoringgrant; grantstatealone is not observedphysicalscreen. Best-effortrefusal/missingnormalplay is explicitoriginalclause; later systemrelease triggers ownrequestwhilewanted. OSsleep despite grant is neither silentlycompliant nor fifthNotestablishedlimit. Conditional success-contract composition remains stated expected-versus-actualmethod; literalphysicaloutcome notmeasured. Review adequacyasconditionalmethodwithnamedpremise, not unconditionalcertification.
+Actualwanted/mode/acquire/release/stale/revoke/refusemethod+controlledsentinel evidence maps own policy. The literalawakeclause requires eligiblevisible document and cooperatingplatform/OS actually honoringgrant; grantstatealone is not observedphysicalscreen. Best-effortrefusal/missingnormalplay is explicitoriginalclause; later systemrelease triggers ownrequestwhilewanted. OSsleep despite grant is neither silentlycompliant nor fifth Not Established limit. Conditional success-contract composition remains stated expected-versus-actualmethod; literalphysicaloutcome notmeasured. Review adequacyasconditionalmethodwithnamedpremise, not unconditionalcertification.
 
 ## DSP8 exposednode/heardAT/Continue/faultboard
 

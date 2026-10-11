@@ -113,7 +113,7 @@ Historical evidence for the page script, not Phase 0 evidence: the only mutation
 
 Local full run, `npm run test:mutation` (Stryker 10.0.0, the scope above, 4 workers on a 4 core machine, Node 26.10.0):
 
-| File | Killed | Timed out | Survived | No coverage | Errors | Score |
+| File | Killed | Timed Out | Survived | No Coverage | Errors | Score |
 | --- | --- | --- | --- | --- | --- | --- |
 | `gameManager.js` | 417 | 6 | 0 | 0 | 0 | 100.00 |
 | `gameState.js` | 23 | 1 | 0 | 0 | 0 | 100.00 |
@@ -128,7 +128,7 @@ The report's JSON also lists the 2 mutants left out by the documented exclusion 
 
 CI full runs on the same code:
 
-| Run | Commit | Killed | Timed out | Survived | No coverage | Errors | Score | Time |
+| Run | Commit | Killed | Timed Out | Survived | No Coverage | Errors | Score | Time |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 37216743885, the manual run of `mutation.yml` for this record | 409faf4 | 1,120 | 32 | 0 | 0 | 0 | 100.00 | 32 minutes 17 seconds |
 | 37173755667, PR #42's full run in `mutation-pr.yml` | aae40ba, whose code trees equal 30e0085's | 1,121 | 31 | 0 | 0 | 0 | 100.00 | 32 minutes 16 seconds |

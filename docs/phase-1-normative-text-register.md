@@ -27,8 +27,8 @@ These restate, without any file name, constant name or code location, decisions 
 
 | Class | Meaning | Records |
 | --- | --- | --- |
-| Owner-approved behavior | The owner answered specific choice questions; private source proof is retained separately | D16-to-D18, D20-to-D25 and D27-to-D34 decision statements; D15's specific scope approval was independently checked |
-| Sourced consequence | Follows from an approved statement and the cited source; not separately approved | D32 Part A, D33 and D34 E3, the "sourced consequence" clauses named in their rows |
+| Owner-Approved Behavior | The owner answered specific choice questions; private source proof is retained separately | D16-to-D18, D20-to-D25 and D27-to-D34 decision statements; D15's specific scope approval was independently checked |
+| Sourced Consequence | Follows from an approved statement and the cited source; not separately approved | D32 Part A, D33 and D34 E3, the "sourced consequence" clauses named in their rows |
 | Annotation | Not decision text | section 3 |
 
 No decision in this class table was found without an owner reply behind its behavioral statement. D30 is a reading of DSP-5 recorded under D25 row 9 and does not edit `REQUIREMENTS.md`.

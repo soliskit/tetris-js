@@ -54,7 +54,7 @@ G9. Prefer a fresh reference-model author. Same-author reuse requires the O8
 exception and a written owner-approved independence argument.
 G10. Use Current and Superseded as certification lifecycle states. Keep those
 states separate from property and finding status. Use existing property status,
-such as Not assessed, for unreleased replacements.
+such as Not Assessed, for unreleased replacements.
 G11. Identify the exact covered tree and reference a checksummed complete
 code-to-claim inventory. Do not require every unit inline in every record.
 G12. Delegate within-charter normative, gameplay and engineering decisions to
@@ -286,7 +286,7 @@ No new lifecycle word is inserted into §5.2.
 
 An unreleased replacement certification record begins with the appropriate existing
 property status, normally:
-- Not assessed.
+- Not Assessed.
 
 The deployed/current record remains Current until successful replacement release closure.
 
@@ -295,14 +295,14 @@ At release closure:
 - prior record becomes Superseded historically.
 
 Exact blueprint §5.2 property statuses remain:
-- Not assessed;
-- Not established;
-- Tested within stated bounds;
-- Proven by reviewed argument;
-- Proven by exhaustive enumeration;
-- Formally verified;
-- Partially established;
-- Out of scope.
+- Not Assessed;
+- Not Established;
+- Tested Within Stated Bounds;
+- Proven by Reviewed Argument;
+- Proven by Exhaustive Enumeration;
+- Formally Verified;
+- Partially Established;
+- Out of Scope.
 
 5. Code-to-claim traceability
 

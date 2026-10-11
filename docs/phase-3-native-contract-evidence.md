@@ -45,7 +45,7 @@ Primary contract: https://www.w3.org/TR/screen-wake-lock/
 
 Later bounded outcomes are described in the companion [phase-3-native-recording-evidence.md](phase-3-native-recording-evidence.md), from held inspection records and owner-reported gestures. This contract document does not replay recordings or establish their output, identity or privacy. Raw recordings are not repository artifacts.
 
-The four owner-approved Not established relations in `phase-3-limited-advancement-record.md` remain delivery of both quick taps, double-tap recovery, zoomed-reload recovery and exact phone-cache source correspondence. This document creates no further approved limit and does not settle literal full-screen meaning or broader application integration.
+The four owner-approved Not Established relations in `phase-3-limited-advancement-record.md` remain delivery of both quick taps, double-tap recovery, zoomed-reload recovery and exact phone-cache source correspondence. This document creates no further approved limit and does not settle literal full-screen meaning or broader application integration.
 
 ## Source identity
 

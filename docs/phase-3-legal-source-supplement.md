@@ -119,7 +119,7 @@ Source: D16 section4 lines76-83; D21 S7/S9 lines21/25; D33 C4 line15; D32 persis
 Check: Confirmed external/cache/presentation routes not granted authority; A16 lifetime set only withdraw/attempt, clear sessionstart or successful same-session save. Accepted Continue commits L17 state; external session save does not clear A16.
 
 ## Limits
-All nineteen row claims are traceable with the conditional/composite qualifications above. Keep Candidate/Not assessed for implementation relations. Most W anchors remain unchecked. The missing legacy count source gap, live UI/focus/physical token/repeat/touch mapping, hostile adapters, dependency coverage, O8 provenance and universal-frame evidence are not closed. The earlier D43 record remains a historical statement of checks pending at that time. This supplement records later bounded citation work, not runtime completion or Phase 3 closure.
+All nineteen row claims are traceable with the conditional/composite qualifications above. Keep Candidate/Not Assessed for implementation relations. Most W anchors remain unchecked. The missing legacy count source gap, live UI/focus/physical token/repeat/touch mapping, hostile adapters, dependency coverage, O8 provenance and universal-frame evidence are not closed. The earlier D43 record remains a historical statement of checks pending at that time. This supplement records later bounded citation work, not runtime completion or Phase 3 closure.
 
 ## Independent review scope
 Independent citation review reported no error and hashed all nine snapshot files against the governed ledger. It checked the cited D32 operation lines and selected D18/D33/D34/requirements clauses, but did not read every clause of L18/L20 B references, the full L08 E1 sentence, every W anchor, runtime relations or original adoption evidence. This is a bounded independent citation review, not exhaustive independent verification.
@@ -134,3 +134,7 @@ docs/phase-1-operations-record.md SHA256 9e0a7db4b0423e8c831e265deca6ee2b66df4db
 docs/phase-1-operations-choices-decision.md SHA256 a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa
 docs/phase-1-operations-choices-2-decision.md SHA256 134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4
 docs/phase-1-trust-and-timer-scope-decision.md SHA256 0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b
+
+Status-label publication identities
+
+The REQUIREMENTS.md source hash cited here identifies the historical source used by this record. It is not the hash of the later restyled publication copy. Normative requirement-ID rows are unchanged; the migration receipt records current publication identities separately. Other source hashes and byte counts in this record retain their original historical meanings.

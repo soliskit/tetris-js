@@ -27,3 +27,7 @@ At introduction:
 | `test/fixtures/saved-game-with-level.json` | `2e1326b248b71c17038dd672e6173be31f74fe0d` | `c628f4442aab487f185b2ba88c58adce6fbf6c55310c3f0314e1dc1e7abc1ebb` |
 
 All three blobs are unchanged at documentation merge. The `public/game/session.js` with-level serializer at PR26 merge `d0b53e8` has SHA-256 `4670e8b9348c747cdc2f5ed27b447f435a4587606512264dec622fbc269545c1`; the no-level serializer at `402a4b7` has SHA-256 `632f3b417ec9bcd837203b07054c45bda3a4289264620a6a38da61ccc69e6171`. serializeSession supplies the named field-set comparison, not an original capture replay.
+
+## Status-label publication migration
+
+The fixture README hash above identifies the documentation inspected for the original capture analysis. Its later title-case change-class reference has a new publication identity in the migration receipt. Both JSON fixture files and all original capture/serializer identities remain unchanged.
