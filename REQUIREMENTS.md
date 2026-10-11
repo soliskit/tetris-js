@@ -1,27 +1,30 @@
 # Requirements
 
-Every behavior of the game is written down here with an ID. Every test names the requirements it verifies in its title, for example `clearing 4 lines at once scores 800 [SCO-1]`. `test/traceability.test.js` fails the build if a requirement has no test, or a test names a requirement that does not exist, or a test names none.
+This file lists every behavior of the game, each with an ID. Every test names the requirements it checks in its title, for example `clearing 4 lines at once scores 800 [SCO-1]`. The ID in square brackets at the end of a title, such as [SCO-1], names the requirement that test checks. test/traceability.test.js fails the build if a requirement has no test, if a test names a requirement that does not exist, or if a test names none. That keeps what the game promises and which requirements the tests name in step.
 
-Unit tests live in `test/`, browser tests in `e2e/`. To list the tests for a requirement, search for its ID, for example `grep -rn "SCO-1" test e2e`.
+Unit tests are in test/ and browser tests are in e2e/. To find the tests for a requirement, search for its ID, for example: grep -rn "SCO-1" test e2e
+
+Plain-words note, added by this plan and not part of the requirement text: SRS wall kicks are the ordered small position adjustments the Super Rotation System tries so that a rotation fits.
 
 ## Rules for changes
 
-1. **No unrecorded observable behavior change.** What the player sees, does, saves or can load changes only with this file in the same commit.
-2. **No weakened protection.** A runtime check, or the test that proves it works, is loosened only when a requirement changes, and then is replaced by the protection the new rule calls for, if any. Otherwise, a test must prove the same input still gets the same outcome at the same boundary. Types don't count.
-3. **Only the described is protected.** Behavior the requirements and tests don't describe has no guarantee.
+1. Behavior changes are written down. What the player sees, does, saves, or can load changes only when this file changes in the same commit.
+2. Protection does not shrink. A runtime check, or the test that proves it works, is loosened only when a requirement changes, and then it is replaced by whatever protection the new rule needs, if any. Otherwise a test must show the same input gets the same result at the same boundary. Types do not count as evidence.
+3. Only what is described is protected. Behavior that no requirement and no test describes has no guarantee.
 
 ### Classifying changes
 
-Each change to game code (everything under `public/`) or to requirement entries (the rows of the tables below) is classified as a Refactor, Bug Fix, Intentional Change and/or Clarification, and each class needs its own evidence.
+Each change to game code (anything under public/) or to a requirement row is one or more of these, and each kind needs its own evidence.
 
 | Class | What changes | Evidence |
 | --- | --- | --- |
-| Refactor | Game code, but not behavior | Requirement entries are unchanged and the tests pass. Tests change only to follow renamed or moved code, never to expect different behavior. |
-| Bug Fix | Game code, brought back in line with an existing requirement | A test for that requirement that failed before the fix |
-| Intentional Change | Game code and requirement entries | The requirement entries edited in the same commit, and their tests updated to match |
-| Clarification | Requirement entries, describing behavior the game already has | The new requirement entries and their tests |
+| Refactor | Code, not behavior | Requirement rows stay unchanged and tests pass. Tests change only to follow renamed or moved code, never to expect different behavior. |
+| Bug Fix | Code, to match an existing requirement | A test for that requirement that failed before the fix |
+| Intentional Change | Code and requirements | Requirement rows edited in the same commit, with tests updated to match |
+| Clarification | Requirements, to describe what the game already does | The new rows and their tests |
 
-A change with no game code and no requirement entries needs no class. It still follows the three rules: weakening a test falls under rule 2, and the gates in QA-1 to QA-6 may not be lowered or removed.
+
+A change to neither code nor requirement rows needs no kind. The three rules still apply: weakening a test falls under rule 2, and the gates QA-1 to QA-6 are never lowered or removed.
 
 ## Pieces and board
 

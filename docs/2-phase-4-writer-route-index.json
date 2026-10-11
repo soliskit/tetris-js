@@ -47,19 +47,14 @@
       "source_anchor": "GM performAction470-481->reset182-195",
       "historical_open_gap": "No item16writeidentified;selectedchoicecloseasync;startwhilepadheld/repeat/touchstate andframepreservation need relation;R1check notallfields;failcutpoints/persistence separate.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W07",
       "source_anchor": "GM load199-217,calledContinue483-485",
       "historical_open_gap": "Reset/lowest exactrestore candidate;legacydefaults andfailureclasses notproved;no item16representation;accepteddata adapter/R1validity/highscore separate. ContinueA12/A13/A14 frame relation notfullymapped.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "new-save-reset-count-disposition.md",
-        "continue-payload-read-failure-scoped-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W08",
@@ -67,7 +62,6 @@
       "historical_open_gap": "Outstanding IC timers untilnexttick mayexistpaused;no full resourceprojection. Need failingcancel/mode/count14/15 traces andhiddenpauseddrag reset mapping. PendingUIA11close async.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "new-save-reset-count-disposition.md",
         "serialization-failure-scoped-disposition.md"
       ]
     },
@@ -76,9 +70,7 @@
       "source_anchor": "GM resume496-501",
       "historical_open_gap": "Count15versus16behaviorcandidate;heldcontrolsuppression missingmap;R1resourcechecks/ICtimers unobserved.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "paused-count15-resume-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W10",
@@ -92,9 +84,7 @@
       "source_anchor": "GM rotate583-590->Tetromino.rotate131-151",
       "historical_open_gap": "Independentkickoracle gap;allaliaswriters/frame preservation notproved;no errorbetween writes tests. sharedrotations/wallkick arrays notsemantic mutations byshippedcode.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "lowest-row-rotation-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W12",
@@ -102,7 +92,6 @@
       "historical_open_gap": "No timerphase correspondence;latefaultcallback/readmalformedstate mayfault again. Scheduler throws insideoperation mostlycaught,butfailSafe cancellation canthrow.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "gravity-request-route-method.md",
         "timer-handle-detector-disposition.md"
       ]
     },
@@ -111,18 +100,14 @@
       "source_anchor": "GM softdropto drop245-257;IC161/296;SC480",
       "historical_open_gap": "Blockedsoftdrop/reissue/sourcepartiality retained;ICcallback/checkpoint after ownstate missing;SCrowOffsetincrements evenifdropno movement.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "gravity-request-route-method.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W14",
       "source_anchor": "GM hardDrop539-547",
       "historical_open_gap": "Independentlanding/lockpoststate &persistenceframe needevidence;invalidpiece dropDistance canhang;directmethodaccess/noonChange notshippedcallerdefectbyitself.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "1-selected-score-request-witness.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W15",
@@ -130,8 +115,7 @@
       "historical_open_gap": "Candidate late-lockfault/paused/over mutation;needactualcanceloutcome boundary,instructioncutpoints,not successfulcancel adversarial premise.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "phase-3-fault-conversion-source-evidence.md",
-        "1-selected-score-request-witness.md"
+        "phase-3-fault-conversion-source-evidence.md"
       ]
     },
     {
@@ -140,8 +124,7 @@
       "historical_open_gap": "SemanticA15boxrowdifferent;ICrepeat idle onovernot immediate;A16absent;score/highscore/turnsave timing requiresO4 evidence.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "score-writer-gravity-premise-reconciliation.md",
-        "1-selected-score-request-witness.md"
+        "score-writer-gravity-premise-reconciliation.md"
       ]
     },
     {
@@ -156,10 +139,7 @@
       "source_anchor": "GM noteLowest300-304/resetLockDelay287-298/resetNew306-310",
       "historical_open_gap": "Formalmax-cellrow andcount16 meanings notmatchedbyname;Continue resetnotrestoration;newlowest increment order sourcecandidate.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "lowest-row-rotation-disposition.md",
-        "new-save-reset-count-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W19",
@@ -167,12 +147,8 @@
       "historical_open_gap": "No visiblefault UI wiredSC12;signaldependscallback;repeat resourcesuncanceled;failedcancel canabortsafeconversion/report. Allpendingrequirementlinked evidence,not promotedfinding.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "1-selected-synthetic-prior-preservation.md",
         "phase-3-fault-conversion-source-evidence.md"
-      ],
-      "publication_qualification": {
-        "1-selected-synthetic-prior-preservation.md": "PR121 exact, not current main; publication pending"
-      }
+      ]
     },
     {
       "id": "W20",
@@ -181,8 +157,7 @@
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
         "phase-4-persistence-effect-premises.md",
-        "serialization-failure-scoped-disposition.md",
-        "exact-high-score-ordinary-write-disposition.md"
+        "serialization-failure-scoped-disposition.md"
       ]
     },
     {
@@ -190,10 +165,7 @@
       "source_anchor": "GM rejectedContinue204;reset194;spawnover238;savefailure224;holdover568;storage eventSC552-556",
       "historical_open_gap": "Need semanticcounterpart/equivalenceorboundedcounterexample. No inferred authorityfromsame names;DOMContinue checksflagonlySC221,notpayload/A16map.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "failed-withdrawal-availability-disposition.md",
-        "continue-payload-read-failure-scoped-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W22",
@@ -221,9 +193,7 @@
       "source_anchor": "IC handleKey119-168;KEY_ALIASES:IC31-37;aliasuse119-120",
       "historical_open_gap": "Need perphysicalcode-to-token representationincludingA+Leftsamealias,modifierkeyup/repeat/dialogpress/release;exactlegalcombinedpress/gameplayframe andfaultpoints evidence.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "held-soft-drop-resume-disposition.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W26",
@@ -237,18 +207,14 @@
       "source_anchor": "IC resumeHeldMovement245-253/startMoving257-271",
       "historical_open_gap": "No fullA13phase/resourceadapter;pausedstart timer allowedbycode;timerregistration/cancel throw outsidefaultguard;everyU4repeatfiringstopbranchcheck missingmap.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W28",
       "source_anchor": "IC stopMoving273-277/blur305-312/disconnect88",
       "historical_open_gap": "Failedcancel chain/report/safe-state andfullframemapping notproved;releaseAllcanpartiallyclear then throw. Browserblurtrustednotownhandling.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "audit-status-and-dispositions-2026-10-06.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W29",
@@ -256,9 +222,7 @@
       "historical_open_gap": "Modechange doesnot synchronouslyclear untilcallback;pausedresourceoutstanding;failedsetInterval/clearInterval outsideguard;stopfiringno explicitinvariantcheck. D23U4 includesrepeat.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "paused-held-repeat-resource-disposition.md",
-        "soft-repeat-registration-refusal-disposition.md",
-        "held-soft-drop-resume-disposition.md"
+        "soft-repeat-registration-refusal-disposition.md"
       ]
     },
     {

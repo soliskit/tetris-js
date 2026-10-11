@@ -23,7 +23,7 @@ Current published P3-C SHA256 after nontechnical redaction: . Original source id
 
 Current independent domain method text: [method support](phase-3-current-method-support.md). These derived methods retain named premises and actual finite/adverse/conditional outcomes.
 
-Later targeted clauses/process/dependencies: [clause support](phase-3-current-clause-process-support.md). Exact grouped outputs/harnesses/reviews and actual execution scope: [grouped identity ledger](phase-3-current-grouped-result-identities.md). Independent geometry comparison: [geometry support](phase-3-kind-geometry-source-evidence.md).
+Later targeted clauses/process/dependencies: [clause support](phase-3-current-clause-process-support.md). Exact grouped outputs/harnesses/reviews and actual execution scope were recorded in the grouped identity ledger, which was later deleted; its bytes remain in git history. The execution scope statements now appear in the record sections below. Independent geometry comparison: [geometry support](phase-3-kind-geometry-source-evidence.md).
 
 Restored explicit source-domain and required-runtime relations: [centering/restart/landing/model/QA support](phase-3-current-restored-domain-relations.md). Finite matched actual uses: [use-site support](phase-3-current-use-site-support.md).
 
@@ -930,7 +930,7 @@ Original complete record: [phase-3-obligations-P3-E.txt](phase-3-obligations-P3-
 
 Model / independent method: Actual independent non-engine source/assertion/native method; no artificial engine model relationship
 
-Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held current Chromium100% log plus recorder/converter method remain evidence, not never-run. No change. Exact current source/result/process bindings are supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and [grouped identities](phase-3-current-grouped-result-identities.md). Raw ranges and converter/failure domains later.
+Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held current Chromium100% log plus recorder/converter method remain evidence, not never-run. No change. Exact current source/result/process bindings were supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and the grouped identities ledger; the ledger was later deleted, its bytes remain in git history, and the exact bindings are not retained in the current repository documents. Raw ranges and converter/failure domains later.
 
 Limits and current conditional/adverse relations: Exact current per-clause packet and review limits retained: finite/conditional/adverse/unresolved outcomes, not universal compliance. Historical stale missing labels must not override actual later statements. No all-domain/native/hostile exhaustion or unsupported independent rerun.
 
@@ -943,7 +943,7 @@ Original complete record: [phase-3-obligations-P3-E.txt](phase-3-obligations-P3-
 
 Model / independent method: Actual independent non-engine source/assertion/native method; no artificial engine model relationship
 
-Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held matrix55/6 WebKit,61/0 Chromium phone,48/13 desktop remains appropriate process evidence. No change. Exact current source/result/process bindings are supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and [grouped identities](phase-3-current-grouped-result-identities.md). No physical Safari added to this tooling claim. Additional browser/skip adequacy later.
+Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held matrix55/6 WebKit,61/0 Chromium phone,48/13 desktop remains appropriate process evidence. No change. Exact current source/result/process bindings were supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and the grouped identities ledger; the ledger was later deleted, its bytes remain in git history, and the exact bindings are not retained in the current repository documents. No physical Safari added to this tooling claim. Additional browser/skip adequacy later.
 
 Limits and current conditional/adverse relations: Exact current per-clause packet and review limits retained: finite/conditional/adverse/unresolved outcomes, not universal compliance. Historical stale missing labels must not override actual later statements. No all-domain/native/hostile exhaustion or unsupported independent rerun.
 
@@ -956,7 +956,7 @@ Original complete record: [phase-3-obligations-P3-E.txt](phase-3-obligations-P3-
 
 Model / independent method: Actual independent non-engine source/assertion/native method; no artificial engine model relationship
 
-Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held chained typecheck success and literal graph/options/order method remain appropriate process evidence. No change. Exact current source/result/process bindings are supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and [grouped identities](phase-3-current-grouped-result-identities.md). Casts are not runtime proof; stricter-option/effective-file domains later.
+Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual held chained typecheck success and literal graph/options/order method remain appropriate process evidence. No change. Exact current source/result/process bindings were supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and the grouped identities ledger; the ledger was later deleted, its bytes remain in git history, and the exact bindings are not retained in the current repository documents. Casts are not runtime proof; stricter-option/effective-file domains later.
 
 Limits and current conditional/adverse relations: Exact current per-clause packet and review limits retained: finite/conditional/adverse/unresolved outcomes, not universal compliance. Historical stale missing labels must not override actual later statements. No all-domain/native/hostile exhaustion or unsupported independent rerun.
 
@@ -969,7 +969,7 @@ Original complete record: [phase-3-obligations-P3-E.txt](phase-3-obligations-P3-
 
 Model / independent method: Actual independent non-engine source/assertion/native method; no artificial engine model relationship
 
-Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual original mutation report1120Killed/32Timeout/2Ignored plus static loop/workflow/exclusion methods remain appropriate process evidence. No change. Exact current source/result/process bindings are supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and [grouped identities](phase-3-current-grouped-result-identities.md). Ignored not tested; timeouts caught under requirement, not correct outcomes; shuffle/RNG and delete-path readings not resolved by counts. Remaining campaign/policy domains and candidate certification later.
+Existing held source/process method and result scopes are stated below; earlier public-linkage gap is superseded only when the final standalone support and identities are actually published. Actual original mutation report1120Killed/32Timeout/2Ignored plus static loop/workflow/exclusion methods remain appropriate process evidence. No change. Exact current source/result/process bindings were supplied in [restored-domain support](phase-3-current-restored-domain-relations.md) and the grouped identities ledger; the ledger was later deleted, its bytes remain in git history, and the exact bindings are not retained in the current repository documents. Ignored not tested; timeouts caught under requirement, not correct outcomes; shuffle/RNG and delete-path readings not resolved by counts. Remaining campaign/policy domains and candidate certification later.
 
 Limits and current conditional/adverse relations: Exact current per-clause packet and review limits retained: finite/conditional/adverse/unresolved outcomes, not universal compliance. Historical stale missing labels must not override actual later statements. No all-domain/native/hostile exhaustion or unsupported independent rerun.
 
@@ -1483,13 +1483,11 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V61
 
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: actual browser coordinator-attributed; independent Python byte equal; recorded screenshot independently inspected in original review. No new pixel inspection. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V57/V62
 
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: actual Node and independent Python rerun byte equal per review. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V42
 
@@ -1537,8 +1535,7 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V56/V75
 
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: V56 browser actual trace coordinator-attributed, source/hash review only; no independent browser rerun. V75 source/literal method using already bound V56 trace, not a separate run. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V38
 
@@ -1586,8 +1583,7 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V58/V59
 
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: V58 source equations, not an execution. V59 actual browser coordinator-attributed; independent Python byte equal plus hand wall relation; the misleading noIntermediateMove field is qualified to the down/up window. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V34
 
@@ -1600,8 +1596,7 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V65/V66/V76
 
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: V65 choice record, not authority established by the index; original user evidence separately required. V66 Node equal except Node version; Python byte equal with the same earlier geometry table; pack copy not directly compared by reviewer. V76 documentary source/author capture attestation; raw capture execution independently unattested. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V72
 
@@ -1641,7 +1636,7 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V60
 
-Exact artifacts and execution scope are in [grouped result identities](phase-3-current-grouped-result-identities.md), section V60.
+Execution scope: Node rerun equal except Node version; Python byte equal, labelled-body atomic VM premise. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V29
 
@@ -1661,10 +1656,7 @@ Exact artifacts and execution scope are in [grouped result identities](phase-3-c
 
 ### V69/V70
 
-Exact artifacts and source/assertion scope are in [grouped result identities](phase-3-current-grouped-result-identities.md), sections V69 and V70. The historical empty index below is not absence of those records.
-
-| Held record identity | SHA256 | Bytes |
-|---|---|---|
+Execution scope: V69 source/assertion method, not execution. V70 source/assertion method plus exact tagged-source inventory; not execution. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
 
 ### V31
 
