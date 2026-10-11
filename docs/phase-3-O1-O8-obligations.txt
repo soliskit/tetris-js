@@ -53,7 +53,7 @@ assumptions:
 covered production code:
   manager.js:77-116,182-243,245-384,389-454,459-590; inputController.js control/repeat bodies; script.js:202-234,394-556. P2 inventory provides individual writer references.
 covered model code, if applicable:
-  Retained source branch docs/o8-reference-model/rev4/o8_reference_model_rev4.py:73-89,183-406; valid_state:416 onward. Candidate, not oracle acceptance.
+  Historical Rev4 source (deleted; retained in git history): lines 73-89,183-406; valid_state:416 onward. Candidate, not oracle acceptance.
 evidence:
   D38 route inventory and D40 55 obligation records inspected. Source has guard/runChecked/monitor/failSafe, but independent boundary broader. Rev4 functions and freeze hashes checked; no implementation comparison run.
 limitations:
