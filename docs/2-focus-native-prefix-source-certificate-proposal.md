@@ -2,7 +2,7 @@
 
 The accepted heading-click witness supplies the ordinary local formation prefix. A source-only controller continuation can test the remaining correspondence under explicit successful input-delivery and completed-operation premises. It does not need a new no-choice rule or a repeat of the old injected blur trace.
 
-Proposed next classification target for independent review, not an adopted certificate or new finding status. Formal candidate unresolved; property Not established.
+Proposed next classification target for independent review, not an adopted certificate or new finding status. Formal candidate unresolved; property Not Established.
 
 ## Named claim and premises
 
@@ -24,6 +24,6 @@ A reviewed operation-correspondence or progress relation must independently say 
 
 ## Recorded review outcome and Phase 4 ordering
 
-Two council replies accepted the packet only conditionally for reasoning and status discipline. They did not certify the proposal, any property or Phase 4 completion. The accepted precision corrections above keep the controller continuation conditional, scope the frame rule accurately and state the missing completion relation. Formal finding remains Candidate/unresolved; property Not established; Phase 4 OPEN. No new execution was performed.
+Two council replies accepted the packet only conditionally for reasoning and status discipline. They did not certify the proposal, any property or Phase 4 completion. The accepted precision corrections above keep the controller continuation conditional, scope the frame rule accurately and state the missing completion relation. Formal finding remains Candidate/unresolved; property Not Established; Phase 4 Open. No new execution was performed.
 
 The next audit completion gate is the reconciled closeout matrix for every original declared domain and candidate, linked to exact narrower dispositions, evidence, limitations and approvals. This reconciliation does not depend on accepting completed-A. Repeating the heading probe is not the next evidence step. If source-grounded research cannot justify the completion relation without adding a new rule, that exact normative choice must be prepared for the owner separately; it is not adopted by this document.

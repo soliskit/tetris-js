@@ -1,6 +1,6 @@
 # Lowest-row history: ordinary rotation information loss
 
-Status: Confirmed defect by independently reviewed conditional source argument for the paired ordinary I histories below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native evidence, all-state correctness, full R1 or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the paired ordinary I histories below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native evidence, all-state correctness, full R1 or Phase4 closure.
 
 ## Independent meaning and representation
 

@@ -1,6 +1,6 @@
 # Session assertions: the declared corruption inputs and oracle limits
 
-This child reconciliation inspects every named corruption entry in test/session.test.js and its explicit expected null. It supplies requirements-based applicability distinctions without executing the parser or calling its predicate an independent oracle. Phase4 OPEN; no new finding, protection edit or whole B16 certificate.
+This child reconciliation inspects every named corruption entry in test/session.test.js and its explicit expected null. It supplies requirements-based applicability distinctions without executing the parser or calling its predicate an independent oracle. Phase4 Open; no new finding, protection edit or whole B16 certificate.
 
 ## Source and selection
 

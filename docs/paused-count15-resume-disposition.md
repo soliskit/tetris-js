@@ -1,6 +1,6 @@
 # Paused count15 Resume: scoped disposition
 
-Status: Confirmed defect by independently reviewed conditional source argument under the ordinary factory, timer and action premises below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, a native timing claim, whole-property certification or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument under the ordinary factory, timer and action premises below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, a native timing claim, whole-property certification or Phase4 closure.
 
 ## Independent criterion
 
@@ -35,6 +35,6 @@ Historical48/49-row injected comparisons and later public-action traces have dis
 
 ## Disposition
 
-Confirmed defect by conditional source argument for premature same-session Resume lock after fourteen resting restarts and Pause produce count15, on the admitted ordinary route above. This closes the ordinary-factory admission premise for that exact operation-rule counterexample, not all pause/reset/lock, R1/B16/SAF6 or Phase4 obligations.
+Confirmed Defect by conditional source argument for premature same-session Resume lock after fourteen resting restarts and Pause produce count15, on the admitted ordinary route above. This closes the ordinary-factory admission premise for that exact operation-rule counterexample, not all pause/reset/lock, R1/B16/SAF6 or Phase4 obligations.
 
 No correction, permanent test, reference-model feedback, requirement, CI or public-site change is authorized. Pending Q2 detector extent and the separate Q1 queue-check interpretation are unchanged. A later correction proposal needs its own approval and regression review, preserving the distinct count15 and count16 meanings.

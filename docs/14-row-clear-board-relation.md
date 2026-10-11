@@ -45,6 +45,6 @@ The actual `fillRows` helper supplies white `#fff` cells. Their locked-kind mean
 
 ## Stopping boundary and language evidence
 
-RC-1 fills the variable-row construction and exact survivor-order premise left open by the empty-board argument, including the selected generated-clear and nonadjacent-row expectations. It does not close W16, SCO-1 or complete A-dimensions/A-cells, establish every writer/failure prefix, promote a finding or certify a property. Phase4 remains OPEN.
+RC-1 fills the variable-row construction and exact survivor-order premise left open by the empty-board argument, including the selected generated-clear and nonadjacent-row expectations. It does not close W16, SCO-1 or complete A-dimensions/A-cells, establish every writer/failure prefix, promote a finding or certify a property. Phase4 remains Open.
 
 Language references fetched for the operational facts: [splice](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice), [unshift](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift), and [reverse](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse). Array.from and object-creation sources are linked in the empty-board argument. These support language semantics only, not game-policy adoption.

@@ -42,4 +42,4 @@ Zero-cell or malformed shapes do not meet DD-1's four-cell premise. In particula
 
 ## Stopping boundary
 
-DD-1/GH-1 close the conditional canonical landing-loop bound/first-blocked-step and ghost-original-preservation premises after review. They do not establish every reachable caller, piece construction, hostile representation, full W14/W35 frame, browser ghost pixels or complete PLY-4/PLY-5 certification. No finding promotion, approved limit or Phase4 exit follows. Phase4 remains OPEN.
+DD-1/GH-1 close the conditional canonical landing-loop bound/first-blocked-step and ghost-original-preservation premises after review. They do not establish every reachable caller, piece construction, hostile representation, full W14/W35 frame, browser ghost pixels or complete PLY-4/PLY-5 certification. No finding promotion, approved limit or Phase4 exit follows. Phase4 remains Open.

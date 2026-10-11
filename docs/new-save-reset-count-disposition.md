@@ -1,6 +1,6 @@
 # New-save reset-count loss: scoped disposition
 
-Status: Confirmed defect by independently reviewed source argument under the premises below, operative only after this record passes its documentation review, exact-head checks, authorized merge and postmerge verification. Not newly Reproduced. Source argument only. No game launch, fixture, serialization call, storage write, correction, permanent test or certification. This addresses the unresolved actual writer-entry premise of the prior paired information-loss argument, not the existence of a good prior saved payload.
+Status: Confirmed Defect by independently reviewed source argument under the premises below, operative only after this record passes its documentation review, exact-head checks, authorized merge and postmerge verification. Not newly Reproduced. Source argument only. No game launch, fixture, serialization call, storage write, correction, permanent test or certification. This addresses the unresolved actual writer-entry premise of the prior paired information-loss argument, not the existence of a good prior saved payload.
 
 ## Claim
 

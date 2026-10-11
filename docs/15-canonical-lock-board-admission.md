@@ -48,4 +48,4 @@ D16 V1 permits unfinished transition microsteps to differ from committed validit
 
 ## Stopping boundary
 
-LK-1 closes the local canonical four-cell write/untouched-board/alias premise after review. It does not admit every caller, factory history or support fixture, classify a defect, certify PCE-6 or whole W16/W34, establish full-frame behavior or close Phase4. Source hashing is not complete-domain property certification. Phase4 remains OPEN.
+LK-1 closes the local canonical four-cell write/untouched-board/alias premise after review. It does not admit every caller, factory history or support fixture, classify a defect, certify PCE-6 or whole W16/W34, establish full-frame behavior or close Phase4. Source hashing is not complete-domain property certification. Phase4 remains Open.

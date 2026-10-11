@@ -14,7 +14,7 @@ B16 requires exact new-write history preservation; S6 requires successful valid 
 
 ## Recorded disposition proposed
 
-Target: "one particular current game-written payload is independently B16-good, was successfully written, and is preserved through the chosen later fault" is Not established at the content-premise facet. Remaining test not attempted afresh because another capture would repeat established omission/source-load behavior without settling independent denotation. This is a bounded test-target block, not approved abandonment of the declared whole F20 domain.
+Target: "one particular current game-written payload is independently B16-good, was successfully written, and is preserved through the chosen later fault" is Not Established at the content-premise facet. Remaining test not attempted afresh because another capture would repeat established omission/source-load behavior without settling independent denotation. This is a bounded test-target block, not approved abandonment of the declared whole F20 domain.
 
 Independent complete synthetic prior preservation remains its own measured relation, not current/released/game-written format. Prior byte-retention and S7/S2 narrow findings do not need this good-current target. No S9 partial-success question is needed for this particular block.
 

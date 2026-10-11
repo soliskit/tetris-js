@@ -1,6 +1,6 @@
 # Ordinary Pause: held soft-repeat resource remains outstanding
 
-Status: Confirmed defect by independently reviewed conditional source argument for the completed ordinary Pause prefix below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native timing evidence, full U4/R1 or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the completed ordinary Pause prefix below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native timing evidence, full U4/R1 or Phase4 closure.
 
 ## Independent resource criterion
 

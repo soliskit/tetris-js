@@ -24,4 +24,4 @@ Coordinator and parent inspected actual screenshot pixels,not just DOM text. Ori
 
 ## Remaining gaps
 
-C3/E2/E3 held-across-resume and DAS/ARR timing;gamepad;modifier chords and keyboardrepeat;letter/Space keys;actual touch;WebKit/Safari/iOS;OS-level visibility;assistive announcements;phone layout/P3/wake-lock device behavior. One browser/session and a small sample do not establish universal claims. Every result here is bounded observation;certification remains Not assessed. Earlier non-opening Enter was not reproduced and is not a finding. New observations are not already part of PR77's reviewed record.
+C3/E2/E3 held-across-resume and DAS/ARR timing;gamepad;modifier chords and keyboardrepeat;letter/Space keys;actual touch;WebKit/Safari/iOS;OS-level visibility;assistive announcements;phone layout/P3/wake-lock device behavior. One browser/session and a small sample do not establish universal claims. Every result here is bounded observation;certification remains Not Assessed. Earlier non-opening Enter was not reproduced and is not a finding. New observations are not already part of PR77's reviewed record.

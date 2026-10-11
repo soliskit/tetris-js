@@ -2,7 +2,7 @@
 
 The revised normal-navigation history supplies a finite per-page version-mixing counterexample under the declared successful cache/event schedule. The earlier empty-client and two-worker proposals remain unresolved history, not accepted admission premises. This record proposes the exact revised candidate's classification only.
 
-Proposed Confirmed defect by reviewed conditional source argument, not newly Reproduced. Operative only after this classification passes independent review, exact-head checks, authorized documentation merge and postmerge verification. No native proof, fix approval, property certificate, new rule or phase exit.
+Proposed Confirmed Defect by reviewed conditional source argument, not newly Reproduced. Operative only after this classification passes independent review, exact-head checks, authorized documentation merge and postmerge verification. No native proof, fix approval, property certificate, new rule or phase exit.
 
 ## Criterion and exact history
 
@@ -20,4 +20,4 @@ This disposition is distinct from forward-clock A-pin expiry: A's pin is fresh h
 
 ## Phase 4 movement
 
-If accepted, this one revised pin-order candidate gains a recorded narrow finding disposition. It does not exhaust all simultaneous-download/open-completion/clock domains or certify a covering Proven property. Broader APP2 remains Not established; every other candidate retains its own status. Corrections, permanent regressions and certification retain their separate gates.
+If accepted, this one revised pin-order candidate gains a recorded narrow finding disposition. It does not exhaust all simultaneous-download/open-completion/clock domains or certify a covering Proven property. Broader APP2 remains Not Established; every other candidate retains its own status. Corrections, permanent regressions and certification retain their separate gates.

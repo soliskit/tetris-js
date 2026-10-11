@@ -77,4 +77,4 @@ The owner exchanges and pinned decision text distinguish confirmed New Game with
 
 Original decision messages were independently checked for the key comparisons, but not every historical message or attachment was independently recovered. The unrecovered cache wording attachment limits exact adoption attribution; the directly inspected pinned blueprint supplies the criterion used here. This does not create a native API witness or permission to change a decision record.
 
-All four relations remain Candidate recommendations at their stated scopes. They are not Confirmed defects, accepted fixes or certified properties. Related properties remain open, and validity and applicability premises retain their limits.
+All four relations remain Candidate recommendations at their stated scopes. They are not Confirmed Defects, accepted fixes or certified properties. Related properties remain open, and validity and applicability premises retain their limits.

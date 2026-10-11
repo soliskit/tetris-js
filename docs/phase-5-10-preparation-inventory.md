@@ -29,19 +29,19 @@ Also read: `docs/audit-status-and-dispositions-2026-10-06.md`, `docs/phase-4-wor
 | Item | Current record |
 |---|---|
 | Phase 4 | Open. The domain work ledger lists eight work families (state-space attacks, every writer, every route, outer layers, protection attacks, independent expectations, original candidate sequence, cache and platform), none closed. |
-| Phase 3 | AUDIT.md "Later formal Phase 3 gate" and `docs/audit-status-and-dispositions-2026-10-06.md` record completed D50 publication followthrough. The scoped appropriate mapping and advancement record is operative with its stated limitations. Four approved phone relations (both quick taps reaching the game, double-tap recovery, zoomed-reload recovery, exact cached phone-file identity) remain Not established. Publication does not make any property Proven. The earlier limited-advancement decision remains as history. |
-| Finding states | The finding states in the blueprint's carried record (F18 Rejected, F19 Fixed historically, F20 to F24, Q1 to Q3, L1, N1, P7, S5 Candidate) are historical, not the current backlog. Later scoped dispositions in AUDIT.md and the status record govern. Examples read: six reviewed Confirmed defect rows (paused held soft-drop callback checkpoint, New Game withdrawal before a later factory fault, input disconnect cancellation refusal, failed-download deletion of a foreign cache binding, retained lock callback after registration throw, Continue eligibility-read failure causing withdrawal), the injected zero-cell piece and controller A selected-Cancel dispositions, and scoped records on F23 serializer failure, F24 eligibility read, new-save reset count, paused count15 Resume, stored high-score read, failed-withdrawal Continue availability and lowest-row history. F21 and Q2 are Reproduced at injected boundaries only. Each is scoped, none implies broad parent closure, and every original parent finding still needs its own reconciliation. |
+| Phase 3 | AUDIT.md "Later formal Phase 3 gate" and `docs/audit-status-and-dispositions-2026-10-06.md` record completed D50 publication followthrough. The scoped appropriate mapping and advancement record is operative with its stated limitations. Four approved phone relations (both quick taps reaching the game, double-tap recovery, zoomed-reload recovery, exact cached phone-file identity) remain Not Established. Publication does not make any property Proven. The earlier limited-advancement decision remains as history. |
+| Finding states | The finding states in the blueprint's carried record (F18 Rejected, F19 Fixed historically, F20 to F24, Q1 to Q3, L1, N1, P7, S5 Candidate) are historical, not the current backlog. Later scoped dispositions in AUDIT.md and the status record govern. Examples read: six reviewed Confirmed Defect rows (paused held soft-drop callback checkpoint, New Game withdrawal before a later factory fault, input disconnect cancellation refusal, failed-download deletion of a foreign cache binding, retained lock callback after registration throw, Continue eligibility-read failure causing withdrawal), the injected zero-cell piece and controller A selected-Cancel dispositions, and scoped records on F23 serializer failure, F24 eligibility read, new-save reset count, paused count15 Resume, stored high-score read, failed-withdrawal Continue availability and lowest-row history. F21 and Q2 are Reproduced at injected boundaries only. Each is scoped, none implies broad parent closure, and every original parent finding still needs its own reconciliation. |
 | Correction work | Timer-stop, Resume suppression, fault boundary and player-notice proposals exist as reviewed text candidates. None is approved or implemented. Persistence withdrawal order, saved-history meaning, count-15 Resume, stored-high-score domain, cache ownership and outer-layer reporting remain separate correction families. |
 
 ## Phase 5: classification and certification
 
-Exit (blueprint): every finding has one finding status, every property has one certification status, no finding remains Candidate, no in-scope property remains Not assessed.
+Exit (blueprint): every finding has one finding status, every property has one certification status, no finding remains Candidate, no in-scope property remains Not Assessed.
 
 | Exit field | Needed input | Waits on |
 |---|---|---|
-| One finding status per finding | A reconciliation of every original parent (F18 to F24, Q1 to Q3, L1, N1, P7, S5 and the other blueprint records) with every later scoped disposition, using only the 5.1 states (Candidate, Reproduced, Not reproduced, Rejected, Requirement clarification, Confirmed defect, Fixed, Reverified). A scoped result is not applied to the whole parent | Remaining Phase 4 results, including the unresolved prior-save meaning for F20, ordinary-versus-injected admission for F21, Q1, Q2 and F23, and the missing 3,738-lock trace for L1; R-decisions already recorded for R1 to R5 |
-| One certification status per property | A 5.2 status for each of the 55 in-scope requirements and each adopted property O1 to O8 | Phase 3 mapping records and the four Not established relations; Phase 4 domain results |
-| No Candidate left | Any applicable non-Candidate 5.1 state for every parent finding and each later scoped disposition, including Reproduced, Not reproduced, Rejected, Requirement clarification, Confirmed defect, Fixed or Reverified | An owner-approved limitation is not a 5.1 state and does not waive the no-Candidate exit unless an approved exit-rule amendment is recorded |
+| One finding status per finding | A reconciliation of every original parent (F18 to F24, Q1 to Q3, L1, N1, P7, S5 and the other blueprint records) with every later scoped disposition, using only the 5.1 states (Candidate, Reproduced, Not Reproduced, Rejected, Requirement Clarification, Confirmed Defect, Fixed, Reverified). A scoped result is not applied to the whole parent | Remaining Phase 4 results, including the unresolved prior-save meaning for F20, ordinary-versus-injected admission for F21, Q1, Q2 and F23, and the missing 3,738-lock trace for L1; R-decisions already recorded for R1 to R5 |
+| One certification status per property | A 5.2 status for each of the 55 in-scope requirements and each adopted property O1 to O8 | Phase 3 mapping records and the four Not Established relations; Phase 4 domain results |
+| No Candidate left | Any applicable non-Candidate 5.1 state for every parent finding and each later scoped disposition, including Reproduced, Not Reproduced, Rejected, Requirement Clarification, Confirmed Defect, Fixed or Reverified | An owner-approved limitation is not a 5.1 state and does not waive the no-Candidate exit unless an approved exit-rule amendment is recorded |
 | Proven claims | Named argument or full finite domain, assumptions, independently justified oracle | O8 model independence and correspondence record |
 | 5.3 evidence record per final claim | Requirement or property, claim, method, assumptions, covered production code, covered model code if applicable, evidence, limitations, status, approver | Exact file and commit bindings, which change if source changes |
 
@@ -53,12 +53,12 @@ Exit: every confirmed defect has an owner-approved minimal correction and a defi
 
 | Exit field | Needed input |
 |---|---|
-| Defect classified | A Confirmed defect status from Phase 5 |
+| Defect classified | A Confirmed Defect status from Phase 5 |
 | Violated requirement or property named | Requirement ID and the R-decision that governs it |
 | Smallest correction | A conceptual change, not an architecture rewrite; construction hypotheses in 6.1 are hypotheses only |
 | Regression test defined | An expected result with independent justification, not copied from the implementation |
 | Collateral behavior | The protections plausibly affected, bounded to the corrected property |
-| REQUIREMENTS.md change class | Refactor, Bug fix, Intentional change or Clarification, with that class's evidence |
+| REQUIREMENTS.md change class | Refactor, Bug Fix, Intentional Change or Clarification, with that class's evidence |
 | Owner approval | Per correction; the existing review of timer, Resume and notice text candidates is not approval |
 
 One conceptual defect per PR. Per-defect implementation before the applicable phase gates needs a separate explicit amendment. Dependencies across corrections that the blueprint names: fault cleanup, reporting, persistence ordering, timer and input lifecycle. The timer candidates already note that existing mocks need approved interface updates and that coverage and mutation gates cannot be weakened to make a proposal pass.
@@ -107,7 +107,7 @@ Per requirement the blueprint asks for eight items: claim, establishing producti
 - Condition 9 (declared domains exhausted, proven, or limited with approval) needs Phase 4 and any approved limits; the four approved phone limits cover only both quick taps reaching the game, double-tap recovery, zoomed-reload recovery and exact cached phone-file identity.
 - Condition 10 (every limitation recorded) needs a limitation list drawn from Phase 3 and 4 records.
 - Condition 12 (QA requirements at required scope) needs a definition of the required scope.
-- Condition 14 forbids unsupported formal-verification claims; no Formally verified status is available without a machine-checked proof.
+- Condition 14 forbids unsupported formal-verification claims; no Formally Verified status is available without a machine-checked proof.
 - Condition 15 is owner approval of the final certification and resulting repository changes.
 
 A green suite and a mutation score are evidence at their tested scope only.

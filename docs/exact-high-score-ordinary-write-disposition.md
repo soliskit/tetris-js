@@ -12,7 +12,7 @@ The source response, finite route calculations and historical evidence retain th
 
 The following text is retained as the historical conditional argument, not the current disposition or permission to act. Its unbounded-domain and Confirmed statements apply only to the earlier criterion. The current decision above supersedes that criterion without rewriting the old evidence.
 
-Status: Confirmed defect by independently reviewed conditional source argument for the finite ordinary clear route below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native storage evidence, full SCO3/S8 or Phase4 closure.
+Status: Confirmed Defect by independently reviewed conditional source argument for the finite ordinary clear route below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native storage evidence, full SCO3/S8 or Phase4 closure.
 
 ## Independent criterion and starting content
 

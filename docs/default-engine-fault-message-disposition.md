@@ -16,11 +16,11 @@ If the page had already seen the game playing, its terminal text and announcer s
 
 ## Finding
 
-F25, Confirmed defect by conditional source argument, T1 player-message half only. The conditions above stay attached to the finding. This is not a new reproduction, a pixel or timing observation, or a measure of how often players would meet it.
+F25, Confirmed Defect by conditional source argument, T1 player-message half only. The conditions above stay attached to the finding. This is not a new reproduction, a pixel or timing observation, or a measure of how often players would meet it.
 
 ## What this does not claim
 
-- Full SAF-3 stays Not established.
+- Full SAF-3 stays Not Established.
 - The separate test-signal half is not classified here.
 - Last-good saved-game content, controller and retained timer resources, cancellation refusal, constructor and startup faults, the SAF-5 drawing and controller notice, and every other fault route are separate.
 - No claim about arbitrary injected hostile code, severity or frequency.

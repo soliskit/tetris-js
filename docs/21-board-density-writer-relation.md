@@ -2,7 +2,7 @@
 
 The inspected ordinary board writers do not create holes from an admitted dense board. Construction makes every entry; canonical locking replaces existing cells; row removal and replacement preserve dense entries. A successful saved-board parser also constructs dense rows rather than retaining the input arrays. This narrows F21's ordinary hole-creation question. It does not make the shallow checkpoint a density validator or reject the broader sparse-board candidate.
 
-Source-only conditional argument for independent review. No game/test/model execution, finding promotion, property certificate, approved limit or Phase4 exit. Phase4 remains OPEN.
+Source-only conditional argument for independent review. No game/test/model execution, finding promotion, property certificate, approved limit or Phase4 exit. Phase4 remains Open.
 
 ## Sources and exact claim
 
