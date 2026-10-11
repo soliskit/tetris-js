@@ -47,10 +47,10 @@ test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
   assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
 });
 
-test('a save from before the bag was saved is valid and carries on with a fresh bag [SAF-1] [STA-4]', () => {
+test('a save without the remaining bag is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
   delete data.bag;
-  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
+  assert.equal(parseSession(JSON.stringify(data), SIZE), null);
 });
 
 test('a save without a held piece is valid [SAF-1]', () => {
@@ -59,13 +59,13 @@ test('a save without a held piece is valid [SAF-1]', () => {
   assert.equal(parseSession(JSON.stringify(data), SIZE).heldTetromino, null);
 });
 
-test('saves leave out the level, which comes from the score, and ignore one an older save stored [SAF-1] [SCO-2]', () => {
+test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]', () => {
   const { data } = validSave();
   assert.equal('level' in data, false);
-  data.level = 99;
-  const session = parseSession(JSON.stringify(data), SIZE);
-  assert.equal(session.score, 1300);
-  assert.equal('level' in session, false);
+  for (const level of [1, 99, null, false]) {
+    data.level = level;
+    assert.equal(parseSession(JSON.stringify(data), SIZE), null);
+  }
 });
 
 test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {
@@ -152,13 +152,10 @@ for (const [name, corrupt] of Object.entries(corruptions)) {
   });
 }
 
-// Saved games exactly as released versions stored them, one per supported
-// format (see test/fixtures/README.md). Each is put where the game keeps its
-// save and continued, as a player would, so the storage names are part of
-// what is checked.
+// The current fixture continues through the player's storage route.
+// The older fixture remains unchanged as evidence that its layout is refused.
 const savedGameFormats = [
-  ['the current format', 'saved-game-current.json', saved => !('level' in saved)],
-  ['the earlier format that also stored the level', 'saved-game-with-level.json', saved => saved.level === 1]
+  ['the current format', 'saved-game-current.json', saved => !('level' in saved)]
 ];
 
 for (const [format, file, isThatFormat] of savedGameFormats) {
@@ -184,6 +181,72 @@ for (const [format, file, isThatFormat] of savedGameFormats) {
     assert.deepEqual(game.factory.bag.map(piece => piece.color), saved.bag);
   });
 }
+
+for (const format of ['a stored level', 'a missing bag', 'a malformed current save']) {
+  test(`Continue refuses ${format} without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]`, () => {
+    const file = format === 'a stored level' ? 'saved-game-with-level.json' : 'saved-game-current.json';
+    let text = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
+    if (format === 'a missing bag') {
+      const saved = JSON.parse(text);
+      delete saved.bag;
+      text = JSON.stringify(saved);
+    } else if (format === 'a malformed current save') {
+      text = '{not json';
+    }
+    const storage = createMemoryStorage();
+    storage.setItem('tetris.savedGameSession', text);
+    storage.setItem('tetris.isSessionSaved', 'true');
+    storage.setItem('tetris.highScore', '5000');
+    const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+    const before = { board: game.gameBoard, piece: game.currentTetromino, bag: [...game.factory.bag] };
+    game.handleAction(PlayerAction.continueGame);
+    assert.equal(game.state, GameState.gameOver);
+    assert.equal(game.isSessionSaved, false);
+    assert.equal(storage.getItem('tetris.isSessionSaved'), 'false');
+    assert.equal(storage.getItem('tetris.savedGameSession'), text);
+    assert.equal(storage.getItem('tetris.highScore'), '5000');
+    assert.equal(game.gameBoard, before.board);
+    assert.equal(game.currentTetromino, before.piece);
+    assert.deepEqual(game.factory.bag, before.bag);
+    assert.equal(game.score, 0);
+  });
+}
+
+for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
+  test(`Continue with an ${source} does not write to storage [SAF-2] [STA-4]`, () => {
+    const storage = createMemoryStorage();
+    if (source !== 'unavailable save') storage.setItem('tetris.isSessionSaved', 'true');
+    const read = storage.getItem;
+    storage.getItem = key => {
+      if (source === 'unreadable save' && key === 'tetris.savedGameSession') throw new Error('SecurityError');
+      return read(key);
+    };
+    const writes = [];
+    storage.setItem = (key, value) => { writes.push([key, value]); };
+    const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+    game.handleAction(PlayerAction.continueGame);
+    assert.equal(game.state, GameState.gameOver);
+    assert.deepEqual(writes, []);
+  });
+}
+
+test('refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const text = fs.readFileSync(new URL('./fixtures/saved-game-with-level.json', import.meta.url), 'utf8');
+  storage.setItem('tetris.savedGameSession', text);
+  storage.setItem('tetris.isSessionSaved', 'true');
+  const writes = [];
+  storage.setItem = (key, value) => {
+    writes.push([key, value]);
+    throw new Error('QuotaExceededError');
+  };
+  const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+  assert.deepEqual(writes, [['tetris.isSessionSaved', 'false']]);
+  assert.equal(storage.getItem('tetris.savedGameSession'), text);
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true');
+});
 
 test('a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]', () => {
   const storage = createMemoryStorage();
