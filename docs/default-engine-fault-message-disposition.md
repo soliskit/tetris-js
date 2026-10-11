@@ -30,6 +30,6 @@ F25, Confirmed defect by conditional source argument, T1 player-message half onl
 
 ## Evidence
 
-Reviewed source packet `default-engine-fault-notice-source-cut.md`, SHA-256 `fbea627f9ae1c36a5c9cf399651925a8fe50499233514a4c52ce458fe3bbd57e`, and classification proposal SHA-256 `e74b7fcd09bb136b1b02403ff73bf4180e3dda639ebeb8c8d735f052a2e33d0c`. Both were independently reviewed. The input controller source SHA-256 is `7454a3c23b9de0acb152fe76bedab74bb4a604ac62ca11d41ff5ee12e3ed27e2`. The reads were not one atomic snapshot. D22 T1 in `docs/phase-1-fault-timer-decision.md` is the criterion.
+Reviewed source packet `default-engine-fault-notice-source-cut.md`, SHA-256 `fbea627f9ae1c36a5c9cf399651925a8fe50499233514a4c52ce458fe3bbd57e`, and classification proposal SHA-256 `e74b7fcd09bb136b1b02403ff73bf4180e3dda639ebeb8c8d735f052a2e33d0c`. Both were independently reviewed. The input controller source SHA-256 is `7454a3c23b9de0acb152fe76bedab74bb4a604ac62ca11d41ff5ee12e3ed27e2`. The reads were not one atomic snapshot. D22 T1 in `docs/phase-1-fault-timer-decision.md` (deleted, bytes in git history) is the criterion, recorded in `AUDIT.md` row D22.
 
 No UI, production code, permanent test, requirement, model, CI, settings, storage or release change. Any correction, regression test or visual check is separate approved work.
