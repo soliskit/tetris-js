@@ -2,6 +2,8 @@
 
 File hashes identify exact source files at main. PR87 later main changes one documentation file only; the public tree remains1e09ad61c19e0b235a231ad8810dae176be4ea77. Source identity is not historical execution, live served body or phone-cache attestation.
 
+Later deletion: on October 11, 2026 the four Phase 1 decision files for the clock, fault reporting and timers, the DSP-5 reading and browser trust were deleted after their references were repaired. Their rows below keep the historical pin at that main; their bytes remain in git history.
+
 | Source file | SHA256 | Bytes |
 |---|---|---|
 | REQUIREMENTS.md | fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc | 15045 |
