@@ -11,7 +11,7 @@ Refresh after rebasing onto main at 3f5f106629ab58425f23e258e4b6707b29d8ef72: ro
 | Path | Sanitized Base SHA-256 | Base Bytes | Current Publication SHA-256 | Current Bytes |
 | --- | --- | ---: | --- | ---: |
 | `.github/pull_request_template.md` | `9907fa18645a9b1a16447b350d9b1225ffe8d24f9d9917b39c2149c70964fc5c` | 1663 | `b5a2c240d0a8bc7c77218a243019d4d77bc3c8fbc14ccb8ce3656552e77ef887` | 1663 |
-| `AUDIT.md` | `3d40a2dde6de25b032fb8c62a4d0ae839705effde6b6a2dc82291ea786e7a2d8` | 147733 | `91fffbb52a4065d8647c0012a9156558cc6761b61eb00e75eef7fc4e0e4539c5` | 178113 |
+| `AUDIT.md` | `3d40a2dde6de25b032fb8c62a4d0ae839705effde6b6a2dc82291ea786e7a2d8` | 147733 | `3fc7428c262f82336f77595358e85d8b0048fc01abed37132ecfb74daebc7f91` | 178138 |
 | `REQUIREMENTS.md` | `fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc` | 15045 | `0bfddb0c36d11ae0b27105df8f6f55cb2f876d9e131f8fd1f204086402ab6889` | 15235 |
 | `docs/audit-blueprint.pdf` | `ae35c5c8f4b2ddcc2f12eeaa319eb6f55e9708f1a4aa0dd4157c4767f64789ca` | 355468 | `8a35b80036219ed6581882045e1e38567ec6c86d31091564c01f33b714ff64b1` | 144509 |
 | `docs/audit-blueprint.txt` | `833ba9827d1eb9cb522b524fa4de7c757a63e089c223b66b6aa7bd38db39e464` | 120534 | `299ad0329c1614f02e78b9b5315ee0ff579e6768193dc4b48fbd1856a4c6ca44` | 121053 |
