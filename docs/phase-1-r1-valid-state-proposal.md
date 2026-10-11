@@ -2,7 +2,7 @@
 
 Status: **PROPOSAL FOR REVIEW. This is not an approved decision.** No owner decision is recorded by this document, no row in `AUDIT.md` refers to it, and none is added.
 
-Base: main. D16 is merged and governs the state categories, the authoritative transition boundary, V1 and F2. Its document `docs/phase-1-state-decision.md` (SHA-256 66aa067da57a525dcdc23d2d3f93f5204c511cb9bdb1750f102a6a2feb6a9182) is not modified. Nothing in `REQUIREMENTS.md`, the blueprint, `AUDIT.md`, the production code, the tests, the CI configuration or any proof tool is changed by this document.
+Base: main. D16 is merged and governs the state categories, the authoritative transition boundary, V1 and F2. Its document `docs/phase-1-state-decision.md` (SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad) is not modified. Nothing in `REQUIREMENTS.md`, the blueprint, `AUDIT.md`, the production code, the tests, the CI configuration or any proof tool is changed by this document.
 
 Independence (blueprint O8): the assistant that drafted this has read the production code. This proposal is built from `REQUIREMENTS.md`, the blueprint and D16, and no rule below rests on how the current code represents or checks anything. It is still not an independent model. It judges the implementation against no predicate and classifies no finding (F21, Q1, Q2, Q3 and the score-domain candidate are not classified).
 
