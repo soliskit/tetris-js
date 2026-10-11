@@ -110,9 +110,7 @@
       "source_anchor": "GM hardDrop539-547",
       "historical_open_gap": "Independentlanding/lockpoststate &persistenceframe needevidence;invalidpiece dropDistance canhang;directmethodaccess/noonChange notshippedcallerdefectbyitself.",
       "completion": "open, not discharged by this index",
-      "related_scoped_records": [
-        "1-selected-score-request-witness.md"
-      ]
+      "related_scoped_records": []
     },
     {
       "id": "W15",
@@ -120,8 +118,7 @@
       "historical_open_gap": "Candidate late-lockfault/paused/over mutation;needactualcanceloutcome boundary,instructioncutpoints,not successfulcancel adversarial premise.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "phase-3-fault-conversion-source-evidence.md",
-        "1-selected-score-request-witness.md"
+        "phase-3-fault-conversion-source-evidence.md"
       ]
     },
     {
@@ -130,8 +127,7 @@
       "historical_open_gap": "SemanticA15boxrowdifferent;ICrepeat idle onovernot immediate;A16absent;score/highscore/turnsave timing requiresO4 evidence.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "score-writer-gravity-premise-reconciliation.md",
-        "1-selected-score-request-witness.md"
+        "score-writer-gravity-premise-reconciliation.md"
       ]
     },
     {
@@ -154,12 +150,8 @@
       "historical_open_gap": "No visiblefault UI wiredSC12;signaldependscallback;repeat resourcesuncanceled;failedcancel canabortsafeconversion/report. Allpendingrequirementlinked evidence,not promotedfinding.",
       "completion": "open, not discharged by this index",
       "related_scoped_records": [
-        "1-selected-synthetic-prior-preservation.md",
         "phase-3-fault-conversion-source-evidence.md"
-      ],
-      "publication_qualification": {
-        "1-selected-synthetic-prior-preservation.md": "PR121 exact, not current main; publication pending"
-      }
+      ]
     },
     {
       "id": "W20",
