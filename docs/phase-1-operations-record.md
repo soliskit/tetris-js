@@ -1,6 +1,8 @@
-# Phase 1 record: sourced assignments of authoritative state to legal operations (blueprint O1)
+# State Changes by Operation
 
-Status: record recorded by ledger row D32 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no entry below is taken from production code or tests.
+The state changes allowed for each operation.
+
+Status and provenance are recorded in `AUDIT.md`, row D32. The drafter read production code, so this record is not implementation-independent under blueprint O8. No entry below was taken from code or tests.
 
 Baseline: D31 (`docs/phase-1-frame-principle-decision.md`, the frame principle Z1), D16 (`docs/phase-1-state-decision.md`) sections 1.1, 4, 5, 7 and 8, D17 item 15, D18 (`docs/phase-1-r1-decision.md`) B6 to B16, D20 item 16, D21 (`docs/phase-1-r2-r5-decision.md`) S1 to S9, D22 T1 to T3, D23 U3 and U4, and `REQUIREMENTS.md`. This file changes no bytes of any of them and does not edit `REQUIREMENTS.md`.
 

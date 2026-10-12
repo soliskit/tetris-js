@@ -1,6 +1,8 @@
-# Phase 1 decision: R2, R3, R4 and R5
+# Saving, Withdrawing, and Reading a Game
 
-Status: decision text recorded by ledger row D21 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests. A wording-only reorganization on October 9, 2026 (ledger row D52 in `AUDIT.md`) rearranged the save rules of this text into sections. The rule index below maps the original rule numbers S1 to S9 to the sections; the high-score clause of S8, S10 and S11 are carried unchanged. A later selection on October 9, 2026 (ledger row D53 in `AUDIT.md`) settled the last-good identity after failed publication.
+R2 to R5: saving and reading games, time between falls, and hand-edited saves.
+
+Status and provenance are recorded in `AUDIT.md`, row D21. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests. A wording-only reorganization on October 9, 2026 (ledger row D52 in `AUDIT.md`) rearranged the save rules of this text into sections. The rule index below maps the original rule numbers S1 to S9 to the sections; the high-score clause of S8, S10 and S11 are carried unchanged. A later selection on October 9, 2026 (ledger row D53 in `AUDIT.md`) settled the last-good identity after failed publication.
 
 Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad), D16 Amendment 1 (D17), the R1 decision (`docs/phase-1-r1-decision.md`, D18, SHA-256 aacf5189a6aa3b21660e8bfe1a5bf8ab2d62f8e853df3febaa54d81412707dec) and D16 Amendment 2 (`docs/phase-1-d16-amendment-2.md`, ledger row D20), whose items 16 (section 1.1), 5 (section 1.2) and 3 (section 1.4) this text uses. None is changed by this file.
 
