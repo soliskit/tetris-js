@@ -1,4 +1,6 @@
-# Current source and independent method support
+# Source and Independent Methods
+
+Published method descriptions, with historical and current scope kept separate.
 
 Domain-method publication candidate, derived from exact held source identities below. Operational routing, permission and review mechanics are excluded; omissions here cannot widen method/evidence scope. Original source authority and original claims remain governing. Each text is a publication derivation, not asserted byte-identical to its held method source. No new measurement or independently inspected pixel result.
 

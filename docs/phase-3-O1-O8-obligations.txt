@@ -1,4 +1,7 @@
-Phase3 O1-O8 proof-obligation supplement,read-only candidate mapping
+Audit Property Evidence Records
+
+Candidate mappings for the eight adopted properties, not certification.
+
 Repository: https://github.com/soliskit/tetris-js
 Base: (pinned checkout verified)
 Date:October5,2026
