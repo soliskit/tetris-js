@@ -1,4 +1,6 @@
-# Refused current-schema content attempts ordinary withdrawal
+# Refuse an Invalid Save
+
+If a present save is read successfully but fails validation, attempt ordinary withdrawal.
 
 ## Decision
 

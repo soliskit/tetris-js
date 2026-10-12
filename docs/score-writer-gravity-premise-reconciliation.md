@@ -1,4 +1,6 @@
-# Score writers and the gravity arithmetic premise
+# Score Changes and Gravity Timing
+
+Where the score assumptions hold, and where row clearing needs more evidence.
 
 The gravity-number result assumes a finite nonnegative integer score at the request. Source review gives that premise for initialization and accepted Continue. It does not give it for every row-clear input that R1 permits. More than four full rows make the shipped score-table lookup undefined, so that writer needs a separate domain argument.
 

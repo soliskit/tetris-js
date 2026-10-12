@@ -1,4 +1,6 @@
-# October 9, 2026 - design decision priority order
+# Design Priorities
+
+The revised order for choosing between designs.
 
 The owner's order for design decisions is now: simplest app first, then avoid an invalid state. This replaces the earlier order of avoiding an invalid state first and choosing the simplest app within that.
 
