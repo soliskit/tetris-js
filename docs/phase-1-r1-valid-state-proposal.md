@@ -1,4 +1,6 @@
-# Phase 1 proposal: R1, exact valid-state semantics
+# Valid Game State Proposal
+
+The earlier proposal for valid game state.
 
 Status: **PROPOSAL FOR REVIEW. This is not an approved decision.** No owner decision is recorded by this document, no row in `AUDIT.md` refers to it, and none is added.
 
