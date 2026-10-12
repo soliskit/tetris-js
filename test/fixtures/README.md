@@ -1,4 +1,6 @@
-# Saved game fixtures
+# Saved Game Fixtures
+
+Released saves kept as fixed inputs for the loading tests.
 
 A fixture is a saved game file the tests load.
 These two fixtures preserve saved positions written by released game code.

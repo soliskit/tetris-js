@@ -1,4 +1,6 @@
-# Phases 5 to 10: exit-field, dependency and test-plan inventory
+# Later Audit Phases
+
+What Phases 5 to 10 need before they can finish.
 
 This register lists what each later phase needs in order to close and what each phase waits on. It is preparation only. Phases 5 to 10 wait on Phase 4 and their written exit checks. The owner authorized automatic progression through Phase 10 when those checks pass. Separate approvals for reserved actions still apply; nothing here starts, certifies or approves them.
 
