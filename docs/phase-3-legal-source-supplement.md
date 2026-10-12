@@ -134,7 +134,7 @@ docs/phase-1-r2-r5-decision.md SHA256 2d2de112e371b8b23094652bcb8c991d8d2c609757
 docs/phase-1-frame-principle-decision.md SHA256 f2b734876e031b70bf47a618845091deb97e93658b329331d94cca5db311cb41
 docs/phase-1-operations-record.md SHA256 9e0a7db4b0423e8c831e265deca6ee2b66df4db1684995c9d070eaead0770101
 docs/phase-1-operations-choices-decision.md SHA256 a4aa77c0d2d049f81c017c56dc07f48e96180197bbf7c2366a7fe17b68cee2aa
-docs/phase-1-operations-choices-2-decision.md SHA256 134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4
+docs/phase-1-operations-choices-2-decision.md. See [AUDIT.md, D34](https://github.com/soliskit/tetris-js/blob/main/AUDIT.md?plain=1#L94), for the D34 fingerprint.
 docs/phase-1-trust-and-timer-scope-decision.md SHA256 0d7f14fd13d1eeb4064fd4064eabf18f6f2066b76e74be999d71b5c71522e75b
 
 Status-label publication identities
