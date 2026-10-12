@@ -1,4 +1,6 @@
-# Phase 3 claim-method mapping supplement
+# Claims and Evidence Methods
+
+The relation between each claim family, its method, and its evidence limits.
 
 Implementation-exposed audit documentation. Not an accepted complete oracle or a certification. Governing source is main; existing D40-D49 records remain historical. This supplement states claim-appropriate relationships, not a count-based closure argument. Source arguments, executed comparisons and reviews have different strengths.
 

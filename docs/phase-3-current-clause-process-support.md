@@ -1,4 +1,6 @@
-# Later clause, process and dependency method support
+# Clause and Dependency Evidence
+
+How the retained methods address individual clauses and process assumptions.
 
 Current per-clause support derived for publication from named held artifacts. Historical method status descriptions are retained as historical where noted; later accepted current relations supersede missing-method labels, not conditional/adverse/unobserved limits. This text is not a new execution or a verbatim independent review. Exact original artifact hashes are identities, not permission or compliance.
 
