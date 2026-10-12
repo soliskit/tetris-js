@@ -1,4 +1,6 @@
-# Phase 3 successful soft-drop restart evidence
+# Soft Drop Restarts Gravity
+
+Compare the piece movement and timer effects with the independent model.
 
 Bounded held differential relation for the successful-fall subset of PLY-3, with O5/O8 source and oracle separation. Not a full bag/timing/landing proof, classified finding or phase closure.
 
