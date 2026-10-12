@@ -1,4 +1,6 @@
-# Phase 3 differential and source-predicate evidence (supplement, candidate only)
+# Model and Source Comparisons
+
+Bounded results for geometry, game transitions, saves, and controlled failures.
 
 Status: prepared for independent review. Not a Phase 3 exit, finding classification, implementation certification, correction approval or permanent test change. Implementation-exposed. Never clean-author input.
 

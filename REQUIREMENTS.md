@@ -1,10 +1,18 @@
 # Requirements
 
-This file lists every behavior of the game, each with an ID. Every test names the requirements it checks in its title, for example `clearing 4 lines at once scores 800 [SCO-1]`. The ID in square brackets at the end of a title, such as [SCO-1], names the requirement that test checks. test/traceability.test.js fails the build if a requirement has no test, if a test names a requirement that does not exist, or if a test names none. That keeps what the game promises and which requirements the tests name in step.
+The game's behavior, safeguards, and rules for changing them.
 
-Unit tests are in test/ and browser tests are in e2e/. To find the tests for a requirement, search for its ID, for example: grep -rn "SCO-1" test e2e
+Each behavior has an ID. Tests name the IDs they check, such as `[SCO-1]`
+for scoring. The traceability test fails the build if an ID has no test,
+a test names an unknown ID, or a test names none. This checks the link
+between requirements and test titles, not whether an assertion proves a rule.
 
-Plain-words note, added by this plan and not part of the requirement text: SRS wall kicks are the ordered small position adjustments the Super Rotation System tries so that a rotation fits.
+Unit tests live in `test/`; browser tests live in `e2e/`. Search both for
+an ID to find its tests, for example `grep -rn "SCO-1" test e2e`.
+
+SRS wall kicks are the ordered small position adjustments the Super
+Rotation System tries to make a rotation fit. This explanation is not
+part of the requirement text.
 
 ## Rules for changes
 
