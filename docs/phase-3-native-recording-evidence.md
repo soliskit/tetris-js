@@ -1,4 +1,6 @@
-# Phase 3 native recording evidence
+# Phone Recording Evidence
+
+Installation, zoom recovery, and the difference between served files and phone caches.
 
 Descriptive evidence record, not formal closure, finding classification or certification. Raw recordings and personal screens are not published. This descriptive record separates pixels, owner-reported gestures and source identity.
 

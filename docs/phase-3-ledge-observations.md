@@ -1,4 +1,6 @@
-# Landing and ledge correspondence (interim)
+# Landing and Moving Off a Ledge
+
+Bounded model comparisons and recorded reset-count differences.
 
 Production base, public-identical documentation main. Original comparisons use frozen model revision 4 without edits. Coordinator Node26; independent review Node22. No finding classification, production correction, model acceptance or closure.
 

@@ -1,4 +1,6 @@
-# Phase 3 fault-conversion source evidence
+# Stopping After a Fault
+
+What the inspected stop path does when timer cancellation throws.
 
 Source deduction and conditional frame relation, not a fresh runtime trace, native cancellation proof, classified finding or phase closure.
 

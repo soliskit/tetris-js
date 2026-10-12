@@ -1,4 +1,6 @@
-# Phase 3 kind geometry and color encoding evidence
+# Piece Shapes and Color Encoding
+
+The recorded comparison between runtime shapes and the independent table.
 
 Descriptive bounded mapping for PCE-2 and geometry dependencies of PCE-6. Not a wall-kick, good-payload, historical-writer, finding-classification or phase-closure record.
 
