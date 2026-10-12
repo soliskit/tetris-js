@@ -1,6 +1,8 @@
-# Phase 3 input and pointer finite observations
+# Input and Pointer Checks
 
-Private later draft, separate from D45 and D46. No findings classification, full correspondence, oracle acceptance or certification. Phase3 remains open. No production, public-site, permanent-test, CI or executable-model change. Source expectations use governing D18B12 and D33C3/D34E1-E3, not production behavior. Pack decisions SHA da968f41cba07b0e6e06ae4b7bab41e6693b8ac3364c6c9d843e191303ac24c1; D34 SHA134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4. Original October5 14:58:21 question/14:58:24 attachments/14:59:27 owner Yes approve inputs only (D39), not model/results/finding. E3 is a sourced consequence, not separate owner wording.
+Recorded key order, held-control restart, and pointer behavior.
+
+Private later draft, separate from D45 and D46. No finding classification, full correspondence, oracle acceptance or certification. Phase 3 remains open. No production, public-site, permanent-test, CI or executable-model change. Source expectations use governing D18B12 and D33C3/D34E1-E3, not production behavior. Pack decisions SHA da968f41cba07b0e6e06ae4b7bab41e6693b8ac3364c6c9d843e191303ac24c1; D34 SHA134d3687f33843ed103bc63cfba12cb64eac37efe7d184ede4f33d6b4f6966c4. Original October5 14:58:21 question/14:58:24 attachments/14:59:27 owner Yes approve inputs only (D39), not model/results/finding. E3 is a sourced consequence, not separate owner wording.
 
 All fixtures local Chrome154, Playwright through Chrome native event dispatch, declared RNG0.3, injectedclock,1000x900. trusted=true events are not OS/hardware or physical device proof. Independent reviewers inspected source/JSON/pixels, without browser rerun; source copies differ by trailing newline from their base, so not exact-served-byte attestation. Actual final JSON assertions ran before handoff; no full A1-A16/resource or real elapsed timing claim.
 
