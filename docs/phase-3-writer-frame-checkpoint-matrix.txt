@@ -1,4 +1,7 @@
-O1/O7 authoritative writer,frame and checkpoint matrix (candidate,read-only)
+State Writers and Safety Boundaries
+
+The mapped state changes, allowed effects, and required checkpoints.
+
 Repository:https://github.com/soliskit/tetris-js
 Pinnedbase;public/test/config bytes equal.
 PreparedOctober5,2026. PR77 pending documentation not treated as governing merged text. Coordinator owns integration/singlewriting. No repository/permanent-test/model-author/contact work,execution,findings promotion or phase closure.

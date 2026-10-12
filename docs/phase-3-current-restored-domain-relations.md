@@ -1,4 +1,6 @@
-# Restored centering, restart, landing, reference-model and QA relations
+# Restored Evidence Relations
+
+Centering, restart, landing, independent-model, and process-check methods.
 
 These domain relations were present in accepted held support and are restored to the standalone publication derivation. No new measurement or expected source choice is introduced. Source hashes identify the original held methods, not byte equality of this publication text.
 
