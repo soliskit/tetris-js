@@ -1,6 +1,8 @@
-# Phase 1 decision: trust boundary for service worker registration and network requests
+# Service Worker and Network Trust
 
-Status: decision text recorded by ledger row D28 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+What the audit assumes about registration and network requests.
+
+Status and provenance are recorded in `AUDIT.md`, row D28. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: the browser trust decision (`docs/phase-1-browser-trust-decision.md`, D27; deleted, bytes in git history), which listed service worker registration and `fetch` as not adopted and unresolved, and D24 V1 (hosting and the offline cache). This file changes no bytes of either.
 

@@ -1,6 +1,8 @@
-# Phase 1 decision: storage trust, SAF-5 reporting, timer cancellation failure and SAF-4 timer scope
+# Storage, Error Reporting, and Timers
 
-Status: decision text recorded by ledger row D23 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+Storage trust, error reporting, and which timers the rules cover.
+
+Status and provenance are recorded in `AUDIT.md`, row D23. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: D16 (`docs/phase-1-state-decision.md`, SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad), whose section 9 left the meaning of "timer" for SAF-4 open, the R2 to R5 decision (`docs/phase-1-r2-r5-decision.md`, D21, SHA-256 2d2de112e371b8b23094652bcb8c991d8d2c6097575a4c61c059a21292b93ed8), and the fault reporting and timer trust decision (`docs/phase-1-fault-timer-decision.md` (deleted, kept in git history), D22, SHA-256 c3de7faf0da3146ec981c35fe6ebd70bede4cdaf1cd757919cad5b1bfab2ae1f; deleted, bytes in git history), which left SAF-5 reporting and the failed cancellation case undecided. This file decides those points and the storage trust boundary. It changes no bytes of those files.
 
