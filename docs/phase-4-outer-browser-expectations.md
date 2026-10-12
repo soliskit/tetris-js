@@ -1,4 +1,6 @@
-# What the outer browser tests prove, and what they leave open
+# Offline, Touch, and Drawing Tests
+
+What the selected browser assertions observe beyond the game engine.
 
 The browser tests have useful expected answers for offline launches, touch input, drawing and the screen wake lock. Some answers are independent literals or geometry. Others read a limited part of the result through a fake browser feature or a helper that shares the game's assumptions. A passing test can support its stated observation without proving the whole requirement. Phase 4 remains open.
 

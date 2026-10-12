@@ -1,4 +1,6 @@
-# The queue check can miss three empty slots
+# The Queue Check Can Miss Invalid Pieces
+
+Source comparisons for declared malformed queues at safety boundaries.
 
 The safety check counts the next pieces but does not check what is in those slots. A three-slot queue containing no real pieces can pass. This conflicts with the adopted requirement to check three valid upcoming pieces at each required safety boundary. The comparison below is a source argument for an explicitly injected malformed queue, not a new game run or evidence that ordinary play creates it.
 
