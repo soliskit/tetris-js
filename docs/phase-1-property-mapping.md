@@ -1,6 +1,8 @@
-# Phase 1 record: adopted properties, applicable requirements and the conflict register
+# Audit Properties and Requirements
 
-Status: record created by ledger row D25 in `AUDIT.md`. The ledger row governs the status and the provenance of this file. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no entry below is taken from production code or tests.
+Which requirements apply to each audit check, and where they conflict.
+
+Status and provenance are recorded in `AUDIT.md`, row D25. The drafter read production code, so this record is not implementation-independent under blueprint O8. No entry below was taken from code or tests.
 
 Purpose: the Phase 1 exit criteria ask that the adopted security properties are recorded, that the applicable requirements for each proof obligation are identified, and that conflicting, ambiguous or apparently inconsistent requirements are identified and resolved. This file does that and nothing more. It decides no new behavior, closes no Phase 1 exit item and certifies nothing. The evidence method and certification status columns of the requirement-scope table stay empty (Phases 3 and 5).
 

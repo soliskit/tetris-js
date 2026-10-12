@@ -1,4 +1,6 @@
-# Phase 1 requirement-scope table
+# Requirement Scope
+
+One row per requirement, with its recorded audit scope and approval gate.
 
 Status: **owner scope decision recorded, subject to green CI on the exact head of the pull request that carries it** (see D15 in `AUDIT.md`). The owner approved this scope on October 4, 2026, after the assistant proposed it and the owner asked for one wording cleanup, made here. The assistant has read the production code, so it is not independent of the implementation (blueprint O8); this table is built from the requirement entries alone and makes no claim about what the code does.
 

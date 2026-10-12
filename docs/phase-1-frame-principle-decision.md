@@ -1,6 +1,8 @@
-# Phase 1 decision: frame principle for legal operations
+# What an Operation May Change
 
-Status: decision text recorded by ledger row D31 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+Each operation may change only the state items assigned to it.
+
+Status and provenance are recorded in `AUDIT.md`, row D31. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: D16 (`docs/phase-1-state-decision.md`) sections 1.1 and 4, D17, D18 (R1) and D20, which define the authoritative game state items 1 to 16 and the authoritative transition boundary. This file changes no bytes of any of them.
 

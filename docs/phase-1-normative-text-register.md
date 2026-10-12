@@ -1,6 +1,8 @@
-# Phase 1 record: normative text register and code-free restatements
+# Decision Text and Supporting Notes
 
-Status: record recorded by ledger row D35 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no restatement below is taken from production code or tests.
+The decision rules the audit uses, separate from supporting notes.
+
+Status and provenance are recorded in `AUDIT.md`, row D35. The drafter read production code, so this record is not implementation-independent under blueprint O8. No restatement below was taken from code or tests.
 
 Purpose: the blueprint requires each Phase 1 decision to be recorded as normative text without code locations, test names, observed implementation behavior or finding history. Some governing decision files carry such material next to their decision text. Historical files are not edited. This record says which parts of each governing file are the normative decision text, which parts are annotations outside it, and restates in code-free form the two decisions whose text names code. It adds no behavior and changes no decision.
 

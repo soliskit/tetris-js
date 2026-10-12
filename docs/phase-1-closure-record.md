@@ -1,6 +1,8 @@
-# Phase 1 record: closure matrix against the blueprint's Phase 1 exit criteria
+# Phase 1 Completion Record
 
-Status: record recorded by ledger row D36 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no entry below is taken from production code or tests.
+Which Phase 1 checks are met, and the decisions that support them.
+
+Status and provenance are recorded in `AUDIT.md`, row D36. The drafter read production code, so this record is not implementation-independent under blueprint O8. No entry below was taken from code or tests.
 
 Base: `main` (D35 merged). Criteria are those under "Phase 1 exit criteria" in `docs/audit-blueprint.txt`. A criterion is marked satisfied only where a governing record states it; no draft or historical review file is relied on.
 

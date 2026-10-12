@@ -1,6 +1,8 @@
-# Phase 1 decision: touch excursion and the resume rule for held controls
+# Touch Movement and Held Controls
 
-Status: decision text recorded by ledger row D34 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+When a touch counts as a tap, and what happens to controls held when play resumes.
+
+Status and provenance are recorded in `AUDIT.md`, row D34. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: D31 (frame principle Z1), D32 (`docs/phase-1-operations-record.md`) and D33 (`docs/phase-1-operations-choices-decision.md`), whose "What is still not specified" section listed the two points answered here. This file changes no bytes of any of them and does not edit `REQUIREMENTS.md`. Operation names and item numbers are those of D32.
 

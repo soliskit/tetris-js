@@ -1,6 +1,8 @@
-# Phase 1 decision: trust assumptions for hosting, the service worker, GitHub Actions and the random source
+# Hosting, Automation, and Randomness
 
-Status: decision text recorded by a ledger row in `AUDIT.md` (row D24). The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+Hosting, offline storage, automated checks, and the random source.
+
+Status: decision text recorded by a ledger row in `AUDIT.md` (row D24). The ledger row governs the status and the provenance of this text. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: the blueprint's O6 trust ledger and Appendix E (point-in-time candidates, none adopted before this file), `docs/phase-0-baseline.md` section 7 (repository rules), AUDIT.md F5 and F6, and D21 to D23. This file changes no bytes of any of them.
 

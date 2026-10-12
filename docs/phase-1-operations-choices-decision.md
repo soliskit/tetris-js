@@ -1,6 +1,8 @@
-# Phase 1 decision: operation choices for the points left unspecified in D32
+# Operation Choices
 
-Status: decision text recorded by ledger row D33 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+The selected save timing, cancelled-touch behavior, and held-key rule.
+
+Status and provenance are recorded in `AUDIT.md`, row D33. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: D31 (frame principle Z1) and D32 (`docs/phase-1-operations-record.md`), whose Part B left four points unspecified. This file changes no bytes of either and does not edit `REQUIREMENTS.md`. It answers the points of D32 Part B in the order below. Operation names and item numbers are those of D32.
 
