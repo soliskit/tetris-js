@@ -1,6 +1,8 @@
-# Phase 1 decision: D16 Amendment 2 (Continue state placements)
+# Saved Games and Continue
 
-Status: decision text recorded by ledger row D20 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code, although no rule below is taken from production code or tests.
+D16 Amendment 2: when a saved game is eligible and Continue is available.
+
+Status and provenance are recorded in `AUDIT.md`, row D20. The drafter read production code, so this record is not implementation-independent under blueprint O8. No rule below was taken from code or tests.
 
 Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad), and D16 Amendment 1, `docs/phase-1-d16-amendment-1.md` (ledger row D17). Both are unchanged by this file. If adopted, the authority for the Phase 1 state model is D16 together with Amendment 1 and this amendment.
 

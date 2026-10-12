@@ -1,6 +1,8 @@
-# Phase 3 record: proof-obligation records for all 55 requirements (interim, not Phase 3 closure)
+# Requirement Evidence Records
 
-Status: record recorded by ledger row D40 in `AUDIT.md`. The ledger row governs the status and provenance of this text. This record is implementation-exposed: its sources cite production code and tests, so it must never be given to a clean O8 model author. It adds no finding status, no certification status, no requirement change and no code change.
+Interim records for all 55 requirements, not Phase 3 completion.
+
+Status and provenance are recorded in `AUDIT.md`, row D40. This record cites production code and tests. It must not be given to an O8 model author who needs to stay independent of the implementation. It adds no finding status, no certification status, no requirement change and no code change.
 
 Base: main. The three partition files preserve the original technical records. P3-C has nontechnical publication redactions. The current publication copies also have title-case status and evidence-field labels. P3-D and P3-E were unedited before that spelling migration. The original records and their source identities remain historical; technical meanings and status assignments are unchanged. The table records original source hashes, not a claim that all current published bytes are unchanged.
 

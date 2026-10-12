@@ -1,4 +1,6 @@
-# Phase 3 full-page focus and touch observations supplement
+# Focus and Touch Checks
+
+Recorded browser input, pointer capture, and the tap-distance boundary.
 
 Candidate observations, not findings disposition, complete input coverage, oracle acceptance or certification. Phase 3 remains open. No production, permanent-test or CI changes. Public bytes served locally from the fetched tree associated with main, unchanged from the D43 scoped source.
 
@@ -8,7 +10,7 @@ Node22.23.3, actual Google Chrome154.0.8037.57, headless Linux, viewport1000x900
 Source expectations were predeclared from STA1/STA2, INP5, D18B12, D33C2 and D34E1. Initial exploratory snapshots before rendering returned empty canvas and were discarded as before/after evidence. Corrected harness waits two animation frames before canvas snapshots. Random piece runs are compared by recorded geometry, not identical raw JSON. V6 injects constant Math.random0.3 to give repeatable non-O S geometry; this is declared input, not evidence of random fairness.
 
 ## Focus observation
-Native keys Enter/Escape establish paused game. A same-task programmatic NewGame click returns dialogclosed and activeElement empty; after rendering the dialog is open and Cancel active. Actual screenshot inspection shows centered readable dialog, Cancel focus ring and paused controls. This is timing evidence, not a new asynchronous grace period, full focus projection proof or classified violation. Tab/accessibility/focus-loss classes remain open.
+Enter then Escape establish a paused game through browser-dispatched keys. A same-task programmatic NewGame click returns dialogclosed and activeElement empty; after rendering the dialog is open and Cancel active. Actual screenshot inspection shows centered readable dialog, Cancel focus ring and paused controls. This is timing evidence, not a new asynchronous grace period, full focus projection proof or classified violation. Tab/accessibility/focus-loss classes remain open.
 
 ## Synthetic capture-failure branch (v3/v4)
 Two DOM PointerEvents have isTrustedfalse,pointerTypetouch,id71. Down at500,488 followed by up at560,488 without pointermove rotates a non-O piece in the recorded run. Source pointerdown writes drag state before setPointerCapture; actual pageerror collection shows capture throws 'No active pointer with the given id'. Later synthetic up reads the retained state. This is a conditional capture-failure/untrusted-event path, not successful native touch or proof a real60px move omits pointermove. A cancel counterpart does not rotate. Source endDrag488 never reads final coordinates; the source gap does not prove physical reachability.

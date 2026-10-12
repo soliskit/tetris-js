@@ -1,6 +1,8 @@
-# Phase 3 seven-kind ghost geometry supplement
+# Ghost Piece Checks
 
-PLY5 finite candidate evidence, not oracle acceptance, finding disposition, complete correspondence or certification. Phase3 remains open. No production, public-site, permanent-test, CI or executable-model change. This later v14 record is separate from D45.
+Landing positions calculated from the recorded cells for seven piece kinds.
+
+PLY5 finite candidate evidence, not oracle acceptance, finding disposition, complete correspondence or certification. Phase 3 remains open. No production, public-site, permanent-test, CI or executable-model change. This later v14 record is separate from D45.
 
 Chrome154.0.8037.57/Node22.23.3, local unmodified page,1000x900, declared constantMath.random0.3 and injected browserclock40ms per step. Seven spawns across six publicSpace presses form one growing-stack trajectory: S,L,I,Z,J,O,T. This is a supplied production bag fixture, not independent normative order or random fairness evidence.
 
