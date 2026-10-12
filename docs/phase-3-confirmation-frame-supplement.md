@@ -2,7 +2,7 @@
 
 Recorded dialog choices and the game fields preserved in those cases.
 
-Private later draft covering v26-v27, separate from D45 throughv13, D46v14-v17, D47v18-v21 and D48v22-v25. Phase 3 remains open. No finding classification, sound all-state correspondence, fullframe proof, oracle acceptance or certification. No production/permanent-test/CI/public mutation or clean-author feedback.
+Private later draft covering v26-v27, separate from D45 throughv13, D46v14-v17, D47v18-v21 and D48v22-v25. At the October 5, 2026 recording (D49), Phase 3 was still open. This is historical status, not a claim about the current phase. No finding classification, sound all-state correspondence, fullframe proof, oracle acceptance or certification. No production/permanent-test/CI/public mutation or clean-author feedback.
 
 Expectations use D32 operations1/2/operation3 (confirmation answer, Cancel case): open pending while paused, selectedCancel; selection changes choice; cancel clears pending/choice and remains paused. D18B12 choice absent when notpending. Source mapping is separate: pending actualGM.isConfirmingNewGame; choice sourceuses DOM focus/buttonpress, not an enginechoicefield. Chrome154/Playwright native-dispatched trustedkeys throughbrowser, declaredRNG.3/injectedclock/1000x900, not OS/hardware/nativeelapsed. ScratchsameURLclassprototypewrappers captureactualGM/ICthis and delegateunchanged; productionfilesunchanged. TimerMap stack-filefilteredsourceattribution, not allresourceproof.
 

@@ -34,7 +34,7 @@ Current published P3-C SHA-256 after nontechnical redaction: . Its requirements,
 
 ## 4. Phase 3 exit status
 
-Phase 3 is not closed. In addition to these records, its exit needs the independent model built from the approved pack, its freeze checksum, and differential evidence for the applicable rows. This record closes none of those items.
+At the October 5, 2026 recording (D40), Phase 3 was still open. This is historical status, not a claim about the current phase. Current phase records are in `AUDIT.md`. In addition to these records, Phase 3's exit needed the independent model built from the approved pack, its freeze checksum, and differential evidence for the applicable rows. This record closes none of those items.
 
 ## Not decided here
 
