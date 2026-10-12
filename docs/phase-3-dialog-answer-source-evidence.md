@@ -2,7 +2,7 @@
 
 Why opening the new-game prompt and answering it use different routes.
 
-Bounded claim/method record, not a classified finding, full overlap proof or phase closure. This uses the held "public answer-route assessment", not an original trace replay.
+This bounded claim/method record compares the outside New Game entry with the answer inside the dialog. It is not a classified finding, full overlap proof or phase closure. It uses the held "public answer-route assessment", not an original trace replay.
 
 ## Requirement and independent comparison
 
@@ -10,9 +10,9 @@ STA-1 says "New Game in the dialog gives the game up" and "any other action befo
 
 ## Held actual relation
 
-The held trace begins paused, with no pending question and the native dialog closed. Two programmatic calls activate the outside newGameButton. The first sets pending before native dialog opening/focus runs. The second outside entry resets the game to playing and increments boardVersion. No inside confirmNewGameButton activation or native-dialog opening is observed between them.
+The held trace begins paused, with no pending question and the native dialog closed. Two programmatic calls activate the outside newGameButton. The first sets pending before the native dialog opening/focus runs. The second outside entry resets the game to playing and increments boardVersion. No inside confirmNewGameButton activation or native-dialog opening is observed between them.
 
-The implementation comment says a second New Game confirms; both entry handlers use that action. This records implementation intent, not normative permission to equate the two public routes. The observed overlap is before native modal opening. Expected native-modal inertness after showModal is a platform premise, not examined by this held trace. Human reachability of this pre-modal overlap is unknown.
+The implementation comment says a second New Game confirms; both entry handlers use that action. This records implementation intent, not normative permission to equate the two public routes. The observed overlap happens before the native modal opens. Expected native-modal inertness after showModal is a platform premise. This held trace does not examine it. Human reachability of this pre-modal overlap is unknown.
 
 This supplies a bounded outside-entry versus dialog-answer comparison. Programmatic activation does not establish trusted human input frequency, native focus behavior or all overlapping schedules.
 
@@ -20,7 +20,7 @@ This supplies a bounded outside-entry versus dialog-answer comparison. Programma
 
 If the first opening conceptually completed, the second outside action is still not the named inside-dialog route under this reading. If it remained unfinished, the trace still shows no inside affirmative answer. These observations do not prove that every permitted overlap/abort abstraction is impossible. A broader interpretation that treats a second outside entry as a logical affirmative answer needs reconciliation with the requirement's explicit route words.
 
-No commit point is invented from an engine return. No missing abort rule is treated as proof of impossible linearization. Complete assigned-operation abstraction and native event/focus domains remain separate. The comparison is a candidate relation, not a confirmed human defect or an owner decision that the implementation is correct.
+No commit point is invented from an engine return. No missing abort rule is treated as proof of impossible linearization. Complete assigned-operation abstraction and native event/focus domains remain separate. The comparison is a candidate relation. It is not a confirmed human defect or an owner decision that the implementation is correct.
 
 ## Source binding
 
