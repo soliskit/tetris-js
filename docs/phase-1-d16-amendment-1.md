@@ -1,6 +1,8 @@
-# Phase 1 decision: D16 Amendment 1 (lowest row reached)
+# Lowest Row Reached
 
-Status: decision text recorded by ledger row D17 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This file is not independent of the implementation (blueprint O8): the assistant that drafted it has read the production code.
+D16 Amendment 1: remember the lowest row a falling piece has reached.
+
+Status and provenance are recorded in `AUDIT.md`, row D17. The drafter read production code, so this record is not implementation-independent under blueprint O8.
 
 Baseline: the approved D16 decision, `docs/phase-1-state-decision.md` (SHA-256 0ca7916f67e1b6a2e784272af15732b018b41ed70f3ec0fe05ceb72a5dcc0bad). Its bytes are unchanged. This file adds to section 1.1 of D16 and alters nothing else in it. The authority for the Phase 1 state model is D16 together with this amendment.
 
