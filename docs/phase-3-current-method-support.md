@@ -2,9 +2,9 @@
 
 Published method descriptions, with historical and current scope kept separate.
 
-Domain-method publication candidate, derived from exact held source identities below. Operational routing, permission and review mechanics are excluded; omissions here cannot widen method/evidence scope. Original source authority and original claims remain governing. Each text is a publication derivation, not asserted byte-identical to its held method source. No new measurement or independently inspected pixel result.
+This publication candidate describes domain methods from the exact held sources below. It excludes operational routing, permission, and review mechanics. Those omissions cannot widen method or evidence scope. The original sources and claims still govern. Each text is derived for publication and is not claimed to match its held method source byte for byte. There is no new measurement or independently inspected pixel result.
 
-Historical method prose below can contain then-pending labels. Current clause support and current63 record supersede only absent-statement/review labels where later actual methods/reviews exist: independent whole raw classifier/field projection is now stated; centering allowed-set and independent kick data are stated; targeted fidelity reviews were completed; finite adverse/conditional evidence remains unchanged. These updates do not make the original method text a stronger execution.
+Historical methods below may contain labels that were pending at the time. Current clause support and the current63 record replace only absent-statement or review labels where later actual methods or reviews exist. The independent whole raw classifier and field projection are now stated. The centering allowed-set and independent kick data are stated. Targeted fidelity reviews were completed. Finite adverse and conditional evidence is unchanged. These updates do not make the original method text a stronger execution.
 
 ## board-piece-route-method-v1.md
 
@@ -91,7 +91,7 @@ Held source SHA256 `ad16109555f2c266810764a2e5e240aca84648f73b49e6852889c2457ed7
 
 # STA3 / SAF3 / SAF5 finite route correspondence
 
-Static source inventory plus independently expected operation/fault rules, not all-reachable proof or new runtime finding.
+This is a static source inventory with independently expected operation and fault rules. It is not a proof of all reachable behavior or a new runtime finding.
 
 Ordinary no-room sites in GM31bb2160: generateNextTetromino tests spawned current fit then sets over/withdraws/stops gravity; holdTetromino held-swap tests fit then over/withdraws with gravity/lock already stopped. Generate-next is called from lockAndSpawnNext and the empty-held branch of holdTetromino; locking is called from lock-delay callback, pieceLanded allowance-exhausted path, and hardDrop. Hold's dispatch is performAction hold. pieceLanded comes through landIfResting called from generate-next, fall, move, rotate, hold and resume. Constructor/NewGame create their opening piece; not ordinaryno-room sites by thisinventory. A nonfitting concrete current after nextspawn has no semantic currentpiece in ordinaryover (B6); no requirement to erase retainedfield. External/directmethod/alias arbitrary calls remain reachability categories, not extra authorizedoperations.
 
@@ -158,7 +158,7 @@ Held source SHA256 `a72b54ebbfe00d79f511ecd6fa43fe16c9be91c0aaff33f61e20c9b75890
 
 # Independent persisted-content classifier and format relation
 
-Written Phase 3 decision procedure, not executable model/test work, full hostile-domain execution, a format adoption or certification. Independent expected predicates are R1 B3-B16, D20 item 16 and D21 S7/S11. SES parser/monitor return is an observation to compare, never expected validity. Source text was reread for this procedure; adopted G6 fixed table/image define geometry, not production piece arrays. Existing raw-to-semantic field table supplies the concrete encoding routes.
+This written Phase 3 decision procedure is not executable model or test work, full hostile-domain execution, a format adoption, or certification. Its independent expected predicates are R1 B3-B16, D20 item 16, and D21 S7/S11. The SES parser or monitor return is an observation to compare, never expected validity. The source text was reread for this procedure. The adopted G6 fixed table and image define geometry, not production piece arrays. The existing raw-to-semantic field table supplies the concrete encoding routes.
 
 ## Two separate inputs
 
@@ -436,7 +436,7 @@ Held source SHA256 `e90b347d3cbda7ddd556ee82b4152833bf4e36a1bc18c28295c8b1db6549
 
 # O6 instrumentation and responsibility crosswalk
 
-Private current method consolidation, not expanded platform trust or execution. Each instrument names what it observes, who supplies its inputs, why evidence is relevant, and what it cannot prove. Historical run identity is not inferred from current-source equality. Source T/U decisions govern timer/fault expectations; harness choices create no new source rule. Linked V29-V32 artifacts and earlier named records remain the evidence, not this table itself.
+This private consolidation of current methods does not expand platform trust or execution. Each instrument names what it observes, who supplies its inputs, why the evidence matters, and what it cannot prove. Matching current source does not establish a historical run identity. Source T/U decisions govern timer and fault expectations. Harness choices create no new source rule. The linked V29-V32 artifacts and earlier named records remain the evidence, not this table.
 
 | Instrument / evidence | Responsibility and independent input | Observed relation | Assumption / known failure / observer effect | Boundary |
 |---|---|---|---|---|
