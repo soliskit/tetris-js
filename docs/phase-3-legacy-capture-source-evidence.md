@@ -1,4 +1,6 @@
-# Phase 3 legacy capture provenance evidence
+# Released Save Capture Records
+
+Compare the capture account with the released serializers without regenerating fixtures.
 
 Documentary capture attestation and historical writer consistency, not independently replayed original capture, regenerated fixtures or phase closure.
 
