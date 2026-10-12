@@ -1,4 +1,7 @@
-CI PIPELINE OPTIMIZATION
+Faster CI
+
+A measured plan for pull-request feedback and deployment speed.
+
 Charter | Approved October 5, 2026
 Project: soliskit/tetris-js
 

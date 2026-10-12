@@ -1,4 +1,7 @@
-MODERN GAMEPLAY
+Modern Gameplay
+
+The approved order, requirements, and evidence for each gameplay change.
+
 Charter | Approved October 5, 2026
 Project: soliskit/tetris-js
 
@@ -14,7 +17,7 @@ Introduction
 
 Modern Gameplay adds the seven agreed features in order while keeping the game's
 certification current. The intended direction is a modern Guideline-style feel:
-a faster speed ramp, drop points, T-spins, combos and short delays. the owner settled
+a faster speed ramp, drop points, T-spins, combos and short delays. The owner settled
 that direction on October 5, 2026. It is not an unresolved planning question.
 
 The program changes gameplay deliberately, not by copying behavior from the
