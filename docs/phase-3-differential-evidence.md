@@ -2,7 +2,7 @@
 
 Bounded results for geometry, game transitions, saves, and controlled failures.
 
-Status: prepared for independent review. Not a Phase 3 exit, finding classification, implementation certification, correction approval or permanent test change. Implementation-exposed. Never clean-author input.
+Status: prepared for independent review. This is not a Phase 3 exit, finding classification, implementation certification, correction approval, or permanent test change. It is implementation-exposed and must never be clean-author input.
 
 Production base:. Documentation squash has identical public tree `1e09ad61c19e0b235a231ad8810dae176be4ea77`. Source claims use committed Phase 1 text, not production acceptance. Frozen model revision 4 SHA-256 `ad35423776ebda03c8e585d6847faa0fe5fab86431fdda8aed23967f87483430`; executable bytes remain on unmerged PR75. D39 inputs, D41 freezes and bounded review govern their identity and limits.
 

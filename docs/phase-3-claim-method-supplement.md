@@ -2,7 +2,7 @@
 
 The relation between each claim family, its method, and its evidence limits.
 
-Implementation-exposed audit documentation. Not an accepted complete oracle or a certification. Governing source is main; existing D40-D49 records remain historical. This supplement states claim-appropriate relationships, not a count-based closure argument. Source arguments, executed comparisons and reviews have different strengths.
+This audit document is implementation-exposed. It is not an accepted complete oracle or certification. Main is the governing source. Existing D40-D49 records remain historical. This supplement states claim-appropriate relationships, not a count-based argument for closure. Source arguments, executed comparisons, and reviews have different strengths.
 
 | Claim family | Applicable full-claim relation/method/evidence | Current mapping judgment |
 |---|---|---|
@@ -41,11 +41,11 @@ The earlier unsupported native installation and named-device observations subseq
 
 ## Evidence interpretation
 
-Independent geometric methods use the adopted fixed piece reference and explicit starting-fit premises. Raw-format methods classify content independently from parser acceptance. Storage chronology and independent content validity are separate; incomplete current save bytes are not declared last-good content just because a write succeeded. Resource claims count outstanding scheduled firings, not truthy handles. Source-only exception deductions do not become observed callback counts.
+Independent geometric methods use the adopted fixed piece reference and explicit starting-fit premises. Raw-format methods classify content independently of parser acceptance. Storage chronology and independent content validity are separate. A successful write does not make incomplete current save bytes last-good content. Resource claims count outstanding scheduled firings, not truthy handles. Source-only exception deductions do not become observed callback counts.
 
 Shipped call-site inventories bound inspected source routes, not reflection, hostile aliases or public-helper protection. Tests sharing production predicates do not independently establish those predicates. Historical fixture/writer provenance is stated separately from original capture and runtime receipts. Model self-tests are self-consistency only; undefined choices remain undefined and implementation findings are not supplied to the clean model author.
 
-Every wider hostile, timing, native, grammar, interleaving and history domain remains a Phase 4 obligation unless separately disposed under its gate. Candidate findings and Not Assessed certifications remain for Phase 5; none is upgraded by this supplement.
+Every wider hostile, timing, native, grammar, interleaving, and history domain remains a Phase 4 obligation unless separately disposed under its gate. Candidate findings and Not Assessed certifications remain for Phase 5. This supplement upgrades none of them.
 
 ## Existing published record anchors
 
