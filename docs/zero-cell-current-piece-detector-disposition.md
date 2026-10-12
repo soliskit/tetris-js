@@ -1,4 +1,6 @@
-# Injected zero-cell falling piece: checkpoint detector disposition
+# Empty and Malformed Piece Checks
+
+The injected current-piece comparisons, separate from ordinary gameplay.
 
 Candidate documentation. Finding exact-head review, required checks, authorized merge and postmerge publication verification remain separate gates. No new game run or correction is made.
 
