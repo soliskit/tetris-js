@@ -1,8 +1,11 @@
 # Tetris
 
-Tetris for your web browser. Built with plain JavaScript and served as static files by a small Express server.
+Play in your browser, with keyboard, controller, or touch controls.
 
-## Getting started
+Start a game, clear lines, and keep your best score on the device. The game
+uses plain JavaScript. A small Express server serves its static files.
+
+## Run Locally
 
 Requires Node.js 26 and npm 12.2 or newer. Node 26 comes with npm 11, so the first command updates npm.
 
@@ -72,9 +75,9 @@ Any controller with the standard mapping works through the Gamepad API.
 * Drag down to soft drop
 * Tap the board to rotate
 * Tap the hold preview to hold
-* Use the on screen buttons for new game, continue and pause
+* Use the on-screen buttons for new game, continue and pause
 
-## Project structure
+## Project Structure
 
 ```
 index.js                     Express server for the public folder
@@ -107,13 +110,13 @@ The engine takes injectable storage, scheduler and piece factory objects, so it 
 
 ## Reliability
 
-The game is built the way safety critical software is:
+The game is built the way safety-critical software is:
 
 * **Written requirements.** [REQUIREMENTS.md](REQUIREMENTS.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
 * **Full coverage.** The unit tests run every line, branch and function of the game logic, and the browser tests do the same for the page script (`public/script.js`, measured in Chromium). `npm test` and `npm run test:e2e` fail below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested. After a browser test run, `coverage/browser-report/index.html` shows the page script line by line.
 * **Type checking.** TypeScript's strictest checks run over everything the browser loads, with the types written as comments in the JavaScript, so there is no build step. `npm run typecheck` catches misspelled properties, wrong argument types and values that might be missing before any code runs.
 * **Mutation testing.** Stryker makes about a thousand small wrong changes to the game logic, one at a time (turning `<` into `<=`, deleting a line, flipping a condition), and runs the tests against each. Every one must make a test fail. Coverage shows the tests run every line; this shows they would notice if a line were wrong. The full run takes about 40 minutes. It runs weekly and on demand (`npm run test:mutation`, report in `reports/mutation/index.html`), and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite.
-* **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built in shapes. A corrupted or edited save is refused whole.
+* **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built-in shapes. A corrupted or edited save is refused whole.
 * **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
 * **Fault injection tests** prove each of these by breaking things on purpose.
 
@@ -127,7 +130,7 @@ npm run test:all    # all three
 npm run test:mutation  # mutation testing, about 40 minutes
 ```
 
-**Unit tests** use the built in `node:test` runner. They cover every piece and rotation, wall kicks, the 7 bag, all game rules (movement, gravity, lock delay, line clears, scoring, levels, hold, pause, continue, game over, storage failures) with a fake clock, keyboard and gamepad input with mocked timers, the Express server, and the page, manifest, service worker and icons.
+**Unit tests** use the built-in `node:test` runner. They cover every piece and rotation, wall kicks, the 7 bag, all game rules (movement, gravity, lock delay, line clears, scoring, levels, hold, pause, continue, game over, storage failures) with a fake clock, keyboard and gamepad input with mocked timers, the Express server, and the page, manifest, service worker and icons.
 
 **Browser tests** use Playwright. They run three times: in WebKit (Safari's engine) and Chromium sized like an iPhone 14 Pro Max with touch, and in Chromium at desktop size. In WebKit, finger drags are driven with the mouse, since the game reads both through the same pointer events, and the checks that need real touch events, and the install check, run in Chromium only. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browsers with `npx playwright install --with-deps chromium webkit`. Playwright's WebKit is close to Safari but is not a real iPhone, so check touch feel on a device too.
 

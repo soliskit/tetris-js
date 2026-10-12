@@ -1,6 +1,8 @@
-# Phase 2 record: implementation and transition-boundary inventory (integrated)
+# Implementation Inventory
 
-Status: record recorded by ledger row D38 in `AUDIT.md`. The ledger row governs the status and the provenance of this text. This is evidence material about the implementation, not decision text. It is not independent of the implementation and must not be given to a clean O8 model author (blueprint O8, Phase 3). It states candidate observations only; it assigns no finding status and no certification status, and it adds no requirement.
+The inspected entry points, state changes, storage effects, and safety boundaries.
+
+Status and provenance are recorded in `AUDIT.md`, row D38. This is evidence material about the implementation, not decision text. It is not independent of the implementation and must not be given to a clean O8 model author (blueprint O8, Phase 3). It states candidate observations only; it assigns no finding status and no certification status, and it adds no requirement.
 
 Base: `main` (D36 merged; `origin/main` was still this commit when the inventory was integrated). All code references are file:line at that commit. Static reading only: nothing was run, no test executed, no scratch mutation made.
 

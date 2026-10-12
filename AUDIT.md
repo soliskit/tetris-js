@@ -1,6 +1,11 @@
-# Audit ledger
+# Audit Ledger
 
-Every finding raised against the game, and every decision about how it is verified, with the evidence behind it and where it was resolved. A finding is only closed by evidence: a reproduction, a test, a measurement, or a requirement it does or does not break. Rejected findings stay here, so the same question is not investigated twice.
+A lasting record of resolved questions and the ones still open.
+
+This ledger records findings, verification decisions, evidence, and
+resolutions. A finding closes only through evidence: a reproduction,
+test, measurement, or the requirement it does or does not break. Rejected
+findings stay here so the same question is not investigated twice.
 
 Pull requests that confirm, fix or reject a finding, or make a verification decision, update this file in the same pull request (see the review questions in `.github/pull_request_template.md`). Requirement IDs refer to [REQUIREMENTS.md](REQUIREMENTS.md).
 

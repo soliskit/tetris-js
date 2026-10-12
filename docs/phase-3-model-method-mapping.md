@@ -1,4 +1,6 @@
-# Phase 3 per-requirement model applicability and evidence methods
+# Requirements and Evidence Methods
+
+Where the independent model applies, and how other claims can be checked.
 
 Status: draft supplement to the unchanged 55 partition records. Candidate mappings, certification Not Assessed. No Phase 3 exit. Existing partition records retain state properties, production routes, assumptions and code references; this table supplies current model applicability and independent method, without treating method plans as executed evidence. Frozen revision 4 only; production base0f4e510 and public-identical documentation main902d504. All names below are exact model functions except explicitly semantic fields. Undefined caller choices remain limits, never copied from production.
 

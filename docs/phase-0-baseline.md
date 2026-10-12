@@ -1,4 +1,6 @@
-# Phase 0 baseline record
+# Audit Baseline
+
+Recorded measurements before the audit, not a correctness certificate.
 
 Recorded on October 4, 2026 under the audit blueprint `docs/audit-blueprint.txt` (, AUDIT.md D11). Drafted by the assistant for the owner's review.
 
