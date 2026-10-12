@@ -1,4 +1,6 @@
-# Phase 3 board and piece route source evidence
+# Board and Piece Changes
+
+The inspected creation, loading, movement, and game-over routes.
 
 Bounded static mapping for PCE-1/PCE-6/STA-3. Not complete reachable-writer coverage, hostile-state exhaustion, finding classification or phase closure.
 
