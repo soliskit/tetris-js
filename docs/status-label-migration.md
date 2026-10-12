@@ -1,4 +1,6 @@
-# Status-label publication migration
+# Status Label Changes
+
+Publication copies and the historical source identities they retain.
 
 Base: 3edfab9aa98f3086242b239fac48489f37fd7db8.
 

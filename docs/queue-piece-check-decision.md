@@ -1,4 +1,6 @@
-# Checking the next three pieces
+# Check Every Upcoming Piece
+
+The selected meaning of the three-piece runtime check.
 
 Each required safety check must verify three real upcoming pieces, not merely a list with three slots. A list with an empty or malformed slot must not pass just because its length is three. This decision settles what the check must detect, not a code change.
 
