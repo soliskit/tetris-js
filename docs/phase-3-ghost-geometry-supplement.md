@@ -2,7 +2,7 @@
 
 Landing positions calculated from the recorded cells for seven piece kinds.
 
-This is finite candidate evidence for PLY5, not oracle acceptance, finding disposition, complete correspondence, or certification. Phase 3 remains open. Current phase records are in `AUDIT.md`. There is no production, public-site, permanent-test, CI, or executable-model change. This later v14 record is separate from D45.
+This is finite candidate evidence for PLY5, not oracle acceptance, finding disposition, complete correspondence, or certification. At the October 5, 2026 recording (D46), Phase 3 was still open. This is historical status, not a claim about the current phase. Current phase records are in `AUDIT.md`. There is no production, public-site, permanent-test, CI, or executable-model change. This later v14 record is separate from D45.
 
 The run used Chrome154.0.8037.57/Node22.23.3 on a local, unmodified page at 1000x900. It declared constant Math.random0.3 and an injected browser clock of 40ms per step. Seven spawns across six public Space presses form one growing-stack trajectory: S,L,I,Z,J,O,T. This is a supplied production bag fixture, not independent normative order or random fairness evidence.
 
