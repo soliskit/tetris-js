@@ -1,4 +1,6 @@
-# Phase 3 dialog-answer source evidence
+# New Game Entry and Confirmation
+
+Why opening the new-game prompt and answering it use different routes.
 
 Bounded claim/method record, not a classified finding, full overlap proof or phase closure. This uses the held "public answer-route assessment", not an original trace replay.
 

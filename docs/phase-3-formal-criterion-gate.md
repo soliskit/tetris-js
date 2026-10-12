@@ -1,4 +1,6 @@
-# Phase 3 formal criterion and advancement record
+# Phase 3 Completion Checks
+
+The mapping and publication checks required before advancement, not certification.
 
 Status: candidate until this record and its D50 ledger entry pass documentation review, required exact-head checks, authorized merge and postmerge publication verification. This is not certification.
 
@@ -41,4 +43,3 @@ D46-D49 and the limited-advancement record remain historical records. D50 append
 ## Status-label publication migration
 
 The reviewed heads, original publication table, byte counts and readback statements above describe the historical Phase 3 publication. Title-case restyling later changed published status labels and evidence-field labels, without changing the recorded status assignments, technical meanings, limits or phase decision. Historical source and publication hashes are retained. The migration receipt identifies the new published document bytes; it is not a rerun or a new Phase 3 closure.
-

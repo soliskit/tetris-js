@@ -1,4 +1,6 @@
-# Phase 3 resource graph, local types and discovery evidence
+# Game File Loading
+
+The inspected resource links, local responses, and early module discovery.
 
 Descriptive bounded mapping evidence, not whole-claim compliance, finding disposition or phase closure.
 

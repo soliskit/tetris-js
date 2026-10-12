@@ -1,10 +1,12 @@
-# Phase 3 limited advancement record
+# Limited Audit Advancement
+
+The four unresolved phone checks kept in scope when Phase 4 began.
 
 Status: owner-approved limited advancement, subject to review of this documentation record. This is not full certification, Phase 4 completion, a finding classification or permission to change the game.
 
 ## Decision and chronology
 
-On October5,2026, after PR81 merged, the owner approved limited advancement to Phase4 with four relations marked Not Established: delivery of both quick taps, double-tap recovery, recovery after reloading while zoomed, and exact correspondence of phone-cached files to the audited version. They remain in scope for later phases, do not count as verified and do not support full certification. Recorded Safari zoom/pinch recovery remains evidence; the Home Screen pinch issue stays open. D46-D49 retain their accurate historical interim no-Phase3-closure status.
+On October 5, 2026, after PR81 merged, the owner approved limited advancement to Phase 4 with four relations marked Not Established: delivery of both quick taps, double-tap recovery, recovery after reloading while zoomed, and exact correspondence of phone-cached files to the audited version. They remain in scope for later phases, do not count as verified and do not support full certification. Recorded Safari zoom/pinch recovery remains evidence; the Home Screen pinch issue stays open. D46-D49 retain their accurate historical interim no-Phase-3-closure status.
 
 
 The decision was initially retained in working evidence rather than published. That publication delay is a process failure. At the October 6, 2026 6:59 AM PDT check, main did not contain the later limited-advancement record. Work performed afterward is bounded Phase 4-oriented research, not evidence that Phase 4 is complete.

@@ -1,4 +1,6 @@
-# Phase 3 observation and writer-matrix integration (interim)
+# Evidence Integration
+
+How the code map and later observations fit together, and what they still cannot show.
 
 Status: documentation record, not Phase 3 closure, findings disposition, certification or accepted oracle. Main baseline has the same public tree as. This batch preserves the D42 record and its revision 4 evidence; it adds later observations separately.
 

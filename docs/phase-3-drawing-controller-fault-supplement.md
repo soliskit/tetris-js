@@ -1,6 +1,8 @@
-# Phase 3 drawing and controller conditional-fault supplement
+# Drawing and Controller Failures
 
-SAF5/D23U2 candidate observations, not findings disposition, native browser failure proof, source-rule selection or certification. Phase3 remains open. No production, public-site, permanent-test, CI or executable-model changes; clean-author isolation is a coordinator process boundary, not a tested property of these artifacts. V15-V17 are later private evidence, separate from D45.
+Controlled failures, visible recovery, and reporting limits.
+
+SAF5/D23U2 candidate observations, not findings disposition, native browser failure proof, source-rule selection or certification. Phase 3 remains open. No production, public-site, permanent-test, CI or executable-model changes; clean-author isolation is a coordinator process boundary, not a tested property of these artifacts. V15-V17 are later private evidence, separate from D45.
 
 ## Source and expectation
 D23U2 counts fault reported when a small noninterrupting player notice and a separate test-observable signal occur; no stored fault record is required. Drawing/polling loops keep running. Source drawSafely catches and resets drawnBoard/drawnPreviews/lastSnapshot, logs console.error once perload and schedules retry. Poll catch logs console.error and continues while connected. Neither handler directly changes DOM or creates a notice. This is source evidence for these paths, not a universal notice-absence proof.
@@ -21,4 +23,4 @@ Separate roundRect/restore fixtures observe actual boardcontext globalAlpha1→0
 Measured: context/pixelalpha and geometry above. Inferredcause: ghost save/globalAlpha0.5/roundRect/stroke/restore sequence leaves alpha0.5 whenroundRect orrestore throws; drawSafely cache reset doesnotresetcontextalpha; canvaswidth/heightassignments duringresize resetcontextstate. Save-stackdepth wasnotinstrumented/proved. FollowupLeft observation shows ArrowLeft moved in these two fixtures, not that input recovery is universally settled; v16's opaque-only projection could not observe the dim state, so those runs cannot show whether it recovered.
 
 ## Open scope
-Dim-render-untilresize is a conditionalcandidate, unclassified. Tenmethods are not allcallpositions/contexts/propertysetters/persistentfailures; initialgetContext/getImageData/setTransform/observerprecatch/modulefailures remain open. No fullcontextrestoration, allcutpoint containment, full A1-A16/stateframe, nativefault/platformreachability, physicaldevice/Safari/elapsedproof or Phase3closure. Missingnotice remains source/finiteDOM/pixel candidate, not universal proof.
+Dim-render-untilresize is a conditionalcandidate, unclassified. Tenmethods are not allcallpositions/contexts/propertysetters/persistentfailures; initialgetContext/getImageData/setTransform/observerprecatch/modulefailures remain open. No fullcontextrestoration, allcutpoint containment, full A1-A16/stateframe, nativefault/platformreachability, physicaldevice/Safari/elapsedproof or Phase 3 closure. Missingnotice remains source/finiteDOM/pixel candidate, not universal proof.
