@@ -1,4 +1,6 @@
-# Phase 3 native and platform-contract evidence
+# Browser Contracts and Device Evidence
+
+Platform guarantees are conditional arguments, not physical measurements.
 
 Evidence record for claim-appropriate mapping review. No formal Phase 3 closure, certification, new requirement or additional approved limit. The application source is unchanged across and documentation merge. The public source tree is 1e09ad61c19e0b235a231ad8810dae176be4ea77.
 
