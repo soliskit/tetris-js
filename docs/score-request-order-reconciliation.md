@@ -1,4 +1,6 @@
-# Score validation can follow a gravity request
+# Score Checks and Gravity Requests
+
+The order of score validation and timer requests under stated assumptions.
 
 The engine's action guard checks the score after the action returns. Some actions can request the next gravity timer before that check. A later invalid-score stop therefore does not establish that no invalid-score request was made.
 
