@@ -143,6 +143,7 @@ Four plain game facts that only those papers argued. Each was checked against cu
 | D60 | 2026-10-09 | Refused current-schema content attempts ordinary withdrawal: for saved-game data that is present and successfully read, failing the full finalized current layout and validation triggers ordinary withdrawal under the existing semantics, covering old-layout, unknown-layout and malformed-current records. No gameplay from a refused record is loaded; stored payload bytes are not deleted; the high score is separate and untouched. Failed reads and successfully established absence are distinct and do not themselves mutate storage. Recorded in `docs/refused-current-schema-withdrawal-decision-2026-10-09.md`. `docs/phase-1-r2-r5-decision.md` SHA-256 85e605845b01938f19995d43cd6134c211f52b3b9b304327c140ec8a2dba5b6a adds the scoped refusal trigger to Withdraw and the refusal/failed-read distinction to Read; `docs/save-conversion-direction-2026-10-09.md` (later deleted; the checksum identifies its bytes in git history) SHA-256 ec9fe23517d987a4539128727f438fe74a1725c36ae05859c0f07d7be45bd3d6 carries the resolution in the current target. | This resolves the refusal-persistence gap D58 and D59 left open; the D58 and D59 rows share this row's checksums for the direction record and the R2-R5 decision, naming the files at this pull request's head. Provenance: the owner approved ordinary withdrawal, after an explanation that both choices refuse Continue and differ only in whether the game writes the unavailable note. The existing other withdrawal triggers, failed-save and last-good rules are unchanged; no retry, recovery, marker, key, transaction or cleanup mechanism is selected. The current adopted STA-4/STA-6 requirement contract remains; implementation, code, tests, storage and REQUIREMENTS.md are unchanged until a separately authorized paired behavior-and-requirement change. Pull-request checks and independent review remain separate publication gates. Docs only. |
 | D61 | 2026-10-09 | Whole-game offline play and one current-release decision are selected: the whole game works offline, with no game feature deliberately disabled because the connection is absent; a release is one matching set of game files, one place says which matching set is current, and everything else reads that answer. Recorded in the deleted offline single-release decision paper (kept in git history). | This selects the offline direction and a single place for the current-release decision only. It does not select a cache layout, number of caches or retained releases, file count, release-ID representation, resource-list format, build or deployment mechanism, update or cleanup mechanics, test changes, or a global app-state layout, and it does not promise an uncached first visit without a connection. Provenance: the owner approved whole-game offline play and one place for the current-release decision. Any practical limit and fallback still need to preserve the chosen offline behavior and be justified from evidence; reliable detection of every consumer is not assumed. Operational values are to be derived from this purpose and current evidence, not supplied as arbitrary owner numbers. Implementation paths, consumer detection, hosting constraints and cost remain unresolved and need research; no failure rate, effort saving or runtime saving is asserted, and selecting one place for the decision does not itself prove complete-release loading or safety. Existing offline requirements remain operative; implementation, code, tests, storage and REQUIREMENTS.md are unchanged. Pull-request checks and independent review remain separate publication gates. Docs only. |
 | D62 | 2026-10-12 | A touch that moves 10 pixels or less counts as a tap. | SwiftUI's default long-press movement limit is 10 points and its default minimum drag distance is 10 points, so 10 is a sound starting point, and touch testing will confirm it for this game. Apple's number is a starting point, not a points-to-pixels conversion. Sources: https://developer.apple.com/documentation/SwiftUI/View/onLongPressGesture(minimumDuration:maximumDistance:pressing:perform:) and https://developer.apple.com/documentation/swiftui/draggesture/init(minimumdistance:coordinatespace:)-8ffe5. |
+| D63 | 2026-10-12 | The owner chose on October 12, 2026 not to approve every phase. The blueprint's [Audit Advancement Gate](docs/audit-blueprint.txt) owns the advancement rule; its reservation sentence and Phases 2 to 10 cross-reference are corrected to agree. Specific approval gates remain unchanged. No phase exit or software restart is recorded here. | Assistant-drafted amendment. SHA-256 of amended `docs/audit-blueprint.txt`: `bc5b24e21e2ddb79b1bb40cd1e417ba3d56018f7f79f3e0b03250004515678f5`. Earlier blueprint identities are historical. |
 
 
 ## Later limited-advancement decision and work record
@@ -410,3 +411,130 @@ Earlier decision, source, frozen-input, review and publication hashes and byte c
 The successor publication manifest in `docs/status-label-migration.md` records the sanitized base and new current-publication identities. It takes precedence only for current published byte identities. No finding is promoted, requirement changed, property certified, phase closed or private disclosure restored by this spelling change.
 
 D15 and D39 identity scope after publication restyling: their original REQUIREMENTS.md hash identifies the historical baseline and original approved model-input bytes. The restyled root and published input copies have successor publication identities only. D15 scope and D39 author exposure are unchanged; no new input pack is implied.
+
+## Playbook source navigation
+
+The valid-state model and exact rules remain in the repository. The Playbook describes the board, piece, queue, score, controls, resources and saving through its plain plan and player behavior; builder detail stays here and in the decision records. [Valid Game State](docs/phase-1-r1-decision.md), [Saving, Withdrawing, and Reading a Game](docs/phase-1-r2-r5-decision.md), and [Storage, Error Reporting, and Timers](docs/phase-1-trust-and-timer-scope-decision.md) are the main behavior records.
+
+The former docs/audit-status-and-dispositions-2026-10-06.md and docs/current-piece-checkpoint-extent-decision.md were deleted. This ledger's "Current falling piece: safety-check extent" section holds the later current-piece choice. [Queue Piece Check](docs/queue-piece-check-decision.md) holds the queue choice. The tests that build states and check ordinary reachability do not rely on either choice. A source gap means code has not yet been read; record the gap, never use it to excuse a change.
+
+## What iCloud security teaches a web game
+
+Builder evidence and exact option details follow. The plain cloud-security conclusion belongs in the Tetris Playbook Charter. Decision status belongs in that Charter section; exact option details follow.
+
+### Dated research
+Read October 4, 2026; outside sources checked October 12, 2026. Claims that could not be read stay unverified. The facts about the app were read from one commit (06d2a59) and may no longer match the app today. Read them as a snapshot, never as how it behaves now. The original research process changed no repository or blueprint content; this documentation revision places its findings here. The sources were not compared against release history.
+
+### Recorded app snapshot (06d2a59)
+
+#### Shipped code
+Client-only game on GitHub Pages, with no accounts, server or secrets. public/ served as static files. index.html loads one same-origin module script, no third-party scripts, no CSP tag.
+
+#### Storage
+High score and saved game in localStorage (README, APP-6, SAF-1, SAF-2). The player and any same-origin script can read and change it.
+
+#### Offline
+Service worker caches the app shell. sw.js uses skipWaiting and clients.claim and deletes older caches.
+
+#### Runtime dependency
+package.json lists only express, used by the local index.js static server, not shipped to Pages.
+
+#### Dev tooling
+Playwright, Stryker, TypeScript and coverage tools.
+
+#### Not verified
+Workflow file contents (reads returned 404), workflow permissions, action pinning, any dependency auditing. No dependabot.yml found.
+
+### What the blueprint already says
+
+[The blueprint](docs/audit-blueprint.txt), section 1.2, says Apple was design inspiration, cites no Apple source and claims no conformance. Adding a citation requires a blueprint change and the owner's approval; this research grants neither.
+
+### Apple's documentation: verified claims
+
+#### Encrypted on device first
+Most iCloud data is encrypted with device-generated keys before upload, with TLS in transit and encryption at rest. Under standard protection Apple holds keys for most categories and 15 categories are end-to-end encrypted. Advanced Data Protection raises that to 25 with keys only on trusted devices and no Apple recovery. Checked October 12, 2026 against support.apple.com/en-us/102651. Apple's ADP security guide still gives 14/23; that source conflict is unresolved.
+
+#### CloudKit key hierarchy
+Private databases use per-user keys generated on the trusted device. Public databases are not encrypted.
+
+#### Version gating
+ADP requires newer OS versions so an older one cannot mishandle new service keys by re-uploading them while trying to repair account state.
+
+#### Signed, unremovable state change
+Turning ADP on writes a device-signed value that Apple servers cannot remove or modify. Key rotation retries until it succeeds.
+
+#### Recovery before commitment
+ADP needs at least one recovery method set up first, because Apple cannot recover end-to-end data.
+
+### What maps to the game
+
+#### Verified direct match, not the same control
+The untrusted-state and whole-validation rules are in [REQUIREMENTS.md](REQUIREMENTS.md), SAF-1 and SAF-2, and [the blueprint](docs/audit-blueprint.txt), O3. Apple's device-first encryption is not that control, but the stance toward untrusted state is similar.
+
+#### Analogy only: version gating
+Apple stops old clients from damaging new state. The game's counterpart is APP-2 (no mix of two versions) and D3 (supported save formats). Record it as the same principle, not an Apple conformance claim.
+
+#### Analogy only: persistence ordering
+Apple's retry-until-success rotation resembles O4 in [the blueprint](docs/audit-blueprint.txt). Fine as cited inspiration; the proposed citation below is not adopted grounding.
+
+#### Other cloud controls
+HSMs and account two-factor also do not apply to the recorded snapshot.
+
+#### Signed state is not local tamper protection
+Apple's signed value works because keys live on separate trusted devices, which the game does not have. [The blueprint](docs/audit-blueprint.txt), Appendix A, owns the checksum and SRI limits against a local player.
+
+### Web security controls, in priority order
+
+- Know that storage is shared across the origin. Web storage cannot be limited to a path, and OWASP advises against hosting several apps on one origin. This is APP-6 on GitHub Pages, now with outside grounding.
+- Keep sensitive data out of localStorage. One XSS can read it too. Record that as a property.
+- Service worker hygiene. Same origin and narrow scope (OWASP HTML5). No recovery path appears in the requirements read at this snapshot; the proposed path is below.
+- Defense in depth with CSP. A policy limiting scripts to the site is a second layer against XSS, not a substitute for safe code (MDN).
+- Few dependencies and a protected build (NIST SSDF). Keep zero third-party runtime code. This is advice, not an adopted requirement. SRI only matters if a CDN resource is ever added.
+- Write down security decisions and scope (ASVS 5.0 asks for documented decisions). AUDIT.md already does this.
+
+### Qualified, not dismissed: server-side controls
+
+CSRF, CORS, authentication, sessions and server-side validation depend on a real backend, an authenticated session or a cross-origin API. Those controls have no live surface in the recorded snapshot described above. They matter for the local express dev server only if it is exposed, and become central if you add accounts, a backend or cloud sync. Third-party scripts would add script supply-chain exposure and same-origin page and storage access. The CSP, SRI and dependency advice above addresses that risk. The iCloud encryption model becomes relevant only with a cloud-sync feature.
+
+### Platform limits and storage loss
+
+[The blueprint](docs/audit-blueprint.txt), Appendix A, owns the CSP meta-tag limits and the Safari storage-removal rule; Appendix E owns the dated hosting-header limits. The GitHub Community headers discussion below could not be inspected during the October 12 check. It is a discussion, not official GitHub documentation, and its custom-header claim stays unverified.
+
+WebKit's Tracking Prevention page, as read October 12, 2026, says a Home Screen web app's first-party domain is exempt from ITP's 7-day storage-removal algorithm, and its data is isolated from Safari. The older 2020 post described a separate use counter and expected no first-party deletion. These are WebKit policy statements, not a test on current iOS or a guarantee against other causes of storage loss. The affected script-writable stores include localStorage, IndexedDB, service worker registrations and caches.
+
+The README promises saves persist so the player can continue later, and APP-4 targets Safari. A Safari-tab player who skips a week could lose a paused game. This is a data-loss risk, not a confidentiality one.
+
+### Exact option details
+
+#### Cite sources as inspiration
+Add Apple pages to the blueprint appendix as inspiration for O4 only, marked non-conformance. Add the OWASP HTML5 sheet as grounding for APP-6 and the service-worker attacks in 4.8.
+
+#### Trust ledger entries (O6)
+Record no secrets or personal data stored, no tamper resistance against the local player (explicit non-goal), zero third-party runtime code and shared GitHub Pages origin as trust-ledger entries, rather than relying only on snapshot observations.
+
+#### Owner decision: storage eviction
+Clarify or accept a documented limit on how long Continue works for Safari-tab players (STA-4, APP-4).
+
+#### Owner decision: meta CSP
+Decide whether to add the feasible meta CSP described above. It changes shipped behavior and needs a requirements decision and tests.
+
+#### Owner decision: worker recovery path
+Decide whether to document a way to unregister a faulty service worker and clear caches.
+
+### Research sources
+
+- [Apple: iCloud security overview](https://support.apple.com/guide/security/icloud-security-overview-secacde2d0da/web)
+- [Apple: iCloud encryption (CloudKit keys)](https://support.apple.com/guide/security/icloud-encryption-sec3cac31735/web)
+- [Apple: Advanced Data Protection for iCloud](https://support.apple.com/guide/security/advanced-data-protection-for-icloud-sec973254c5f/1/web/1)
+- [Apple: iCloud data security overview (categories)](https://support.apple.com/en-us/102651)
+- [OWASP HTML5 Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html)
+- [OWASP Input Validation Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html)
+- [OWASP ASVS 5.0 preface](https://asvs.dev/v5.0.0/Preface/)
+- [MDN: Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
+- [MDN: CSP frame-ancestors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors)
+- [MDN: Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
+- [NIST SP 800-218 SSDF 1.1](https://csrc.nist.gov/pubs/sp/800/218/final)
+- [WebKit: Tracking Prevention](https://webkit.org/tracking-prevention/)
+- [WebKit: Full third-party cookie blocking and more](https://webkit.org/blog/10218/full-third-party-cookie-blocking-and-more/)
+- [GitHub Community: headers on Pages (discussion, not official docs)](https://github.com/orgs/community/discussions/54257)
+
