@@ -1,4 +1,6 @@
-# Phase 4 work in progress
+# Phase 4 Evidence So Far
+
+Selected completed checks, unsuccessful attempts, and unresolved work.
 
 Status: incomplete, bounded evidence awaiting final finding and property dispositions. No production fix, permanent test, CI change or complete certification is recorded here.
 

@@ -1,4 +1,6 @@
-# Phase 4 domain work ledger
+# Phase 4 Work Families
+
+The eight areas still needed before the audit phase can finish.
 
 Phase 4 remains open. These eight work families preserve the earlier finite work ledger, updated for later detector decisions. A counterexample can stop its exact target, not the whole phase. No source-navigation count, case count or completed publication closes a family.
 

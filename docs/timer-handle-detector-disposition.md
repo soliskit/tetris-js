@@ -1,4 +1,6 @@
-# Timer handles are not proof that a timer is running
+# Timer Handles and Outstanding Firings
+
+A handle comparison is not a resource-history check.
 
 The engine checks whether a timer handle is null. The adopted rule instead asks whether a future firing actually exists. Under the declared injected cases below, an undefined handle with no scheduled firing passes a playing-state check that should detect missing gravity or lock delay. These are source comparisons, not new timer executions or claims that the browser normally returns undefined.
 

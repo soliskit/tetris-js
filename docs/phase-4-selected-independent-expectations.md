@@ -1,4 +1,6 @@
-# Phase 4 independent expectations: selected test families
+# Independent Test Expectations
+
+Selected random-play, save, geometry, and fault-test families.
 
 Bounded independently reviewed source packet for publication; no whole-claim certification. Source main. Phase 4 remains open. This is source and literal-data comparison, not a new game execution, reproduction, defect confirmation, certification or complete test-universe review.
 

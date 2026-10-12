@@ -1,4 +1,6 @@
-# Held soft-repeat registration refusal: no safe-stop conversion
+# Soft-Repeat Registration Failure
+
+The event path from a held S key to an interval request.
 
 Status: Confirmed Defect by independently reviewed conditional source argument for the ordinary S event and declared registration refusal below. Operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. Not newly Reproduced, native scheduler evidence, full SAF/T3/U4/R1 or Phase4 closure.
 

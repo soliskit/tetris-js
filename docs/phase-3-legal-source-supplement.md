@@ -1,4 +1,6 @@
-# Phase 3 supplemental legal-operation source-citation record
+# Allowed State Changes
+
+The cited decision rules for nineteen legal-operation rows.
 
 Candidate citation record. Read-only check against fetched PR78. No changes to PR78, requirements, rules, model, production, tests or CI. This is a citation/content check, not independent adoption provenance, runtime frame proof, complete writer inventory, or certification. Governing decision status remains in the ledger and original owner exchanges; document wording is not action authority.
 

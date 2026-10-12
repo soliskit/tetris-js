@@ -1,4 +1,6 @@
-# Phase 4 persistence effects and unresolved premises
+# Storage Effects and Missing Evidence
+
+The inspected storage writes and the evidence needed to assess their effects.
 
 Working source ledger against main. This enumerates the direct storage write call sites in the inspected public source plus their current engine callers. It is not an exhaustive alias/native/concurrent-actor theorem or a new execution. No existing finding is reclassified here.
 

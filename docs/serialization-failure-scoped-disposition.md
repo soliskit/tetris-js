@@ -1,4 +1,6 @@
-# Serialization-failure handling: scoped disposition
+# Serialization Failure Handling
+
+Separate a serialization exception from a failed storage operation.
 
 Status: Confirmed Defect by independently reviewed source argument in the declared injected-serialization-failure domain. This record becomes operative only after documentation review, exact-head checks, authorized merge and postmerge publication verification. No new runtime reproduction, native-cause claim, property certification or Phase4 closure.
 
