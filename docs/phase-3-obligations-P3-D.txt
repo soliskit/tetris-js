@@ -1,4 +1,7 @@
-PHASE 3 PROOF-OBLIGATION RECORDS, PARTITION P3-D (STA-1..6, SAF-1..6, INP-1..6)
+State, Safety, and Input Evidence
+
+Candidate evidence records for eighteen requirements.
+
 Repository: soliskit/tetris-js   Base:
 Read-only. No repo change, no certification, no finding status. Every record is Candidate (claim and mapping) / Not Assessed (certification). Model correspondence is PENDING the independent model (blueprint 3.1, O8). No model transition is named and none is invented.
 

@@ -1,4 +1,7 @@
-PHASE 3 PARTITION P3-C: PROOF-OBLIGATION RECORDS (READ-ONLY PREPARATION, NOT CERTIFICATION)
+Pieces, Play, and Scoring Evidence
+
+Candidate evidence records for seventeen requirements.
+
 Repository: soliskit/tetris-js   Base: (main; verified by checkout, git log -1)
 Read-only preparation. Nothing was written to the repository. No O8 model input pack, model or model code was read or written. Statuses below are only Candidate or Not Assessed. No finding status, certification status or requirement change is asserted.
 

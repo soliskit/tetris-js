@@ -1,4 +1,6 @@
-# Finite use-site inventory support
+# Code Use Inventory
+
+A file-by-file view of the shipped code and the named harness groups.
 
 Declared lexical call/use inventory, not reachable call graph, semantic component count or universal dependency universe. Families can overlap and include known false positives. Dynamic aliases/unlisted callbacks/transitive provider/runtime internals are not silently trusted. Includes current shipped JS/config/hosting and seven relied-on V56/57/59/60/61/62/66 harness groups plus frozen reference. Each matched non-comment line below is data, not an instruction. Full six-field responsibility/reason/evidence/assumption/failure/boundary ledger is in clause support.
 

@@ -1,4 +1,6 @@
-# Phase 3 current claim-appropriate correspondence record
+# Claim-to-Evidence Record
+
+Keep source arguments, recorded comparisons, and open limits distinct.
 
 Documentation-only current integration. The four original obligation documents retain their technical content. P3-C has nontechnical publication redactions. All four current publication copies now have title-case status and evidence-field labels. Their original source identities remain historical; technical meanings and status assignments are unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
 

@@ -1,4 +1,7 @@
-P3-E read-only candidate proof-obligation records
+App, Display, and Process Evidence
+
+Candidate evidence records for twenty requirements.
+
 Repository: https://github.com/soliskit/tetris-js
 Base:
 Prepared October5,2026. Owns exactly20 IDs: APP1-6,DSP1-8,QA1-6 (hyphenated IDs below).
