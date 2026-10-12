@@ -2,7 +2,7 @@
 
 Controlled failures, visible recovery, and reporting limits.
 
-These are SAF5/D23U2 candidate observations. They do not dispose of findings, prove native browser failures, select a source rule, or certify anything. Phase 3 remains open. There were no production, public-site, permanent-test, CI, or executable-model changes. Clean-author isolation is a coordinator process boundary, not a tested property of these artifacts. V15 to V17 are later private evidence, separate from D45.
+These are SAF5/D23U2 candidate observations. They do not dispose of findings, prove native browser failures, select a source rule, or certify anything. At the October 5, 2026 recording (D46), Phase 3 was still open. This is historical status, not a claim about the current phase. There were no production, public-site, permanent-test, CI, or executable-model changes. Clean-author isolation is a coordinator process boundary, not a tested property of these artifacts. V15 to V17 are later private evidence, separate from D45.
 
 ## Source and expectation
 

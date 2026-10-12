@@ -2,7 +2,7 @@
 
 Recorded browser cases and the limits of their input and pixel measurements.
 
-Bounded candidate observations, not findings disposition, accepted oracle, complete correspondence or certification. Phase 3 remains open. No game code, public-site content, permanent tests, CI or executable-model changes. Evidence remains separate from the clean author.
+Bounded candidate observations, not findings disposition, accepted oracle, complete correspondence or certification. At the October 5, 2026 recording (D45), Phase 3 was still open. This is historical status, not a claim about the current phase. No game code, public-site content, permanent tests, CI or executable-model changes. Evidence remains separate from the clean author.
 
 ## Environment and provenance
 Node22.23.3 and actual Chrome154.0.8037.57, headless Linux,1000x900 viewport, local static production page. Gamepad values are explicit standard-mapping snapshots replacing navigator.getGamepads, not physical hardware. V7 constantMath.random0.3 without injectedclock; V8-V10 andV13 use injected Playwright browser clock and constant Math.random0.3. Clock advancement is not real elapsed timing or device evidence. Canvas centers/previews, DOM focus and labels are projections, not complete authoritative-state adapters.

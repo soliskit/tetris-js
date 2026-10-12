@@ -2,7 +2,7 @@
 
 Bounded checks of seven-piece bags, refill counts, and saved bag order.
 
-Phase 3 remains open. Current phase records are in `AUDIT.md`. This bounded private evidence for PCE5 is Candidate evidence. It is not certification, findings disposition, fairness, or an accepted oracle. There are no production, permanent-test, CI, or clean-author changes.
+At the October 5, 2026 recording (D45), Phase 3 was still open. This is historical status, not a claim about the current phase. Current phase records are in `AUDIT.md`. This bounded private evidence for PCE5 is Candidate evidence. It is not certification, findings disposition, fairness, or an accepted oracle. There are no production, permanent-test, CI, or clean-author changes.
 
 ## Factory v11
 
