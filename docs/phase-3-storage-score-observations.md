@@ -1,4 +1,6 @@
-# Phase 3 storage and scoring observations (interim)
+# Saving and Scoring Checks
+
+Bounded scoring, loaded-save, high-score, and failed-write comparisons.
 
 Status: bounded correspondence and candidate evidence, not findings disposition, certification or Phase 3 closure. Prepared separately from PR77. Production base, public-identical documentation main. No production, permanent test, fixture, CI or frozen model edits.
 

@@ -1,4 +1,6 @@
-# Phase 3 writer-anchor and conditional checkpoint supplement
+# Code Writes and Safety Checkpoints
+
+Inspected source locations and conditional failure observations.
 
 Source main, whose public tree remains identical to D43 scoped source. No repository edits, execution, tests, model author contact, rule adoption or finding classification. These are direct static reads of actual fetched source bytes.
 

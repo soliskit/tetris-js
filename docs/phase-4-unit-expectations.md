@@ -1,4 +1,6 @@
-# How independent the unit-test answers are
+# Unit-Test Answers
+
+Selected board, bag, input, transition, and process assertions.
 
 The unit tests contain useful literal answers for board size, movement, score, timing and input actions. They also compare some results with values built by the same game code. Those comparisons can catch a changed result, but they cannot prove that a shared assumption is right. This review adds the remaining selected unit families to the expectation ledger. It does not run the game or tests, confirm a defect, certify a property or close Phase 4.
 
