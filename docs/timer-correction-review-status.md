@@ -1,4 +1,6 @@
-# Timer correction review status
+# Timer and Player-Notice Proposals
+
+Proposed fixes, their review status, and the evidence still needed.
 
 These proposals aim to stop timers safely, prevent held controls from restarting after Resume, and show players when something fails. The game has not been changed by this work.
 
