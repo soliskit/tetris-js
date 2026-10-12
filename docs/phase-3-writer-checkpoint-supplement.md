@@ -2,7 +2,7 @@
 
 Inspected source locations and conditional failure observations.
 
-Source main, whose public tree remains identical to D43 scoped source. No repository edits, execution, tests, model author contact, rule adoption or finding classification. These are direct static reads of actual fetched source bytes.
+The source is main. Its public tree remains identical to the D43 scoped source. There are no repository edits, execution, tests, model author contact, rule adoption, or finding classification. These are direct static reads of actual fetched source bytes.
 
 Checked anchor groups: W01-W21 and W25-W33. W22-W24 and W34-W35 direct static anchors are checked below; their full native-focus, alias/reachability/category relations are still not proved. No full writer exhaustiveness or runtime proof is claimed.
 
