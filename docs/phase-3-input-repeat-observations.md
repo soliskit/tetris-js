@@ -1,4 +1,6 @@
-# Input-owned repeat observations (bounded)
+# Held-Key Repeat Checks
+
+Seven controlled cases for stopping repeats, Resume, and key aliases.
 
 Status: independently reviewed engine-plus-controller candidates, not findings disposition, certification or real-device evidence. Production, public-identical main. No code, permanent test or CI changes. Not part of PR77.
 
