@@ -1,4 +1,6 @@
-# Phase 3 input, Hold and ghost supplement
+# Controls, Hold, and Ghost Pieces
+
+Recorded browser cases and the limits of their input and pixel measurements.
 
 Bounded candidate observations, not findings disposition, accepted oracle, complete correspondence or certification. Phase 3 remains open. No game code, public-site content, permanent tests, CI or executable-model changes. Evidence remains separate from the clean author.
 

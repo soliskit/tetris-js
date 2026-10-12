@@ -1,4 +1,6 @@
-# Phase 3 row-clear and level source evidence
+# Line Clearing and Level Arithmetic
+
+Source arguments for row order, score limits, and requested gravity timing.
 
 Conditional source arguments, not machine-checked proof, universal valid-state coverage, finding classification or phase closure.
 
