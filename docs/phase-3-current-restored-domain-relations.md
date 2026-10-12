@@ -2,19 +2,19 @@
 
 Centering, restart, landing, independent-model, and process-check methods.
 
-These domain relations were present in accepted held support and are restored to the standalone publication derivation. No new measurement or expected source choice is introduced. Source hashes identify the original held methods, not byte equality of this publication text.
+These domain relations were in accepted held support and are restored to the standalone publication derivation. They add no measurement or expected source choice. Source hashes identify the original held methods, not byte equality of this publication text.
 
 ## PCE3 occupied-span centering
 
 Original held source SHA256 `6239c3a568df9047ff63686bf70c80548e9ccbd99ba062c89c4d2566a582c6c9`.
 
-Private source-only external method, modelrev6A2 remains callerpartial. No chosen floor tie, new inputpack or model change. Governing PCE3firststate/center/top2 and B2fixedgeometry.
+This is a private, source-only external method. modelrev6A2 remains callerpartial. No floor tie is chosen, no new inputpack is added, and the model is unchanged. PCE3firststate/center/top2 and B2fixedgeometry govern this relation.
 
-An integral-grid placement cannot exactly center a three-column occupied span on a ten-column board. A claim-appropriate set-valued check can express the existing ordinary meaning "centered" as the integer placement(s) minimizing absolute difference of occupied-span midpoint from boardmidpoint. It does not demand a left or right tie. Independent formula for span[minc,maxc] in sourceG6spawn state: minimize |positionColumn+(minc+maxc)/2 - 4.5| over integerpositions whose fourcells fit. All seven spawn shapes span their full sourcebox width: I4, O2, other5kinds3. This yields Icol3, Ocol4, otherscol3or4. Row0 places the G6cells in top2 (Ioccupiedrow1, othersrows0/1). Firststate fixed by adoptedG6.
+An integral-grid placement cannot exactly center a three-column occupied span on a ten-column board. A claim-appropriate set-valued check can express the existing ordinary meaning "centered": accept the integer placement(s) with the smallest absolute difference between the occupied-span midpoint and boardmidpoint. It does not demand a left or right tie. For span[minc,maxc] in sourceG6spawn state, the independent formula is: minimize |positionColumn+(minc+maxc)/2 - 4.5| over integerpositions whose fourcells fit. All seven spawn shapes span their full sourcebox width: I4, O2, other5kinds3. This yields Icol3, Ocol4, otherscol3or4. Row0 places the G6cells in top2 (Ioccupiedrow1, othersrows0/1). adoptedG6 fixes Firststate.
 
-Actual publicV14 firststate spawn placements: S/L/Z/J/T col3, Icol3, Ocol4, boxrow0. Existing observedcells/rotation match this allowedrelation. This is bounded source-to-spawn comparison, not proof everyfactory/queue/hold/Continue route obeys it. Actual Tetromino.spawned uses row0, Math.trunc with max for (columns-shapewidth)/2, and rotation0. This equals floor only under the current nonnegative fixed-geometry premises, so named built-in spawn routes satisfy the allowedcentering classes for currentfixedgeometry. No expected value extracted from production floor; formula and G6 independently define allowed set before comparison.
+Actual publicV14 firststate spawn placements are S/L/Z/J/T col3, Icol3, Ocol4, boxrow0. The existing observedcells/rotation match this allowedrelation. This bounded source-to-spawn comparison does not prove that everyfactory/queue/hold/Continue route obeys it. Actual Tetromino.spawned uses row0, Math.trunc with max for (columns-shapewidth)/2, and rotation0. That equals floor only under the current nonnegative fixed-geometry premises, so the named built-in spawn routes satisfy the allowedcentering classes for currentfixedgeometry. The expected value is not extracted from production floor: the formula and G6 independently define the allowed set before comparison.
 
-ModelNA specifically for a unique A2 output if no owner tie supplied. External source-defined allowedpredicate is the actual independent evidence method, as blueprint467/3.3 permits no artificial model relationship. It may map PCE3 centered/firststate/top2 without forcing normative unique choice. It does not adopt the formula as a new mandatory tie rule or certify model A2. If "centered" is later required to mean some other explicit unique box/center convention, that is separate ownerchoice, not needed to judge currentplacements against this declared symmetric allowed reading.
+ModelNA applies specifically to a unique A2 output when the owner has supplied no tie. The external source-defined allowedpredicate is the actual independent evidence method; blueprint467/3.3 permits no artificial model relationship. It may map PCE3 centered/firststate/top2 without forcing a normative unique choice. It neither adopts the formula as a mandatory tie rule nor certifies model A2. If "centered" later requires another explicit unique box/center convention, that is a separate ownerchoice. It is not needed to judge currentplacements against this declared symmetric allowed reading.
 
 ## PLY3 fresh-request timing and PLY6 appearing
 
@@ -22,7 +22,7 @@ Original held source SHA256 `89993d3241b3fc0ca98b13540adb07f3ae4f4569517ab89a22e
 
 Original: soft drop moves one row and restarts gravity timer. State relation: when successful one-row fall occurs while playing, the independent expected restart is removal of the previously outstanding gravity request and creation of a fresh request whose delay equals the current gravity interval, measured from the restart call rather than retaining the old deadline. The injected V28 ledger independently checks cancel(old live handle) then request(new handle,700) at score0. It has no clock/delivery field, so it cannot show elapsed native due time. Actual source startGameLoop cancels the old request and issues schedule(interval*1000); schedule delegates that requested delay to scheduler. Under the explicitly declared relative-setTimeout provider contract, a fresh request has due = call time + requested interval; the earlier request no longer determines the due. This is a conditional source timing relation, not a measured actual due field. Native elapsed/delivery, throttling, old-callback race and fault cancellation are separate explicitly unobserved domains, not a requested-only waiver. Model gravity_restarts counter records occurrence, not deadline.
 
-Blocked-floor soft drop is retained as actual observation with undefined model reading; do not extend successful-fall expected relation into an adopted blocked restart rule. V28 zero-delivery scheduler is insufficient to certify all timing, but the independent fresh-request relation can map what is compared and what remains conditional.
+Blocked-floor soft drop remains an actual observation with an undefined model reading. Do not turn the successful-fall expected relation into an adopted blocked restart rule. The V28 zero-delivery scheduler cannot certify all timing. The independent fresh-request relation can still map what is compared and what remains conditional.
 
 ## PLY6 0.5 second timing
 
@@ -34,7 +34,7 @@ Source generateNextTetromino assigns a new spawned current and queue/bag/hold/co
 
 ## Continue
 
-V32/V41/V62/V66 already map independent known count/lowest history against omitted serialized fields and Continue reset. Preservation failure or loss of a needed history adapter is a valid comparison relation, not an absent comparison to be repaired by calling omissions default0 for new saves. Legacy L3 remains only its actual two old formats. Current/new-write count/lowest relation is not compliant by this method.
+V32/V41/V62/V66 already map independent known count/lowest history against omitted serialized fields and Continue reset. Preservation failure, or loss of a needed history adapter, is a valid comparison relation. It is not a missing comparison that can be repaired by treating omitted fields as default0 for new saves. Legacy L3 covers only its actual two old formats. By this method, the current/new-write count/lowest relation is not compliant.
 
 ## B9 defined and allowed landing
 
@@ -56,7 +56,7 @@ Current frozen model f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63
 
 ### Current rev6 clause and choice adapter map
 
-The table retains historical missing-current-relation descriptions from its method preparation. They mark executable-model/caller-choice/provenance partiality, not current absence of all independent evidence. Later raw reconstruction/checkpoint/control, centering allowed-set, native268 and current13-field relations in current63/domain/clause support supersede absent-statement labels where supported. No unresolved model choice is silently accepted or older execution renamed rev6.
+The table keeps the historical missing-current-relation descriptions from method preparation. They mark partial executable-model/caller-choice/provenance support, not a current absence of all independent evidence. Where supported, later raw reconstruction/checkpoint/control, centering allowed-set, native268 and current13-field relations in current63/domain/clause support supersede the absent-statement labels. No unresolved model choice is silently accepted. No older execution is renamed rev6.
 
 | Clause / source point | Defined/partial expectation | Choice/preflight before effects | Comparison-adapter boundary / held evidence | Missing current relation |
 |---|---|---|---|---|
@@ -90,13 +90,13 @@ Stable observedsourceurls:
 - 
 
 
-Printed coverage is actual process evidence, not independently recomputed raw denominators. Source-equal historical full mutation is not a newly rerun campaign or the distinct manual weakened-score experiment. The manual score variant remains Phase4 work. Configuration/assertion/control-flow/loop/reachability methods remain separate from result counts.
+Printed coverage is actual process evidence. Its raw denominators were not independently recomputed. Source-equal historical full mutation is neither a newly rerun campaign nor the separate manual weakened-score experiment. The manual score variant remains Phase4 work. Result counts remain separate from configuration/assertion/control-flow/loop/reachability methods.
 
 ### source-identity-reconciliation.json
 
 Exact held artifact SHA256 `5f271596cd66adec5173626a28ca48cad5e0999350800023e29baffb4ae4e188`.
 
-Source public/test/e2e/runner/config identities were compared across livebe96b538, historical409faf4, baseline30e0085 and retainedowning310fb759; exact object equality is current source identity, not execution chronology.
+Source public/test/e2e/runner/config identities were compared across livebe96b538, historical409faf4, baseline30e0085 and retainedowning310fb759. Exact object equality establishes current source identity, not execution chronology.
 
 ### parsed-project-results.json
 
