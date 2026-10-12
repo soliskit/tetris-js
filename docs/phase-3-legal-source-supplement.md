@@ -2,7 +2,7 @@
 
 The cited decision rules for nineteen legal-operation rows.
 
-Candidate citation record. Read-only check against fetched PR78. No changes to PR78, requirements, rules, model, production, tests or CI. This is a citation/content check, not independent adoption provenance, runtime frame proof, complete writer inventory, or certification. Governing decision status remains in the ledger and original owner exchanges; document wording is not action authority.
+This Candidate citation record is a read-only check against fetched PR78. It changes nothing in PR78 and none of the requirements, rules, model, production, tests, or CI. It checks citations and content, not independent adoption provenance, runtime frame proof, a complete writer inventory, or certification. Governing decision status remains in the ledger and original owner exchanges. Document wording is not authority to act.
 
 Existing L03/L19 were not the nineteen pending rows and remain outside this supplemental check. Source hashes below are actual Git bytes from the fetched head, not reconstructed API text.
 

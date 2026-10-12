@@ -2,7 +2,7 @@
 
 Bounded checks of seven-piece bags, refill counts, and saved bag order.
 
-PCE5 bounded private evidence. Candidate, not certification, findings disposition, fairness or accepted oracle. Phase 3 remains open. No production, permanent-test, CI or clean-author changes.
+This bounded private evidence for PCE5 is Candidate evidence. It is not certification, findings disposition, fairness, or an accepted oracle. Phase 3 remains open. There are no production, permanent-test, CI, or clean-author changes.
 
 ## Factory v11
 Node22.23.3. Enumerate5040discrete choice tuples j0..i for i6..1 and supply midpointdraws(j+.5)/(i+1), under V3 random[0,1). Independent predicates use the seven kinds I,O,T,S,Z,J,L, remaining complement/cardinality and drawcounts, not production shuffle order as expected oracle. Each tuple deals14pieces across two aligned refills. Actual result5040paths/5040unique firstbags/151237checks/0failures. Supplied remainingbag lengths0..7 carry their supplied prefix without draws, then emptyrefill uses6draws. Supplied arrays become empty by reference; external mutation remains a trust boundary.

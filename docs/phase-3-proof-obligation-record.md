@@ -2,7 +2,7 @@
 
 Interim records for all 55 requirements, not Phase 3 completion.
 
-Status and provenance are recorded in `AUDIT.md`, row D40. This record cites production code and tests. It must not be given to an O8 model author who needs to stay independent of the implementation. It adds no finding status, no certification status, no requirement change and no code change.
+Status and provenance are in `AUDIT.md`, row D40. This record cites production code and tests. It must not be given to an O8 model author who needs to stay independent of the implementation. It adds no finding status, certification status, requirement change, or code change.
 
 Base: main. The three partition files preserve the original technical records. P3-C has nontechnical publication redactions. The current publication copies also have title-case status and evidence-field labels. P3-D and P3-E were unedited before that spelling migration. The original records and their source identities remain historical; technical meanings and status assignments are unchanged. The table records original source hashes, not a claim that all current published bytes are unchanged.
 
@@ -34,7 +34,7 @@ Current published P3-C SHA-256 after nontechnical redaction: . Its requirements,
 
 ## 4. Phase 3 exit status
 
-Phase 3 is not closed. The exit needs, in addition to these records, the independent model built from the approved pack, its freeze checksum, and differential evidence for the applicable rows. This record closes none of those items.
+Phase 3 is not closed. In addition to these records, its exit needs the independent model built from the approved pack, its freeze checksum, and differential evidence for the applicable rows. This record closes none of those items.
 
 ## Not decided here
 
