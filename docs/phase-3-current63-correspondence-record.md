@@ -2,13 +2,13 @@
 
 Keep source arguments, recorded comparisons, and open limits distinct.
 
-Documentation-only current integration. The four original obligation documents retain their technical content. P3-C has nontechnical publication redactions. All four current publication copies now have title-case status and evidence-field labels. Their original source identities remain historical; technical meanings and status assignments are unchanged. This supplement supplies current claim-specific model/method/source/evidence and limitations for their original 55 requirements and O1-O8. Historical missing/pending descriptions in the original documents remain historical when later actual relations below supersede them.
+This documentation-only integration keeps the technical content of the four original obligation documents. P3-C has nontechnical publication redactions. All four current publication copies now use title case for status and evidence-field labels. Their original source identities remain historical. Technical meanings and status assignments are unchanged. This supplement supplies the current claim-specific model, method, source, evidence, and limits for their original 55 requirements and O1-O8. Missing or pending descriptions in the original documents remain historical where later actual relations below replace them.
 
 Pinned implementation main:. Public tree: 1e09ad61c19e0b235a231ad8810dae176be4ea77. Evidence identity is not execution, cached-phone identity, proof of all domains or compliance. Historical executed model revisions and caller choices retain their names. The current frozen reference model SHA256 is f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2; named applicable methods below are correspondence anchors, not an accepted universal oracle.
 
-Current source mapping is reviewed as complete appropriate to the original claims, including conditional premises, unresolved classifier outcomes and adverse source comparisons. Actual differentials retain their finite input/revision/choice/state/safe-failure scopes under blueprint 3.4. Source deductions are not promoted to executed comparisons. Candidate findings and Not Assessed property statuses remain unchanged. Phase 4 exhaustion and Phase 5 disposition are separate. No production, requirement, permanent-test, model behavior or CI change is made by this document.
+Current source mapping is reviewed as complete and appropriate to the original claims, including conditional premises, unresolved classifier outcomes, and adverse source comparisons. Actual differentials keep their finite input, revision, choice, state, and safe-failure scopes under blueprint 3.4. Source deductions do not become executed comparisons. Candidate findings and Not Assessed property statuses are unchanged. Phase 4 exhaustion and Phase 5 disposition remain separate. This document changes no production code or behavior, requirement, permanent test, model behavior, or CI.
 
-This candidate does not itself record an operative phase exit. Any formal gate record must bind these final published bytes, source identities, exact normal CI and existing owner authority; private preparation and independent review alone are not phase closure.
+This candidate does not itself record an operative phase exit. Any formal gate record must bind these final published bytes, source identities, exact normal CI, and existing owner authority. Private preparation and independent review alone do not close a phase.
 
 ## Integrity and governing source
 
@@ -23,7 +23,7 @@ The original partitions contain the full thirteen fields under blueprint 3.3. Or
 
 Current published P3-C SHA256 after nontechnical redaction: . Original source identity above remains historical; all technical claim fields remain unchanged.
 
-Current independent domain method text: [method support](phase-3-current-method-support.md). These derived methods retain named premises and actual finite/adverse/conditional outcomes.
+Current independent domain methods are in [method support](phase-3-current-method-support.md). These derived methods keep their named premises and actual finite, adverse, and conditional outcomes.
 
 Later targeted clauses/process/dependencies: [clause support](phase-3-current-clause-process-support.md). Exact grouped outputs/harnesses/reviews and actual execution scope were recorded in the grouped identity ledger, which was later deleted; its bytes remain in git history. The execution scope statements now appear in the record sections below. Independent geometry comparison: [geometry support](phase-3-kind-geometry-source-evidence.md).
 
