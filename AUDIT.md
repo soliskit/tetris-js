@@ -241,7 +241,7 @@ This changes the current tree only. Old public commits still contain the removed
 
 | Path | Source commit | Original SHA-256 | Published SHA-256 | Changed scope | Precedence |
 | --- | --- | --- | --- | --- | --- |
-| `docs/audit-blueprint.pdf` |  |  | `ae35c5c8f4b2ddcc2f12eeaa319eb6f55e9708f1a4aa0dd4157c4767f64789ca` | Re-render of reduced text; pagination/layout newly inspected | Original identifies source; published identifies current bytes. Decisions/status remain governing. |
+| `docs/audit-blueprint.pdf` (deleted, kept in git history) |  |  | `ae35c5c8f4b2ddcc2f12eeaa319eb6f55e9708f1a4aa0dd4157c4767f64789ca` | Re-render of reduced text; pagination/layout newly inspected | Historical publication identity; the duplicate PDF was later removed. These bytes remain in git history. Decisions/status remain governing. |
 | `docs/audit-blueprint.txt` |  |  |  | Disclosure reduction and historical/current identity wording only | Original identifies source; published identifies current bytes. Decisions/status remain governing. |
 | `docs/phase-1-closure-record.md` |  |  |  | Disclosure reduction only | Original identifies source; published identifies current bytes. Decisions/status remain governing. |
 | `docs/phase-1-dsp5-reading-decision.md` (deleted, kept in git history) |  |  | `126646fadbddf14451c49133be42fee10e3d91b9247cd99f03b45b7d34cab511` | Disclosure reduction only | Original identifies source; the published copy was later deleted and its bytes remain in git history. Decisions/status remain governing. |
