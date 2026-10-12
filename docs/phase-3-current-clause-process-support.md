@@ -2,7 +2,7 @@
 
 How the retained methods address individual clauses and process assumptions.
 
-Current per-clause support derived for publication from named held artifacts. Historical method status descriptions are retained as historical where noted; later accepted current relations supersede missing-method labels, not conditional/adverse/unobserved limits. This text is not a new execution or a verbatim independent review. Exact original artifact hashes are identities, not permission or compliance.
+This per-clause support is derived for publication from named held artifacts. Where noted, historical method status descriptions remain historical. Later accepted current relations supersede missing-method labels, not conditional/adverse/unobserved limits. This text records neither a new execution nor a verbatim independent review. Exact original artifact hashes identify artifacts. They grant no permission and establish no compliance.
 
 ## LANE-D-STA1-CLAUSE-WALK-v262.md
 
@@ -10,7 +10,7 @@ Held source SHA256 `35d953a830a674efdcb19fe186c553b02477ad0301ace47b27683e1c5242
 
 # STA1 original-clause correspondence walk v262
 
-This integrates existing source methods, not new execution or a compliant-outcome verdict. Original claim is unchanged; every clause below has its expected relation, concrete route, method/evidence and explicit limit.
+This brings existing source methods together. It records no new execution and gives no compliant-outcome verdict. The original claim is unchanged. Each clause below names its expected relation, concrete route, method/evidence, and explicit limit.
 
 |Original clause|Source comparison method and existing binding|Evidence strength / remaining boundary|
 |---|---|---|
@@ -25,7 +25,7 @@ This integrates existing source methods, not new execution or a compliant-outcom
 |Selected button always highlighted|CSS button:focus white3px outline3px offset under selected=focus projection|258 mechanism, not actual contrast/pixels/universal nativefocus success.|
 |Keys belong to dialog, arrows move, repeating presses nothing|IC pending branch returns without game dispatch, ArrowLeft/Right move focus, repeat preventDefault only; Enter/Space nonrepeat delegated|Full V83 rows and IC/test source; modified early return remains separate INP3 two readings. Native default/Tab/focus not inferred from controller mocks.|
 
-The legal-operation-sequence/cutpoint comparison in V85 maps precompletion admission/possible abandonment and unexplained histories without choosing an overlap/abort rule. Whether this whole-clause walk is adequate is review judgment; a counterexample can map a clause without showing correctness. No named clause is removed or waived. Wider native input, failure and timing domains remain; existing source/pixel/run attribution cannot be promoted by this table.
+The V85 legal-operation-sequence/cutpoint comparison maps precompletion admission/possible abandonment and unexplained histories. It chooses no overlap/abort rule. Whether this whole-clause walk is adequate is a matter of review judgment: a counterexample can map a clause without showing correctness. No named clause is removed or waived. Wider native input, failure, and timing domains remain. This table does not strengthen existing source/pixel/run attribution.
 
 
 ## LANE-D-PENDING-NONKEY-RELATION-v263.md
@@ -34,7 +34,7 @@ Held source SHA256 `9ca35721e03cac32908857173ed549fccfcdb35ecf2d24be654c8132990d
 
 # STA1 pending nonkey and non-dialog route relation v263
 
-Private static route comparison. Original clause remains: Cancel/Escape/outside/any other action before answer keeps paused. Compare actual named entry to existence of source-legal op1/op2/op3 sequence and cutpoints using V85, preserving literal adverse outcomes. No alternate owner meaning selected, no defect certification, no new event run.
+This is a private static route comparison. The original clause remains: Cancel/Escape/outside/any other action before answer keeps paused. Using V85, compare the actual named entry with the existence of a source-legal op1/op2/op3 sequence and its cutpoints. Keep literal adverse outcomes. No alternate owner meaning is selected. No defect is certified, and no new event is run.
 
 |Entry while pending/paused|Actual route and result|Expected/comparison method|
 |---|---|---|
@@ -50,7 +50,7 @@ Private static route comparison. Original clause remains: Cancel/Escape/outside/
 |Outstanding engine/input callback while paused|gameplay entry guards paused; IC callbacks may stop later; monitor/resource semantics separate|Conditional route composition and U4 checkpoint/history comparison, not assumption no callbacks exist.|
 |API/callback failure / failSafe|fault conversion can set over and report; not ordinary no-answer success|Original SAF3/F2/T-U exceptional route, never recast as compliant paused answer or excluded because private.|
 
-Actual source Resume route is named precisely; it is not omitted under a keyboard-only reading. The clause now has an independent expected literal pause-retention predicate and source-legal-sequence comparison applied to each inspected route class. This can be adequate Phase3 mapping even if one route contradicts the literal predicate; it does not establish compliance or choose a new exemption. Reachable/dynamic callers and native precompletion timing remain declared domains. Exact owner semantics, if later needed for finding disposition, must come from governing texts or trusted owner evidence, not actual behavior.
+The actual source Resume route is named precisely, not omitted under a keyboard-only reading. The clause now has an independent expected literal pause-retention predicate and source-legal-sequence comparison applied to each inspected route class. This can be adequate Phase3 mapping even when one route contradicts the literal predicate. It establishes no compliance and chooses no new exemption. Reachable/dynamic callers and native precompletion timing remain declared domains. Exact owner semantics, if later needed for finding disposition, must come from governing texts or trusted owner evidence, not actual behavior.
 
 
 ## LANE-E-CLAUSE-PREMISE-JUDGMENTS-v267.md
@@ -142,18 +142,18 @@ Held source SHA256 `7a77062958368e7407cf7b622cd365f4783941e9edf7f7a8e067930df493
 
 ## Claim-appropriate relation
 
-Original QA1 claim is: all actual tests tag known IDs; every requirement has meaningful test verification, not mere mention. The independent relation has two joins, not a tag union:
+The original QA1 claim requires all actual tests to tag known IDs and every requirement to have meaningful test verification, not mere mention. The independent relation uses two joins, not a tag union:
 
 1. Actual registration → named IDs → actual assertion body/fixture → the source clause that the assertion observes.
 2. Requirement → at least one such meaningful witness, with the witness's covered clause and limits recorded.
 
-A relation can return partial verification, an irrelevant/overstated witness or an unresolved expected reading. It does not have to return success in order to map the QA1 property. Game transitions/model NA remains appropriate for registry/semantic test applicability. An audit probe is not retroactively a permanent test witness.
+A relation can return partial verification, an irrelevant/overstated witness, or an unresolved expected reading. It need not return success to map the QA1 property. Game transitions/model NA remains appropriate for registry/semantic test applicability. An audit probe does not retroactively become a permanent test witness.
 
 ## Actual evidence now held
 
 V51 actual bounded source-registration grammar/AST/scanner/log relation establishes the known-ID and nonempty-tag syntax joins, with review and runtime-template limits. V80 scanner negative-control deduction establishes that tag union cannot decide semantic verification. V87 independently reads meaningful representative assertions for all55 requirement witnesses; V81 isolates all tagged sites for APP4/STA6/QA1/DSP7. Existing input/display/cache/random-play artifacts provide body-to-clause details for those families. Original requirements and adopted source properties provide the expected clause, not test titles or production validators.
 
-The register records explicit partial/full-claim insufficiency comparisons: target metadata does not observe native target identity; injected fault signal does not show T1 player notice; bytes assumed 'good' do not assert independent B16 goodness; shared parser/fits/table helpers do not become independent audit oracles. Tests can meaningfully verify part of a requirement without establishing the whole requirement. These actual insufficiency/source-strength relations are evidence for the QA1 mapping, not proof that the game is wrong or every test irrelevant.
+The register records explicit partial/full-claim insufficiency comparisons. Target metadata does not observe native target identity. An injected fault signal does not show T1 player notice. Bytes assumed 'good' do not assert independent B16 goodness. Shared parser/fits/table helpers do not become independent audit oracles. A test can meaningfully verify part of a requirement without establishing the whole requirement. These actual insufficiency/source-strength relations support the QA1 mapping. They do not prove that the game is wrong or that every test is irrelevant.
 
 
 ## QA1-REQUIREMENT-WITNESSES-v87.md
@@ -162,7 +162,7 @@ Held source SHA256 `55138161cc840f1f52c7825d9e9a760072dc02bb9faef708398fddb98c96
 
 # QA1 requirement-to-assertion applicability register
 
-Independent source-body judgment, not a new test run, test authoring, universal correctness proof or tag-union oracle. Exact current V51 registrations locate witnesses; actual bodies were read in this continuation or existing named source-body artifacts. Each row identifies meaningful asserted behavior and what that witness does not establish. Dated passes retain original attribution, not raw per-project/native proof. Other tagged tests are not silently certified by selecting a witness.
+This is an independent source-body judgment, not a new test run, test authoring, universal correctness proof, or tag-union oracle. Exact current V51 registrations locate the witnesses. Actual bodies were read in this continuation or existing named source-body artifacts. Each row identifies the meaningful asserted behavior and what the witness does not establish. Dated passes keep their original attribution; they are not raw per-project/native proof. Selecting a witness does not silently certify other tagged tests.
 
 ## Game, score and state
 
@@ -262,7 +262,7 @@ Held source SHA256 `ee38982a20442d1ce6ee6ded0a6a4f66419ed16e286f35c330b7de5e1934
 
 # O6 actual dependency and evidence-control use reconciliation v260
 
-This is a finite declared inventory, not a complete universe. Exact shipped source at main c1a721cb and the seven O5 grouped evidence harnesses were read and lexically enumerated. Frozen rev6 is unchanged and implementation-exposed inventory work does not contact its author. No executions, package installs or provider trust grants.
+This declared inventory is finite, not a complete universe. Exact shipped source at main c1a721cb and the seven O5 grouped evidence harnesses were read and lexically enumerated. Frozen rev6 is unchanged. Implementation-exposed inventory work does not contact its author. No executions, package installs, or provider trust grants occurred.
 
 ## Scope and explicit unlisted uses
 
@@ -270,7 +270,7 @@ Includes engine/page/worker imports and API call/use sites, Express hosting entr
 
 ## Six-field reconciliation
 
-Each row names responsibility, reason, evidence, assumptions, failure modes and boundary. The use-site inventory makes these entries apply to actual code rather than merely adding abstract components.
+Each row names responsibility, reason, evidence, assumptions, failure modes, and boundary. The use-site inventory ties these entries to actual code rather than merely adding abstract components.
 
 |Use family / actual responsibility|Why relied on|Supporting evidence|Assumptions|Failure and observer limits|Inside/outside boundary and prior entry|
 |---|---|---|---|---|---|
@@ -310,4 +310,4 @@ Private finite static relation for original after-every-action-and-every-timer c
 
 GMrunChecked operationthenfindInvariantViolation, onthrow callsfailSafe; returnedviolation alsofailSafe. This maps check/faultassociation to SAF3 expectedsafeconversion, withV72escapingcancel/reportcandidate. Actualpredicate list coversboard/rowlengths,queuecount, safeinteger/%100score, playingfits/gravity/lock, nonplayingGMhandles; it omitscellkinds/resetcount/lowest/ICoutstandingresources andonlychecksplayingcurrent. IndependentB3-B14/D20andhistory classifier supplies actualpredicatecomparison; omittedchecks are adverse/unresolvedstrength notabsent expectedtable. Legalplayclauses useboard/fit/operationinduction plusfiniteindependentmove/clear/history/resourcecounterexamples andSAF6boundedassertions; monitoracceptance isnotvalidityoracle. Universalproof remainsunestablished andPhase4domainexhaustion separate.
 
-F3/F4/F5 and omitted predicate adverse relations remain current. Only the prior conditional drawing/poll timer classifications are superseded by adopted U4. Existing independent review personally checked gravity/lock/IC DASARR/soft-interval anchors; poll/render relied on the supplied source packet. This finite read scope is retained, not a new execution.
+F3/F4/F5 and the adverse relations for omitted predicates remain current. Adopted U4 supersedes only the prior conditional drawing/poll timer classifications. The existing independent review personally checked gravity/lock/IC DASARR/soft-interval anchors. Poll/render relied on the supplied source packet. This keeps that finite read scope and records no new execution.
