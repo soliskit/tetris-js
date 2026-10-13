@@ -2,15 +2,15 @@
 
 The inspected creation, loading, movement, and game-over routes.
 
-Bounded static mapping for PCE-1/PCE-6/STA-3. Not complete reachable-writer coverage, hostile-state exhaustion, finding classification or phase closure.
+This source check maps the named routes that change the board and piece. It is a bounded static mapping for PCE-1/PCE-6/STA-3, not complete reachable-writer coverage, hostile-state exhaustion, finding classification or phase closure.
 
 ## Board shape under named ordinary writers
 
 The constructor fixes rows to 20 and columns to 10, then createBoard makes separate rows and empty cells. New Game uses the same creation route. Accepted Continue assigns the reconstructed parseBoard result, which checks outer and inner lengths against those dimensions. This is an implementation format check, not an independent whole-payload oracle or permission to narrow valid imported content.
 
-Lock writes cell values, not array dimensions, provided every piece cell is in bounds and every row exists. Those preconditions require the fitted-piece relation before lock; a post-operation monitor alone does not prove them. A throw can retain a partial board under the fault rule, outside this ordinary-completion argument.
+Lock writes cell values, not array dimensions, if every piece cell is in bounds and every row exists. The fitted-piece relation must hold before lock to meet those preconditions. A monitor that checks after the operation does not prove them on its own. A throw can retain a partial board under the fault rule, outside this ordinary-completion argument.
 
-clearFullRows removes each collected full row once in descending-index order and prepends the same number of fresh empty rows. The row-transform argument in the separate row-clear record states its dense ordinary-board and normal-completion premises. Surviving cell aliases are not eliminated. The inspected lexical board-write sites are GameManager lines 115, 184, 208, 329, 343 and 346 (constructor/reset/load/lock/clear), but a lexical inventory is not proof that all exposed aliases, direct calls, setters or malformed dependency routes are harmless.
+clearFullRows removes each collected full row once in descending-index order and prepends the same number of fresh empty rows. The separate row-clear record states the dense ordinary-board and normal-completion premises for its row-transform argument. Surviving cell aliases are not eliminated. The inspected lexical board-write sites are GameManager lines 115, 184, 208, 329, 343 and 346 (constructor/reset/load/lock/clear), but a lexical inventory is not proof that all exposed aliases, direct calls, setters or malformed dependency routes are harmless.
 
 For the named ordinary dense board, cellAt reads board[row]?.[column] (gameState.js 55-57); absent rows or columns return undefined. isFree tests whether that read has isFilled === false (tetromino.js 27-29), so an absent position is not free. This maps the application read relation for positions outside that board; it is not an independent oracle or a proof about arbitrary array properties, aliases or hostile getters.
 
@@ -32,7 +32,7 @@ The engine monitor checks falling-piece fit while playing, not paused/over. Its 
 
 ## Ordinary over route distinction
 
-Opening over, fault over and ordinary no-room over have different meanings. The inspected ordinary no-room writers are next-piece generation after lock/empty Hold and incoming held-piece swap. Next-piece no-room retains the assigned nonfitting concrete next piece. Held-swap no-room retains the prior concrete current piece, conditionally fitting under its pre-state premises; neither field is an ordinary-over semantic falling piece. Both assign the stored eligibility flag false, but a flag attempt is not independent proof of successful withdrawal, session history or resource completion. The source next-piece no-room branch calls stopGameLoop; Hold calls stopGameLoop and cancelLockDelay before testing the incoming piece. These call sites are partial static STA-3 mapping, not independent evidence that native timers stopped, saved data was withdrawn, or all ordinary-over resource effects completed. A malformed factory failure is not silently classified as ordinary top-out.
+Opening over, fault over and ordinary no-room over have different meanings. The inspected ordinary no-room writers are next-piece generation after lock/empty Hold and incoming held-piece swap. Next-piece no-room retains the assigned nonfitting concrete next piece. Held-swap no-room retains the prior concrete current piece, conditionally fitting under its pre-state premises; neither field is an ordinary-over semantic falling piece. Both assign the stored eligibility flag false. That attempt is not independent proof of successful withdrawal, session history or resource completion. The source next-piece no-room branch calls stopGameLoop; Hold calls stopGameLoop and cancelLockDelay before testing the incoming piece. These call sites provide a partial static STA-3 mapping. They are not independent evidence that native timers stopped, saved data was withdrawn, or all ordinary-over resource effects completed. A malformed factory failure is not silently classified as ordinary top-out.
 
 ## Source identity
 
