@@ -2,21 +2,21 @@
 
 Compare the capture account with the released serializers without regenerating fixtures.
 
-Documentary capture attestation and historical writer consistency, not independently replayed original capture, regenerated fixtures or phase closure.
+This record compares the written account of fixture capture with the historical serializers. It is documentary capture attestation and historical writer consistency, not independently replayed original capture, regenerated fixtures or phase closure.
 
 ## Recorded source and expected relation
 
 STA-6 concerns fixture contents actually written by released versions. The fixture-introduction README at commit states that fixtures were made by playing a seeded game with each release's own code until a line cleared, then holding, turning/moving and pausing. It distinguishes the older with-level format window from the later no-level format. Those "release" windows are repository states/merges here, not independently bound deployed releases. The fixtures were introduced later than the represented formats. Introduction commit prose repeats that capture method.
 
-The introduction author is identified in public commit metadata as an AI coding assistant. These are repository-authored provenance statements, not authenticated owner claims or independent execution receipts. They establish that an account of capture exists; they do not establish every detail of its truth by being fetched.
+The introduction author is identified in public commit metadata as an AI coding assistant. These are repository-authored provenance statements, not authenticated owner claims or independent execution receipts. They establish that an account of capture exists. Fetching them does not establish that every detail is true.
 
 ## Mapped documentary method
 
-The method identifies the first fixture bytes and preserves them, binds the stated release window, compares the corresponding historical serializer key sets with fixture fields, and separately compares independent semantic decode with current Continue behavior. The serializer key sets match their corresponding fixture fields; this does not reproduce stored values or prove runtime capture. The latter comparisons test writer consistency and interpretation, not a recreation of the original seeded action history.
+The method identifies the first fixture bytes and preserves them, binds the stated release window, compares the corresponding historical serializer key sets with fixture fields, and separately compares independent semantic decode with current Continue behavior. The serializer key sets match their corresponding fixture fields. This does not reproduce stored values or prove runtime capture. The latter comparisons test writer consistency and interpretation, not a recreation of the original seeded action history.
 
-Exact seed, complete inputs, raw storage-capture log, original execution environment and independently verified release-deployment binding were not recovered in the held inspection. Bounded archive absence is not proof that capture did not occur. STA-6 does not itself require a seed/log to be preserved; missing independent execution attestation remains an evidence limit, not an invented requirement.
+Exact seed, complete inputs, raw storage-capture log, original execution environment and independently verified release-deployment binding were not recovered in the held inspection. Bounded archive absence is not proof that capture did not occur. STA-6 does not itself require a seed/log to be preserved. Missing independent execution attestation remains an evidence limit, not an invented requirement.
 
-Recorded capture attestation plus historical writer consistency is a bounded provenance relation, with dependence on the repository author's account explicit. It is not universal fixture authenticity proof. Modern regeneration or a new Continue run cannot repair a fixture's historical origin. The original fixtures remain untouched; no owner authority or identity follows from commit-author prose.
+Recorded capture attestation plus historical writer consistency is a bounded provenance relation, with dependence on the repository author's account explicit. It is not universal fixture authenticity proof. Modern regeneration or a new Continue run cannot repair a fixture's historical origin. The original fixtures remain untouched. No owner authority or identity follows from commit-author prose.
 
 ## Exact historical bindings
 
