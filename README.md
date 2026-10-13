@@ -135,3 +135,7 @@ npm run test:mutation  # mutation testing, about 40 minutes
 **Browser tests** use Playwright. They run three times: in WebKit (Safari's engine) and Chromium sized like an iPhone 14 Pro Max with touch, and in Chromium at desktop size. In WebKit, finger drags are driven with the mouse, since the game reads both through the same pointer events, and the checks that need real touch events, and the install check, run in Chromium only. They cover starting, pausing, continuing and ending games, keyboard and touch controls, the layout fitting the screen, drawing, zoom blocking, installing and playing offline. Saved games in `localStorage` set up exact board positions. The first time, install the browsers with `npx playwright install --with-deps chromium webkit`. Playwright's WebKit is close to Safari but is not a real iPhone, so check touch feel on a device too.
 
 Both suites run on every pull request and before every deploy.
+
+## License
+
+[MIT](LICENSE)
