@@ -17,7 +17,7 @@
 		"test:all": "npm run typecheck && npm test && npm run test:e2e"
 	},
 	"author": "David Solis",
-	"license": "ISC",
+	"license": "MIT",
 	"dependencies": {
 		"express": "^5.2.1"
 	},
