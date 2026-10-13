@@ -79,3 +79,33 @@ Public contract premises:
 - https://www.w3.org/WAI/WCAG22/Techniques/aria/ARIA22
 
 These sources supply technical premises, not approval or proof of target execution.
+
+## Required comparison procedures, not execution results
+
+These procedures describe what to compare, not cases newly run or passed. This document already owns claim-to-method relationships; the historical observation records remain result records.
+
+### Saving and faults
+
+After each withdrawal, failed save, failed read and fault case, compare both Continue eligibility and the stored value against [Saving, Withdrawing, and Reading a Game](phase-1-r2-r5-decision.md). Either mismatch fails the case. The successful-call storage boundary is in [Storage, Error Reporting, and Timers](phase-1-trust-and-timer-scope-decision.md), U1. For this comparison, a write succeeds when its storage call returns without an error. Use U1 for the whole-operation trust boundary; this method adds no partial-success cases.
+
+### Error reporting
+
+The required notice and separate test signal are in [AUDIT.md](../AUDIT.md), D22, and [Storage, Error Reporting, and Timers](phase-1-trust-and-timer-scope-decision.md), U2. Check both. The required player-visible notice and session limit have their home in the Tetris Playbook's How It Works section.
+
+A later owner-selected reporting target requires every error to be recorded and counted, with none dropped; a repeat increases the count. The owner chose this on October 8, 2026. This is a target, not an implementation or test-result claim, and it does not change the present wording of SAF-5.
+
+### Engine checks and timer cancellation
+
+Use [Storage, Error Reporting, and Timers](phase-1-trust-and-timer-scope-decision.md), U4, to select the covered cases and check points. Compare board, piece, queue and score validity in each case; a failed validity check is a fault. Cancellation evidence and limits are in [Timer Cancellation During a Fault Stop](phase-3-fault-conversion-source-evidence.md). That record is source deduction under a throwing-cancellation premise, not an executed native failure. The former Playbook's blanket "This is tested" statement has no verified result covering its full claim and is not carried forward as a result.
+
+### Bag and Resume comparisons
+
+Use [Hosting, Automation, and Randomness](phase-1-trust-ledger-decision.md), V3, for the comparison premise. The bag comparison fails on a repeated or missing piece within a seven-piece bag; the Tetris Playbook's How It Works section owns the player-facing rule.
+
+For keyboard direction, soft-drop, stick and d-pad separately: pause, hold, resume, confirm no movement, release, press again, confirm movement. [Operation Choices, Part 2](phase-1-operations-choices-2-decision.md), E2 and E3, owns the exact rules. The Tetris Playbook's How It Works section owns the player behavior. This sequence claims no completed result for all four kinds.
+
+### Operation scope and trust references
+
+Use [What an Operation May Change](phase-1-frame-principle-decision.md), Z1, with the assignments in [State Changes by Operation](phase-1-operations-record.md) when comparing operation effects.
+
+Use [Normative Decision Text](phase-1-normative-text-register.md), K2, for clock cases; [Service Worker and Network Trust](phase-1-sw-fetch-decision.md), X1 and X2, and [AUDIT.md](../AUDIT.md), D27, for browser cases; and [Hosting, Automation, and Randomness](phase-1-trust-ledger-decision.md), V1 to V3, for those premises.
