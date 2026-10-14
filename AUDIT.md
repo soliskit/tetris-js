@@ -328,7 +328,7 @@ Independently reviewed source-only child-admission comparison separates helper-o
 
 The manifest pins source bytes; the reads behind it were not one atomic commit snapshot. Existing dispositions are unchanged. Operative only after documentation review, required checks, authorized documentation merge and separate publication verification. No game, permanent-test, model, CI, requirement, storage or public-site change.
 
-## Current readiness note, October 9, 2026
+## Readiness note, October 9, 2026
 
 This dated note updates the current reading of the earlier preparation and status records. Their original text and evidence remain history. Phase 4 stays open; no phase exit or property certification is recorded here.
 
