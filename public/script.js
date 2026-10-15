@@ -359,14 +359,17 @@ function redrawAll() {
   drawIfChanged();
 }
 
-// An error while drawing is reported once and everything is redrawn on the
-// next frame, so drawing always recovers.
+// An error while drawing is reported once per unbroken run of failures, and
+// everything is redrawn on the next frame, so drawing always recovers. A
+// frame that draws without error ends the run, so the next failure is
+// reported too.
 let renderErrorReported = false;
 
 /** @param {() => void} draw */
 function drawSafely(draw) {
   try {
     draw();
+    renderErrorReported = false;
   } catch (error) {
     drawnBoard = {};
     drawnPreviews.clear();

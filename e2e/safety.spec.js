@@ -59,6 +59,39 @@ test('an error while drawing does not stop the game from drawing [SAF-5]', async
   expect(logged.filter(text => text.includes('Tetris drawing error'))).toHaveLength(1);
 });
 
+test('drawing errors are reported once per run of failures, and again after drawing recovers [SAF-5]', async ({ page }) => {
+  const logged = [];
+  page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+  await page.addInitScript(() => {
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    window.drawingFails = false;
+    window.failedDraws = 0;
+    CanvasRenderingContext2D.prototype.fill = function (...args) {
+      if (window.drawingFails) {
+        window.failedDraws++;
+        throw new Error('injected drawing failure');
+      }
+      return fill.apply(this, args);
+    };
+  });
+  const reports = () => logged.filter(text => text.includes('Tetris drawing error')).length;
+  // Fails every frame until let go, then draws one piece more.
+  const failingDrop = async filled => {
+    await page.evaluate(() => { window.failedDraws = 0; window.drawingFails = true; });
+    await page.keyboard.press('Space');
+    await expect.poll(() => page.evaluate(() => window.failedDraws)).toBeGreaterThan(3);
+    await page.evaluate(() => { window.drawingFails = false; });
+    await expect.poll(() => filledCount(page)).toBe(filled);
+  };
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  await failingDrop(8);
+  await expect.poll(reports).toBe(1);
+  await failingDrop(12);
+  await expect.poll(reports).toBe(2);
+});
+
 test('the game plays normally when storage is blocked [SAF-2]', async ({ page }) => {
   const errors = trackErrors(page);
   await page.addInitScript(() => {
