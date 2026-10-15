@@ -22,6 +22,8 @@ A separate scratch calculation, with no production import, translated the adopte
 
 The manager's selected O wall bounds 0 and 8, blocked movement at column 4 against `(1,6)`, and ghost top rows 18 and 13 follow the same fixed geometry under the declared fixture. Wider pieces, sparse boards, arbitrary representations, all rotations and all writer routes remain separate. Tests that finally call production fits to assert the result fits do not independently prove that predicate, even when their explicit position or orientation assertion adds a useful answer.
 
+`Tetromino.copy()` initially shares the original position object, rotation arrays and kick data by reference. The copy test replaces `copy.position`; it does not mutate the shared position in place. Its unchanged-original assertion therefore shows replacement isolation, not in-place isolation. See [Piece Bag Checks](phase-3-bag-supplement.md) for supplied-bag consumption by reference and the external-mutation boundary.
+
 ## Bags: uniqueness, kinds and exact order are different claims
 
 `factory.test.js` expects seven pieces, 50 selected bags of seven distinct colors, repeatability under seed 7, a difference under seed 8, fresh object identities and selected reset behavior. The cardinalities and reference inequalities are independent relations. The set of expected colors comes from production PieceColors, so set membership depends on that kind/token binding; seven distinct output colors alone is not an independently literal list of the seven kinds.

@@ -16,9 +16,19 @@ The selected browser tests check useful things a player can see: scores, buttons
 
 These independent arithmetic and literal answers are meaningful. A test is not wholly circular just because its setup uses production code. But a narrow literal assertion does not give independence to every unasserted field or to the setup's historical provenance.
 
+## Engine-fault notice assertions
+
+`e2e/engine-fault-notice.spec.js` declares 15 source cases: two fault timings, six failed-recovery notice-retention cases, two successful-recovery clearing cases, four independent-attempt cases and one repeated-fault case. This count is a source inventory, not a run receipt.
+
+Its page-route adapter appends `window.testGame = gameManager` to expose the private manager only in the test. The fault helper calls the real guard with a synthetic injected exception; selected cases also replace report, drawing, recovery or storage providers. These are selected injected failures, not native browser failures or proof of every fault route.
+
+The assertions check visible `#gameOverMessage` text, its `aria-hidden="true"` attribute, `#announcer` text and `role="status"`, and selected console-error text. Manager state, fault reasons and timer handles are read through the test-only exposure. The two timing cases capture a screenshot, but do not assert its pixels. DOM and aria assertions do not establish that a screen reader spoke the message.
+
+Successful Continue setup still uses the production-built savedGame fixture. See [AUDIT F25 and F30](../AUDIT.md) for finding status.
+
 ## Sources and continuity
 
-Fresh source main. The transferred six-source archive passed its own SHA256 manifest, and each file is byte-equal to this live fetched main: app.spec, fixtures, game.spec, helpers, safety.spec and touch.spec. This verifies source continuity, not that an original execution or independent review happened.
+The six-source archive comparison was made before PR175 changed touch.spec. It established byte equality for app.spec, fixtures, game.spec, helpers, safety.spec and the older touch.spec at that comparison, not equality to current main. The other five source files remain unchanged in this read-only reconciliation. Source continuity does not establish an original execution or independent review.
 
 The retained per-registration source commentary was read as earlier analysis. Its claims were checked against game.spec and helpers for the selected rows above, not accepted as measurement receipts. The earlier commentary's 22 declarations are navigation, not an important-test selection criterion, actual browser count or completion result. The present selection targets the persistence/expected-value dependency and explicit arithmetic assertions, not every browser family.
 
