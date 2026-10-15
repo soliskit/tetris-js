@@ -133,6 +133,18 @@ test('the O piece never changes when rotated [PCE-4]', () => {
   assert.deepEqual(o.position, position(8, 4));
 });
 
+// The page redraws the board when the piece's position object changes.
+test('turning the O piece keeps its position object, so the page has nothing to redraw [PCE-4] [DSP-3]', () => {
+  const board = createBoard(20, 10);
+  const o = pieceByColor(PieceColors.yellow);
+  o.position = position(8, 4);
+  const before = o.position;
+  o.rotate(board);
+  assert.equal(o.position, before);
+  o.rotate(board, true);
+  assert.equal(o.position, before);
+});
+
 test('a J piece kicks left off the right wall [PCE-4]', () => {
   const board = createBoard(20, 10);
   const j = pieceByColor(PieceColors.blue);

@@ -5,7 +5,7 @@ import express from 'express';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { PieceColors, boardCells, expectLabel, fakeWakeLock, filledCount, isChromium, trackErrors, wakeLockCounts, wakeLockRequests } from './helpers.js';
+import { PieceColors, boardCells, continueSavedGame, expectLabel, fakeWakeLock, filledCount, isChromium, savedGame, trackErrors, wakeLockCounts, wakeLockRequests } from './helpers.js';
 
 test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => {
   await page.addInitScript(() => {
@@ -22,6 +22,32 @@ test('nothing is redrawn while the game is paused [DSP-3]', async ({ page }) => 
   await expectLabel(page, 'Resume');
   const before = await page.evaluate(() => window.drawCalls);
   await page.waitForTimeout(1000);
+  expect(await page.evaluate(() => window.drawCalls)).toBe(before);
+});
+
+test('turning an O piece, which does not turn, redraws nothing [DSP-3] [PCE-4]', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.drawCalls = 0;
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    CanvasRenderingContext2D.prototype.fill = function (...args) {
+      window.drawCalls++;
+      return fill.apply(this, args);
+    };
+  });
+  await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, position: { row: 5, column: 4 } }));
+  await page.keyboard.press('KeyP');
+  await expectLabel(page, 'Pause');
+  // Waits for gravity to move the piece and the page to draw it, so the
+  // next gravity step is most of a second away.
+  await page.evaluate(() => new Promise(resolve => {
+    const start = window.drawCalls;
+    const check = () => (window.drawCalls > start ? resolve() : requestAnimationFrame(check));
+    check();
+  }));
+  const before = await page.evaluate(() => window.drawCalls);
+  await page.keyboard.press('KeyW');
+  await page.keyboard.press('KeyZ');
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   expect(await page.evaluate(() => window.drawCalls)).toBe(before);
 });
 

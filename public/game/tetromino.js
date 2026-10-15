@@ -130,6 +130,9 @@ export class Tetromino {
    */
   rotate(gameBoard, counterclockwise = false) {
     const count = this.rotations.length;
+    // A piece with one rotation state (the O piece) does not turn. Leaving
+    // it alone, position object included, tells the page nothing moved.
+    if (count === 1) return;
     const clockwise = (this.rotationState + 1) % count;
     const counterClockwise = (this.rotationState + count - 1) % count;
     /** @type {Array<[number, Position[]]>} */
