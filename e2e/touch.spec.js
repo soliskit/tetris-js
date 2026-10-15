@@ -177,6 +177,36 @@ test('a piece pushed against a ledge slides in once it drops below it [INP-5]', 
   await touch.up();
 });
 
+test('pushing down on a piece that rests banks nothing: once off its ledge it drops as the finger goes on down [INP-5] [PLY-3]', async ({ page }) => {
+  // Test-only access to the page's private game, to hold off gravity and the
+  // lock delay so only the drag moves the piece. No hook is shipped to players.
+  await page.route('**/script.js', async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, body: `${await response.text()}\nwindow.testGame = gameManager;` });
+  });
+  // The square rests on a ledge in columns 0 to 5; columns 6 to 9 are open to the floor.
+  await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, position: { row: 4, column: 4 }, board: rowsExcept([6], [6, 7, 8, 9]) }));
+  await page.evaluate(() => {
+    window.testGame.lockDelayInterval = 60;
+    Object.defineProperty(window.testGame, 'standardDropInterval', { value: 60 });
+  });
+  await page.keyboard.press('KeyP');
+  const touch = await boardTouch(page);
+  const top = async () => minRow(await cellsOf(page, PieceColors.yellow));
+  await touch.down(5, 5);
+  await touch.moveBy(0, 2.5, 10); // pushes down on the ledge: blocked
+  await touch.moveBy(2.4, 0, 12); // slides off it
+  expect(minColumn(await cellsOf(page, PieceColors.yellow))).toBe(6);
+  expect(await top()).toBe(4);
+  await touch.moveBy(0, 0.3, 2); // on down: it drops at once
+  await expect.poll(top).toBe(5);
+  await touch.moveBy(0, 0.6, 3); // then a row per cell dragged
+  expect(await top()).toBe(5);
+  await touch.moveBy(0, 0.5, 3);
+  await expect.poll(top).toBe(6);
+  await touch.up();
+});
+
 async function centerOf(page, selector) {
   const box = await page.locator(selector).boundingBox();
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };

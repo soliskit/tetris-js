@@ -436,7 +436,9 @@ const drag = {
   moved: false,
   cellOffset: 0,
   rowOffset: 0,
-  blocked: 0
+  blocked: 0,
+  /** @type {number | null} Where the finger was when the piece last could not drop, until it drops again. */
+  pushedDownAt: null
 };
 
 function resetDragState() {
@@ -446,6 +448,7 @@ function resetDragState() {
   drag.cellOffset = 0;
   drag.rowOffset = 0;
   drag.blocked = 0;
+  drag.pushedDownAt = null;
 }
 
 function cellWidth() {
@@ -461,6 +464,14 @@ function tryMove(piece, step) {
   const column = piece.position.column;
   gameManager.handleAction(step > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft);
   return piece.position.column !== column;
+}
+
+// Returns whether the piece actually dropped a row.
+/** @param {Tetromino} piece */
+function trySoftDrop(piece) {
+  const row = piece.position.row;
+  gameManager.softDrop();
+  return piece.position.row !== row;
 }
 
 boardCanvas.addEventListener('pointerdown', event => {
@@ -510,9 +521,26 @@ boardCanvas.addEventListener('pointermove', event => {
     drag.blocked = 0;
   }
 
-  const newRowOffset = Math.max(0, Math.trunc(dy / width));
+  // One row down per cell dragged. A row the piece cannot drop, because it
+  // rests on something, is not counted, and the anchor moves to the finger.
+  if (drag.pushedDownAt !== null && event.clientY > drag.pushedDownAt && gameManager.currentTetromino === drag.piece) {
+    // Still pushing down. Drop if it can now, and keep the anchor under the
+    // finger so pushing does not bank rows.
+    if (trySoftDrop(piece)) {
+      drag.rowOffset += 1;
+      drag.pushedDownAt = null;
+    } else {
+      drag.pushedDownAt = event.clientY;
+    }
+    drag.startY = event.clientY - drag.rowOffset * width;
+  }
+  const newRowOffset = Math.max(0, Math.trunc((event.clientY - drag.startY) / width));
   while (drag.rowOffset < newRowOffset && gameManager.currentTetromino === drag.piece) {
-    gameManager.softDrop();
+    if (!trySoftDrop(piece)) {
+      drag.pushedDownAt = event.clientY;
+      drag.startY = event.clientY - drag.rowOffset * width;
+      break;
+    }
     drag.rowOffset += 1;
   }
 });
