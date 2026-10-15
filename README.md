@@ -104,9 +104,13 @@ tsconfig.sw.json             Type checking for the service worker
 stryker.config.json          Mutation testing setup
 scripts/browser-coverage.js  Browser coverage report and 100% check for the page script
 REQUIREMENTS.md              Every behavior, with an ID that tests trace to
+DECISIONS.md               Every finding and decision across all work, with its evidence
+docs/                      Records of every piece of work: decisions, evidence and plans
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
+
+Every piece of work on the project is recorded in [docs/](docs/), starting at [docs/README.md](docs/README.md): decisions, evidence and plans.
 
 ## Reliability
 

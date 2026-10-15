@@ -951,7 +951,7 @@ checksummed copy before any certification or O8 use):
 - https://tetris.wiki/Marathon (gravity curve, level goals)
 - https://tetris.wiki/Guideline (playfield, hidden buffer, lock-down)
 - https://tetris.wiki/ARE (entry delay)
-Project sources: REQUIREMENTS.md and AUDIT.md (D12 to D34) on main; implementation
+Project sources: REQUIREMENTS.md and DECISIONS.md (D12 to D34) on main; implementation
 facts from public/game (read only, context, never model-input material).
 Unverified until their stage evidence is gathered:
 - whether the game's derived counterclockwise kicks equal the adopted SRS data;
