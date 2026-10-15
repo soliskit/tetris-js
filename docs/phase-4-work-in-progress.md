@@ -67,6 +67,8 @@ Under U2, the small notice was absent in the declared drawing prefix. The browse
 
 ## Sources, coverage and remaining limits
 
+The compressed replacement archives UC348, NG357, CACHE362 and W28-366 are preserved. That does not establish the identity of the original attachments or show that their evidence applies to current code. These archives are not the same four reviewed checks recorded in D51. The UC348 process finished, but the comparison failed and its comparison file is empty. W28 retains its cancellation-route limit; it is not evidence for the ResizeObserver check above. Preserving embedded evidence files does not verify the Backup download or recovery on iPad, which remain unverified.
+
 These checks used the unchanged public source tree `1e09ad61c19e0b235a231ad8810dae176be4ea77` at main commit. Their reviewed records retain the declared method, source, expected result, actual result and process limits. This selected summary is not a complete inventory and does not replace those records. No production, permanent-test, CI, reference-model or requirement change is made.
 
 Later source review inspected the previously unread factory, spawn and rotate dependencies, plus pointer lifecycle and cancellation. It represented all 35 historical navigation IDs, not the complete writer domain. In ordinary game over, touch-drag fields have no semantic value; their concrete values need not be cleared. A directly callable helper is not automatically reachable through a public action. The absence of a lost-pointer-capture listener or explicit capture release is only a source-text observation; native implicit delivery remains untested.
