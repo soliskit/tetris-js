@@ -1,6 +1,6 @@
 {
   "source_commit": "",
-  "historical_matrix": "docs/phase-3-writer-frame-checkpoint-matrix.txt",
+  "historical_matrix": "docs/tetris-audit/phase-3-writer-frame-checkpoint-matrix.txt",
   "mapping_limit": "All35 historical navigation IDs represented, not all source writers/routes exhaustively reconciled. Related records cover only their declared scopes. PR121 preservation publication is pending.",
   "rows": [
     {

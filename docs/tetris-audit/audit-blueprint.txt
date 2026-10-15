@@ -1938,4 +1938,4 @@ Non-goals of this audit's trust accounting: CSP, a header proxy, CodeQL, Dependa
 
 Status-label publication migration
 
-Human-authored status labels use title case, with short prepositions such as by and of lowercase. Historical published status records have been restyled as well; status meanings and assignments are unchanged. Original source, review and model-input identities remain historical. DECISIONS.md and docs/status-label-migration.md identify the successor publication bytes. Verbatim requirement quotations, runtime identifiers and raw external result strings retain their original spelling.
+Human-authored status labels use title case, with short prepositions such as by and of lowercase. Historical published status records have been restyled as well; status meanings and assignments are unchanged. Original source, review and model-input identities remain historical. DECISIONS.md and docs/tetris-audit/status-label-migration.md identify the successor publication bytes. Verbatim requirement quotations, runtime identifiers and raw external result strings retain their original spelling.

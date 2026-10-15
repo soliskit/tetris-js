@@ -4,7 +4,7 @@ Publication copies and the historical source identities they retain.
 
 Base: 3edfab9aa98f3086242b239fac48489f37fd7db8.
 
-This receipt records title-case restyling of human-authored labels in current and historical publication copies. Source evidence, status assignments, scope, limits, model semantics, normative requirement rows and privacy redactions are unchanged. Old hashes identify the sanitized pre-migration base; new hashes identify the current publication copies. Original older source hashes retain their historical meanings.
+This receipt records title-case restyling of human-authored labels in current and historical publication copies. Source evidence, status assignments, scope, limits, model semantics, normative requirement rows and privacy redactions are unchanged. Old hashes identify the sanitized pre-migration base; new hashes identify the publication copies as the migration restyled them, with the unverified successor binding stated under Current publication identities. Original older source hashes retain their historical meanings.
 
 ## Current publication identities
 
@@ -64,4 +64,4 @@ The local exact-manifest comparison confirms 723 label edits and the reviewed pr
 
 Local type checking and unit tests passed under Node 26.11.1 and npm 12.2.0, with all 360 unit tests passing and the existing 100% line, branch and function coverage gates. The execution logs and toolchain check were returned with the review package. Local browser verification could not complete because the environment lacks WebKit system libraries. Independent exact-diff review passed with minor publication corrections; those corrections and hosted required checks are pending final confirmation; this receipt does not claim they passed. Their results belong to the reviewed commit/PR checks, not a historical evidence rerun.
 
-The table excludes this receipt itself to avoid a self-hash cycle. Its repository commit binds the receipt and all table entries together. Earlier ledger hashes remain historical; these entries identify successor publication bytes only.
+The table excludes this receipt itself to avoid a self-hash cycle. Its repository commit binds the receipt and all table entries together. Earlier ledger hashes remain historical; these entries identify the migration's restyled output bytes, with the same unverified successor binding stated above.
