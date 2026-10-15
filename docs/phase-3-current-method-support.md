@@ -56,6 +56,8 @@ GMhandleAction459-460 invokes guard with performAction. schedule383 wraps eventu
 
 ## Actual monitor predicates versus source domains
 
+The table below and the Continue row above describe the historical `gameManager.js` source identified in this method, not current main. [PR171](https://github.com/soliskit/tetris-js/pull/171) later added checks that queued pieces and the current falling piece are valid, including the falling piece while paused. The changed checks are at `gameManager.js:421/422/424`. The earlier results keep their original scope. Linking to the change does not verify those results against current code or show that every other missing check was added.
+
 | Predicate / code | Admission/check scope | Independent domain / omitted relation |
 |---|---|---|
 | Board outer/row lengths GM413-416 | After ordinary guarded op/callback; configured rows/columns | B5 semantic20x10 cellkind/null validity not checked; exposed dimensions/aliases require own preconditions. |
@@ -133,6 +135,8 @@ For a bounded evidence row retain session identity, route/operation, independent
 Compute last-good candidate only for a payload whose successful write and independent B16-valid content have both been established, subject to the unresolved save-success/flag-failure relation. No update on failed serialization/write or unresolved content. A later fault preserves this candidate; an intentional withdrawal can retain its bytes while denying Continue. Never relabel retained bytes as last-good merely to compare equality.
 
 ## Held evidence bindings and honest gaps
+
+[AUDIT F29](../AUDIT.md) records the missing prerequisite: a save written by the game whose content and history have independently been shown to satisfy B16's saved-game rules. Later comparisons show that saving and restoring can lose history. They do not establish such a valid prior save.
 
 - D43 save cutpoints and seven-effect sequence establish attributed actual write chronology. They do not independently establish all payloads' semantic goodness or completed-turn mapping.
 - V32 establishes a new-save public O-history count1, omitted count and fresh Continue0. It gives a count-preservation comparison without a missing-count default. Its O-only factory/partial bag scope means it is not a fully B16-certified good payload or general history proof.

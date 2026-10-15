@@ -4,9 +4,9 @@ Keep source arguments, recorded comparisons, and open limits distinct.
 
 This documentation-only integration keeps the technical content of the four original obligation documents. P3-C has nontechnical publication redactions. All four current publication copies now use title case for status and evidence-field labels. Their original source identities remain historical. Technical meanings and status assignments are unchanged. This supplement supplies the current claim-specific model, method, source, evidence, and limits for their original 55 requirements and O1-O8. Missing or pending descriptions in the original documents remain historical where later actual relations below replace them.
 
-Pinned implementation main:. Public tree: 1e09ad61c19e0b235a231ad8810dae176be4ea77. Evidence identity is not execution, cached-phone identity, proof of all domains or compliance. Historical executed model revisions and caller choices retain their names. The current frozen reference model SHA256 is f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2; named applicable methods below are correspondence anchors, not an accepted universal oracle.
+The implementation mapped in this record is historical. Its public source tree is: 1e09ad61c19e0b235a231ad8810dae176be4ea77. Evidence identity is not execution, cached-phone identity, proof of all domains or compliance. Historical executed model revisions and caller choices retain their names. The current frozen reference model SHA256 is f958f910a7a8ae02e2abd4a25a82f4f6127d5ff41440d45008cb92e4b63e93d2; named applicable methods below are correspondence anchors, not an accepted universal oracle.
 
-Current source mapping is reviewed as complete and appropriate to the original claims, including conditional premises, unresolved classifier outcomes, and adverse source comparisons. Actual differentials keep their finite input, revision, choice, state, and safe-failure scopes under blueprint 3.4. Source deductions do not become executed comparisons. Candidate findings and Not Assessed property statuses are unchanged. Phase 4 exhaustion and Phase 5 disposition remain separate. This document changes no production code or behavior, requirement, permanent test, model behavior, or CI.
+The source mapping was reviewed as complete and appropriate to the original claims at that historical tree, including conditional premises, unresolved classifier outcomes, and adverse source comparisons. It was not reviewed against current main. The later [PR171](https://github.com/soliskit/tetris-js/pull/171) changed the piece checks. The original results are retained; they were not rerun or verified against that change. Each recorded comparison keeps its original inputs, revision, choices, states and safe-failure limits under blueprint 3.4. Conclusions drawn from source code are not executed comparisons. Candidate findings and Not Assessed property statuses are unchanged. Phase 4 exhaustion and Phase 5 disposition remain separate. This document changes no production code or behavior, requirement, permanent test, model behavior, or CI.
 
 This candidate does not itself record an operative phase exit. Any formal gate record must bind these final published bytes, source identities, exact normal CI, and existing owner authority. Private preparation and independent review alone do not close a phase.
 
@@ -25,7 +25,7 @@ Current published P3-C SHA256 after nontechnical redaction: . Original source id
 
 Current independent domain methods are in [method support](phase-3-current-method-support.md). These derived methods keep their named premises and actual finite, adverse, and conditional outcomes.
 
-Later targeted clauses/process/dependencies: [clause support](phase-3-current-clause-process-support.md). Exact grouped outputs/harnesses/reviews and actual execution scope were recorded in the grouped identity ledger, which was later deleted; its bytes remain in git history. The execution scope statements now appear in the record sections below. Independent geometry comparison: [geometry support](phase-3-kind-geometry-source-evidence.md).
+Later targeted clauses/process/dependencies: [clause support](phase-3-current-clause-process-support.md). The exact names, sizes and hashes of grouped outputs, harnesses and reviews, together with what was executed and reviewed, were recorded in `e47ff9bc899c2a4474907cf8ba6af9f396ed7e03:docs/phase-3-current-grouped-result-identities.md` before that file was deleted. The file remains in git history. Its presence does not show that every named raw artifact is available or that the evidence applies to current code. The execution scope statements now appear in the record sections below. Independent geometry comparison: [geometry support](phase-3-kind-geometry-source-evidence.md).
 
 Restored explicit source-domain and required-runtime relations: [centering/restart/landing/model/QA support](phase-3-current-restored-domain-relations.md). Finite matched actual uses: [use-site support](phase-3-current-use-site-support.md).
 
@@ -1457,6 +1457,8 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V53/V55
 
+The original data used to select expected answers, harness, result and review files have not been recovered from the holdings checked. See [Geometry and kicks](phase-4-selected-independent-expectations.md#geometry-and-kicks). The retained account of 48 rows and 550 visitor comparisons is not a substitute for those files or their exact identities.
+
 | Held record identity | SHA256 | Bytes |
 |---|---|---|
 
@@ -1485,11 +1487,11 @@ Four approved Not Established relations remain exactly: delivery of both quick t
 
 ### V61
 
-Execution scope: actual browser coordinator-attributed; independent Python byte equal; recorded screenshot independently inspected in original review. No new pixel inspection. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: actual browser coordinator-attributed; independent Python byte equal; recorded screenshot independently inspected in original review. No new pixel inspection. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V57/V62
 
-Execution scope: actual Node and independent Python rerun byte equal per review. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: actual Node and independent Python rerun byte equal per review. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V42
 
@@ -1537,7 +1539,7 @@ Execution scope: actual Node and independent Python rerun byte equal per review.
 
 ### V56/V75
 
-Execution scope: V56 browser actual trace coordinator-attributed, source/hash review only; no independent browser rerun. V75 source/literal method using already bound V56 trace, not a separate run. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: V56 browser actual trace coordinator-attributed, source/hash review only; no independent browser rerun. V75 source/literal method using already bound V56 trace, not a separate run. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V38
 
@@ -1585,7 +1587,7 @@ Execution scope: V56 browser actual trace coordinator-attributed, source/hash re
 
 ### V58/V59
 
-Execution scope: V58 source equations, not an execution. V59 actual browser coordinator-attributed; independent Python byte equal plus hand wall relation; the misleading noIntermediateMove field is qualified to the down/up window. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: V58 source equations, not an execution. V59 actual browser coordinator-attributed; independent Python byte equal plus hand wall relation; the misleading noIntermediateMove field is qualified to the down/up window. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V34
 
@@ -1598,7 +1600,7 @@ Execution scope: V58 source equations, not an execution. V59 actual browser coor
 
 ### V65/V66/V76
 
-Execution scope: V65 choice record, not authority established by the index; original user evidence separately required. V66 Node equal except Node version; Python byte equal with the same earlier geometry table; pack copy not directly compared by reviewer. V76 documentary source/author capture attestation; raw capture execution independently unattested. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: V65 choice record, not authority established by the index; original user evidence separately required. V66 Node equal except Node version; Python byte equal with the same earlier geometry table; pack copy not directly compared by reviewer. V76 documentary source/author capture attestation; raw capture execution independently unattested. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V72
 
@@ -1638,7 +1640,7 @@ Execution scope: V65 choice record, not authority established by the index; orig
 
 ### V60
 
-Execution scope: Node rerun equal except Node version; Python byte equal, labelled-body atomic VM premise. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: Node rerun equal except Node version; Python byte equal, labelled-body atomic VM premise. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V29
 
@@ -1658,7 +1660,7 @@ Execution scope: Node rerun equal except Node version; Python byte equal, labell
 
 ### V69/V70
 
-Execution scope: V69 source/assertion method, not execution. V70 source/assertion method plus exact tagged-source inventory; not execution. The exact artifact identities were recorded in the grouped result identity ledger, which was later deleted; the exact bindings are not retained in the current repository documents, and the ledger's bytes remain in git history.
+Execution scope: V69 source/assertion method, not execution. V70 source/assertion method plus exact tagged-source inventory; not execution. See [Integrity and governing source](#integrity-and-governing-source) for the historical list of artifact identities and its limits.
 
 ### V31
 
