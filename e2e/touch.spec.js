@@ -104,6 +104,34 @@ test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async 
   await touch.up();
 });
 
+test('a drag on a board that has no width yet moves nothing, and is not a tap [INP-5]', async ({ page }) => {
+  // Test-only access to the page's private game, to read the piece the board
+  // cannot show, and to hold off gravity. No hook is shipped to players.
+  await page.route('**/script.js', async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, body: `${await response.text()}\nwindow.testGame = gameManager;` });
+  });
+  await continueSavedGame(page, savedGame({ piece: PieceColors.purple, position: { row: 5, column: 3 } }));
+  await page.evaluate(() => Object.defineProperty(window.testGame, 'standardDropInterval', { value: 60 }));
+  await page.keyboard.press('KeyP');
+  // The board keeps an area to touch, its padding, but its content has no width to measure cells by.
+  await page.evaluate(() => Object.assign(document.getElementById('tetris').style, { width: '0px', height: '400px', paddingRight: '200px' }));
+  await expect.poll(() => page.evaluate(() => document.getElementById('tetris').width)).toBe(0);
+  const piece = () => page.evaluate(() => {
+    const { position, rotationState } = window.testGame.currentTetromino;
+    return { ...position, rotationState };
+  });
+  const before = await piece();
+  const touch = await boardTouch(page);
+  await touch.down(5, 5);
+  await touch.moveBy(3, 0, 6);
+  await touch.moveBy(-3, 0, 6);
+  expect(await piece()).toEqual(before);
+  await touch.moveBy(0, 4, 8);
+  await touch.up();
+  expect(await piece()).toEqual(before);
+});
+
 test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,

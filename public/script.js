@@ -483,6 +483,8 @@ boardCanvas.addEventListener('pointermove', event => {
   if (!drag.moved && Math.hypot(dx, dy) <= TAP_SLOP_PX) return;
   drag.moved = true;
   const width = cellWidth();
+  // A board with no width yet has no cells to drag across.
+  if (width === 0) return;
 
   let offset = (event.clientX - drag.startX) / width;
   if (drag.blocked !== 0 && Math.sign(offset - drag.cellOffset) === drag.blocked) {
