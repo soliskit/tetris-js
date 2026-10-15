@@ -88,6 +88,46 @@ test('the canvases are rebuilt when the screen pixel density changes [DSP-2]', a
   expect(await page.evaluate(() => window.resolutionQueries.at(-1).media)).toBe('(resolution: 2dppx)');
 });
 
+test('an error while rebuilding the canvases for a new pixel density does not stop the page watching for the next one [DSP-2]', async ({ page }) => {
+  // Stands in for density changes as the test above does, and makes resizing
+  // a canvas fail once, during the first change.
+  await page.addInitScript(() => {
+    const matchMedia = window.matchMedia.bind(window);
+    window.resolutionQueries = [];
+    window.matchMedia = query => {
+      const list = matchMedia(query);
+      if (query.startsWith('(resolution')) window.resolutionQueries.push(list);
+      return list;
+    };
+    const setTransform = CanvasRenderingContext2D.prototype.setTransform;
+    window.failSizing = false;
+    CanvasRenderingContext2D.prototype.setTransform = function (...args) {
+      if (window.failSizing) {
+        window.failSizing = false;
+        throw new Error('injected sizing failure');
+      }
+      return setTransform.apply(this, args);
+    };
+  });
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  const changeDensity = ratio => page.evaluate(ratio => {
+    window.devicePixelRatio = ratio;
+    window.resolutionQueries.at(-1).dispatchEvent(new Event('change'));
+  }, ratio);
+  await page.evaluate(() => { window.failSizing = true; });
+  await changeDensity(2);
+  expect(await page.evaluate(() => window.failSizing)).toBe(false);
+  await changeDensity(1.5);
+  await expect.poll(() => page.evaluate(() => {
+    const canvas = document.getElementById('tetris');
+    return canvas.width === Math.round(canvas.getBoundingClientRect().width * 1.5);
+  })).toBe(true);
+  await expect.poll(() => filledCount(page)).toBe(4);
+  expect(await page.evaluate(() => window.resolutionQueries.at(-1).media)).toBe('(resolution: 1.5dppx)');
+});
+
 test('the page cannot be zoomed, scrolled by touch or text selected [DSP-4]', async ({ page }) => {
   await page.goto('/');
   const styles = await page.evaluate(() => {

@@ -408,11 +408,13 @@ canvases.forEach(canvas => resizeObserver.observe(canvas));
 
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
+// Each listener runs once, so the next one is in place before rebuilding,
+// which an error could otherwise cut short.
 function watchPixelRatio() {
   matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', () => {
+    watchPixelRatio();
     for (const [canvas, { width, height }] of canvasSizes) sizeCanvas(canvas, width, height);
     drawSafely(redrawAll);
-    watchPixelRatio();
   }, { once: true });
 }
 watchPixelRatio();
