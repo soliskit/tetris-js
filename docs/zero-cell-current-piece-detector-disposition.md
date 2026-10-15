@@ -10,11 +10,15 @@ The current-piece checkpoint choice requires checking a valid four-block falling
 
 ## Source argument
 
+The source comparisons in this paper, including the later nonempty and paused partitions, describe the historical implementation identified here. [PR171](https://github.com/soliskit/tetris-js/pull/171) later changed the piece checks. These comparisons were not rerun or verified against that change. Their recorded findings and limits are unchanged.
+
 At main, public tree 1e09ad61c19e0b235a231ad8810dae176be4ea77, the playing-state monitor calls the current piece's fits method but does not check four occupied blocks or canonical kind geometry. A generic Tetromino whose rotations are [[[]]], rotation is zero, position is (0,4), color is yellow and kicks are [[]] returns no occupied cells. Its actual fits method uses every over that empty cell list, which returns true without a replaced method.
 
 With the selected dense empty 20x10 board, queue of three, safe score zero, live gravity and no lock handle, the selected monitor conditions report no violation. A guarded no-op accepts the zero-cell current piece. One guarded soft drop moves its anchor to (1,4), restarts gravity and again reports no violation. Zero cells cannot denote the independently required four-block falling piece. Overlap acceptance is not validity.
 
 ## Retained bounded evidence
+
+The preserved raw packet is `Q2-EMPTY-ACTUAL-RESULT-v454.tar-fe24a282.gz`.
 
 The retained October 6 actual454 evidence used two injected playing-state fixtures: a built-in O control and the generic empty piece. Both received a guarded no-op and one soft drop. The real monitor returned null at both boundaries in both fixtures. The O control retained its four literal cells and moved its anchor from row zero to row one; the empty fixture remained empty and moved from row zero to row one. The completed process receipt records exit zero and a finite time bound. Frozen source, method and result identities were rechecked for this comparison; no rerun occurred.
 
