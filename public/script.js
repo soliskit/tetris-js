@@ -497,9 +497,11 @@ boardCanvas.addEventListener('pointermove', event => {
     offset = drag.cellOffset;
   }
 
-  // One cell of movement per cell dragged, starting at half a cell.
+  // One cell of movement per cell dragged, starting at half a cell. A step
+  // can land the piece and lock it at once, so each step first checks the
+  // piece is still the one this drag controls.
   const targetOffset = Math.round(offset);
-  while (drag.cellOffset !== targetOffset) {
+  while (drag.cellOffset !== targetOffset && gameManager.currentTetromino === drag.piece) {
     const step = Math.sign(targetOffset - drag.cellOffset);
     if (!tryMove(piece, step)) {
       drag.blocked = step;

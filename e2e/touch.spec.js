@@ -161,6 +161,26 @@ test('a drag that outlives its piece leaves the next piece alone [INP-5]', async
   await touch.up();
 });
 
+test('a sideways drag that locks its piece partway leaves the next piece alone [INP-5]', async ({ page }) => {
+  // Test-only access to the page's private game, to use up the lock delay
+  // resets so that landing locks at once. No hook is shipped to players.
+  await page.route('**/script.js', async route => {
+    const response = await route.fetch();
+    await route.fulfill({ response, body: `${await response.text()}\nwindow.testGame = gameManager;` });
+  });
+  // A block under column 2: one step right lands the square, which locks.
+  await continueSavedGame(page, savedGame({ piece: PieceColors.yellow, position: { row: 10, column: 0 }, board: [[12, 2]] }));
+  const touch = await boardTouch(page);
+  await page.evaluate(() => { window.testGame.lockDelayResetCount = 15; });
+  await page.keyboard.press('KeyP');
+  await touch.down(1, 11);
+  await touch.moveBy(2.2, 0, 1); // two cells in a single move
+  await expect.poll(async () => (await cellsOf(page, PieceColors.yellow)).filter(([r]) => r >= 10)).toEqual([[10, 1], [10, 2], [11, 1], [11, 2]]);
+  // The next square is still where it appeared.
+  expect(minColumn((await cellsOf(page, PieceColors.yellow)).filter(([r]) => r < 10))).toBe(4);
+  await touch.up();
+});
+
 test('a piece pushed against a ledge slides in once it drops below it [INP-5]', async ({ page }) => {
   await playSaved(page, {
     piece: PieceColors.yellow,
