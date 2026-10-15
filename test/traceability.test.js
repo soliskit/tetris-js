@@ -4,7 +4,9 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,6 +55,39 @@ test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]'
   const script = fs.readFileSync(path.join(root, 'scripts/browser-coverage.js'), 'utf8');
   assert.match(script, /export const THRESHOLD = 100;/);
   assert.match(script, /\['lines', 'branches', 'functions'\]/);
+});
+
+// Runs the browser coverage check over the given coverage files, in a folder
+// of its own with a copy of the page script.
+function checkBrowserCoverage(entriesByFile) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-coverage-'));
+  try {
+    fs.mkdirSync(path.join(dir, 'public'));
+    fs.copyFileSync(path.join(root, 'public/script.js'), path.join(dir, 'public/script.js'));
+    fs.mkdirSync(path.join(dir, 'coverage/browser'), { recursive: true });
+    for (const [file, entries] of Object.entries(entriesByFile)) {
+      fs.writeFileSync(path.join(dir, 'coverage/browser', file), JSON.stringify(entries));
+    }
+    return spawnSync(process.execPath, [path.join(root, 'scripts/browser-coverage.js')], { cwd: dir, encoding: 'utf8' });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test('the browser coverage check fails when nothing was measured, rather than reading 100% [QA-3]', () => {
+  const url = 'http://localhost/script.js';
+  const unmeasured = { url, functions: [] };
+  for (const [name, entries] of [['no entries', []], ['an entry with no ranges', [unmeasured]]]) {
+    const result = checkBrowserCoverage({ 'run.json': entries });
+    assert.equal(result.status, 1, name);
+    assert.match(result.stderr, /No browser coverage of public\/script\.js was measured/, name);
+  }
+  // An entry that measured nothing cannot cover up one that measured gaps.
+  const size = fs.readFileSync(path.join(root, 'public/script.js'), 'utf8').length;
+  const nothingRan = { url, functions: [{ functionName: '', isBlockCoverage: true, ranges: [{ startOffset: 0, endOffset: size, count: 0 }] }] };
+  const result = checkBrowserCoverage({ 'a.json': [nothingRan], 'b.json': [unmeasured] });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Browser coverage of public\/script\.js is below 100%/);
 });
 
 test('the browser tests run in WebKit at iPhone size [QA-4]', () => {

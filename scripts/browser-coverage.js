@@ -23,13 +23,23 @@ if (files.length === 0) {
 
 const map = libCoverage.createCoverageMap({});
 const source = fs.readFileSync(sourceFile, 'utf8');
+// An entry with no function ranges measured nothing, yet would convert to a
+// fully covered file, so only entries with ranges count.
+let measured = 0;
 for (const file of files) {
   for (const entry of JSON.parse(fs.readFileSync(path.join(coverageDir, file), 'utf8'))) {
+    if (entry.functions.length === 0) continue;
+    measured += 1;
     const converter = v8ToIstanbul(sourceFile, 0, { source });
     await converter.load();
     converter.applyCoverage(entry.functions);
     map.merge(converter.toIstanbul());
   }
+}
+// With nothing measured the summary would read 100%.
+if (measured === 0) {
+  console.error('No browser coverage of public/script.js was measured. Run the browser tests in Chromium first: npm run test:e2e');
+  process.exit(1);
 }
 
 const context = libReport.createContext({ dir: path.join(root, 'coverage/browser-report'), coverageMap: map });
