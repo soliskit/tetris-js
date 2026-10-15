@@ -8,7 +8,7 @@ This receipt records title-case restyling of human-authored labels in current an
 
 ## Current publication identities
 
-Refresh after rebasing onto main at 3f5f106629ab58425f23e258e4b6707b29d8ef72: rows for files that main later deleted are removed, and the current hash and byte count are refreshed for the files that later merged changes edited. The edit count, test results and base commit stated here describe the earlier reviewed head, not this one.
+Refresh after rebasing onto main at 3f5f106629ab58425f23e258e4b6707b29d8ef72: rows for files that main later deleted are removed, and the current hash and byte count are refreshed for the files that later merged changes edited. The edit count, test results and base commit stated here describe the earlier reviewed head, not this one. The blueprint's current identity is not fingerprinted: the text changes with each amendment, and AUDIT.md records the governing amendment checksum (latest: D64).
 
 | Path | Sanitized Base SHA-256 | Base Bytes | Current Publication SHA-256 | Current Bytes |
 | --- | --- | ---: | --- | ---: |
@@ -16,7 +16,7 @@ Refresh after rebasing onto main at 3f5f106629ab58425f23e258e4b6707b29d8ef72: ro
 | `AUDIT.md` | `3d40a2dde6de25b032fb8c62a4d0ae839705effde6b6a2dc82291ea786e7a2d8` | 147733 | `3fc7428c262f82336f77595358e85d8b0048fc01abed37132ecfb74daebc7f91` | 178138 |
 | `REQUIREMENTS.md` | `fa2580d6bf0a67dd80d5e569da363776a029a79caef457604c7efe74ea72f7bc` | 15045 | `0bfddb0c36d11ae0b27105df8f6f55cb2f876d9e131f8fd1f204086402ab6889` | 15235 |
 | `docs/audit-blueprint.pdf` | `ae35c5c8f4b2ddcc2f12eeaa319eb6f55e9708f1a4aa0dd4157c4767f64789ca` | 355468 | `8a35b80036219ed6581882045e1e38567ec6c86d31091564c01f33b714ff64b1` | 144509 |
-| `docs/audit-blueprint.txt` | `833ba9827d1eb9cb522b524fa4de7c757a63e089c223b66b6aa7bd38db39e464` | 120534 | `299ad0329c1614f02e78b9b5315ee0ff579e6768193dc4b48fbd1856a4c6ca44` | 121053 |
+| `docs/audit-blueprint.txt` | `833ba9827d1eb9cb522b524fa4de7c757a63e089c223b66b6aa7bd38db39e464` | 120534 | Not fingerprinted here: the blueprint text changes with each amendment, and AUDIT.md records the governing amendment checksum (latest: D64) | - |
 | `docs/milestones/modern-gameplay.txt` | `acd16d13069d6a2944bf865a366374900a3fb2681cc72147e5fc197364c0d2da` | 43455 | `72ac4232a44c2b09d8d59f35a3e104b7a83ca17b43c778d9ca59aa194f058ff9` | 43455 |
 | `docs/phase-0-baseline.md` | `b895da3e0609f24e3ba4c3192ee6ff4a83af398c06b71c4d116c6d327355afab` | 31626 | `425982a0208fcad4e93e38f7733fa517fdd3123619dc8da594856ac114fbe732` | 31626 |
 | `docs/phase-1-normative-text-register.md` | `853d13d45d040c5514e6b36d2f5b8968e73060e30827190df0e64d31abe2bc33` | 4965 | `7c0e01d59758648c0cbf3613c16c2a3a86ddebefd5bad645478b72fce251c1f0` | 4965 |
