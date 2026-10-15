@@ -1,13 +1,23 @@
 # Documentation
 
-This folder is the project's public record: decisions, evidence, and plans.
+This folder is the project's public record: decisions, evidence, and plans for every piece of work.
 
 Three files give the whole project. The rest is drill-down.
 
-**What** - [the readme](../README.md) and the [audit executive summary](tetris-audit-executive-summary.md): the game itself, and what its audit establishes, with its limits. Start here.
+**What** - [the readme](../README.md) and the work table below: the game itself, and each piece of work with its status and outcome. Start here.
 
-**Why** - the [audit ledger](../AUDIT.md): every finding and verification decision, open or closed, with its evidence.
+**Why** - the [decision ledger](../DECISIONS.md): every finding and decision across all work, open or closed, with its evidence.
 
-**How** - the phase records and evidence in this folder. The [audit blueprint](audit-blueprint.txt) states the method and obligations; `phase-0` records the baseline, `phase-1` the decisions, `phase-2` the inventory, `phase-3` the claim-to-code mapping, and `phase-4` the bounded evidence (still open).
+**How** - one folder per piece of work, named for the work, holding its records and evidence.
 
-**Plans** - [milestones/](milestones/) holds approved future work, separate from the audit records.
+**Plans** - [milestones/](milestones/) holds approved future work, separate from the work records.
+
+**Sources** - [sources/](sources/) holds reference material the records cite.
+
+## Work
+
+Each piece of work gets its own folder and a row in this table. The order of work lives here, not in filenames.
+
+| Work | Window | Status | Outcome |
+| --- | --- | --- | --- |
+| [tetris-audit](tetris-audit/tetris-audit-executive-summary.md) | October 2026 - running | Phases 0-3 closed, phase 4 open, phases 5-10 ahead | Checks whether the game follows its rules under unexpected play, saved data and browser services; what it establishes, and its limits, are in its summary |
