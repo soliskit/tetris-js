@@ -2,9 +2,7 @@
 
 Proposed fixes, their review status, and the evidence still needed.
 
-These proposals aim to stop timers safely, prevent held controls from restarting after Resume, and show players when something fails. The game has not been changed by this work.
-
-Timer-stop, Resume suppression and player notices are unimplemented proposals. They are not approved fixes. The timer-stop pair is separate from the input and notice candidates; no package is implementation-ready merely because its patch applies or parses.
+These proposals aim to stop timers safely, prevent held controls from restarting after Resume, and show players when something fails. None of these candidates is implemented by PR171 or PR172, which are separate and narrower; their status is in [AUDIT F25](../AUDIT.md). The timer-stop pair is separate from the input and notice candidates; no package is implementation-ready merely because its patch applies or parses.
 
 ## Candidate groups
 
@@ -15,7 +13,7 @@ Timer-stop, Resume suppression and player notices are unimplemented proposals. T
 
 ## Exact retained candidate identities
 
-The following actual SHA-256 values identify the reviewed textual candidates, not the descriptive filename prefixes. Baseline production source is main; subsequent documentation commits leave its public tree unchanged.
+These SHA-256 values identify the retained candidate text, not the current production source.
 
 | Candidate | SHA-256 |
 |---|---|

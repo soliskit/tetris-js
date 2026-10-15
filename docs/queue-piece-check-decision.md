@@ -10,9 +10,11 @@ Interpret SAF-4's "three pieces queued" using the existing upcoming-piece semant
 
 Waiting pieces do not inherit the current falling piece's board-fit, live position, lowest-row history, lock-delay or timer conditions. No specific class, object layout, checker function or duplicated geometry is required. Representation must denote the adopted semantic piece; recognizable color alone does not certify an otherwise malformed representation without a reviewed reconstruction or representation mapping.
 
-## Source comparison
+## Pre-correction source comparison
 
-The current `public/game/gameManager.js` invariant monitor compares `nextTetrominos.length` with `UPCOMING_COUNT`. This distinguishes list size, not element validity. A dense three-entry list of nulls and a sparse list of length three cannot be rejected by that count predicate alone. These are source observations, not new executed findings or proof that ordinary play creates such states.
+The pre-correction `public/game/gameManager.js` invariant monitor compared `nextTetrominos.length` with `UPCOMING_COUNT`. This distinguishes list size, not element validity. A dense three-entry list of nulls and a sparse list of length three cannot be rejected by that count predicate alone. These are source observations, not new executed findings or proof that ordinary play creates such states.
+
+The later [piece-check implementation in PR171](https://github.com/soliskit/tetris-js/pull/171) is separate from this historical count-only comparison.
 
 The built-in factory and saved waiting-piece reconstruction are separate writer evidence. Their successful-path preservation under stated premises does not demonstrate runtime element checking or cover every writer, hostile alias or custom dependency.
 
