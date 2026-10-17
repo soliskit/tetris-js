@@ -65,7 +65,7 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 | Finding | Word | State | Scope and limit |
 |---|---|---|---|
 | F23 | Confirmed Defect | Recorded (D73) | Source argument, not run. Injected nonstorage serializer exception swallowed; Pause stays paused with no required SAF-3 stop or test signal. No ordinary or native cause claimed |
-| F26 | Confirmed Defect | Recorded (D72) | Conditional source argument. A forward clock jump can lose the game's saved copy. Not run; backward jumps and other loading schedules not covered |
+| F26 | Confirmed Defect | Recorded (D72) | Conditional source argument. A forward clock jump can lose the page's cached version. Not run; backward jumps and other loading schedules not covered |
 | F27 | Confirmed Defect | Recorded (D72) | "If another project uses either name". Source argument; the other-owner condition is not checked |
 | F36 | Confirmed Defect | Recorded (D72) | Conditional source argument with a long first download; native worker lifetime not measured |
 | F29 | Folded into F20 | Recorded (D72) | No independent good save exists; carried as a limit |
