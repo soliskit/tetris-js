@@ -31,7 +31,7 @@ Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 t
 | Row 4 | Confirmed Defect | Run; D70 | Chromium, simulated touch, not a phone |
 | Row 7 | Candidate (limit approved; Not Reproduced proposed) | Emulated changes fired no event; the handler works when given one directly | Section 3, limit 1 |
 | Row 26 | Candidate (limit approved; no word proposed) | One real-iPhone attempt, inconclusive (taps not visible); the auditor checked the viewport, touch-action, and zoom-gesture rules in the source | Section 3, limit 2 |
-| Row 68 | Reproduced (limit approved: device part untested) | Run October 16, Chrome 154, GPU crash | Section 3, limit 3 |
+| Row 68 | Reproduced (limit approved: device part untested) | Run October 16, Chrome 154 (as the outside audit reported), GPU crash | Section 3, limit 3 |
 
 ## 3. Limits
 
