@@ -3,8 +3,9 @@
 What the audit establishes, its limits, and the work still open.
 
 The audit checks whether the game follows its rules when play, saved data,
-or browser services behave unexpectedly. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). Its evidence
-supports specific results under stated conditions, not a claim that the
+or browser services behave unexpectedly. Phase 4 is closed, with five
+documented limits (D66 and D71 in DECISIONS.md). Its evidence supports
+specific results under stated conditions, not a claim that the
 whole game is correct.
 
 ## What the records support
@@ -23,7 +24,9 @@ A source argument does not become a physical-device measurement.
 ## What remains unfinished
 
 Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md).
-The audit did not reconcile every relevant state writer, entry route, failure combination, and important test expectation; D71 records those gaps as limits.
+The audit did not reconcile every relevant state writer, entry route,
+failure combination, and important test expectation; D71 records those
+gaps as limits.
 Saved-game evidence must show that retained content is a valid saved position, not merely unchanged bytes.
 
 Physical input, timing, display, and cached-file questions retain separate limits.
