@@ -26,7 +26,7 @@ Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 t
 | Item | Status | Basis | Limit |
 | --- | --- | --- | --- |
 | Q3 | Confirmed Defect (injected case) | Source argument against B13; D67 | Not run; a real browser timer returning undefined not shown |
-| S5 | Reproduced (rows 5, 10, 61) | Run October 16, Chrome 154, injected state; D68 | Cache clearing not shown |
+| S5 | Reproduced (rows 5, 10, 61) | Run October 16, Chrome 154 (as the outside audit reported), injected state; D68 | Cache clearing not shown |
 | L1 | Not Reproduced | Traces in section 4; D69 | See D69 |
 | Row 4 | Confirmed Defect | Run; D70 | Chromium, simulated touch, not a phone |
 | Row 7 | Candidate (limit approved; Not Reproduced proposed) | Emulated changes fired no event; the handler works when given one directly | Section 3, limit 1 |
@@ -37,7 +37,7 @@ Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 t
 
 1. **Row 7.** Emulated pixel densities fired no event; with a test standing in for the event, the handler rebuilt the canvas each time. Outside audits disagree: one saw the canvas follow the change in Chromium 141, and one saw no canvas change in Chromium 144. Needs a real window moved between two displays of different density.
 2. **Row 26.** Chromium cannot show this Safari behavior. Rules the auditor read in the source: `user-scalable=no`, `touch-action: none` on the board, zoom gestures blocked in `public/script.js`. A recording of the taps cannot show they came fast enough to count as the double tap that zooms. Needs a real-iPhone test where the taps are visible.
-3. **Row 68.** A GPU crash (the browser's graphics process stopping) in Chrome 154 cleared all five canvases; after the game resumed, the board came back only in the top-left quarter and the previews stayed empty. Two real-iPhone screen locks, of 1 and 5 minutes, left the board and piece intact; they do not show a surface loss. Untested: iPhone surface loss and restore, an app switch, a long time in the background, a page dropped from memory. The row stays Reproduced for the desktop run; the device part is the limit.
+3. **Row 68.** A GPU crash (the browser's graphics process stopping) in Chrome 154 (as the outside audit reported) cleared all five canvases; after the game resumed, the board came back only in the top-left quarter and the previews stayed empty. Two real-iPhone screen locks, of 1 and 5 minutes, left the board and piece intact; they do not show a surface loss. Untested: iPhone surface loss and restore, an app switch, a long time in the background, a page dropped from memory. The row stays Reproduced for the desktop run; the device part is the limit.
 4. **Offline install source.** Offline rows 8, 13, 19, 24, 70, 71, and 79 ran in Chromium on local servers. The auditor's installed-app test asks Chromium only whether the page qualifies as installable. It cannot show an installed icon, a fullscreen UI, or a physical installation (`docs/tetris-audit/phase-4-outer-browser-expectations.md` line 57). The auditor did not run a real install from the live host.
 5. **Timing beyond level 1.** For row 76, the auditor calculated the drop speed at levels 2, 3, 8, 11, and 23 from the formula. The calculation says nothing about when the browser fired each timer. Real timing above level 1 needs long physical play.
 
