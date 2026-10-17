@@ -23,7 +23,6 @@ A source argument does not become a physical-device measurement.
 
 ## What remains unfinished
 
-Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md).
 The audit did not reconcile every relevant state writer, entry route,
 failure combination, and important test expectation; D71 records those
 gaps as limits.
