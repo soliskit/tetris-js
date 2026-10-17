@@ -20,4 +20,4 @@ Each piece of work gets its own folder and a row in this table. The order of wor
 
 | Work | Window | Status | Outcome |
 | --- | --- | --- | --- |
-| [tetris-audit](tetris-audit/tetris-audit-executive-summary.md) | October 2026 - running | Phases 0-3 closed, phase 4 open, phases 5-10 ahead | Checks whether the game follows its rules under unexpected play, saved data and browser services; what it establishes, and its limits, are in its summary |
+| [tetris-audit](tetris-audit/tetris-audit-executive-summary.md) | October 2026 - running | Phases 0-4 closed, Phase 5 under way, Phases 6-10 ahead | Checks whether the game follows its rules under unexpected play, saved data and browser services; what it establishes, and its limits, are in its summary |
