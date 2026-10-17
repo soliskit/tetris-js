@@ -2,7 +2,7 @@
 
 Nothing here changes code, tests, requirements, CI (the automated checks that run on each change), or the public site. Source: the audited Tetris code at commit `06a43a9`. "The auditor" performed the checks, by run or by code reading.
 
-Terms. A plain number (row 7, row 26) is an item's position in the audit's findings list. A letter plus a number (F26, Q3, S5, P7, L1, N1) is a finding's name from the earlier audit records, so some findings have both. O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get). Source argument: a conclusion from reading the code, not from running it. Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, and Reverified (status words, blueprint section 5.1). Closed (historical note) is a word the owner set in D72 for an old note about an unfinished check; Folded into F20 is another owner-set disposition (F29).
+Terms. Node runs JavaScript outside a browser. Chromium is the open browser engine behind Chrome; a Chromium-only run is not a Safari or iPhone run. Outside audits are audits run outside this project. SAF-n, INP-n, and QA-n are entries in `REQUIREMENTS.md` (safety, input, and quality gates); R1 and B13 are the audit's valid-state decision and its runtime-resource rule; TE1 and TE2 are the two parts of finding F28. A plain number (row 7, row 26) is an item's position in the audit's findings list. A letter plus a number (F26, Q3, S5, P7, L1, N1) is a finding's name from the earlier audit records, so some findings have both. O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get). Source argument: a conclusion from reading the code, not from running it. Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, and Reverified (status words, blueprint section 5.1). Closed (historical note) is a word the owner set in D72 for an old note about an unfinished check; Folded into F20 is another owner-set disposition (F29).
 
 ## 1. Decision-log rows
 
@@ -10,7 +10,7 @@ Decisions D66 to D75 are recorded in [DECISIONS.md](../../DECISIONS.md). The sec
 
 ## 2. Status table for the October 17 items (labels from blueprint section 5.1)
 
-Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 the auditor proposes Not Reproduced, which would mean no attempt showed the problem, not that the code is right. For row 26 the one real-iPhone attempt cannot show the taps were fast enough, so no word is proposed. The owner approved the limits only.
+Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 the auditor proposes Not Reproduced, which would mean no attempt showed the problem, not that the code is right. For row 26 the one real-iPhone attempt cannot show the taps were fast enough, so no word is proposed. The owner approved each limit on October 17; section 3 records them in this wording.
 
 | Item | Status | Basis | Limit |
 | --- | --- | --- | --- |
@@ -49,7 +49,7 @@ The Phase 5 exit rule needs its own decision for any open item that stays a limi
 
 ## 3B. Status words for the open and split findings
 
-Recorded: the owner chose the status word (D72 to D75). Set from a source argument: the auditor reads the code at the finding's stated scope and reports one line per row (D72 rule). Set from a run: the word follows a read-only run, as D72 and D74 allow. Unchanged: the word was already final before this record. F32 is the confirmation-dialog focus item, split into parts a to e.
+Recorded: the owner chose the status word (D72 to D75). Set from a source argument: the auditor reads the code at the finding's stated scope and reports one line per row (D72 rule). Set from a run: the word follows a read-only run, as D72 and D74 allow. Unchanged: the word was already final before this record. F32 is the confirmation-dialog focus item, split into parts a to e. F25 and F32 b are listed for completeness; their words did not change.
 
 | Finding | Word | State | Scope and limit |
 |---|---|---|---|
@@ -68,16 +68,17 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 | F32 d | Rejected | Set from a source argument | A real click cannot reach Resume while the dialog is open; assistive events not covered |
 | F32 e | Closed (historical note) | Set from a source argument | An old note about an unfinished check |
 | F21 | Confirmed Defect (injected scope) | Set from a run (D74) | The safety check accepts a directly written board that is missing a row or cell; shown by a run in Node. Not shown reachable by ordinary play or by a save |
-| F22 | Not Reproduced | Set from a run (D74, D75) | At levels 1 to 2,000 the measured gravity delay matched the requested delay within 0.000000001 ms, run in Node. S10, the audit's setting, is kept (D75) |
+| F22 | Not Reproduced | Set from a run (D74, D75) | At levels 1 to 2,000 the measured gravity delay matched the requested delay within a billionth of a millisecond (0.000000001 ms), run in Node. S10, the audit's setting, is kept (D75) |
 | N1 | Rejected | Set from a run (D74, D75) | A fault after a confirmed New Game keeps the old save withdrawn and the saved text as it was, run in Node. S2, the audit's setting, is kept (D75) |
 | P7 | Rejected | Set from a run (D74, D75) | The game accepted a hand-edited save that granted one more hold than the rules allow, after loading and resuming, run in Node. S11, the audit's setting, is kept (D75) |
 
 ## 4. L1 evidence
 
 - Replacement random trace: `l1-trace-harness.mjs`. Each run stops at 3,738 locks, the original trace's count. Seed 20261017: 281 games, 1 line clear, 0 rule violations, 0 monitor faults. Seed 2024: 283 games, 0 clears, 0 rule violations, 0 monitor faults. Node 22, simulated clock, up to 2,000 steps per game.
-- Queue, bag and save restore after a clear: `l1-clear-after-harness.mjs`, 800 trials (seeds 1 to 200, clear sizes 1 to 4, a Hold first on even seeds), 0 failures. The harness injects the current piece as a vertical I into column 9. To replay with the harness: `node l1-clear-after-harness.mjs 200`.
+- Queue, bag and save restore after a clear: `l1-clear-after-harness.mjs`, 800 trials (seeds 1 to 200, clear sizes 1 to 4, a Hold first on even seeds), 0 failures. The harness injects the current piece as a vertical I into column 9.
 - Repository test cases that remain the line-clear evidence: `test/gameManager.test.js` lines 281 to 288 (1 to 4 rows), 291 to 316 (rows above, split rows), 318 to 326 (one level boundary), 408 to 418 (save after a clear), 988 to 998 (a clear that ends the game); `test/safety.test.js` lines 189 to 202 (monitor silent through a full game cycle, including a clear).
-- The harnesses and raw logs stay with the auditor, outside the repository; replaying a run needs a copy from the auditor.
+- The random traces rarely clear a line (1 and 0 clears), so the clear evidence is the 800-trial run and the repository cases above. Not covered: pieces other than a vertical I, repeated clears, clears across more than one level boundary, a real browser, and real storage.
+- These harnesses are not in the repository, so these runs cannot be replayed from it.
 
 ## 5. Requirement entry for the first-finger choice
 
@@ -89,7 +90,7 @@ Proposed row for `REQUIREMENTS.md`, added in the same commit as the fix (rule 1 
 | --- | --- |
 | INP-7 | Touch, second finger: While one finger is dragging, a second finger touching the screen does not take over the drag; its movement and release do nothing to the game. A second finger also means the gesture no longer counts as a tap, so lifting the first finger does not rotate the piece. |
 
-The traceability check fails the build when a requirement ID has no test. Until that row is added, D70 records the choice. Class when added: Intentional Change (a requirement that changes behavior the code has today; the code lets the second finger take over, row 4).
+The traceability test fails the build when a requirement ID has no test. Until that row is added, D70 records the choice. Class when added: Intentional Change (a requirement that changes behavior the code has today; the code lets the second finger take over, row 4).
 
 ## 6. Before Phase 5 exits
 
