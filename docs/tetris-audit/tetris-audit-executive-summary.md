@@ -23,7 +23,7 @@ A source argument does not become a physical-device measurement.
 ## What remains unfinished
 
 Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md).
-The audit still needs to reconcile every relevant state writer, entry route, failure combination, and important test expectation.
+The audit did not reconcile every relevant state writer, entry route, failure combination, and important test expectation; D71 records those gaps as limits.
 Saved-game evidence must show that retained content is a valid saved position, not merely unchanged bytes.
 
 Physical input, timing, display, and cached-file questions retain separate limits.
