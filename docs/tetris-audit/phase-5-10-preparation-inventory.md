@@ -2,7 +2,7 @@
 
 What Phases 5 to 10 need before they can finish.
 
-This register lists what each later phase needs in order to close and what each phase waits on. It is preparation only. Phases 5 to 10 wait on Phase 4 and their written exit checks. The owner authorized automatic progression through Phase 10 when those checks pass. Separate approvals for reserved actions still apply; nothing here starts, certifies or approves them.
+This register lists what each later phase needs in order to close and what each phase waits on. It is preparation only. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). Phases 5 to 10 wait on their written exit checks. The owner authorized automatic progression through Phase 10 when those checks pass. Separate approvals for reserved actions still apply; nothing here starts, certifies or approves them.
 
 Candidate inventory for independent review. No execution, finding promotion or demotion, correction, permanent-test change, property certification, phase promotion or Phase 4 exit. Central matrix and DECISIONS.md rows are left to the coordinator.
 
@@ -17,7 +17,7 @@ Source identity is main. Checked current bytes at that commit:
 | `docs/phase-4-domain-work-ledger.md` | 7b7bdecfc88fc46360292b7b6d9df5c391b8da085be4ce9157550dcadea8385c |
 | `docs/timer-correction-review-status.md` | 55803d41baf9c381b7161d0e733c77ce8837502d5f62ed799f739bfe97b041e5 |
 
-Also read: `docs/phase-4-work-in-progress.md`, `package.json`, `stryker.config.json`, `playwright.config.js`, the opening of `REQUIREMENTS.md`, and the workflows `.github/workflows/pages.yml`, `mutation.yml` and `mutation-pr.yml`. This is not a full docs inventory.
+Also read: `docs/tetris-audit/phase-4-work-in-progress.md`, `package.json`, `stryker.config.json`, `playwright.config.js`, the opening of `REQUIREMENTS.md`, and the workflows `.github/workflows/pages.yml`, `mutation.yml` and `mutation-pr.yml`. This is not a full docs inventory.
 
 ## Governing rules that apply to every later phase
 
@@ -30,7 +30,7 @@ Also read: `docs/phase-4-work-in-progress.md`, `package.json`, `stryker.config.j
 
 | Item | Current record |
 |---|---|
-| Phase 4 | Closed, with five documented limits (D66 and D71 in DECISIONS.md). The domain work ledger lists eight work families (state-space attacks, every writer, every route, outer layers, protection attacks, independent expectations, original candidate sequence, cache and platform), closed from existing records. |
+| Phase 4 | Closed (D66, D71). The domain work ledger lists eight work families (state-space attacks, every writer, every route, outer layers, protection attacks, independent expectations, original candidate sequence, cache and platform), closed from existing records. |
 | Phase 3 | DECISIONS.md "Later formal Phase 3 gate" records the completed D50 publication gate. The dated followthrough receipt page is deleted and its receipt is accepted as lost. The scoped appropriate mapping and advancement record is operative with its stated limitations. Four approved phone relations (both quick taps reaching the game, double-tap recovery, zoomed-reload recovery, exact cached phone-file identity) remain Not Established. Publication does not make any property Proven. The earlier limited-advancement decision remains as history. |
 | Finding states | The finding states in the blueprint's carried record (F18 Rejected, F19 Fixed historically, F20 to F24, Q1 to Q3, L1, N1, P7, S5 Candidate) are historical, not the current backlog. Later scoped dispositions in DECISIONS.md govern. Of the six reviewed Confirmed Defect rows, five (paused held soft-drop callback checkpoint, New Game withdrawal before a later factory fault, input disconnect cancellation refusal, failed-download deletion of a foreign cache binding, retained lock callback after registration throw) were recorded only in the deleted status page and are accepted as lost; the sixth (Continue eligibility-read failure causing withdrawal) is now recorded in DECISIONS.md. Examples read: the injected zero-cell piece and controller A selected-Cancel dispositions, and scoped records on F23 serializer failure, F24 eligibility read, new-save reset count, paused count15 Resume, stored high-score read, failed-withdrawal Continue availability and lowest-row history. F21 and Q2 are Reproduced at injected boundaries only. Each is scoped, none implies broad parent closure, and every original parent finding still needs its own reconciliation. |
 
@@ -134,7 +134,7 @@ Exit: each removal states its replacement protection and the owner has approved 
 
 ## Cross-phase dependency order
 
-1. Phase 4 domain families and candidate reproduction (closed; D66 and D71 in DECISIONS.md).
+1. Phase 4 domain families and candidate reproduction (closed).
 2. Phase 5 statuses, after Phase 4 results and any approved limits.
 3. Phase 6 corrections, one per confirmed defect, each with owner approval.
 4. Phase 7 implementation, only for approved changes.
@@ -150,8 +150,8 @@ Each limitation not covered by proof; each correction and its regression test; e
 
 ## What remains
 
-This register does not decide any finding status, count requirements per status, or schedule work, and it gives no finish estimate. Claim-status counts and the completeness of the Appendix E trust ledger are unreviewed. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md); no property newly certified.
+This register does not decide any finding status, count requirements per status, or schedule work, and it gives no finish estimate. Claim-status counts and the completeness of the Appendix E trust ledger are unreviewed. Phase 4 is closed (D66, D71); no property newly certified.
 
 ## Phase advancement authorization
 
-This corrects the earlier claim that every phase exit needs a new owner approval. Automatic progression through Phase 10 was authorized separately and remains conditional on verified, recorded written exit checks. It is not approval to skip a phase, certify an unproved claim or perform a reserved action. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). This wording change does not edit the blueprint, requirements, code, tests, models, CI or settings.
+This corrects the earlier claim that every phase exit needs a new owner approval. Automatic progression through Phase 10 was authorized separately and remains conditional on verified, recorded written exit checks. It is not approval to skip a phase, certify an unproved claim or perform a reserved action. This wording change does not edit the blueprint, requirements, code, tests, models, CI or settings.
