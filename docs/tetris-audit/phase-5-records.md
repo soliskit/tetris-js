@@ -4,7 +4,16 @@ The evidence behind decisions D66 to D75.
 
 Nothing here changes code, tests, requirements, CI (the automated checks that run on each change), or the public site. Source: the audited Tetris code at commit `06a43a9`. "The auditor" performed the checks, by run or by code reading.
 
-Terms. Node runs JavaScript outside a browser. Chromium is the open browser engine behind Chrome; a Chromium-only run is not a Safari or iPhone run. Outside audits are reviews of the game run by people or tools outside this project. SAF-n, INP-n, and QA-n are entries in `REQUIREMENTS.md` (safety, input, and quality gates); R1 and B13 are the audit's valid-state decision and its runtime-resource rule; TE1 and TE2 are the two parts of finding F28. A plain number (row 7, row 26) is an item's position in the audit's findings list. A letter plus a number (F26, Q3, S5, P7, L1, N1) is a finding's name from the earlier audit records, so some findings have both. O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get). Source argument: a conclusion from reading the code, not from running it. Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, and Reverified (status words, blueprint section 5.1). Closed (historical note) is a word the owner set in D72 for an old note about an unfinished check; Folded into F20 is another owner-set disposition (F29).
+Terms:
+
+- Node runs JavaScript outside a browser. Chromium is the open browser engine behind Chrome; a Chromium-only run is not a Safari or iPhone run.
+- Outside audits are reviews of the game run by people or tools outside this project.
+- SAF-n, INP-n, and QA-n are entries in `REQUIREMENTS.md` (safety, input, and quality gates). R1 and B13 are the audit's valid-state decision and its runtime-resource rule. TE1 and TE2 are the two parts of finding F28.
+- A plain number (row 7, row 26) is an item's position in the audit's findings list. A letter plus a number (F26, Q3, S5, P7, L1, N1) is a finding's name from the earlier audit records, so some findings have both.
+- O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get).
+- Source argument: a conclusion from reading the code, not from running it.
+- Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, and Reverified (status words, blueprint section 5.1).
+- Closed (historical note) is a word the owner set in D72 for an old note about an unfinished check; Folded into F20 is another owner-set disposition (F29).
 
 ## 1. Decision-log rows
 
@@ -28,7 +37,7 @@ Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 t
 
 1. **Row 7.** Emulated pixel densities fired no event; with a test standing in for the event, the handler rebuilt the canvas each time. Outside audits disagree: one saw the canvas follow the change in Chromium 141, and one saw no canvas change in Chromium 144. Needs a real window moved between two displays of different density.
 2. **Row 26.** Chromium cannot show this Safari behavior. Rules the auditor read in the source: `user-scalable=no`, `touch-action: none` on the board, zoom gestures blocked in `public/script.js`. A recording of the taps cannot show they came fast enough to count as the double tap that zooms. Needs a real-iPhone test where the taps are visible.
-3. **Row 68.** A GPU crash in Chrome 154 cleared all five canvases; after the game resumed, the board came back only in the top-left quarter and the previews stayed empty. Two real-iPhone screen locks, of 1 and 5 minutes, left the board and piece intact; they do not show a surface loss. Untested: iPhone surface loss and restore, an app switch, a long time in the background, a page dropped from memory. The row stays Reproduced for the desktop run; the device part is the limit.
+3. **Row 68.** A GPU crash (the browser's graphics process stopping) in Chrome 154 cleared all five canvases; after the game resumed, the board came back only in the top-left quarter and the previews stayed empty. Two real-iPhone screen locks, of 1 and 5 minutes, left the board and piece intact; they do not show a surface loss. Untested: iPhone surface loss and restore, an app switch, a long time in the background, a page dropped from memory. The row stays Reproduced for the desktop run; the device part is the limit.
 4. **Offline install source.** Offline rows 8, 13, 19, 24, 70, 71, and 79 ran in Chromium on local servers. The auditor's installed-app test asks Chromium only whether the page qualifies as installable. It cannot show an installed icon, a fullscreen UI, or a physical installation (`docs/tetris-audit/phase-4-outer-browser-expectations.md` line 57). The auditor did not run a real install from the live host.
 5. **Timing beyond level 1.** For row 76, the auditor calculated the drop speed at levels 2, 3, 8, 11, and 23 from the formula. The calculation says nothing about when the browser fired each timer. Real timing above level 1 needs long physical play.
 
@@ -84,7 +93,7 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 
 ## 5. Requirement entry for the first-finger choice
 
-The owner's choice, recorded in D70 (the tap clause restates the owner's October 8 tap rule): once a finger starts a drag, it keeps control of the piece for the whole gesture; a second finger means the gesture no longer counts as a tap, and does nothing else to gameplay (its movement and release are ignored).
+The owner's choice, recorded in D70, is: "First finger keeps control of the piece. The second finger does nothing to gameplay." The proposed INP-7 below adds one clause that the choice does not state: a second finger also means the gesture no longer counts as a tap. The owner has not yet decided whether INP-7 should carry that clause.
 
 Proposed row for `REQUIREMENTS.md`, added in the same commit as the fix (rule 1 of its "Rules for changes"), not before:
 
