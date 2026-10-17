@@ -2,7 +2,7 @@
 
 What the selected browser assertions observe beyond the game engine.
 
-The browser tests have useful expected answers for offline launches, touch input, drawing and the screen wake lock. Some answers are independent literals or geometry. Others read a limited part of the result through a fake browser feature or a helper that shares the game's assumptions. A passing test can support its stated observation without proving the whole requirement. Phase 4 remains open.
+The browser tests have useful expected answers for offline launches, touch input, drawing and the screen wake lock. Some answers are independent literals or geometry. Others read a limited part of the result through a fake browser feature or a helper that shares the game's assumptions. A passing test can support its stated observation without proving the whole requirement. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md).
 
 This source review adds the app, safety and touch families to the selected browser-expectation review. It does not run a test, confirm a new defect, certify a property or change code. The important-test selection is still incomplete; the unit and generated families need separate reconciliation.
 
