@@ -4,7 +4,7 @@ A handle comparison is not a resource-history check.
 
 The engine checks whether a timer handle is null. The adopted rule instead asks whether a future firing actually exists. Under the declared injected cases below, an undefined handle with no scheduled firing passes a playing-state check that should detect missing gravity or lock delay. These are source comparisons, not new timer executions or claims that the browser normally returns undefined.
 
-Phase 4 remains open. Independent finding review and publication gates are still pending. No correction, test, model, CI or requirement change is included.
+Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). No correction, test, model, CI or requirement change is included.
 
 ## Independent resource meaning
 
