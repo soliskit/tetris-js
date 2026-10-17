@@ -2,6 +2,8 @@
 
 Selected completed checks, unsuccessful attempts, and unresolved work.
 
+Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). The status line below is the original text.
+
 Status: incomplete, bounded evidence awaiting final finding and property dispositions. No production fix, permanent test, CI change or complete certification is recorded here.
 
 This is a selected work summary, not a complete candidate inventory or completion claim.

@@ -4,7 +4,7 @@ Source comparisons for declared malformed queues at safety boundaries.
 
 The safety check counts the next pieces but does not check what is in those slots. A three-slot queue containing no real pieces can pass. This conflicts with the adopted requirement to check three valid upcoming pieces at each required safety boundary. The comparison below is a source argument for an explicitly injected malformed queue, not a new game run or evidence that ordinary play creates it.
 
-Phase 4 stays open. This draft confirms no finding until independent review and publication gates pass. It changes no code, tests, model, requirements or CI.
+Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). This draft confirms no finding until independent review and publication gates pass. It changes no code, tests, model, requirements or CI.
 
 ## Independent meaning and admitted input
 

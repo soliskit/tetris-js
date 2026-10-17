@@ -2,7 +2,7 @@
 
 Selected random-play, save, geometry, and fault-test families.
 
-Bounded independently reviewed source packet for publication; no whole-claim certification. Source main. Phase 4 remains open. This is source and literal-data comparison, not a new game execution, reproduction, defect confirmation, certification or complete test-universe review.
+Bounded independently reviewed source packet for publication; no whole-claim certification. Source main. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). This is source and literal-data comparison, not a new game execution, reproduction, defect confirmation, certification or complete test-universe review.
 
 ## What this adds
 

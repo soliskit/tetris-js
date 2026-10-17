@@ -34,6 +34,6 @@ Phase 3 requires claim-appropriate methods and mappings, not successful implemen
 
 The Audit Advancement Gate permits an explicit approved Not Established disposition. This record uses that route only for the four relations above. It does not silently narrow other requirements. If review finds another genuinely incomplete Phase 3 mapping, that relation must be stated and resolved rather than hidden by this approval.
 
-Phase 4 remains incomplete. Every declared domain still needs exhaustion, a claim certified Proven or a documented, justified and approved limit. Phase 5 still needs separate finding and property statuses. Production corrections, permanent tests, CI changes, final certification and test removal retain their later gates.
+Later note: Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). Original text follows. Phase 4 remains incomplete. Every declared domain still needs exhaustion, a claim certified Proven or a documented, justified and approved limit. Phase 5 still needs separate finding and property statuses. Production corrections, permanent tests, CI changes, final certification and test removal retain their later gates.
 
 No production, public-site, test, executable-model, CI or requirement file is changed by this record.

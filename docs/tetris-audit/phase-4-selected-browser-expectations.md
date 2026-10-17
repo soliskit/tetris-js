@@ -2,7 +2,7 @@
 
 Selected scores, pictures, controls, and layout assertions, with their limits.
 
-The selected browser tests check useful things a player can see: scores, buttons, saved-board pictures and some layout. They do not, on their own, prove that a saved game is valid or that every game state and failure is handled correctly. This review separates the tests' independent expected answers from the parts built with the same game code they test. Phase 4 remains open. No test or game code was changed or executed for this review.
+The selected browser tests check useful things a player can see: scores, buttons, saved-board pictures and some layout. They do not, on their own, prove that a saved game is valid or that every game state and failure is handled correctly. This review separates the tests' independent expected answers from the parts built with the same game code they test. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). No test or game code was changed or executed for this review.
 
 ## Selected claims and expected answers
 
