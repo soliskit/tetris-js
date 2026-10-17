@@ -2,7 +2,7 @@
 
 The eight work families of the closed phase, kept as the record.
 
-Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). Updated for later detector decisions. A counterexample can stop its exact target, not the whole phase. No source-navigation count, case count or completed publication closes a family.
+Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). This ledger is updated for later detector decisions. A counterexample can stop its exact target, not the whole phase. No source-navigation count, case count or completed publication closes a family.
 
 | Family | Work and remaining gates |
 |---|---|
