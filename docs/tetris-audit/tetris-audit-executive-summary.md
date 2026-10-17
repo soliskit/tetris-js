@@ -3,7 +3,7 @@
 What the audit establishes, its limits, and the work still open.
 
 The audit checks whether the game follows its rules when play, saved data,
-or browser services behave unexpectedly. Phase 4 remains open. Its evidence
+or browser services behave unexpectedly. Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md). Its evidence
 supports specific results under stated conditions, not a claim that the
 whole game is correct.
 
@@ -22,7 +22,7 @@ A source argument does not become a physical-device measurement.
 
 ## What remains unfinished
 
-Phase 4 remains open.
+Phase 4 is closed, with five documented limits (D66 and D71 in DECISIONS.md).
 The audit still needs to reconcile every relevant state writer, entry route, failure combination, and important test expectation.
 Saved-game evidence must show that retained content is a valid saved position, not merely unchanged bytes.
 
