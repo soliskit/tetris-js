@@ -17,7 +17,7 @@ Source identity is main. Checked current bytes at that commit:
 | `docs/phase-4-domain-work-ledger.md` | 7b7bdecfc88fc46360292b7b6d9df5c391b8da085be4ce9157550dcadea8385c |
 | `docs/timer-correction-review-status.md` | 55803d41baf9c381b7161d0e733c77ce8837502d5f62ed799f739bfe97b041e5 |
 
-Also read: `docs/phase-4-work-in-progress.md`, `package.json`, `stryker.config.json`, `playwright.config.js`, the opening of `REQUIREMENTS.md`, and the workflows `.github/workflows/pages.yml`, `mutation.yml` and `mutation-pr.yml`. This is not a full docs inventory.
+Also read: `package.json`, `stryker.config.json`, `playwright.config.js`, the opening of `REQUIREMENTS.md`, and the workflows `.github/workflows/pages.yml`, `mutation.yml` and `mutation-pr.yml`. This is not a full docs inventory.
 
 ## Governing rules that apply to every later phase
 
