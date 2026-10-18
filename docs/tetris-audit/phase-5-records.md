@@ -49,12 +49,12 @@ The auditor read the Phase 4 ledger and its supporting records at commit `06a43a
 |---|---|---|---|
 | 1 | State-space attacks | Current-piece and queue checkers; Q1 and Q2 source-argument dispositions (queue-checkpoint-detector-disposition.md, zero-cell-current-piece-detector-disposition.md) | The full valid and invalid partition was not reconciled; the PR #106 publication receipt is not independently reconciled (PR #171 is not a substitute) |
 | 2 | Every writer | 35-row writer and route index (2-phase-4-writer-route-index.json); storage-write ledger (phase-4-persistence-effect-premises.md) | The index states not all writers and routes were reconciled; no independent known-good prior save (F29) |
-| 3 | Every route | New Game failure and paused soft-drop records (phase-4-work-in-progress.md) | Per-route reconciliation was not done |
+| 3 | Every route | New Game failure and paused soft-drop records (preserved outcomes in phase-4-domain-work-ledger.md) | Per-route reconciliation was not done |
 | 4 | Outer layers | phase-4-outer-browser-expectations.md; drawing console decision (drawing-console-report-policy.md); S5 Reproduced for rows 5, 10, and 61 (D68) | Native and physical-device gaps, except the five approved limits (D66) |
 | 5 | Protection attacks | Result of the score-check variant test against a scratch copy (an altered copy used only for the test); the result is named in the Phase 4 ledger, and the archive file is not in the repository | How completely the mutation tests catch seeded faults (QA-6) was not assessed; the named result covers one historical variant |
 | 6 | Independent expectations | phase-4-unit-expectations.md; phase-4-selected-independent-expectations.md; phase-4-selected-browser-expectations.md; 25-row geometry literal comparison | The complete selection of important tests, and the raw receipts, are missing |
 | 7 | Original candidate sequence | Records for F20, F23, F24, F33 to F35, and F37; Q3, S5, and L1 with the status words the owner set on October 17 (D67 to D69) | The ledger has no disposition for F22, N1, and P7 (section 3B records them and F21); the 3,738-lock trace has no seed or raw log (replaced by the L1 runs, D69) |
-| 8 | Cache and platform | Cache deletion and reopened identity record (phase-4-work-in-progress.md); offline rows run in Chromium | Native install and physical timing, except the five approved limits (D66) |
+| 8 | Cache and platform | Cache deletion and reopened identity record (preserved outcomes in phase-4-domain-work-ledger.md); offline rows run in Chromium | Native install and physical timing, except the five approved limits (D66) |
 
 The Phase 5 exit rule needs its own decision for any open item that stays a limit (section 6).
 
