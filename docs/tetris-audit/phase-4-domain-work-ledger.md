@@ -19,7 +19,7 @@ The per-writer, per-route and per-candidate inventory still needs reconciliation
 
 ## Preserved outcomes from the removed Phase 4 evidence summary
 
-`phase-4-work-in-progress.md` was removed on October 17 under D76. It was a selected summary from before Phase 4 closed; its bytes remain in git history. These are its outcomes, as they stood then. Each is a bounded check with its limit. D66 and D71 record how Phase 4 closed.
+`phase-4-work-in-progress.md` was removed on October 17 under D76. It was a selected summary from before Phase 4 closed; its bytes remain in git history. These are selected outcomes from it, as they stood then; the rest of its detail (for example the ledge and deadline restart checks and the later source-review counts) stays in git history and in the records the other ledger sections cite. Each is a bounded check with its limit. D66 and D71 record how Phase 4 closed.
 
 - Legal deterministic clears: a public-action trace reached single and multiple clears and saves. Not every 3 or 4 line clear, level, timing or history variant. New saves omit the history fields, so they are not certified good saves.
 - Input alias and resume suppression: a held soft-drop sequence paused and resumed while the key stayed held, and a later neutral gamepad poll registered a new soft-drop interval before the key was released. Hardware and other event schedules were not covered.
