@@ -21,7 +21,7 @@ Decisions D66 to D75 are recorded in [DECISIONS.md](../../DECISIONS.md). The sec
 
 ## 2. Status table for the October 17 items (labels from blueprint section 5.1)
 
-Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 the auditor proposes Not Reproduced, which would mean no attempt showed the problem, not that the code is right. For row 26 the one real-iPhone attempt cannot show the taps were fast enough, so no word is proposed. The owner approved each limit on October 17; section 3 records them in this wording.
+Row 7 is Not Reproduced: no attempt showed the problem, which does not mean the code is right. Row 26 is a Candidate until the owner decides a final status. For row 26 the one real-iPhone attempt cannot show the taps were fast enough, so no word is proposed. The owner approved each limit on October 17; section 3 records them in this wording.
 
 | Item | Status | Basis | Limit |
 | --- | --- | --- | --- |
@@ -29,7 +29,7 @@ Rows 7 and 26 are Candidates until the owner decides a final status. For row 7 t
 | S5 | Reproduced (rows 5, 10, 61) | Run October 16, Chrome 154 (as the outside audit reported), injected state; D68 | Cache clearing not shown |
 | L1 | Not Reproduced | Traces in section 4; D69 | See D69 |
 | Row 4 | Confirmed Defect | Run; D70 | Chromium, simulated touch, not a phone |
-| Row 7 | Candidate (limit approved; Not Reproduced proposed) | Emulated changes fired no event; the handler works when given one directly | Section 3, limit 1 |
+| Row 7 | Not Reproduced (limit approved) | Emulated changes fired no event; the handler works when given one directly | Section 3, limit 1 |
 | Row 26 | Candidate (limit approved; no word proposed) | One real-iPhone attempt, inconclusive (taps not visible); the auditor checked the viewport, touch-action, and zoom-gesture rules in the source | Section 3, limit 2 |
 | Row 68 | Reproduced (limit approved: device part untested) | Run October 16, Chrome 154 (as the outside audit reported), GPU crash | Section 3, limit 3 |
 
