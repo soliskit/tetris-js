@@ -31,4 +31,3 @@ No mutant went uncovered or errored. Of the 1,325 mutants, the first run (`gameM
 - This is one run on Node 22, not Node 26; it does not show the same result on Node 26.
 - The raw Stryker reports (HTML and JSON) are not in the repo because of their size. This table is the record.
 - This is a separate run, not a re-run or copy of the Oct 16 run, which was never recorded in the repo.
-- The full-suite counts already in the repo are in `DECISIONS.md`, under Baselines (Oct 3 and Oct 4).
