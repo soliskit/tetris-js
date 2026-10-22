@@ -12,8 +12,8 @@ Terms:
 - A plain number (row 7, row 26) is an item's position in the audit's findings list. A letter plus a number (F26, Q3, S5, P7, L1, N1) is a finding's name from the earlier audit records, so some findings have both.
 - O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get).
 - Source argument: a conclusion from reading the code, not from running it.
-- Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, and Reverified (status words, blueprint section 5.1).
-- Closed (historical note) is a word the owner set in D72 for an old note about an unfinished check; Folded into F20 is another owner-set disposition (F29).
+- Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, Reverified, Folded into F20, and Closed (historical note) (status words, blueprint section 5.1; the last two were added in D77).
+- Closed (historical note) (F32e) and Folded into F20 (F29) are finding states in blueprint section 5.1, added in D77. The assistant wrote both names from the owner's D72 decisions.
 
 ## 1. Decision-log rows
 
@@ -107,5 +107,5 @@ The traceability test fails the build when a requirement ID has no test. Until t
 
 - Match each original finding (F18 to F24, Q1, Q2, N1, P7) against the later decisions that narrowed it.
 - Give each of the 55 in-scope requirements a certification status from the Phase 5 column of the scope table, and give O1 to O8 their statuses from blueprint section 5.2.
-- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). An approved limit does not change that; treating a limit as a final status needs an exit-rule amendment the owner has yet to approve. The same holds for the owner-set words Closed (historical note) and Folded into F20, which the blueprint does not list.
+- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). An approved limit does not change that; treating a limit as a final status needs an exit-rule amendment the owner has yet to approve. Closed (historical note) and Folded into F20 are listed in blueprint section 5.1 (D77), so they are final states.
 - Every Requirement Clarification found in that reconciliation needs the owner's yes.
