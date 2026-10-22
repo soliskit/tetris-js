@@ -60,7 +60,7 @@ The Phase 5 exit rule needs its own decision for any open item that stays a limi
 
 ## 3B. Status words for the open and split findings
 
-Recorded: the owner chose the status word (D72 to D75). Set from a source argument: the auditor reads the code at the finding's stated scope and reports one line per row (D72 rule). Set from a run: the word follows a read-only run, as D72 and D74 allow. Unchanged: the word was already final before this record. F32 is the confirmation-dialog focus item, split into parts a to e. F25 and F32 b are listed for completeness; their words did not change.
+Recorded: the status word follows the owner's decisions (D72 to D75). Set from a source argument: the auditor reads the code at the finding's stated scope and reports one line per row (D72 rule). Set from a run: the word follows a read-only run, as D72 and D74 allow. Unchanged: the word was already final before this record. F32 is the confirmation-dialog focus item, split into parts a to e. F25 and F32 b are listed for completeness; their words did not change.
 
 | Finding | Word | State | Scope and limit |
 |---|---|---|---|
@@ -93,7 +93,7 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 
 ## 5. Requirement entry for the first-finger choice
 
-The owner's choice, recorded in D70, is: "First finger keeps control of the piece. The second finger does nothing to gameplay." The proposed INP-7 below adds one clause that the choice does not state: a second finger also means the gesture no longer counts as a tap. The owner decided that INP-7 carries that clause.
+The owner chose on October 14 that the first finger keeps control of the piece and the second finger does nothing to gameplay (D70). The proposed INP-7 below adds one clause that the choice does not state: a second finger also means the gesture no longer counts as a tap. The owner decided that INP-7 carries that clause.
 
 Proposed row for `REQUIREMENTS.md`, added in the same commit as the fix (rule 1 of its "Rules for changes"), not before:
 
