@@ -93,7 +93,7 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 
 ## 5. Requirement entry for the first-finger choice
 
-The owner chose on October 14 that the first finger keeps control of the piece and the second finger does nothing to gameplay (D70). The proposed INP-7 below adds one clause that the choice does not state: a second finger also means the gesture no longer counts as a tap. The owner decided that INP-7 carries that clause.
+The owner chose on October 14 that the first finger keeps control of the piece and the second finger does nothing to gameplay (D70). The proposed INP-7 below adds one clause that the choice does not state: a second finger also means the gesture no longer counts as a tap. That clause still needs the owner's yes before the row is added; D70 stays as decided.
 
 Proposed row for `REQUIREMENTS.md`, added in the same commit as the fix (rule 1 of its "Rules for changes"), not before:
 
