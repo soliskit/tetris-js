@@ -30,7 +30,7 @@ Row 7 is Not Reproduced: no attempt showed the problem, which does not mean the 
 | L1 | Not Reproduced | Traces in section 4; D69 | See D69 |
 | Row 4 | Confirmed Defect | Run; D70 | Chromium, simulated touch, not a phone |
 | Row 7 | Not Reproduced (limit approved) | Emulated changes fired no event; the handler works when given one directly | Section 3, limit 1 |
-| Row 26 | Candidate (limit approved; no word proposed) | One real-iPhone attempt, inconclusive (taps not visible); the auditor checked the viewport, touch-action, and zoom-gesture rules in the source | Section 3, limit 2 |
+| Row 26 | Candidate, under its approved limit (D78) | One real-iPhone attempt, inconclusive (taps not visible); the auditor checked the viewport, touch-action, and zoom-gesture rules in the source | Section 3, limit 2 |
 | Row 68 | Reproduced (limit approved: device part untested) | Run October 16, Chrome 154 (as the outside audit reported), GPU crash | Section 3, limit 3 |
 
 ## 3. Limits
@@ -56,7 +56,7 @@ The auditor read the Phase 4 ledger and its supporting records at commit `06a43a
 | 7 | Original candidate sequence | Records for F20, F23, F24, F33 to F35, and F37; Q3, S5, and L1 with the status words the owner set on October 17 (D67 to D69) | The ledger has no disposition for F22, N1, and P7 (section 3B records them and F21); the 3,738-lock trace has no seed or raw log (replaced by the L1 runs, D69) |
 | 8 | Cache and platform | Cache deletion and reopened identity record (preserved outcomes in phase-4-domain-work-ledger.md); offline rows run in Chromium | Native install and physical timing, except the five approved limits (D66) |
 
-The Phase 5 exit rule needs its own decision for any open item that stays a limit (section 6).
+The Phase 5 exit rule needs its own decision for any open item that stays a limit (section 6). D78 makes that decision for item 26 only.
 
 ## 3B. Status words for the open and split findings
 
@@ -107,5 +107,5 @@ The traceability test fails the build when a requirement ID has no test. Until t
 
 - Match each original finding (F18 to F24, Q1, Q2, N1, P7) against the later decisions that narrowed it.
 - Give each of the 55 in-scope requirements a certification status from the Phase 5 column of the scope table, and give O1 to O8 their statuses from blueprint section 5.2.
-- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). An approved limit does not change that; treating a limit as a final status needs an exit-rule amendment the owner has yet to approve. Closed (historical note) and Folded into F20 are listed in blueprint section 5.1 (D77), so they are final states.
+- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). The one exception is item 26 (row 26 in this file), which D78 lets stay Candidate under its approved limit; any other limit would need its own exit-rule amendment. Closed (historical note) and Folded into F20 are listed in blueprint section 5.1 (D77), so they are final states.
 - Every Requirement Clarification found in that reconciliation needs the owner's yes.
