@@ -267,7 +267,7 @@ Later note: Phase 4 is closed, with five documented limits (D66 and D71).
 
 ## Upcoming queue: element-validity detector extent
 
-`docs/queue-piece-check-decision.md` records the selected interpretation of SAF-4's "three pieces queued": at each required safety checkpoint, exactly three valid semantic upcoming pieces under R1 B3/B7, not count alone. This resolves B7's deferred detector extent without editing REQUIREMENTS.md, changing the waiting-piece domain or imposing active-piece fit/history/timer conditions. Source count-only comparison remains separate from malformed-state reachability, ordinary-writer preservation and executed evidence. No Q1/all-state R1/Phase 4 closure or production/test/model/CI/public-site correction approval. Publication becomes operative only after independent content review, exact-head checks, authorized documentation merge and postmerge verification.
+`docs/tetris-audit/queue-piece-check-decision.md` records the selected interpretation of SAF-4's "three pieces queued": at each required safety checkpoint, exactly three valid semantic upcoming pieces under R1 B3/B7, not count alone. This resolves B7's deferred detector extent without editing REQUIREMENTS.md, changing the waiting-piece domain or imposing active-piece fit/history/timer conditions. Source count-only comparison remains separate from malformed-state reachability, ordinary-writer preservation and executed evidence. No Q1/all-state R1/Phase 4 closure or production/test/model/CI/public-site correction approval. Publication becomes operative only after independent content review, exact-head checks, authorized documentation merge and postmerge verification.
 
 ## Phase 4 register migration and correction preparation
 
