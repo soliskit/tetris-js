@@ -107,5 +107,5 @@ The traceability test fails the build when a requirement ID has no test. Until t
 
 - Match each original finding (F18 to F24, Q1, Q2, N1, P7) against the later decisions that narrowed it.
 - Give each of the 55 in-scope requirements a certification status from the Phase 5 column of the scope table, and give O1 to O8 their statuses from blueprint section 5.2.
-- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). An approved limit does not change that. The one exception is item 26 (row 26 in this file), which D78 lets stay Candidate under its approved limit; any other limit would need its own exit-rule amendment. Closed (historical note) and Folded into F20 are listed in blueprint section 5.1 (D77), so they are final states.
+- Phase 5 cannot exit while any finding is Candidate (blueprint, exit criteria for Phases 2 to 10). The one exception is item 26 (row 26 in this file), which D78 lets stay Candidate under its approved limit; any other limit would need its own exit-rule amendment. Closed (historical note) and Folded into F20 are listed in blueprint section 5.1 (D77), so they are final states.
 - Every Requirement Clarification found in that reconciliation needs the owner's yes.
