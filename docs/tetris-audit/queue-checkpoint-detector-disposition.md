@@ -46,7 +46,7 @@ Not Established here: ordinary malformed creation, all Q1 partitions, queue beha
 - `public/game/gameManager.js:93-126,182-195,230-242,397-432`: SHA256 `31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea`.
 - `public/game/tetrominoFactory.js:91-110`: SHA256 `25e1da6c0b1992b0317aef7025fb7030803a8fd20e649a45eb2ddeaa166ae8b4`.
 - `public/game/session.js:123-126,163-169`: SHA256 `54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b`.
-- Criteria: `docs/queue-piece-check-decision.md`; R1 B3/B7; blueprint section 4.8 Q1. Source identities do not authenticate historical execution.
+- Criteria: `docs/tetris-audit/queue-piece-check-decision.md`; R1 B3/B7; blueprint section 4.8 Q1. Source identities do not authenticate historical execution.
 
 ## Later partitions: object, numbers and one detector group
 
