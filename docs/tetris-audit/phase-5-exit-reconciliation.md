@@ -9,7 +9,7 @@ The Phase 5 exit list (section 6) names F18 to F24, Q1, Q2, N1 and P7. Each is m
 | Finding | Word | Match |
 | --- | --- | --- |
 | F18 | Rejected | Repeating the same fault after a safe stop is harmless: the record is bounded and New Game or Continue replaces the broken state (PR #40). No later narrowing. |
-| F19 | Settled (fixed historically) | DECISIONS records the row Settled; fixed in PR #42. Reverification under this audit is pending; no current verification is claimed. |
+| F19 | Settled (fixed historically) | DECISIONS records the row Settled; fixed in PR #42. Reverification under this audit was pending when this record was written; it completed October 23, 2026 at the scope the blueprint appendix records. |
 | F20 | Confirmed Defect (source argument) | Both halves recorded: the reset-count loss and the lowest-row loss ("New-save reset-count preservation disposition" and "Lowest-row history: ordinary rotation information loss" in DECISIONS.md). F29 is Folded into F20 (D77). The defect stands; no fix is approved. |
 | F21 | Confirmed Defect (injected scope) | Set from a run (D74). The migrated d74-f21-f22-p7 test watches it as a todo test. |
 | F22 | Not Reproduced | Set from a run (D74, D75). The audit's setting S10 is kept. |
