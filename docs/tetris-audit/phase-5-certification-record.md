@@ -29,7 +29,7 @@ Reading notes: words in quotes are the batches' own words. The batches use the s
 | PLY-7 | Partially Established (Inf) | 2 |
 | PLY-8 | Engine half Partially Established, display half Not Established (Inf) | 2 |
 | SCO-1 | Partially Established (Inf) | 2 |
-| SCO-2 | Proven by Reviewed Argument within the safe-integer range (Inf: argument and assumptions are stated, but Phase 5 acceptance of the argument is not shown) | 2 |
+| SCO-2 | Proven by Reviewed Argument within the safe-integer range (Inf: argument and assumptions stated in the P3-C record, as blueprint 5.2 requires) | 2 |
 | SCO-3 | Partially Established (Inf) | 2 |
 | STA-1 | Partially (Inf) | 3 |
 | STA-2 | Not Established for the resume-at-count-15 half (a confirmed defect, F34); Partially for the rest (Inf) | 3 |
@@ -127,5 +127,5 @@ INP-7 (first-finger choice) is not yet a requirement row in REQUIREMENTS.md; D70
 
 - It adopts sets A and B only, as recorded above, under the owner approvals of October 22, 2026. Any further status change (an upgrade from new evidence, an Out of Scope choice, any fix) needs its own approval.
 - It is not the Phase 9 final certification gate; it is the Phase 5 per-row status collection that gate will build on.
-- It does not close Phase 5; closure waits for the remaining exit checks. One stays open here: SCO-2's reviewed argument and its assumptions are stated, but Phase 5 acceptance is not shown, so SCO-2's word carries that limit rather than an acceptance.
+- It does not close Phase 5; closure waits for the remaining exit checks. SCO-2's word stays an auditor-inference word: blueprint 5.2 expressly requires that a Proven by Reviewed Argument claim state its argument and assumptions, and the P3-C record states them; the blueprint names no separate Phase 5 acceptance step for this word. The word's limit is the stated assumption range: scores above MAX_SAFE_INTEGER are rejected (GM:418, SS:160), the page does not show the level, and the level reaches the player only through gravity speed (PLY-2).
 - It does not decide INP-7, any fix, any limit approval, or any device-evidence plan; it only lists where each is needed.
