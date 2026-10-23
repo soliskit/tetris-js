@@ -13,6 +13,9 @@ Terms:
 - O1 to O8 are the eight properties the owner adopted for the whole game, such as valid transitions and validated saved state (blueprint section 5.2 lists the status words each one can get).
 - Source argument: a conclusion from reading the code, not from running it.
 - Candidate is a finding with no final status yet. Confirmed Defect means found and scoped, with no fix approved. The audit blueprint (the audit's governing plan) also allows Reproduced, Not Reproduced, Rejected, Requirement Clarification, Fixed, Reverified, Folded into F20, and Closed (historical note) (status words, blueprint section 5.1).
+
+- Tested Within Stated Bounds: the claim, as the row bounds it, is fully covered by a test or run over a finite set of cases the row names, and nothing outside that set is claimed. Partially Established: the requirement itself is only partly shown, and the row names the part it does not show.
+
 - Closed (historical note) (F32e) and Folded into F20 (F29) are the finding states added in D77. The assistant wrote both names from the owner's D72 decisions.
 
 ## 1. Decision-log rows
