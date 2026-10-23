@@ -39,9 +39,11 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
   // Real touch down through the DevTools Protocol, no move event, then a
   // synthetic pointerup 60 px away: the TE2 sequence from the finding.
   const cdp = await page.context().newCDPSession(page);
+  // Trial-D variant: reuse the pointer id the browser assigns to the real touch-down.
+  await page.evaluate(() => document.getElementById('tetris').addEventListener('pointerdown', (e) => { window.__downId = e.pointerId; }, { once: true }));
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: cx, y: cy, id: 1 }] });
   await page.evaluate(({ x, y }) => {
-    document.getElementById('tetris').dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, pointerType: 'touch', clientX: x + 60, clientY: y, bubbles: true }));
+    document.getElementById('tetris').dispatchEvent(new PointerEvent('pointerup', { pointerId: window.__downId, pointerType: 'touch', clientX: x + 60, clientY: y, bubbles: true }));
   }, { x: cx, y: cy });
 
   await page.waitForTimeout(300);
