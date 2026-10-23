@@ -40,4 +40,4 @@ This reconciliation produces none. Every ambiguity it touched was already settle
 - This record is the finding match the exit list asks for.
 - The 55 in-scope requirements and O1 to O8 keep the certification statuses their cleared batches recorded; no final certification is claimed.
 - Item 26 stays Candidate under its approved exception (D78).
-- Phase 5 closure itself is the owner's gate and is not claimed here.
+- Phase 5 closure is not claimed here; the phase closes under the Audit Advancement Gate once its numbered exit checks are recorded as passed, with owner approval only where a check includes it (a Requirement Clarification, or an approved Not Established or Out of Scope disposition).
