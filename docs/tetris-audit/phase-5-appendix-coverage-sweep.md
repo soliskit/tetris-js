@@ -16,7 +16,7 @@ Of the 18 appendix entries: 3 agree with the current records, 12 are Candidate e
 | --- | --- | --- |
 | F17 | "Status: Rejected" | DECISIONS.md register: Rejected |
 | F18 | "Status: Rejected" | DECISIONS.md register: Rejected |
-| F19 | "Finding status: Fixed, historically (DECISIONS.md F19, PR #42). Reverification under this audit is pending; no current verification is claimed here." | This appendix entry is itself the current governing record; the register's Settled is historical |
+| F19 | "Finding status: Fixed, historically (DECISIONS.md F19, PR #42). Reverification under this audit completed October 23, 2026 at its stated scope: two Node tests break the invariant check and the guard still catches and reports the fault (test/safety.test.js:213 and :224); browser corroboration covers a generic engine failure with separately injected console and draw refusals (e2e/engine-fault-notice.spec.js), not the Node throw routes; scripted fault injection, not an organic failure; browser viewports, not a physical device. Deployment and current behavior stay pending Phase 0 and Phase 8 evidence (below)." | This appendix entry is itself the current governing record; the register's Settled is historical |
 
 ### Superseded by later records (12)
 
