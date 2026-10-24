@@ -81,6 +81,8 @@ export class InputController {
     this.padDirection = null;
     /** Whether the stick or directional pad is held down. */
     this.padDown = false;
+    /** Whether a pad down held while paused has been spent. */
+    this.padDownSpent = false;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
     window.addEventListener('keyup', event => this.handleKey(event, false));
@@ -123,8 +125,10 @@ export class InputController {
     // as held: macOS sends no keyup for a key let go while Cmd is down, so
     // it would stay held forever.
     if (pressed && modifierHeld) return;
-    if (pressed) this.heldKeys.add(key);
-    else this.heldKeys.delete(key);
+    // Held keys matter only during play: a key pressed while paused must
+    // not count as held when play resumes.
+    if (pressed && this.gameManager.state !== GameState.paused) this.heldKeys.add(key);
+    else if (!pressed) this.heldKeys.delete(key);
 
     // While the pause screen asks to confirm New Game, keys belong to its
     // dialog and press its buttons, except a held key repeating: the Enter
@@ -162,6 +166,7 @@ export class InputController {
       this.updateSoftDrop();
     } else if (pressed && (key === 'KeyP' || key === 'Escape')) {
       this.gameManager.togglePause();
+      if (this.gameManager.state === GameState.paused) this.releaseForPause();
     } else if (pressed) {
       this.gameManager.handleAction(KEY_ACTIONS[key]);
     }
@@ -216,6 +221,7 @@ export class InputController {
         this.gameManager.handleAction(PlayerAction.newGame);
       } else {
         this.gameManager.togglePause();
+        if (this.gameManager.state === GameState.paused) this.releaseForPause();
       }
     } else if (newPresses.has('view')) {
       this.gameManager.handleAction(PlayerAction.newGame);
@@ -226,7 +232,12 @@ export class InputController {
       for (const action of actions) this.gameManager.handleAction(action);
     }
 
-    this.padDown = yAxis < -0.5 || pressed.has('down');
+    // A pad down held while paused is spent: it soft drops nothing until
+    // it is let go and pushed again during play.
+    const padDown = yAxis < -0.5 || pressed.has('down');
+    if (padDown && this.gameManager.state === GameState.paused) this.padDownSpent = true;
+    else if (!padDown) this.padDownSpent = false;
+    this.padDown = padDown && !this.padDownSpent;
     this.updateSoftDrop();
 
     // Polling runs every frame, so only react to stick and pad changes;
@@ -255,6 +266,7 @@ export class InputController {
 
   /** @param {PlayerActionValue} action */
   startMoving(action) {
+    if (this.gameManager.state === GameState.paused) return;
     if (this.movement === action) return;
     this.movement = action;
     clearTimeout(this.movementTimer);
@@ -302,12 +314,26 @@ export class InputController {
     this.softDropTimer = undefined;
   }
 
+  // Pausing releases everything held: both repeat timers stop and the held
+  // keys are forgotten, so a key still held when play resumes does nothing
+  // until it is let go and pressed again. Buttons and the stick keep
+  // tracking what is physically held, so a held Menu cannot resume the game
+  // on the next poll, a held stick direction does not move after resume
+  // (the poll acts only on changes), and a pad down held into the pause
+  // stays spent until let go.
+  releaseForPause() {
+    this.stopMoving();
+    this.stopSoftDrop();
+    this.heldKeys.clear();
+  }
+
   releaseAllInput() {
     this.stopMoving();
     this.stopSoftDrop();
     this.heldButtons = new Set();
     this.padDirection = null;
     this.padDown = false;
+    this.padDownSpent = false;
     this.heldKeys.clear();
   }
 }
