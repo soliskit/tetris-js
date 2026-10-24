@@ -349,6 +349,26 @@ test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => 
   assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
 });
 
+test('a withdrawal write that storage refuses counts for the rest of the session [STA-4] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: fixedFactory(yellow) });
+  game.togglePause(); // pausing saves the game
+  assert.equal(game.isSessionSaved, true);
+  game.togglePause();
+  const setItem = storage.setItem;
+  storage.setItem = () => { throw new Error('storage refuses writes'); };
+  game.togglePause(); // the save fails, and so does the withdrawal write
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'the stale stored flag is still there');
+  assert.equal(game.isSessionSaved, false, 'the failed withdrawal still holds');
+  assert.equal(game.isSessionSaved, false, 'and holds on every later check');
+  const reloaded = new GameManager({ scheduler: createFakeScheduler(), storage, factory: fixedFactory(yellow) });
+  assert.equal(reloaded.isSessionSaved, true, 'after a reload the stored flag governs again');
+  storage.setItem = setItem; // storage recovers
+  game.togglePause();
+  game.togglePause(); // pausing saves again
+  assert.equal(game.isSessionSaved, true, 'a save that lands governs again');
+});
+
 test('the game stores everything under names of its own [APP-6]', () => {
   const storage = createMemoryStorage();
   const written = new Set();
