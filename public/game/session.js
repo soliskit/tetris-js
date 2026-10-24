@@ -20,6 +20,8 @@ import { allPieces } from './tetrominoFactory.js';
  * @property {Tetromino | null} heldTetromino
  * @property {boolean} canHoldTetromino
  * @property {Tetromino[]} bag The pieces left in the shuffled bag, dealt next.
+ * @property {number} [lockDelayResetCount] Lock-delay resets used; absent in pre-fix saves.
+ * @property {number} [lowestRowReached] Deepest anchor row the piece has reached; absent in pre-fix saves.
  */
 
 /**
@@ -34,6 +36,8 @@ export function serializeSession(game) {
     nextTetrominos: game.nextTetrominos,
     heldTetromino: game.heldTetromino,
     canHoldTetromino: game.canHoldTetromino,
+    lockDelayResetCount: game.lockDelayResetCount,
+    lowestRowReached: game.lowestRowReached,
     // By color: the type is all a piece in the bag needs.
     bag: (game.factory.bag ?? []).map(piece => piece.color)
   });
@@ -140,10 +144,10 @@ function parseBag(colors) {
 // missing or anything in it is invalid.
 /**
  * @param {string | null} text
- * @param {{ rows: number, columns: number }} size
+ * @param {{ rows: number, columns: number, maxLockDelayResets?: number }} size
  * @returns {Session | null}
  */
-export function parseSession(text, { rows, columns }) {
+export function parseSession(text, { rows, columns, maxLockDelayResets }) {
   /** @type {unknown} */
   let data = null;
   try {
@@ -178,6 +182,30 @@ export function parseSession(text, { rows, columns }) {
   const bag = parseBag(data.bag);
   if (!bag) return null;
 
+  // Lock-delay state (F20): optional members. Absent means a pre-fix save,
+  // which loads with the same fresh defaults as before. Present but invalid
+  // rejects the whole save, like any other invalid field.
+  /** @type {number | undefined} */
+  let lockDelayResetCount;
+  if (Object.hasOwn(data, 'lockDelayResetCount')) {
+    const count = data.lockDelayResetCount;
+    // Callers pass the game's reset cap; without it there is no upper bound
+    // to check against.
+    if (!isInteger(count) || count < 0 || (
+        // Stryker disable next-line ConditionalExpression: without a cap, count > undefined is always false, so replacing this guard with true is unobservable. This also hides the guard-to-false mutant, which the over-cap test kills; the registered rewrite removes the exclusion. Flagged for a rewrite (rewrite: register follow-up F38).
+        maxLockDelayResets !== undefined
+        && count > maxLockDelayResets)) return null;
+    lockDelayResetCount = count;
+  }
+  /** @type {number | undefined} */
+  let lowestRowReached;
+  if (Object.hasOwn(data, 'lowestRowReached')) {
+    const row = data.lowestRowReached;
+    // A remembered low shallower than the piece's current row is impossible.
+    if (!isInteger(row) || row < currentTetromino.position.row || row >= rows) return null;
+    lowestRowReached = row;
+  }
+
   return {
     gameBoard,
     score,
@@ -185,6 +213,8 @@ export function parseSession(text, { rows, columns }) {
     nextTetrominos,
     heldTetromino,
     canHoldTetromino: data.canHoldTetromino,
-    bag
+    bag,
+    ...(lockDelayResetCount !== undefined ? { lockDelayResetCount } : {}),
+    ...(lowestRowReached !== undefined ? { lowestRowReached } : {})
   };
 }
