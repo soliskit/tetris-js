@@ -1408,6 +1408,7 @@ Reverification must retain the regression test proving that an invariant-check f
 F20
 
 Status: Candidate pending independent reproduction
+Superseded October 24, 2026: reproduced and recorded as register row F20 (DECISIONS.md), status Pending work; Confirmed Defect (source argument) per phase-5-finding-crosswalk.md and phase-5-exit-reconciliation.md, section 1.
 
 Candidate concern: persistence side effects, where preservation is required, may occur before the transition has reached the required post-transition validation boundary. The implementation ordering is an observation to reproduce; whether it is a defect is not yet concluded.
 
@@ -1445,6 +1446,7 @@ R2 determines the forgetting semantics for New Game (STA-1) and game over (STA-3
 F21
 
 Status: Candidate pending R1 and independent reproduction
+Superseded October 24, 2026: Confirmed Defect (injected scope), set from a run (D74), recorded in phase-5-records.md, section 3B, and phase-5-exit-reconciliation.md, section 1; the migrated test test/audit/d74-f21-f22-p7.test.js watches it as a todo test. Not a register row.
 
 The board invariant uses `Array.prototype.every()`, allowing sparse arrays to satisfy predicates that inspect only existing elements.
 
@@ -1464,6 +1466,7 @@ The classification depends on the exact R1 valid-state definition and whether th
 F22
 
 Status: Candidate pending R3 and independent reproduction
+Superseded October 24, 2026: Not Reproduced, set from a run (D74, D75), recorded in phase-5-records.md, section 3B, and phase-5-exit-reconciliation.md, section 1; the audit's setting S10 is kept. Not a register row.
 
 Gravity interval arithmetic can produce floating-point values slightly below nominal mathematical milliseconds, such as approximately 499.99999999999994 ms.
 
@@ -1478,6 +1481,7 @@ R3 determines the accepted timing tolerance.
 F23
 
 Status: Candidate pending independent reproduction
+Superseded October 24, 2026: Confirmed Defect at the measured game-manager scope, recorded in D80 (the current F23 decision; D73 stands as the earlier record) and in phase-5-records.md, section 3B, per phase-5-finding-crosswalk.md and phase-5-exit-reconciliation.md, section 1. Not a register row.
 
 `saveGameSession` catches serialization failures in a way that may allow an engine failure during persistence to be swallowed rather than entering SAF-3.
 
@@ -1488,6 +1492,7 @@ This is evaluated together with O4 but remains a separate finding until reproduc
 F24
 
 Status: Candidate pending R4 and independent reproduction
+Superseded October 24, 2026: dispositioned as register row F24 (DECISIONS.md), status Pending work; Confirmed Defect (source argument plus qualified historical reproduction) per phase-5-finding-crosswalk.md and phase-5-exit-reconciliation.md, section 1, with the constraints a later minimal fix must keep recorded there.
 
 A storage-read failure during Continue can clear the saved-game availability flag even though the underlying stored value remains.
 
@@ -1498,6 +1503,7 @@ R4 determines whether that loss of discoverability violates the storage-failure 
 Q1
 
 Status: Candidate pending R1
+Superseded October 24, 2026: Reverified (injected scope), recorded in phase-5-exit-reconciliation.md, section 1, with evidence in its section 2. Not a register row.
 
 The queue predicate may check only `length === 3`, allowing malformed values with length three.
 
@@ -1518,6 +1524,7 @@ R1 determines whether the invariant must reject these representations.
 Q2
 
 Status: Candidate pending R1
+Superseded October 24, 2026: Reverified (injected scope), recorded in phase-5-exit-reconciliation.md, section 1, with evidence in its section 2. Not a register row.
 
 A malformed current-piece object with no cells may satisfy a vacuous fit predicate.
 
@@ -1528,6 +1535,7 @@ R1 determines whether current-piece validity includes canonical piece structure 
 Q3
 
 Status: Candidate pending R1
+Superseded October 24, 2026: Confirmed Defect (injected case), recorded in D67 (phase-5-records.md, section 2), per phase-5-finding-crosswalk.md. Not a register row.
 
 Timer predicates using `!== null` may treat undefined as an existing timer.
 
@@ -1543,6 +1551,7 @@ R1 and SAF-4 determine the exact required timer-state predicate.
 L1
 
 Status: Candidate. Evidence Gap: open.
+Superseded October 24, 2026: Not Reproduced, recorded in D69 (phase-5-records.md, section 2), per phase-5-finding-crosswalk.md. Not a register row.
 
 A prior random-play probe produced 3,738 locks with zero line clears.
 
@@ -1555,6 +1564,7 @@ The audit requires a deterministic trace plus the recorded bounded random trace 
 N1
 
 Status: Candidate, potentially folded into F20
+Superseded October 24, 2026: Rejected, set from a run (D74, D75), recorded in phase-5-records.md, section 3B, and phase-5-exit-reconciliation.md, section 1; the audit's setting S2 is kept and the migrated test test/audit/d74-N1.test.js runs as an ordinary must-pass test. The status line's fold speculation is moot: N1 was rejected outright. Not a register row.
 
 A fault during New Game could occur after the saved-game flag is set to false, so that the previous save is no longer offered. At the repository commit checked (30e0085), the stored save text is not deleted by this effect (`isSessionSaved = false` at `gameManager.js:194`; the only `removeItem` is in the in-memory fallback storage). The previous stored representation therefore remains but is no longer offered, as in F24.
 
@@ -1567,6 +1577,7 @@ N1 stays a separate record cross-referenced to F20. R2 can make N1 a non-defect 
 P7
 
 Status: Candidate pending R5
+Superseded October 24, 2026: Rejected, set from a run (D74, D75), recorded in phase-5-records.md, section 3B, and phase-5-exit-reconciliation.md, section 1; the audit's setting S11 is kept. Not a register row.
 
 A hand-edited valid save with `canHoldTetromino = true` may allow another hold after reopening/Continue.
 
@@ -1593,6 +1604,7 @@ The shipped safe-integer check is loosened only as REQUIREMENTS.md rule 2 allows
 S5
 
 Status: Candidate pending reproduction
+Superseded October 24, 2026: Reproduced (rows 5, 10, 61), recorded in D68 (phase-5-records.md, section 2), per phase-5-finding-crosswalk.md. Not a register row.
 
 A page redraw callback can throw after a checked engine step.
 
