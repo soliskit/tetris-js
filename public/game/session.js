@@ -191,7 +191,10 @@ export function parseSession(text, { rows, columns, maxLockDelayResets }) {
     const count = data.lockDelayResetCount;
     // Callers pass the game's reset cap; without it there is no upper bound
     // to check against.
-    if (!isInteger(count) || count < 0 || (maxLockDelayResets !== undefined && count > maxLockDelayResets)) return null;
+    if (!isInteger(count) || count < 0 || (
+        // Stryker disable next-line ConditionalExpression: without a cap, count > undefined is always false, so replacing this guard with true is unobservable. This also hides the guard-to-false mutant, which the over-cap test kills; the registered rewrite removes the exclusion. Flagged for a rewrite (rewrite: todo-01M5QV6MEH229TKHAVBB1R6YX4).
+        maxLockDelayResets !== undefined
+        && count > maxLockDelayResets)) return null;
     lockDelayResetCount = count;
   }
   /** @type {number | undefined} */
