@@ -13,10 +13,16 @@ function setup(t) {
   const frames = [];
   const pads = [];
   globalThis.window = { addEventListener: (type, listener) => (listeners[type] ??= []).push(listener) };
+  const documentListeners = {};
+  globalThis.document = {
+    hidden: false,
+    addEventListener: (type, listener) => (documentListeners[type] ??= []).push(listener)
+  };
   globalThis.requestAnimationFrame = callback => frames.push(callback);
   Object.defineProperty(globalThis, 'navigator', { value: { getGamepads: () => pads }, configurable: true, writable: true });
   t.after(() => {
     delete globalThis.window;
+    delete globalThis.document;
     delete globalThis.requestAnimationFrame;
   });
 
@@ -48,7 +54,11 @@ function setup(t) {
   const tick = ms => {
     for (let left = ms; left > 0; left -= 10) t.mock.timers.tick(Math.min(10, left));
   };
-  return { manager, controller, fire, key, tap, tick, pads, frames };
+  const hidePage = () => {
+    globalThis.document.hidden = true;
+    (documentListeners.visibilitychange ?? []).forEach(listener => listener());
+  };
+  return { manager, controller, fire, key, tap, tick, pads, frames, hidePage };
 }
 
 function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
@@ -834,3 +844,21 @@ test('a stick push or move key pressed while paused starts no movement, then a f
   controller.pollGamepads();
   assert.deepEqual(manager.actions, [PlayerAction.moveRight], 'and a freshly pushed stick moves at once');
 });
+test('hiding the page releases held input even when the window does not blur [STA-2] [STA-5]', t => {
+  const { manager, controller, pads, key, tick, hidePage } = setup(t);
+  key('KeyS');
+  tick(150);
+  assert.ok(count(manager, 'softDrop') > 1, 'the held key soft drops while playing');
+  manager.state = GameState.paused; // the page's visibility handler pauses
+  hidePage(); // without a window blur, as on some platforms
+  manager.state = GameState.playing; // back visible, game resumed
+  manager.actions = [];
+  pads[0] = gamepad();
+  controller.pollGamepads(); // the ordinary poll runs after resume
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'the key held across the hide does not soft drop again');
+  key('KeyS', false);
+  key('KeyS');
+  assert.deepEqual(manager.actions, ['softDrop'], 'a fresh press soft drops again');
+});
+
