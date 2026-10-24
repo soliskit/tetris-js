@@ -89,6 +89,11 @@ export class InputController {
     window.addEventListener('blur', () => this.releaseAllInput());
     window.addEventListener('gamepaddisconnected', () => this.releaseAllInput());
     window.addEventListener('gamepadconnected', () => this.startPolling());
+    // The page pauses when hidden, so release held input then too: hiding
+    // does not blur the window on every platform.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.releaseForPause();
+    });
     /** Whether a poll is scheduled for the next animation frame. */
     this.polling = false;
     // Browsers usually report a gamepad only once a button is pressed, but
