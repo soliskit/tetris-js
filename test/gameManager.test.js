@@ -628,15 +628,24 @@ test('pausing during the lock delay cancels it and counts as a reset, and resumi
   assert.equal(filledCells(game), 4);
 });
 
-test('resuming a resting piece whose resets are used up locks it at once [STA-2] [PLY-6]', () => {
-  const { game } = newGame({ factory: fixedFactory(yellow) });
-  landOnSurface(game);
-  game.lockDelayResetCount = 15;
-  game.togglePause();
-  game.togglePause();
-  assert.equal(filledCells(game), 4);
-  assert.equal(game.state, GameState.playing);
-  assert.notEqual(game.gameLoopTask, null, 'the next piece falls');
+test('a pause never uses up the last reset: at 14 of 15, or with the resets used up, resume starts the lock delay again [STA-2] [PLY-6]', () => {
+  for (const before of [14, 15]) {
+    const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+    landOnSurface(game);
+    game.lockDelayResetCount = before;
+    game.togglePause();
+    assert.equal(game.lockDelayResetCount, 14, `pause at ${before} clamps one below the cap`);
+    assert.equal(game.lockDelayTask, null, 'the pause still cancels the delay');
+    game.togglePause();
+    assert.equal(filledCells(game), 0, `resume at ${before} does not lock at once`);
+    assert.notEqual(game.lockDelayTask, null, 'resume starts the lock delay again');
+    assert.equal(game.state, GameState.playing);
+    scheduler.advance(499);
+    assert.equal(filledCells(game), 0);
+    scheduler.advance(1);
+    assert.equal(filledCells(game), 4, 'the piece locks when the delay runs out');
+    assert.notEqual(game.gameLoopTask, null, 'the next piece falls');
+  }
 });
 
 test('resuming into a lock that ends the game leaves no timers running [STA-2] [STA-3] [SAF-4]', () => {
