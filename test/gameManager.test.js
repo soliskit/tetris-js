@@ -491,6 +491,59 @@ test('reaching a new lowest row resets the lock delay move count [PLY-6]', () =>
   assert.equal(game.lockDelayResetCount, 0);
 });
 
+test('a continued game keeps the lock-delay count and lowest row [PLY-6] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ factory: fixedFactory(yellow), storage });
+  landOnSurface(game);
+  game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.moveRight);
+  assert.equal(game.lockDelayResetCount, 2, 'two moves while resting');
+  const restRow = game.currentTetromino.position.row;
+  game.togglePause();
+  assert.equal(game.lockDelayResetCount, 3, 'the pause itself counts as one reset');
+  const continued = new GameManager({ scheduler: createFakeScheduler(), storage });
+  assert.equal(continued.isSessionSaved, true);
+  continued.handleAction(PlayerAction.continueGame);
+  assert.equal(continued.state, GameState.paused);
+  assert.equal(continued.lockDelayResetCount, 3);
+  assert.equal(continued.lowestRowReached, restRow);
+});
+
+test('a continued pre-fix save starts with fresh lock-delay state [PLY-6] [STA-6]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ factory: fixedFactory(yellow), storage });
+  landOnSurface(game);
+  game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.moveRight);
+  assert.ok(game.lockDelayResetCount > 0, 'moves while resting burn resets');
+  game.togglePause();
+  // Simulate a save from before the lock-delay state was recorded.
+  const saved = JSON.parse(storage.getItem('tetris.savedGameSession'));
+  delete saved.lockDelayResetCount;
+  delete saved.lowestRowReached;
+  storage.setItem('tetris.savedGameSession', JSON.stringify(saved));
+  const continued = new GameManager({ scheduler: createFakeScheduler(), storage });
+  continued.handleAction(PlayerAction.continueGame);
+  assert.equal(continued.lockDelayResetCount, 0, 'a pre-fix save has no resets to restore');
+  assert.equal(continued.lowestRowReached, continued.currentTetromino.position.row, 'the remembered low starts at the piece');
+});
+
+test('a continued save restores a remembered low below the piece [PLY-6] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ factory: fixedFactory(yellow), storage });
+  game.softDrop();
+  game.softDrop();
+  game.togglePause();
+  // A wall-kick can leave the remembered low below the anchor (F20).
+  const saved = JSON.parse(storage.getItem('tetris.savedGameSession'));
+  saved.lowestRowReached = saved.currentTetromino.position.row + 2;
+  storage.setItem('tetris.savedGameSession', JSON.stringify(saved));
+  const continued = new GameManager({ scheduler: createFakeScheduler(), storage });
+  continued.handleAction(PlayerAction.continueGame);
+  assert.equal(continued.lowestRowReached, saved.currentTetromino.position.row + 2);
+});
+
+
 test('the counterclockwise action turns the piece the other way [PCE-4] [INP-1]', () => {
   const { game } = newGame({ factory: fixedFactory(purple) });
   game.handleAction(PlayerAction.rotateCounterclockwise);
