@@ -491,6 +491,25 @@ test('reaching a new lowest row resets the lock delay move count [PLY-6]', () =>
   assert.equal(game.lockDelayResetCount, 0);
 });
 
+test('a continued game keeps the lock-delay count and lowest row [PLY-6] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ factory: fixedFactory(yellow), storage });
+  landOnSurface(game);
+  game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.moveRight);
+  assert.equal(game.lockDelayResetCount, 2, 'two moves while resting');
+  const restRow = game.currentTetromino.position.row;
+  game.togglePause();
+  assert.equal(game.lockDelayResetCount, 3, 'the pause itself counts as one reset');
+  const continued = new GameManager({ scheduler: createFakeScheduler(), storage });
+  assert.equal(continued.isSessionSaved, true);
+  continued.handleAction(PlayerAction.continueGame);
+  assert.equal(continued.state, GameState.paused);
+  assert.equal(continued.lockDelayResetCount, 3);
+  assert.equal(continued.lowestRowReached, restRow);
+});
+
+
 test('the counterclockwise action turns the piece the other way [PCE-4] [INP-1]', () => {
   const { game } = newGame({ factory: fixedFactory(purple) });
   game.handleAction(PlayerAction.rotateCounterclockwise);
