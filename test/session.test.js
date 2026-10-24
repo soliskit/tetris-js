@@ -8,7 +8,7 @@ import { parseSession, serializeSession } from '../public/game/session.js';
 import { PieceColors, TetrominoFactory } from '../public/game/tetrominoFactory.js';
 import { createFakeScheduler, newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
 
-const SIZE = { rows: 20, columns: 10 };
+const SIZE = { rows: 20, columns: 10, maxLockDelayResets: 15 };
 
 // A realistic save: a few locked blocks, a held piece and a moved piece.
 function validSave() {
@@ -278,4 +278,72 @@ test('a saved game stored under the names used before the game had names of its 
   assert.equal(game.isSessionSaved, false, 'Continue is not offered');
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.gameOver);
+});
+
+test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
+  const { game } = validSave();
+  game.softDrop();
+  game.softDrop();
+  game.softDrop();
+  game.lockDelayResetCount = 4; // stands in for resets burned while resting
+  const data = JSON.parse(serializeSession(game));
+  assert.equal(data.lockDelayResetCount, 4);
+  assert.equal(data.lowestRowReached, 3);
+  const session = parseSession(JSON.stringify(data), SIZE);
+  assert.equal(session.lockDelayResetCount, 4);
+  assert.equal(session.lowestRowReached, 3);
+});
+
+test('a save from before the lock-delay fields loads with fresh defaults [PLY-6] [STA-6]', () => {
+  const { data } = validSave();
+  delete data.lockDelayResetCount;
+  delete data.lowestRowReached;
+  const session = parseSession(JSON.stringify(data), SIZE);
+  assert.notEqual(session, null);
+  assert.equal(session.lockDelayResetCount, undefined);
+  assert.equal(session.lowestRowReached, undefined);
+});
+
+test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
+  const { data } = validSave();
+  const withCount = count => {
+    const d = JSON.parse(JSON.stringify(data));
+    d.lockDelayResetCount = count;
+    return parseSession(JSON.stringify(d), SIZE);
+  };
+  assert.equal(withCount(16), null, 'above the 15-reset cap');
+  assert.equal(withCount(-1), null);
+  assert.equal(withCount(1.5), null);
+  assert.equal(withCount('3'), null);
+  assert.notEqual(withCount(15), null);
+  assert.notEqual(withCount(0), null);
+  const withRow = row => {
+    const d = JSON.parse(JSON.stringify(data));
+    d.currentTetromino.position.row = 5;
+    d.lowestRowReached = row;
+    return parseSession(JSON.stringify(d), SIZE);
+  };
+  assert.equal(withRow(4), null, 'a remembered low shallower than the piece is impossible');
+  assert.notEqual(withRow(5), null);
+  assert.notEqual(withRow(19), null, 'a wall-kick can leave the low below the anchor');
+  assert.equal(withRow(20), null);
+  assert.equal(withRow(-1), null);
+  assert.equal(withRow(2.5), null);
+});
+
+test('a pre-fix save loads without the lock-delay keys at all [STA-6]', () => {
+  const { data } = validSave();
+  delete data.lockDelayResetCount;
+  delete data.lowestRowReached;
+  const session = parseSession(JSON.stringify(data), SIZE);
+  assert.ok(!Object.hasOwn(session, 'lockDelayResetCount'), 'no count key leaks in');
+  assert.ok(!Object.hasOwn(session, 'lowestRowReached'), 'no lowest-row key leaks in');
+});
+
+test('a save without a reset cap keeps any whole non-negative count [STA-6]', () => {
+  const { data } = validSave();
+  data.lockDelayResetCount = 999; // no cap passed: no upper bound to check against
+  const session = parseSession(JSON.stringify(data), { rows: 20, columns: 10 });
+  assert.notEqual(session, null);
+  assert.equal(session.lockDelayResetCount, 999);
 });

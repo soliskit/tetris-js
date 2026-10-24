@@ -209,7 +209,7 @@ export class GameManager {
     const text = this.readItem(SAVED_SESSION_KEY);
     // A failed read or a missing save does not change storage.
     if (text === null) return;
-    const session = parseSession(text, { rows: this.rows, columns: this.columns });
+    const session = parseSession(text, { rows: this.rows, columns: this.columns, maxLockDelayResets: this.maxLockDelayResets });
     if (!session) {
       this.isSessionSaved = false;
       return;
@@ -224,6 +224,9 @@ export class GameManager {
     this.canHoldTetromino = session.canHoldTetromino;
     this.factory.resetBag?.(session.bag);
     this.resetLockDelayForNewPiece();
+    // Pre-fix saves lack both fields and keep the fresh defaults just set.
+    if (session.lockDelayResetCount !== undefined) this.lockDelayResetCount = session.lockDelayResetCount;
+    if (session.lowestRowReached !== undefined) this.lowestRowReached = session.lowestRowReached;
   }
 
   saveGameSession() {

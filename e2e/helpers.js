@@ -26,6 +26,8 @@ export function savedGame({ piece, board = [], position, rotationState = 0, scor
   game.handleAction(PlayerAction.newGame);
   for (const [row, column] of board) game.gameBoard[row][column] = { isFilled: true, color: BOARD_COLOR };
   if (position) game.currentTetromino.position = position;
+  // Teleporting the piece bypasses the tracker, so the save must record the row the piece now rests at.
+  if (position) game.lowestRowReached = position.row;
   game.currentTetromino.rotationState = rotationState;
   game.score = score;
   game.handleAction(PlayerAction.pause);

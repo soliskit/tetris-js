@@ -1408,7 +1408,7 @@ Reverification must retain the regression test proving that an invariant-check f
 F20
 
 Status: Candidate pending independent reproduction
-Superseded October 24, 2026: reproduced and recorded as register row F20 (DECISIONS.md), status Pending work; Confirmed Defect (source argument) per phase-5-finding-crosswalk.md and phase-5-exit-reconciliation.md, section 1.
+Superseded October 24, 2026: reproduced and recorded as register row F20 (DECISIONS.md); Confirmed Defect (source argument) per phase-5-finding-crosswalk.md and phase-5-exit-reconciliation.md, section 1; fixed at the stated bounds in PR #293, register status Settled.
 
 Candidate concern: persistence side effects, where preservation is required, may occur before the transition has reached the required post-transition validation boundary. The implementation ordering is an observation to reproduce; whether it is a defect is not yet concluded.
 
