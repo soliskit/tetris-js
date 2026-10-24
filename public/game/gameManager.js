@@ -89,6 +89,8 @@ export class GameManager {
     this.onChange = onChange;
     /** @type {boolean | undefined} The saved game flag as last read from storage, until it may have changed. */
     this.storedIsSessionSaved = undefined;
+    /** Whether a save withdrawal that storage refused counts for this session. */
+    this.sessionSaveWithdrawn = false;
     /** @type {Fault[]} */
     this.faults = [];
     this.rows = 20;
@@ -157,6 +159,7 @@ export class GameManager {
   // Kept in memory, because the page checks it on every frame. A write, or
   // a change made in another tab, makes the next check read storage again.
   get isSessionSaved() {
+    if (this.sessionSaveWithdrawn) return false;
     this.storedIsSessionSaved ??= this.readItem(IS_SESSION_SAVED_KEY) === 'true';
     return this.storedIsSessionSaved;
   }
@@ -166,8 +169,12 @@ export class GameManager {
     this.storageChanged();
     try {
       this.storage.setItem(IS_SESSION_SAVED_KEY, String(value));
+      // The write landed, so the stored flag governs again.
+      this.sessionSaveWithdrawn = false;
     } catch {
-      // Not saved.
+      // A withdrawal that cannot be written still holds for the rest of the
+      // session, or a stored "true" would keep advertising the save.
+      if (!value) this.sessionSaveWithdrawn = true;
     }
   }
 
