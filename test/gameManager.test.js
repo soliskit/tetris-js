@@ -369,6 +369,24 @@ test('a withdrawal write that storage refuses counts for the rest of the session
   assert.equal(game.isSessionSaved, true, 'a save that lands governs again');
 });
 
+test('a save write that storage refuses does not withdraw the session [STA-4] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const { game } = newGame({ storage, factory: fixedFactory(yellow) });
+  game.togglePause(); // pausing saves the game
+  assert.equal(game.isSessionSaved, true);
+  game.togglePause(); // playing again; the withdrawal lands
+  storage.setItem('tetris.isSessionSaved', 'true'); // another tab saves the session
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => {
+    if (key === 'tetris.isSessionSaved') throw new Error('storage refuses the flag write');
+    setItem(key, value);
+  };
+  game.togglePause(); // pausing saves: the session lands, the save-flag write is refused
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'the stored flag was never rewritten');
+  assert.equal(game.isSessionSaved, true, 'a refused save-flag write does not withdraw the stored save');
+  storage.setItem = setItem; // storage recovers
+});
+
 test('the game stores everything under names of its own [APP-6]', () => {
   const storage = createMemoryStorage();
   const written = new Set();
