@@ -558,7 +558,7 @@ const questionButtons = [cancelNewGameButton, confirmNewGameButton];
 // The selected button is the focused one, so Tab and clicks stay in step with
 // a controller and the arrow keys, which move the focus; A presses it, as
 // Enter does. With none selected, a move selects Cancel, the safe answer.
-new InputController(gameManager, {
+const inputController = new InputController(gameManager, {
   move: step => {
     const index = questionButtons.indexOf(/** @type {HTMLElement} */ (document.activeElement));
     questionButtons[Math.max(0, Math.min(questionButtons.length - 1, index + step))].focus();
@@ -573,7 +573,10 @@ newGameDialog.addEventListener('cancel', event => {
   gameManager.cancelNewGame();
 });
 continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
-playPauseButton.addEventListener('click', () => gameManager.togglePause());
+playPauseButton.addEventListener('click', () => {
+  gameManager.togglePause();
+  if (gameManager.state === GameState.paused) inputController.releaseForPause();
+});
 
 // Matches the scenePhase handler: pause when the page is hidden.
 document.addEventListener('visibilitychange', () => {
