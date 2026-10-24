@@ -500,7 +500,9 @@ export class GameManager {
         this.state = GameState.paused;
         this.stopGameLoop();
         if (this.lockDelayTask !== null) {
-          this.lockDelayResetCount += 1;
+          // The pause counts as one reset, but never the last one: resume
+          // must start the delay again, and at the cap resume locks at once.
+          this.lockDelayResetCount = Math.min(this.lockDelayResetCount + 1, this.maxLockDelayResets - 1);
         }
         this.cancelLockDelay();
         this.saveGameSession();
