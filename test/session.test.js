@@ -330,3 +330,20 @@ test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   assert.equal(withRow(-1), null);
   assert.equal(withRow(2.5), null);
 });
+
+test('a pre-fix save loads without the lock-delay keys at all [STA-6]', () => {
+  const { data } = validSave();
+  delete data.lockDelayResetCount;
+  delete data.lowestRowReached;
+  const session = parseSession(JSON.stringify(data), SIZE);
+  assert.ok(!Object.hasOwn(session, 'lockDelayResetCount'), 'no count key leaks in');
+  assert.ok(!Object.hasOwn(session, 'lowestRowReached'), 'no lowest-row key leaks in');
+});
+
+test('a save without a reset cap keeps any whole non-negative count [STA-6]', () => {
+  const { data } = validSave();
+  data.lockDelayResetCount = 999; // no cap passed: no upper bound to check against
+  const session = parseSession(JSON.stringify(data), { rows: 20, columns: 10 });
+  assert.notEqual(session, null);
+  assert.equal(session.lockDelayResetCount, 999);
+});
