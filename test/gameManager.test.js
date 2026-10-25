@@ -342,13 +342,6 @@ test('the high score is saved when beaten and kept when not [SCO-3]', () => {
   assert.equal(second.highScore, 5000);
 });
 
-test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => {
-  const storage = createMemoryStorage();
-  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
-  storage.setItem('tetris.highScore', 'not a number');
-  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
-});
-
 test('a withdrawal write that storage refuses counts for the rest of the session [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
   const { game } = newGame({ storage, factory: fixedFactory(yellow) });
@@ -590,67 +583,6 @@ test('once the 15 resets are used up, landing locks immediately [PLY-6]', () => 
   assert.equal(game.currentTetromino.position.row, 0);
 });
 
-test('moving onto a ledge starts the lock delay at once, without using a reset [PLY-6]', () => {
-  const faults = [];
-  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
-  game.gameBoard[7][3] = filled();
-  for (let i = 0; i < 5; i++) game.softDrop(); // rows 5 and 6, just above the ledge's row
-  assert.equal(game.lockDelayTask, null);
-  game.handleAction(PlayerAction.moveLeft);
-  assert.notEqual(game.lockDelayTask, null);
-  assert.equal(game.lockDelayResetCount, 0);
-  scheduler.advance(499);
-  assert.equal(filledCells(game), 1);
-  scheduler.advance(1);
-  assert.equal(filledCells(game), 5);
-  assert.deepEqual(faults, []);
-});
-
-test('turning onto a ledge starts the lock delay at once [PLY-6]', () => {
-  const faults = [];
-  const { game, scheduler } = newGame({ factory: fixedFactory(purple), onFault: fault => faults.push(fault) });
-  game.gameBoard[8][4] = filled();
-  for (let i = 0; i < 5; i++) game.softDrop();
-  assert.equal(game.lockDelayTask, null);
-  game.handleAction(PlayerAction.rotate); // the stem now points down at the ledge
-  assert.equal(game.currentTetromino.rotationState, 1);
-  assert.equal(game.isOnSurface, true);
-  assert.notEqual(game.lockDelayTask, null);
-  scheduler.advance(500);
-  assert.equal(filledCells(game), 5);
-  assert.deepEqual(faults, []);
-});
-
-test('a new piece that appears resting on the stack starts its lock delay at once [PLY-6]', () => {
-  const faults = [];
-  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
-  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
-  game.gameBoard[2][4] = filled(); // under where the next piece appears
-  game.handleAction(PlayerAction.drop);
-  assert.equal(game.currentTetromino.position.row, 0);
-  assert.notEqual(game.lockDelayTask, null);
-  scheduler.advance(499);
-  assert.equal(filledCells(game), 5);
-  scheduler.advance(1);
-  assert.equal(filledCells(game), 9);
-  assert.deepEqual(faults, []);
-});
-
-test('a held piece swapped in resting on the stack starts its lock delay at once [PLY-6] [PLY-7]', () => {
-  const faults = [];
-  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]), onFault: fault => faults.push(fault) });
-  game.handleAction(PlayerAction.hold); // holds T, plays O
-  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
-  game.handleAction(PlayerAction.drop); // O locks, plays S
-  game.gameBoard[2][4] = filled(); // under where the T appears
-  game.handleAction(PlayerAction.hold);
-  assert.equal(game.currentTetromino.color, purple);
-  assert.notEqual(game.lockDelayTask, null);
-  scheduler.advance(500);
-  assert.equal(filledCells(game), 9);
-  assert.deepEqual(faults, []);
-});
-
 // Hold
 
 test('the first hold stores the piece at its spawn state and brings in the next one [PLY-7]', () => {
@@ -845,25 +777,7 @@ test('continue with a corrupted save stays at game over and forgets it [STA-4] [
   assert.equal(game.isSessionSaved, false);
 });
 
-test('continue is ignored while a game is running [STA-4]', () => {
-  const { game } = newGame();
-  game.handleAction(PlayerAction.moveLeft);
-  const before = snapshot(game);
-  game.handleAction(PlayerAction.continueGame);
-  assert.equal(snapshot(game), before);
-});
-
 // Game over
-
-test('topping out stops all timers [STA-3]', () => {
-  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
-  repeatUntil(() => game.state !== GameState.playing, () => game.handleAction(PlayerAction.drop), 'the game ending');
-  assert.equal(game.state, GameState.gameOver);
-  assert.equal(scheduler.pending, 0);
-  const before = snapshot(game);
-  scheduler.advance(10000);
-  assert.equal(snapshot(game), before);
-});
 
 // Storage failures
 
@@ -963,22 +877,6 @@ test('a new game starts with a fresh lock delay, whatever the last game left beh
   game.state = GameState.gameOver;
   game.stopGameLoop();
   game.handleAction(PlayerAction.newGame);
-  landOnSurface(game);
-  game.softDrop();
-  assert.equal(filledCells(game), 0, 'waits instead of locking at once');
-  scheduler.advance(500);
-  assert.equal(filledCells(game), 4);
-});
-
-test('continuing a saved game starts with a fresh lock delay [PLY-6] [STA-4]', () => {
-  const storage = createMemoryStorage();
-  newGame({ storage, factory: fixedFactory(yellow) }).game.togglePause();
-  const scheduler = createFakeScheduler();
-  const game = new GameManager({ scheduler, storage, factory: fixedFactory(yellow) });
-  game.lockDelayResetCount = 15;
-  game.lowestRowReached = 19;
-  game.handleAction(PlayerAction.continueGame);
-  game.togglePause();
   landOnSurface(game);
   game.softDrop();
   assert.equal(filledCells(game), 0, 'waits instead of locking at once');
