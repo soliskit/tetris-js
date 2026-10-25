@@ -1,4 +1,4 @@
-// Audit migration, docs/decision-log.md row D69 (L1 closed as Not Reproduced): a
+// Audit migration, docs/decisions.md row D69 (L1 closed as Not Reproduced): a
 // bounded random play trace monitoring the score invariant. The original
 // trace's 3,738-lock runs had no seed in the original finding and cannot be
 // replayed; the audit's replacement runs used seeds 20261017 and 2024, and
