@@ -44,7 +44,7 @@ The O/locked-stack tests combine independent fixture coordinates with pixel edge
 
 `boardTouch` uses Chromium CDP touch events; on non-Chromium it substitutes mouse events. The source explicitly makes that substitution. The quick-tap tests run only in Chromium, while zoom tests replace visualViewport.scale and dispatch synthetic resize/gesture events. CSS, listener and literal shape observations are useful project-policy evidence. They are not physical Safari zoom, native touch transport or the four separately approved phone relations' execution receipts.
 
-[AUDIT F28](../decision-log.md) records the input-delivery limits of the six permanent 10-pixel boundary cases. The earlier touch supplement's strict-less-than comparison is historical; the adopted tap decision is not superseded.
+[AUDIT F28](../decisions.md) records the input-delivery limits of the six permanent 10-pixel boundary cases. The earlier touch supplement's strict-less-than comparison is historical; the adopted tap decision is not superseded.
 
 The hold-box tap tests assert only that canvasHasDrawing returns true for heldPreview. They are "tapping the hold box holds the piece" and "a quick tap on the hold box right after one on the board still holds". The first uses locator.tap; the second uses touchscreen.tap and is Chromium-only. Their [helper observable](phase-4-selected-browser-expectations.md#fixture-and-observation-adapters) does not identify the held piece, replacement piece or count.
 

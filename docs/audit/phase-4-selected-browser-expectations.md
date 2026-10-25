@@ -24,7 +24,7 @@ Its page-route adapter appends `window.testGame = gameManager` to expose the pri
 
 The assertions check visible `#gameOverMessage` text, its `aria-hidden="true"` attribute, `#announcer` text and `role="status"`, and selected console-error text. Manager state, fault reasons and timer handles are read through the test-only exposure. The two timing cases capture a screenshot, but do not assert its pixels. DOM and aria assertions do not establish that a screen reader spoke the message.
 
-Successful Continue setup still uses the production-built savedGame fixture. See [AUDIT F25 and F30](../decision-log.md) for finding status.
+Successful Continue setup still uses the production-built savedGame fixture. See [AUDIT F25 and F30](../decisions.md) for finding status.
 
 ## Sources and continuity
 

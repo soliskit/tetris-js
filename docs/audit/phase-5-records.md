@@ -20,7 +20,7 @@ Terms:
 
 ## 1. Decision-log rows
 
-Decisions D66 to D75 are recorded in [DECISIONS.md](../decision-log.md). The sections below hold the evidence they cite.
+Decisions D66 to D75 are recorded in [decisions.md](../decisions.md). The sections below hold the evidence they cite.
 
 ## 2. Status table for the October 17 items (labels from blueprint section 5.1)
 
