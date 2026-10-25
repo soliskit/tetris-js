@@ -29,7 +29,7 @@ test('the shuffle uses the injected random source [PCE-5]', () => {
   const factory = new TetrominoFactory(() => 0);
   const order = allPieces().map(piece => piece.color);
   const expected = order.slice();
-  for (let i = expected.length - 1; i > 0; i--) [expected[i], expected[0]] = [expected[0], expected[i]];
+  for (let i = 1; i < expected.length; i++) [expected[i], expected[0]] = [expected[0], expected[i]];
   assert.deepEqual(colorsOf(factory, 7), expected);
 });
 
