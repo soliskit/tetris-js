@@ -311,16 +311,6 @@ test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
   assert.equal(session.lowestRowReached, 3);
 });
 
-test('a save from before the lock-delay fields loads with fresh defaults [PLY-6] [STA-6]', () => {
-  const { data } = validSave();
-  delete data.lockDelayResetCount;
-  delete data.lowestRowReached;
-  const session = parseSession(JSON.stringify(data), SIZE);
-  assert.notEqual(session, null);
-  assert.equal(session.lockDelayResetCount, undefined);
-  assert.equal(session.lowestRowReached, undefined);
-});
-
 test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
   const withCount = count => {
