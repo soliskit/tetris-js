@@ -103,9 +103,9 @@ tsconfig.json                Type checking for the game and page script
 tsconfig.sw.json             Type checking for the service worker
 stryker.config.json          Mutation testing setup
 scripts/browser-coverage.js  Browser coverage report and 100% check for the page script
-REQUIREMENTS.md              Every behavior, with an ID that tests trace to
-DECISIONS.md               Every finding and decision across all work, with its evidence
 docs/                      Records of every piece of work: decisions, evidence and plans
+  requirements.md          Every behavior, with an ID that tests trace to
+  decision-log.md          Every finding and decision across all work, with its evidence
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
@@ -116,7 +116,7 @@ Every piece of work on the project is recorded in [docs/](docs/), starting at [d
 
 The game is built the way safety-critical software is:
 
-* **Written requirements.** [REQUIREMENTS.md](REQUIREMENTS.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
+* **Written requirements.** [REQUIREMENTS.md](docs/requirements.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
 * **Full coverage.** The unit tests run every line, branch and function of the game logic, and the browser tests do the same for the page script (`public/script.js`, measured in Chromium). `npm test` and `npm run test:e2e` fail below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested. After a browser test run, `coverage/browser-report/index.html` shows the page script line by line.
 * **Type checking.** TypeScript's strictest checks run over everything the browser loads, with the types written as comments in the JavaScript, so there is no build step. `npm run typecheck` catches misspelled properties, wrong argument types and values that might be missing before any code runs.
 * **Mutation testing.** Stryker makes about a thousand small wrong changes to the game logic, one at a time (turning `<` into `<=`, deleting a line, flipping a condition), and runs the tests against each. Every one must make a test fail. Coverage shows the tests run every line; this shows they would notice if a line were wrong. The full run takes about 40 minutes. It runs weekly and on demand (`npm run test:mutation`, report in `reports/mutation/index.html`), and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite.

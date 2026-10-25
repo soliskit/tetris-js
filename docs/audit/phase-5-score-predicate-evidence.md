@@ -9,7 +9,7 @@ The blueprint's Score entry asks a conditional: "If the permanent suite does not
 ## Method
 
 - Source: main at `9db0855fee0c5cd626317eb847f751531df5a027`, on a scratch copy; the repository is unchanged.
-- Command for every run: `node --test --experimental-test-isolation=none` with no file arguments - bare test discovery from the copy's root, the same discovery `npm test` uses. (`npm test` adds coverage flags and 100% gates; those were not part of these runs. The Node-22 isolation-option spelling follows `docs/tetris-audit/mutation-run-2026-10-19.md`.)
+- Command for every run: `node --test --experimental-test-isolation=none` with no file arguments - bare test discovery from the copy's root, the same discovery `npm test` uses. (`npm test` adds coverage flags and 100% gates; those were not part of these runs. The Node-22 isolation-option spelling follows `docs/audit/mutation-run-2026-10-19.md`.)
 - What discovery actually found was not assumed from a file list: a module load hook on a bare run recorded every executed file under `test/` (hook source and output in the raw capture, `score-mutation-run-raw.txt`). Fifteen `.test.js` files executed - the eleven directly under `test/` plus `test/audit/d74-N1.test.js`, `test/audit/d74-f21-f22-p7.test.js`, `test/audit/l1-clear-after.test.js` and `test/audit/l1-trace.test.js`. The bare run also executes `test/helpers.js`, which contains no tests.
 - Local Node 22.23.3 (caveat in Limits).
 - Each mutation and probe below was one targeted edit, applied alone, then reverted; after all runs the scratch copy was verified clean (zero modified files).
@@ -57,7 +57,7 @@ The counterexample class the entry names exists and separates the predicates: 1e
 ## Limits
 
 - Local Node 22.23.3 is indicative, not authoritative; CI runs Node 26 or newer.
-- The Oct 19 mutation run (`docs/tetris-audit/mutation-run-2026-10-19.md`) reports all 1,325 Stryker mutants caught. The raw Stryker reports are not committed, so this record makes no claim about whether the safe-integer substitution was among Stryker's generated mutants; the manual runs above stand on their own as the scratch-mutation check the entry describes.
+- The Oct 19 mutation run (`docs/audit/mutation-run-2026-10-19.md`) reports all 1,325 Stryker mutants caught. The raw Stryker reports are not committed, so this record makes no claim about whether the safe-integer substitution was among Stryker's generated mutants; the manual runs above stand on their own as the scratch-mutation check the entry describes.
 - One local run per mutation and per probe, on the exact source and mutations named.
 
 ## What this record does not do

@@ -1,9 +1,10 @@
-// Audit migration, DECISIONS.md rows D74 and D75: the settled N1 reading.
+// Audit migration, docs/decision-log.md rows D74 and D75: the settled N1 reading.
 // A fault after a confirmed New Game stops the game safely, the fault is
 // recorded and reported, the old save stays withdrawn and its stored text is
 // kept (the setting S2 was kept by D75). Ported from the audit scratch script
-// d74-N1-run.mjs; the byte-identical original and its checksum live in
-// docs/tetris-audit/test-migration-provenance/. Deviations from the original:
+// d74-N1-run.mjs; the byte-identical original lived in
+// docs/audit/test-migration-provenance/ (deleted, kept in git history).
+// Deviations from the original:
 // repository-relative imports, node --test assertions instead of console
 // output, and checks for the recorded fault report, dangling timers and the
 // recovery path added from the audit blueprint's N1 checkpoints.

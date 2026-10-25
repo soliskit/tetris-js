@@ -1,15 +1,16 @@
 import { test, expect } from './fixtures.js';
 import { PieceColors, continueSavedGame, cellsOf, savedGame } from './helpers.js';
 
-// Audit migration, DECISIONS.md rows D72d and D72e (F28 TE2, Confirmed Defect
+// Audit migration, docs/decision-log.md rows D72d and D72e (F28 TE2, Confirmed Defect
 // at synthetic scope): in Chromium, a touch lift 60 px from touch-down with no
 // move event in between counted as a tap, although the tap rule allows only
 // 10 px. The with-move case and a real phone were not part of the finding, and
 // WebKit was not run. test.fail marks the test as an expected failure while
 // the defect's fix is unapproved; the fix's pull request removes the mark.
 // Ported from the audit scratch script d72-F28-TE2-run.mjs; the byte-identical
-// original and its checksum live in
-// docs/tetris-audit/test-migration-provenance/. Deviations from the original:
+// original lived in
+// docs/audit/test-migration-provenance/ (deleted, kept in git history).
+// Deviations from the original:
 // no window.__g hook (the test reads what the page shows, per the owner's
 // touch-test choice), the repository's @playwright/test and saved-game
 // helpers replace playwright-core and the hand-started server, and rotation

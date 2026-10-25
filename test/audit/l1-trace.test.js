@@ -1,11 +1,11 @@
-// Audit migration, DECISIONS.md row D69 (L1 closed as Not Reproduced): a
+// Audit migration, docs/decision-log.md row D69 (L1 closed as Not Reproduced): a
 // bounded random play trace monitoring the score invariant. The original
 // trace's 3,738-lock runs had no seed in the original finding and cannot be
 // replayed; the audit's replacement runs used seeds 20261017 and 2024, and
 // this test runs a bounded, deterministic share of each so CI stays fast.
 // Ported from the audit scratch harness l1-trace-harness.mjs; the
-// byte-identical original and its checksum live in
-// docs/tetris-audit/test-migration-provenance/. Deviations from the original:
+// byte-identical original lives in
+// docs/audit/test-migration-provenance/. Deviations from the original:
 // repository-relative imports, node --test assertions instead of the log
 // file, the bounded lock cap (the original ran to 3,738 locks), and no
 // "outside the repo" comment lines.

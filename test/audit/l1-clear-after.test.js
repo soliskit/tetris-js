@@ -1,8 +1,8 @@
-// Audit migration, DECISIONS.md row D69 (L1 closed as Not Reproduced): the
+// Audit migration, docs/decision-log.md row D69 (L1 closed as Not Reproduced): the
 // queue, the 7-bag order and the saved game after one to four line clears.
 // Ported from the audit scratch harness l1-clear-after-harness.mjs; the
-// byte-identical original and its checksum live in
-// docs/tetris-audit/test-migration-provenance/. Deviations from the original:
+// byte-identical original lives in
+// docs/audit/test-migration-provenance/. Deviations from the original:
 // repository-relative imports, node --test assertions instead of the log
 // file, and no "outside the repo" comment lines.
 import { test } from 'node:test';

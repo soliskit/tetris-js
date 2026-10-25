@@ -1,6 +1,6 @@
 Scratch-run raw capture: storage-read failure during save discovery and Continue
 Evidence for the blueprint's section 4.7, item 4, F24 (appendix F24 at
-docs/tetris-audit/audit-blueprint.txt:1488). One indicative local run, not
+docs/audit/audit-blueprint.txt:1488). One indicative local run, not
 a status. Scratch copy only: the repository tests and requirements are
 unchanged; the test file does not live in the repository.
 
@@ -248,7 +248,7 @@ Limits
   (package.json engines); behavior under the required major version is
   not measured. One indicative run on one commit.
 - R4 is decided (October 4, 2026). As recorded in DECISIONS.md D21
-  and docs/tetris-audit/phase-1-r2-r5-decision.md: a failed read may
+  and docs/audit/phase-1-r2-r5-decision.md: a failed read may
   make the saved game unavailable, but does not by itself withdraw it
   or change stored values, and nothing is promised about when
   availability returns. That is the decision record's formulation; the

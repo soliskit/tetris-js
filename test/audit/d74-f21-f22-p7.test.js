@@ -1,8 +1,9 @@
-// Audit migration, DECISIONS.md row D74 (read-only reproduction attempts for
+// Audit migration, docs/decision-log.md row D74 (read-only reproduction attempts for
 // F21, F22, N1 and P7) and row D75 (the kept settings S10 and S11). Ported
 // from the audit scratch script d74-F21-F22-P7-run-as-first-written.mjs; the
-// byte-identical original and its checksum live in
-// docs/tetris-audit/test-migration-provenance/. Deviations from the original:
+// byte-identical original lived in
+// docs/audit/test-migration-provenance/ (deleted, kept in git history).
+// Deviations from the original:
 // repository-relative imports, node --test assertions instead of console
 // output, and the score-for-level port (level is now derived from the score,
 // so the F22 check sets the writable score field instead of the removed level
