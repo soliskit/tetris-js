@@ -5,9 +5,9 @@ name: Mutation testing on pull requests
 # threshold is stryker.config.json's (break at 100); mutants that make the
 # tests run too long count as caught, and the exclusions marked in the code
 # stay excluded. The plan step lists the game files from the public/game
-# directory, and each file is mutated in its own parallel run, so the full
-# check takes about as long as its largest file and new game files are
-# picked up on their own. A change to the game logic alone mutates just the
+# tree, and each file is mutated in its own parallel run, so the full check
+# takes about as long as its largest file and new game files are picked up
+# on their own. A change to the game logic alone mutates just the
 # changed files. A change to the tests runs every game file, since a test
 # can be weakened without touching the game logic, and so does a change to
 # this workflow, so the gate itself is tested. A plan that finds no game
@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       files: ${{ steps.list.outputs.files }}
+      has_files: ${{ steps.list.outputs.has_files }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -41,17 +42,20 @@ jobs:
           changed=$(git diff --name-only --diff-filter=d "origin/$GITHUB_BASE_REF...HEAD")
           if grep -qE '^(test/|\.github/workflows/mutation-pr\.yml$)' <<< "$changed"; then
             echo "The tests or this workflow changed, so every game file is mutated."
-            files=$(ls public/game/*.js)
+            files=$(find public/game -name '*.js' | sort)
           else
             files=$(grep -E '^public/game/.+\.js$' <<< "$changed" || true)
           fi
           echo "Game files to mutate: ${files:-none}"
           matrix=$(jq -n -c --arg f "$files" \
-            '{include: ($f | split("\n") | map(select(length > 0)) | map({file: ., name: (. | split("/") | last | rtrimstr(".js"))}))}')
+            '{include: ($f | split("\n") | map(select(length > 0)) | map({file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js") | gsub("/"; "-"))}))}')
           echo "files=$matrix" >> "$GITHUB_OUTPUT"
+          count=$(jq -r '.include | length' <<< "$matrix")
+          echo "has_files=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
   mutation:
     name: mutation (${{ matrix.name }})
     needs: plan
+    if: needs.plan.outputs.has_files == 'true'
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.files) }}
