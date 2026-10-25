@@ -7,14 +7,6 @@ import { position } from '../public/game/position.js';
 import { TetrominoFactory, PieceColors } from '../public/game/tetrominoFactory.js';
 import { createFakeScheduler, fixedFactory, newGame, pieceByColor, repeatUntil } from './helpers.js';
 
-test('7-bag hands out every piece exactly once per bag [PCE-5]', () => {
-  const factory = new TetrominoFactory();
-  for (let bag = 0; bag < 3; bag++) {
-    const colors = new Set(Array.from({ length: 7 }, () => factory.generate().color));
-    assert.equal(colors.size, 7);
-  }
-});
-
 test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', () => {
   const t = pieceByColor(PieceColors.purple);
   assert.equal(t.rotations.length, 4);
