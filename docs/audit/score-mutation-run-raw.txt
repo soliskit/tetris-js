@@ -3,7 +3,7 @@ Capture times (UTC, 2026-10-23): baseline/mutation/probe runs ~08:42; the file-d
 Source: soliskit/tetris-js main 9db0855fee0c5cd626317eb847f751531df5a027 (scratch copy /tmp/tj-mut; repo unchanged)
 Node: v22.23.3 (local; indicative only - repo asks Node 26+, CI is authoritative)
 Command for every run: node --test --experimental-test-isolation=none   (bare discovery, no file arguments)
-(Node-22 option spelling per docs/tetris-audit/mutation-run-2026-10-19.md)
+(Node-22 option spelling per docs/audit/mutation-run-2026-10-19.md)
 
 === RUNTIME FILE-DISCOVERY EVIDENCE ===
 Hook command: node --import /tmp/hook2.mjs --test --experimental-test-isolation=none
