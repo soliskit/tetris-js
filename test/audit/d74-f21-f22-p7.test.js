@@ -1,4 +1,4 @@
-// Audit migration, docs/decision-log.md row D74 (read-only reproduction attempts for
+// Audit migration, docs/decisions.md row D74 (read-only reproduction attempts for
 // F21, F22, N1 and P7) and row D75 (the kept settings S10 and S11). Ported
 // from the audit scratch script d74-F21-F22-P7-run-as-first-written.mjs; the
 // byte-identical original lived in
