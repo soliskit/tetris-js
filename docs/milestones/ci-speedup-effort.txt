@@ -133,7 +133,7 @@ Exit:
 
 3. Historical baseline
 
-Use docs/tetris-audit/phase-0-baseline.md as the D12 historical baseline.
+Use docs/tetris-audit/phase-0-baseline.md (deleted, kept in git history) as the D12 historical baseline.
 
 The approved source records these approximate Phase-0 figures:
 - test job: 2 min 30 s;
