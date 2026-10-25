@@ -1,0 +1,7 @@
+Audit blueprint appendix pointer map (one way: old location to new)
+
+Appendices A, C and D of docs/audit/audit-blueprint.txt moved to docs/sources/audit-blueprint-appendices-A-C-D.txt. Appendix B, Appendix E, the Completion standard and the "Apple/security research grounding" rule paragraph stayed in the blueprint. Appendix letters, finding numbers and section names are unchanged. Records that cite "Appendix A", "Appendix C" or "Appendix D" mean the heading of that name in the sources file. Citing records were not edited.
+
+Appendix A. Research grounding -> docs/sources/audit-blueprint-appendices-A-C-D.txt, heading "Appendix A. Research grounding"
+Appendix C. Published Tetris references and what they do not establish -> docs/sources/audit-blueprint-appendices-A-C-D.txt, same heading
+Appendix D. Source files kept in the repository -> docs/sources/audit-blueprint-appendices-A-C-D.txt, same heading
