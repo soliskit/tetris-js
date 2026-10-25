@@ -86,12 +86,16 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /npm run test:mutation/);
   // Pull requests that change the game logic or its tests: the changed game
-  // logic alone, or the full suite when the tests change.
+  // logic alone, or every game file when the tests or the workflow change,
+  // each game file mutated in its own parallel run (D83).
   const pullRequests = fs.readFileSync(path.join(root, '.github/workflows/mutation-pr.yml'), 'utf8');
   assert.match(pullRequests, /pull_request:/);
   for (const changed of ["'public/game/**'", "'test/**'"]) assert.ok(pullRequests.includes(changed), changed);
-  assert.match(pullRequests, /npx stryker run --mutate "\$engine"/, 'changed game logic is mutated');
-  assert.match(pullRequests, /npm run test:mutation/, 'changed tests run the full suite');
+  assert.match(pullRequests, /fromJSON\(needs\.plan\.outputs\.files\)/, 'one run per game file');
+  assert.match(pullRequests, /npx stryker run --mutate "\$\{\{ matrix\.file \}\}"/, 'each run mutates its file');
+  assert.match(pullRequests, /files=\$\(find public\/game -name '\*\.js' \| sort\)/, 'a test or workflow change mutates every game file');
+  assert.match(pullRequests, /if: needs\.plan\.outputs\.has_files == 'true'/, 'a plan with no game file passes');
+  assert.match(pullRequests, /grep -E '\^public\/game\/\.\+\\\.js\$'/, 'changed game logic is mutated');
   // Every unit test file that exercises the game logic takes part.
   for (const file of fs.readdirSync(path.join(root, 'test')).filter(name => name.endsWith('.test.js'))) {
     const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
