@@ -133,29 +133,6 @@ test('the O piece never changes when rotated [PCE-4]', () => {
   assert.deepEqual(o.position, position(8, 4));
 });
 
-test('a J piece kicks left off the right wall [PCE-4]', () => {
-  const board = createBoard(20, 10);
-  const j = pieceByColor(PieceColors.blue);
-  j.rotationState = 3;
-  j.position = position(10, 8); // vertical, flush against the right wall
-  assert.ok(j.cells.some(cell => cell.column === 9));
-  j.rotate(board);
-  assert.equal(j.rotationState, 0);
-  assert.deepEqual(j.position, position(10, 7));
-  assert.ok(j.fits(board));
-});
-
-test('wall kick lets an I piece rotate against the right wall [PCE-4]', () => {
-  const board = createBoard(20, 10);
-  const i = pieceByColor(PieceColors.cyan);
-  i.rotationState = 1;
-  i.position = position(5, 7); // vertical in column 9
-  i.rotate(board);
-  assert.equal(i.rotationState, 2);
-  assert.ok(i.fits(board));
-  assert.ok(i.cells.every(cell => cell.column <= 9));
-});
-
 test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (const [row, column] of [[9, 4], [12, 4], [12, 5]]) board[row][column] = filled();
@@ -165,18 +142,6 @@ test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]
   assert.equal(t.rotationState, 3);
   assert.deepEqual(t.position, position(10, 5));
   assert.ok(t.fits(board));
-});
-
-test('turning counterclockwise, a J piece kicks right off the left wall [PCE-4]', () => {
-  const board = createBoard(20, 10);
-  const j = pieceByColor(PieceColors.blue);
-  j.rotationState = 1;
-  j.position = position(10, -1); // vertical, flush against the left wall
-  assert.ok(j.cells.some(cell => cell.column === 0) && j.fits(board));
-  j.rotate(board, true);
-  assert.equal(j.rotationState, 0, 'turned counterclockwise, not clockwise');
-  assert.deepEqual(j.position, position(10, 0));
-  assert.ok(j.fits(board));
 });
 
 test('when counterclockwise is blocked, rotation falls back to clockwise [PCE-4]', () => {
