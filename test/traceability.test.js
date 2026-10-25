@@ -1,4 +1,4 @@
-// Requirements traceability: every requirement in REQUIREMENTS.md is
+// Requirements traceability: every requirement in docs/requirements.md is
 // verified by at least one test, and every test names the requirements it
 // verifies, all of which must exist.
 
@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const requirementIds = [...fs.readFileSync(path.join(root, 'REQUIREMENTS.md'), 'utf8').matchAll(/^\| ([A-Z]{2,3}-\d+) \|/gm)].map(match => match[1]);
+const requirementIds = [...fs.readFileSync(path.join(root, 'docs', 'requirements.md'), 'utf8').matchAll(/^\| ([A-Z]{2,3}-\d+) \|/gm)].map(match => match[1]);
 
 // Every test() call in the unit and browser test files, with its tags.
 const tests = ['test', 'e2e'].flatMap(folder =>
