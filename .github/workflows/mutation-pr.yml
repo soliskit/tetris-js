@@ -4,10 +4,14 @@ name: Mutation testing on pull requests
 # testing, and fail if any mutant that can change behavior survives. The
 # threshold is stryker.config.json's (break at 100); mutants that make the
 # tests run too long count as caught, and the exclusions marked in the code
-# stay excluded. A change to the game logic alone mutates just the changed
-# files. A change to the tests runs the full suite, since a test can be
-# weakened without touching the game logic, and so does a change to this
-# workflow, so the gate itself is tested. The weekly full run stays as is.
+# stay excluded. The plan step lists the game files from the public/game
+# tree, and each file is mutated in its own parallel run, so the full check
+# takes about as long as its largest file and new game files are picked up
+# on their own. A change to the game logic alone mutates just the
+# changed files. A change to the tests runs every game file, since a test
+# can be weakened without touching the game logic, and so does a change to
+# this workflow, so the gate itself is tested. A plan that finds no game
+# file to mutate passes with no runs. The weekly full run stays as is.
 on:
   pull_request:
     paths:
@@ -23,35 +27,52 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mutation:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    outputs:
+      files: ${{ steps.list.outputs.files }}
+      has_files: ${{ steps.list.outputs.has_files }}
     steps:
       - uses: actions/checkout@v7
         with:
           # The base branch's history, to see what the pull request changes.
           fetch-depth: 0
+      - id: list
+        run: |
+          changed=$(git diff --name-only --diff-filter=d "origin/$GITHUB_BASE_REF...HEAD")
+          if grep -qE '^(test/|\.github/workflows/mutation-pr\.yml$)' <<< "$changed"; then
+            echo "The tests or this workflow changed, so every game file is mutated."
+            files=$(find public/game -name '*.js' | sort)
+          else
+            files=$(grep -E '^public/game/.+\.js$' <<< "$changed" || true)
+          fi
+          echo "Game files to mutate: ${files:-none}"
+          matrix=$(jq -n -c --arg f "$files" \
+            '{include: ($f | split("\n") | map(select(length > 0)) | map({file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js") | gsub("/"; "-"))}))}')
+          echo "files=$matrix" >> "$GITHUB_OUTPUT"
+          count=$(jq -r '.include | length' <<< "$matrix")
+          echo "has_files=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+  mutation:
+    name: mutation (${{ matrix.name }})
+    needs: plan
+    if: needs.plan.outputs.has_files == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.files) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 26
           cache: npm
       - run: npm install --global npm@12.2.0
       - run: npm ci
-      - name: Mutate what the pull request changes
-        run: |
-          changed=$(git diff --name-only --diff-filter=d "origin/$GITHUB_BASE_REF...HEAD")
-          engine=$(grep -E '^public/game/.+\.js$' <<< "$changed" | paste -sd, - || true)
-          if grep -qE '^(test/|\.github/workflows/mutation-pr\.yml$)' <<< "$changed"; then
-            echo "The tests or this workflow changed, so the full suite runs."
-            npm run test:mutation
-          elif [ -n "$engine" ]; then
-            echo "Mutating the changed game logic: $engine"
-            npx stryker run --mutate "$engine"
-          else
-            echo "No game logic or tests changed."
-          fi
+      - name: Mutate ${{ matrix.file }}
+        run: npx stryker run --mutate "${{ matrix.file }}"
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: mutation-report
+          name: mutation-report-${{ matrix.name }}
           path: reports/mutation/
