@@ -105,7 +105,7 @@ stryker.config.json          Mutation testing setup
 scripts/browser-coverage.js  Browser coverage report and 100% check for the page script
 docs/                      Records of every piece of work: decisions, evidence and plans
   requirements.md          Every behavior, with an ID that tests trace to
-  decision-log.md          Every finding and decision across all work, with its evidence
+  decisions.md          Every finding and decision across all work, with its evidence
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
