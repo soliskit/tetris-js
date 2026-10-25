@@ -51,4 +51,3 @@ The O6 ledger lists thirteen dependencies the audit assumes, each with where its
 
 - The property paper records that its earlier 19 static checks ran at the original P3 base, locally on Node 22 and npm 10, not the target Node 26, and that the dated baseline reported 100% metrics and mutation and a deployment (409faf4), which is not new evidence of what ships now. These statements were not independently verified at fold time.
 - "Not Assessed" is a certification category, not a claim that no method exists. O5 and O8 do not replace each other, and O6 assumptions are not proof of provider correctness.
-
