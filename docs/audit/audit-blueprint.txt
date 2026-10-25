@@ -1669,31 +1669,7 @@ Only the underlying applicable security property is adopted when the project lac
 
 Appendix A. Research grounding
 
-This appendix cites the external sources listed below, each for the theme and claim stated and no wider. No Apple source is cited. Assistant-written secondary summaries kept in the repository are listed in Appendix D; they are kept for reference and are not cited as grounding. The sources are design-grounding material for these themes, which are the topics the adopted properties address:
-
-* trusted boundaries;
-* validated state transitions;
-* least authority;
-* fail-safe behavior;
-* persistence ordering;
-* separation of trusted and untrusted data;
-* independent validation;
-* defense against malformed state.
-
-They are not implementation certification.
-
-Cited sources (read October 4, 2026; each states what it supports and where it stops):
-
-* Separation of trusted and untrusted data; defense against malformed state; validated state transitions (O2, O3). OWASP Input Validation Cheat Sheet, https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html: validate syntax and semantics, accept by allowlist, and parse then validate before processing or storage. It is written for server-facing input. It supports treating a saved game as untrusted input; it does not define this game's valid state. OWASP HTML5 Security Cheat Sheet, https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html: data in Web Storage can be altered by anyone with local access, so authentication or authorization must not be assumed over it. It does not prescribe a validation procedure.
-* Least authority. GitHub Docs, Secure use reference, https://docs.github.com/en/actions/reference/security/secure-use: least privilege for tokens and secrets, and pinning an action to a full-length commit SHA as the most secure option, or to a tag only if the creator is trusted. It applies to the CI workflows, not to the game code.
-* Persistence ordering; fail-safe behavior (O4). WHATWG HTML Standard, Web Storage, https://html.spec.whatwg.org/multipage/webstorage.html, and WHATWG Storage Standard, https://storage.spec.whatwg.org/: storage is scoped to an origin; the browser may clear storage in its default mode; persistent mode needs a permission grant and, when granted, protects against the browser's clearing policies, though the user can still clear it. Whether a browser grants the permission varies. These sources describe what storage can lose. They do not give a write-ordering method. WebKit Tracking Prevention, https://webkit.org/tracking-prevention/: Safari's ITP deletes script-writable storage after 7 days of no user interaction with the website, and the page exempts the first-party domain of home screen web applications from that cap. It is Safari-specific. How Safari treats persistent storage was not verified.
-* Boundary enforcement; trusted boundaries (O1, O7). W3C Service Workers, https://www.w3.org/TR/service-workers/, and the Chromium Service Worker Security FAQ (listed in C6): service worker scope, same-origin rules and cache behavior that bear on the cache attacks in Phase 4. They do not define this project's authoritative transition boundary.
-* General secure-development practice. NIST SP 800-218, https://csrc.nist.gov/pubs/sp/800/218/final, OWASP ASVS 5.0, https://asvs.dev/v5.0.0/Preface/, and OWASP Top 10 A04 Insecure Design, https://owasp.org/Top10/A04_2021-Insecure_Design/: general frameworks for secure design, development and verification of web applications. No numbered practice or requirement of them is mapped to a theme here. Many ASVS requirements assume a backend that this project does not have.
-* No source was verified for independent validation (O5, O6, O8) or for the write-ordering method in O4; those properties rest on the owner's adoption alone.
-
-Platform limits that bear on the trust ledger (Appendix E), cited as limits and not as themes: MDN, Content Security Policy, https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP, and its frame-ancestors page, https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/frame-ancestors (a policy set by meta tag does not support frame-ancestors or report-only); MDN Subresource Integrity, https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity (it detects a changed fetched resource; it does not protect against a local player or a malicious change by the repository owner; a checksum detects accidental corruption and is not tamper protection).
-
-The project does not claim conformance to a platform security architecture merely because analogous properties are adopted.
+Moved to docs/sources/audit-blueprint-appendices-A-C-D.txt, unchanged. See docs/audit/audit-blueprint-appendix-pointer-map.txt.
 
 ⸻
 
@@ -1806,139 +1782,13 @@ Final principle: the audit does not certify that no bug exists in an unlimited u
 
 Appendix C. Published Tetris references and what they do not establish
 
-Source: the research survey "Tetris rules and implementations: research for the tetris-js audit", version 2, October 4, 2026 (Tetris-rules-research-v2.pdf, kept at docs/sources/Tetris-rules-research-v2.pdf), which this appendix summarizes. The audit has not independently re-read these sources or re-run its comparisons. Where a statement below is a reading of a source, it says so.
-
-C1. Status and limits
-
-* This appendix is reference material. It is not a requirement, it adopts no rule, and it is not evidence that tetris-js satisfies any requirement or property. REQUIREMENTS.md at 30e0085 decides what counts as a defect.
-
-* A difference between tetris-js and a published game is not a finding. It becomes a finding only if it breaks a REQUIREMENTS.md requirement. Adopting a published rule as a new requirement is an Intentional Change, made in REQUIREMENTS.md together with its code; it is not a finding.
-
-* Coverage is a representative sample, not "all public versions of Tetris", which is not a finite list. Read in full or in the relevant parts: the 2009 Tetris Design Guideline (a leaked, unauthenticated copy read as archive.org OCR text, so it may contain OCR errors and may differ from later versions), community wiki summaries, the source of three public engines, one formally analyzed Tetris, and web-platform security guidance. README level only: tetr.js and tetrs. No engine was run, no other engine's tests or lock delay, hold and scoring code was read, and the Tetris Company's current rules are not public.
-
-* Conformance to any public version does not show the game is bug-free or secure, and passing every test does not either.
-
-C2. Published rules compared with REQUIREMENTS.md
-
-Every statement about published games in this section is what the supplied survey reports; none is an audit fact. Requirement IDs in the tetris-js column were checked to exist in REQUIREMENTS.md at 30e0085, and two misattributions were corrected; that column's readings of the code are the survey's. Class: Matches, Variation (published games differ among themselves), Yours (a REQUIREMENTS.md rule differs), Unspecified (neither the requirements nor the tests describe it). The supplied research survey reports the published statements below from the sources in C6. The Matches, Variation and Yours classes below are observations reported by the supplied research survey. They are not independently verified by this audit and cannot support certification until independently reproduced where applicable.
-
-Topic | Published (as reported by the survey) | tetris-js (requirement) | Class (survey-reported, not an audit finding)
-
-Playfield | 10 x 20 matrix plus an invisible buffer; spawn on rows 21 and 22 (2009 Guideline); spawn row varies by game. | 10 x 20, nothing outside it (PCE-1). Spawn in the top two rows (PCE-3). | Variation, and Yours. The supplied research survey interprets this difference as meaning that kicks above the top are blocked and that this implementation therefore lacks that form of lock-out (an inference from the reported playfield and spawn rules, not a reported observation).
-
-Spawn columns | Three-wide pieces on cells 4 to 6 (2009 Guideline 3.4). | Columns 3 to 5 zero-based, I at 3 to 6, O at 4 to 5. | Matches, by the survey's reading of the code.
-
-Wall kicks | Five tests per transition; JLSTZ share one table, I has its own, O does not kick (SRS page). | Same tables (PCE-4). | Reported as matching (C3, inherited, unverified).
-
-Failed rotation | "If all five rotations fail, the rotation cannot occur" (2009 Guideline, Appendix A). NullpoMino, term-tetris and python-tetris also leave the piece unchanged. | After all five kicks fail, tries the opposite direction (PCE-4). | Yours. Not in the Guideline text or the three engines read.
-
-Randomizer | 7-bag: shuffle seven, deal, refill. | 7-bag, fresh bag per game (PCE-5). | Matches.
-
-Lock delay | Extended Placement: 0.5 s, 15 moves or rotations, count resets when the piece falls one row below the lowest yet reached, immediate lock after 15 (2009 Guideline 5.7). A rotation that lifts the piece pauses the timer without resetting it. | 0.5 s, 15 resets, count resets on a lower row (PLY-6). The delay restarts on a lifting rotation. | Matches, except the lifting-rotation nuance, which differs. Not a defect under REQUIREMENTS.md rules 1 and 3.
-
-Gravity and level | Marathon curve (0.8 - (level - 1) x 0.007)^(level - 1) s per row; level rises by line clears. | max(0.25, 0.7 - 0.02 x (level - 1)) s (PLY-2); level = floor(score / 1000) + 1 (SCO-2). | Yours.
-
-Scoring | Guideline-era games: 100/300/500/800 x level plus T-spins, back-to-back, combos, drop points, perfect clears. | 100/300/500/800, no multiplier, nothing else (SCO-1). | Yours. Base values match. Any drop-point scoring would first need the implementation's multiple-of-100 score check to change. No requirement states that rule; whether SAF-4's "valid score" includes it is R1's question.
-
-Hold | One held piece; swapped-in piece starts north facing; a lock down between holds. | Hold once per piece, returns in its starting state (PLY-7). | Matches.
-
-Game over | Lock out, block out, or top out (2009 Guideline section 10). | Game over when a new or held piece has no room (STA-3). | Yours. Block out matches.
-
-Controls and repeat | Hold on C or Shift; DAS 167 ms and ARR 33 ms recommended. | Hold on H; 167 ms then 33 ms (INP-1, INP-2). | Yours (hold key); Matches (repeat).
-
-Soft drop | 20 times the normal fall speed (2009 Guideline 5.5). | One row per press (PLY-3); a row every 50 ms while held (INP-2). | Variation.
-
-Entry delay, line-clear delay, T-spin, garbage, perfect clear | Present in many Guideline games. | Not in the requirements. | Unspecified. Absence is not a defect (rule 3).
-
-Historical context: NES Tetris has no wall kicks or lock delay and can crash after about 1,550 lines from inefficient multiplication (NES Tetris, Wikipedia). The survey's reasoning that tetris-js cannot reach a comparable overflow (score checked with `Number.isSafeInteger` and as a multiple of 100) is a claim to confirm in Phase 1, not a finding.
-
-C3. Kick-table comparison
-
-The supplied research survey reports the results in this section; they are inherited and are not independently verified by this audit; the audit has not re-run the comparison. Method as reported: each engine's kick table was converted to the wiki's (x, y) convention and compared by script, all eight transitions per table, with the SRS tables at tetris.wiki/SRS. tetris-js was compared the same way from tetrominoFactory.js and tetromino.js at 30e0085, with counterclockwise kicks derived as rotate() does. No engine was run.
-
-Implementation | Read | Kick data vs wiki SRS (survey-reported, unverified) | Other points (survey-reported)
-
-tetris-js | tetrominoFactory.js, tetromino.js | 16 of 16 match | Opposite-direction fallback after all kicks fail (PCE-4): its own rule.
-
-NullpoMino (Java) | StandardWallkick.java | 16 of 16 match | Returns no result on failure, so the rotation does not happen. Also has 180-degree kick tables and an allowUpward flag.
-
-term-tetris (Rust) | src/tetromino.rs | 16 of 16 match | Restores the old rotation on failure. A small project; agreement shows copying fidelity, not independent derivation.
-
-python-tetris (Python) | tetris/impl/rotation.py | 15 of 16 match | One I-piece entry (2 to R, fifth test) reads (row -1, col +2) where the wiki converts to (row -1, col -2). Looks like a sign typo. A lead, not a confirmed bug: not run, tests not read, not reported upstream.
-
-AdaCore SPARK Tetris (Ada) | Two blog posts only | Not Checked | Proves absence of run-time errors (array bounds, ranges) on about 165 lines of game logic. The article does not claim rule correctness.
-
-tetr.js, tetrs | README only | Not Checked | Guideline and SRS compliance claimed, not verified.
-
-* The supplied research survey reports that the tables in tetris-js agree with the published tables (inherited, unverified). That would check the numbers only.
-
-* Agreement among implementations is weak evidence: they copy the same wiki or Guideline, so matches are not independent checks.
-
-* A published-table comparison can catch a transcription slip that 100% coverage would not, because coverage shows that a line ran, not that a number is right. This is an instance of the circular-oracle concern in 3.2 and 4.6.
-
-* Not shown: whether the rotation logic applies the data correctly, collision at walls and the floor, and how the PCE-4 fallback behaves in play.
-
-C4. Security and robustness references
-
-Source | What it says (as reported) | Bears on
-
-OWASP HTML5 Security Cheat Sheet, Local Storage | localStorage is shared across the origin, can be loaded with malicious data by a single XSS, and should not be trusted. No path scoping exists. The sheet advises against hosting several applications on one origin. | SAF-1, SAF-2, APP-6. Keeps open the question of who else can write this origin's storage.
-
-MDN, Window.localStorage | Values are strings; access can throw if blocked by policy; data persists with no expiration; origin-wide. | SAF-2.
-
-Chromium Service Worker Security FAQ | A registration lasts indefinitely, updates are checked on navigation, and registration matches by serialized URL prefix, so sites should be careful about which paths can serve worker scripts. | APP-2, APP-3, APP-6: sw.js on a shared origin is a boundary worth stating in Phase 1.
-
-V. Romeo, "implementing secure leaderboards" (not Tetris) | A client-sent score can be spoofed; deterministic play from a seed plus an input log lets a server replay it. | The game has no server or leaderboard, so score spoofing is out of scope. A seeded replay is a possible audit instrument because the random source and scheduler are injectable (PCE-5).
-
-The supplied research survey reports that no published security standard specific to Tetris games was identified. The supplied research survey identifies the following classes as relevant to a client-only game: untrusted stored data, storage faults, a stale or malicious service-worker cache, same-origin neighbors on GitHub Pages, and input and timing faults. The SAF and APP requirements already name these.
-
-C5. Items the research surfaces for Phase 1 (not decisions)
-
-None of these is adopted. Each is the owner's decision under the Audit Advancement Gate.
-
-* Whether the published SRS tables and the C3 comparison become the oracle for kick data, and whether the 16-transition check becomes evidence for PCE-2 and PCE-4. That is a new proof obligation only if adopted.
-
-* Whether the intentional differences in C2 (the PCE-4 fallback, no hidden buffer, level from score, the gravity curve, scoring without a multiplier, and PLY-6's restart on a lifting rotation) are recorded in DECISIONS.md as "not a finding".
-
-* Which independent oracle to use for kicks, hold, lock down and game over, if any: a published-table check, a second implementation from the SRS spec, or differential testing against an open-source engine. Each establishes a different thing.
-
-* Whether a seeded replay is used as an audit instrument.
-
-C6. Sources
-
-* Tetris Guideline: https://tetris.wiki/Tetris_Guideline; SRS and kick tables: https://tetris.wiki/SRS; Random Generator: https://tetris.wiki/Random_Generator; Lock delay: https://tetris.wiki/Lock_delay; Scoring: https://tetris.wiki/Scoring; Marathon: https://tetris.wiki/Marathon; Top out: https://tetris.wiki/Top_out
-
-* 2009 Tetris Design Guideline (leaked, unauthenticated copy; OCR text): https://archive.org/details/2009-tetris-variant-concepts_202201
-
-* NullpoMino StandardWallkick.java: https://github.com/nullpomino/nullpomino/blob/4de098dd0b48d991247313d8dba30b9721e6f9d9/nullpomino-core/src/main/java/mu/nu/nullpo/game/subsystem/wallkick/StandardWallkick.java
-
-* term-tetris: https://git.pvv.ntnu.no/vegardbm/term-tetris/raw/branch/master/src/tetromino.rs; python-tetris: https://github.com/g3ner1c/python-tetris
-
-* AdaCore: https://www.adacore.com/blog/tetris-in-spark-on-arm-cortex-m4 and https://www.adacore.com/blog/spark-tetris-on-the-raspberry-pico
-
-* tetr.js: https://github.com/simonlc/tetr.js/; tetrs: https://github.com/tiehuis/tetrs/
-
-* Guideline compliant game differences: https://www.tetris.wiki/Guideline_compliant_game_differences; Rotation systems: https://strategywiki.org/wiki/Tetris/Rotation_systems; NES Tetris: https://en.wikipedia.org/wiki/Tetris_(NES_video_game)
-
-* OWASP HTML5 Security Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html; MDN localStorage: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage; Chromium Service Worker Security FAQ: https://chromium.googlesource.com/chromium/src/+/main/docs/security/service-worker-security-faq.md; Romeo: https://vittorioromeo.com/index/blog/oh_secure_leaderboards.html
-
-Source types, read October 4, 2026. No link above was replaced. Community or tertiary sources: the tetris.wiki, www.tetris.wiki and strategywiki pages and the Wikipedia page. Unauthenticated copy: the archive.org 2009 Guideline. Open-source code: NullpoMino is pinned to a commit; term-tetris is read from a branch, and python-tetris, tetr.js and tetrs are unpinned pages whose content can change. At the time of reading, the python-tetris URL resolved to a page titled skysomorphic/python-tetris. Vendor technical blogs: the AdaCore pages. Authoritative for what they state: the OWASP, MDN and Chromium pages. Personal blog: Romeo. No source supporting the same claims as the Tetris rules sources or the Romeo blog was verified, and none is claimed to exist.
+Moved to docs/sources/audit-blueprint-appendices-A-C-D.txt, unchanged. See docs/audit/audit-blueprint-appendix-pointer-map.txt.
 
 ⸻
 
 Appendix D. Source files kept in the repository
 
-The kept file is for reference. The blueprint relies only on the Tetris survey, through Appendix C; the Apple reading is background and is not relied on. Where the Tetris survey and Appendix C differ, Appendix C governs. The text file docs/tetris-audit/audit-blueprint.txt is authoritative. The duplicate PDF was removed. The Apple review summary and the Google lessons summary were deleted on October 15, 2026; their exact bytes remain in git history, and the checksums below identify them. The fuller Apple reading was deleted on October 17, 2026; its exact bytes remain in git history, and its checksum below identifies it. The other files are assistant-written secondary summaries prepared for the owner. They are not audit facts, not evidence that the implementation conforms to anything, and not the wording of Apple, Google or any other source; the primary sources they cite remain the authority for what those sources say.
-
-File | What it is | Provenance | SHA-256
-
-docs/sources/Tetris-rules-research-v2.pdf | Assistant-written research survey, version 2, October 4, 2026 (summarised by Appendix C) | secondary summary; cites published Tetris rules and open-source engines | 47db35b0207d7867130adf908eb5a0ece6834e606d4ad21819aabf05c587d0ef
-
-docs/sources/Apple-platform-security-review.pdf (deleted October 15, 2026, kept in git history) | Assistant-written summary of Apple's published security documentation, October 3, 2026. Deleted on October 15, 2026; the checksum identifies the deleted bytes. | secondary summary; primary sources are Apple's Platform Security guide and security.apple.com publications it cites | e561334723cff73ad4135cb0f16a1d9880ea9dad403ce4db52da6e2917c5373f
-
-docs/sources/Apple-platform-security-full-reading.pdf (deleted October 17, 2026, kept in git history) | Assistant-written fuller reading of Apple's published security documentation, October 3, 2026 | secondary summary; primary sources are the Apple pages it cites | b543029911457180a27f71500a7353d6b980a9b10e17d6f5163b0372a3ac5ab3
-
-docs/sources/Google-security-lessons-v3.pdf (deleted October 15, 2026, kept in git history) | Assistant-written summary of Google security publications, October 3, 2026. Deleted on October 15, 2026; the checksum identifies the deleted bytes. | secondary summary; its source list includes Google pages, blog posts and papers, and two papers by outside authors. For Google's Secure by Design technical report it read the full text from a third-party mirror (elhacker.info), and cites Google's page for the report, which holds the abstract and links to Google's official PDF: https://storage.googleapis.com/gweb-research2023-media/pubtools/7665.pdf. On October 4, 2026 the summary's statements about that report were compared with the official PDF, and the report's content supports them. One attribution discrepancy: the summary places the syzkaller bug counts after its remark on data races, but the report cites them for bug finding outpacing bug fixing. The report does not disagree with the summary. The summary's Android-blog figures were not checked. The file is unchanged | 482943493ee7156c7e286f82beb80b4c0484d0ad86a2f3c6157c25e807c2b209
+Moved to docs/sources/audit-blueprint-appendices-A-C-D.txt, unchanged. See docs/audit/audit-blueprint-appendix-pointer-map.txt.
 
 ⸻
 
