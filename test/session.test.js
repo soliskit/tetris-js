@@ -230,6 +230,23 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
   });
 }
 
+test('Continue when the availability flag cannot be read does not write to storage [SAF-2] [STA-4]', () => {
+  const storage = createMemoryStorage();
+  storage.setItem('tetris.isSessionSaved', 'true');
+  storage.setItem('tetris.savedGameSession', '{}');
+  const read = storage.getItem;
+  storage.getItem = key => {
+    if (key === 'tetris.isSessionSaved') throw new Error('SecurityError');
+    return read(key);
+  };
+  const writes = [];
+  storage.setItem = (key, value) => { writes.push([key, value]); };
+  const game = new GameManager({ storage, scheduler: createFakeScheduler() });
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.gameOver);
+  assert.deepEqual(writes, []);
+});
+
 test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
   const text = fs.readFileSync(new URL('./fixtures/saved-game-current.json', import.meta.url), 'utf8');
