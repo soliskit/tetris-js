@@ -1,4 +1,4 @@
-// Audit migration, docs/decision-log.md row D69 (L1 closed as Not Reproduced): the
+// Audit migration, docs/decisions.md row D69 (L1 closed as Not Reproduced): the
 // queue, the 7-bag order and the saved game after one to four line clears.
 // Ported from the audit scratch harness l1-clear-after-harness.mjs; the
 // byte-identical original lives in
