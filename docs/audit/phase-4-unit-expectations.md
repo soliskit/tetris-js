@@ -54,7 +54,7 @@ Lock-delay tests use fake time and literal 499/500,400+100,15-reset and16th-move
 
 The exhausted-reset landing test injects count 15 and lowest 18 into an O piece at anchor row 17. Its occupied rows are 17-18; falling to anchor 18 reaches occupied row 19. Under [R1 B9.2](phase-1-r1-decision.md), that new low resets the count to zero. The assertion of immediate locking therefore needs an independently admitted history that makes its expected result applicable. The test's comment about an earlier turn does not supply that history. This is an oracle/applicability limit, not an executed defect.
 
-The new-low rotation test injects lowest 15 into a T already occupying row 16, then accepts a final reset count of at most 1. B9.2 requires zero when a new low is reached. Its kicked-anchor assertion does not establish independently admitted prior history or complete ordered kick selection. [AUDIT F20](../../DECISIONS.md) remains the finding home.
+The new-low rotation test injects lowest 15 into a T already occupying row 16, then accepts a final reset count of at most 1. B9.2 requires zero when a new low is reached. Its kicked-anchor assertion does not establish independently admitted prior history or complete ordered kick selection. [AUDIT F20](../decision-log.md) remains the finding home.
 
 Getter assertions using tolerance `1e-9` compare seconds. [S10's requested-delay tolerance](phase-1-r2-r5-decision.md) is `1e-9` milliseconds. Fake delivered-time steps such as 699/1 or 600/100 do not themselves establish that requested-value comparison.
 

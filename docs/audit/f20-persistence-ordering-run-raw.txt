@@ -1,6 +1,6 @@
 Scratch-run raw capture: F20 persistence-ordering reproduction classes
 Evidence for the blueprint's F20 entry (appendix at
-docs/tetris-audit/audit-blueprint.txt:1408). One indicative local run, not
+docs/audit/audit-blueprint.txt:1408). One indicative local run, not
 a status. Scratch copy only: the repository tests and requirements are
 unchanged; the test files do not live in the repository.
 
