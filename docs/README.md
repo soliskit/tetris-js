@@ -6,7 +6,7 @@ Three files give the whole project. The rest is drill-down.
 
 **What** - [the readme](../README.md) and the work table below: the game itself, and each piece of work with its status and outcome. Start here.
 
-**Why** - the [decision ledger](decision-log.md): every finding and decision across all work, open or closed, with its evidence.
+**Why** - the [decision ledger](decisions.md): every finding and decision across all work, open or closed, with its evidence.
 
 **How** - one folder per piece of work, named for the work, holding its records and evidence.
 
