@@ -83,7 +83,7 @@ Earlier update note (historical, from the pull request that added the Phase 3 li
 | QA-2 | Process | In Scope |  | Approved: In Scope | Claim in `phase-3-obligations-P3-E.txt`, record QA-2 | Method/evidence in `phase-3-model-method-mapping.md`, row QA-2; underlying P3-E record | Partially (Inf) |
 | QA-3 | Process | In Scope |  | Approved: In Scope | Claim in `phase-3-obligations-P3-E.txt`, record QA-3 | Method/evidence in `phase-3-model-method-mapping.md`, row QA-3; underlying P3-E record | Partially (Inf) |
 | QA-4 | Process | In Scope | Evidence may be a gap: depends on a WebKit run | Approved: In Scope | Claim in `phase-3-obligations-P3-E.txt`, record QA-4 | Method/evidence in `phase-3-model-method-mapping.md`, row QA-4; underlying P3-E record | Partially for the repository-checkable half; device half Not Established |
-historical meanings.\nying P3-E record | Partially (Inf) |
+| QA-5 | Process | In Scope |  | Approved: In Scope | Claim in `phase-3-obligations-P3-E.txt`, record QA-5 | Method/evidence in `phase-3-model-method-mapping.md`, row QA-5; underlying P3-E record | Partially (Inf) |
 | QA-6 | Process | In Scope |  | Approved: In Scope | Claim in `phase-3-obligations-P3-E.txt`, record QA-6 | Method/evidence in `phase-3-model-method-mapping.md`, row QA-6; underlying P3-E record | Partially (Inf) |
 
 Status-label publication identities
