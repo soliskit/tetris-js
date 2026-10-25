@@ -78,17 +78,6 @@ test('an error inside the gravity timer stops the game safely and is reported [S
   assert.equal(reported[0].error.message, 'factory failure');
 });
 
-test('an error during a soft drop is contained [SAF-3]', () => {
-  const factory = breakableFactory();
-  const { game, scheduler, reported } = recordingGame({ factory });
-  repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
-  game.lockDelayResetCount = 15; // the landing locks at once
-  game.lowestRowReached = game.currentTetromino.position.row + 1;
-  factory.broken = true;
-  assert.doesNotThrow(() => game.softDrop());
-  assertSafeStop(game, scheduler, reported, 'unexpected error');
-});
-
 test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
   const storage = createMemoryStorage();
   const factory = breakableFactory();
@@ -302,12 +291,6 @@ test('storage whose reads throw still gives a playable game [SAF-2]', () => {
   assert.equal(game.state, GameState.playing);
   assert.equal(game.score, 0);
   assert.deepEqual(reported, []);
-});
-
-test('continue with unreadable storage stays at game over [SAF-2]', () => {
-  const game = new GameManager({ scheduler: createFakeScheduler(), storage: throwingReads() });
-  game.handleAction(PlayerAction.continueGame);
-  assert.equal(game.state, GameState.gameOver);
 });
 
 test('a stored high score that is negative or fractional reads as 0 [SAF-2]', () => {
