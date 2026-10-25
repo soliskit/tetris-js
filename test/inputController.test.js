@@ -828,3 +828,20 @@ test('losing window focus lets a spent pad down drop again after resume [STA-2] 
   tick(500);
   assert.ok(count(manager, 'softDrop') > 0, 'the blur forgot the spending, so the held pad soft drops');
 });
+
+test('a key held across game over and Continue still counts as held [STA-2]', t => {
+  const { manager, key, tick } = setup(t);
+  key('KeyD');
+  tick(200);
+  assert.ok(count(manager, 'moveRight') > 1, 'the held key moves while playing');
+  manager.state = GameState.gameOver; // the game ends with the key held
+  manager.state = GameState.paused; // Continue loads the saved game paused
+  key('KeyD'); // the held key is pressed again while paused
+  manager.state = GameState.playing; // resumed, the key never released
+  manager.actions = [];
+  key('KeyA');
+  key('KeyA', false); // releasing another key falls back to keys still held
+  tick(400);
+  assert.ok(count(manager, 'moveRight') > 0, 'the still-held key moves again');
+  key('KeyD', false);
+});
