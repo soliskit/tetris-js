@@ -78,8 +78,10 @@ export function allPieces() {
  * @returns {T[]} The same array.
  */
 function shuffle(items, random) {
-  // Stryker disable next-line EqualityOperator: also running i = 0 would swap the first item with itself. Flagged for a rewrite (rewrite: register follow-up F39).
-  for (let i = items.length - 1; i > 0; i--) {
+  // F39 rewrite: the loop visits indices 1 up, so a mutant that widens the
+  // range writes past the array's end (or never shuffles) instead of
+  // performing an invisible swap of the first item with itself.
+  for (let i = 1; i < items.length; i++) {
     const j = Math.floor(random() * (i + 1));
     [items[i], items[j]] = [items[j], items[i]];
   }
