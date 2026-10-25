@@ -147,7 +147,7 @@ function parseBag(colors) {
  * @param {{ rows: number, columns: number, maxLockDelayResets?: number }} size
  * @returns {Session | null}
  */
-export function parseSession(text, { rows, columns, maxLockDelayResets }) {
+export function parseSession(text, { rows, columns, maxLockDelayResets = Infinity }) {
   /** @type {unknown} */
   let data = null;
   try {
@@ -189,12 +189,11 @@ export function parseSession(text, { rows, columns, maxLockDelayResets }) {
   let lockDelayResetCount;
   if (Object.hasOwn(data, 'lockDelayResetCount')) {
     const count = data.lockDelayResetCount;
-    // Callers pass the game's reset cap; without it there is no upper bound
-    // to check against.
-    if (!isInteger(count) || count < 0 || (
-        // Stryker disable next-line ConditionalExpression: without a cap, count > undefined is always false, so replacing this guard with true is unobservable. This also hides the guard-to-false mutant, which the over-cap test kills; the registered rewrite removes the exclusion. Flagged for a rewrite (rewrite: register follow-up F38).
-        maxLockDelayResets !== undefined
-        && count > maxLockDelayResets)) return null;
+    // Callers pass the game's reset cap; when they do not, the parameter
+    // default of Infinity leaves the count with no upper bound to check
+    // against (F38 rewrite: the cap check reads as one plain comparison, so
+    // no mutant of it is unobservable).
+    if (!isInteger(count) || count < 0 || count > maxLockDelayResets) return null;
     lockDelayResetCount = count;
   }
   /** @type {number | undefined} */
