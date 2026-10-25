@@ -2,7 +2,7 @@
 
 The outside facts the project relies on, each with its source, the date checked, and a status of Verified or Unproven. Only Verified facts support a requirement.
 
-Decisions and findings live in [DECISIONS.md](decision-log.md); requirements live in [REQUIREMENTS.md](requirements.md). This record is their evidence base for facts that come from outside the project.
+Decisions and findings live in [decisions.md](decisions.md); requirements live in [REQUIREMENTS.md](requirements.md). This record is their evidence base for facts that come from outside the project.
 
 ## Geometry
 
