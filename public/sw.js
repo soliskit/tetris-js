@@ -17,8 +17,7 @@ const VERSION_PREFIX = 'tetris-version-';
 const PINS = 'tetris-pins';
 // How long a page keeps the version it opened with, once the page is gone.
 // Pages ask for all their files as they start, so this only needs to
-// outlast loading; a page that is still open keeps its version for as long
-// as it lives, however the clock moves.
+// outlast loading.
 const PIN_MS = 10 * 60 * 1000;
 // The caches earlier workers kept, cleared out when this one takes over,
 // but only the ones this app made: GitHub Pages serves every project of an
@@ -130,7 +129,9 @@ async function removeOldVersions() {
   // wall-clock expiry alone cannot be trusted, because a clock that jumps
   // forward would make a loading page's record look old and get its version
   // deleted under it. Only a record whose page is gone can expire by time.
-  const live = new Set((await worker.clients.matchAll()).map(client => client.id));
+  // A page still loading is not yet controlled by this worker, so the list
+  // asks for uncontrolled pages too.
+  const live = new Set((await worker.clients.matchAll({ includeUncontrolled: true })).map(client => client.id));
   for (const key of await pins.keys()) {
     const pinned = await pins.match(key);
     if (!pinned) continue;
@@ -188,10 +189,10 @@ worker.addEventListener('install', event => {
 });
 
 // Deletes one earlier cache, but only when everything in it belongs to this
-// app: earlier workers kept a single cache of this app's files that each
-// download changed in place, and this worker's scope is this app's own
-// address. A cache another project made holds that project's addresses, not
-// this one's, so it stays untouched.
+// app: every stored address under this worker's own scope. A cache holding
+// another project's addresses stays, and so does an empty one, whose maker
+// cannot be told from its contents. Keeping is the safe side: a stale cache
+// costs disk, a wrong delete costs another project its offline copy.
 /** @param {string} name */
 async function removeOldCacheIfOurs(name) {
   if (!(await caches.has(name))) return;
@@ -209,7 +210,6 @@ worker.addEventListener('activate', event => {
 
 worker.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
   if (event.request.mode !== 'navigate') {
     event.respondWith(versionFor(event.clientId).then(version => answer(event.request, version)));
     return;
