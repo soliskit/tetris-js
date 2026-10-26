@@ -170,7 +170,7 @@ function loadWorker(world) {
   const worker = {
     registration: { scope: SCOPE },
     clients: {
-      matchAll: async () => world.liveClients,
+      matchAll: async options => { world.matchAllOptions = options; return world.liveClients; },
       claim: async () => {},
     },
     addEventListener: (type, fn) => { handlers[type] = fn; },
@@ -231,6 +231,7 @@ test('a clock jump forward cannot cost a loading page its version [APP-2]', asyn
   await seedPin(world, 'page-1', 'tetris-version-1-aaa', Date.now() - 2 * PIN_MS_TEST);
   const handlers = loadWorker(world);
   await runEvent(handlers.install); // downloads version 3, then cleans up
+  assert.equal(world.matchAllOptions?.includeUncontrolled, true, 'a page still loading is not yet a controlled client');
   assert.ok(world.stores.has('tetris-version-1-aaa'), "the open page's version survives");
   const pin = await (await world.caches.open(PINS_CACHE)).match(`pins/${encodeURIComponent('page-1')}`);
   assert.ok(pin, "the open page's record survives");
@@ -265,4 +266,22 @@ test('a page record saved while cleanup runs keeps its version [APP-2]', async (
   const handlers = loadWorker(world);
   await runEvent(handlers.install);
   assert.ok(world.stores.has('tetris-version-1-aaa'), "the late record's version is not deleted under it");
+});
+
+test("an old cache mixing this app's and another project's addresses stays [APP-6]", async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  const mixed = await world.caches.open('tetris');
+  await mixed.put('index.html', new Response('ours'));
+  await mixed.put('https://example.github.io/other-app/index.html', new Response('theirs'));
+  const handlers = loadWorker(world);
+  await runEvent(handlers.activate);
+  assert.ok(world.stores.has('tetris'), 'a cache holding any foreign address is left alone');
+});
+
+test('an empty old cache stays, its maker unknown [APP-6]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  await world.caches.open('tetris-2'); // created but never filled
+  const handlers = loadWorker(world);
+  await runEvent(handlers.activate);
+  assert.ok(world.stores.has('tetris-2'), 'an empty cache is left alone');
 });
