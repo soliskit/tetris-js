@@ -121,8 +121,8 @@ test('the service worker is registered with a relative path [APP-2] [APP-3]', ()
 });
 
 // Service worker storage behavior. The worker runs in a small fake of the
-// Cache and Clients APIs, so the scenarios of findings F26, F27 and F36 play
-// out against the real sw.js source.
+// Cache and Clients APIs, so the storage scenarios above play out against
+// the real sw.js source.
 
 import vm from 'node:vm';
 
@@ -133,7 +133,6 @@ const PINS_CACHE = 'tetris-pins';
 // out clones the way the real Cache API does.
 function makeCaches() {
   const stores = new Map();
-  const deleted = [];
   const hooks = { onKeys: null };
   const urlOf = key => (typeof key === 'string' ? new URL(key, SCOPE).href : key.url);
   const makeCache = name => {
@@ -158,10 +157,10 @@ function makeCaches() {
     open: async name => makeCache(name),
     has: async name => stores.has(name),
     keys: async () => [...stores.keys()],
-    delete: async name => { deleted.push(name); return stores.delete(name); },
+    delete: async name => stores.delete(name),
     match: async (key, { cacheName } = {}) => (cacheName ? stores.get(cacheName)?.get(urlOf(key))?.clone() : undefined),
   };
-  return { caches, stores, deleted, hooks };
+  return { caches, stores, hooks };
 }
 
 // Runs the real sw.js with fakes for the worker globals; returns its handlers.
