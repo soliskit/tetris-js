@@ -121,7 +121,7 @@ test('the service worker is registered with a relative path [APP-2] [APP-3]', ()
 });
 
 // Service worker storage behavior. The worker runs in a small fake of the
-// Cache and Clients APIs, so the storage scenarios above play out against
+// Cache and Clients APIs, so the storage scenarios below play out against
 // the real sw.js source.
 
 import vm from 'node:vm';
