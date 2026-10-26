@@ -188,9 +188,6 @@ worker.addEventListener('install', event => {
   worker.skipWaiting();
 });
 
-// TEMP-DIAGNOSTIC (remove before final): captures what the worker can see.
-/** @type {{ scope: string | null, allNames: string[] | null, caches: Record<string, { has?: boolean, keyCount?: number, keyUrls?: string[], deleted?: boolean }>, errors: string[] }} */
-const swDiag = { scope: null, allNames: null, caches: {}, errors: [] };
 // Deletes one earlier cache, but only when everything in it belongs to this
 // app: every stored address under this worker's own scope. A cache holding
 // another project's addresses stays, and so does an empty one, whose maker
@@ -198,22 +195,11 @@ const swDiag = { scope: null, allNames: null, caches: {}, errors: [] };
 // costs disk, a wrong delete costs another project its offline copy.
 /** @param {string} name */
 async function removeOldCacheIfOurs(name) {
-  try {
-    const scope = worker.registration.scope;
-    swDiag.scope = scope;
-    swDiag.allNames = await caches.keys();
-    const has = await caches.has(name);
-    swDiag.caches[name] = { has };
-    if (!has) return;
-    const keys = await (await caches.open(name)).keys();
-    swDiag.caches[name].keyCount = keys.length;
-    swDiag.caches[name].keyUrls = keys.map(request => request.url);
-    if (keys.length > 0 && keys.every(request => request.url.startsWith(scope))) {
-      await caches.delete(name);
-      swDiag.caches[name].deleted = true;
-    }
-  } catch (err) {
-    swDiag.errors.push(String(err));
+  if (!(await caches.has(name))) return;
+  const keys = await (await caches.open(name)).keys();
+  const scope = worker.registration.scope;
+  if (keys.length > 0 && keys.every(request => request.url.startsWith(scope))) {
+    await caches.delete(name);
   }
 }
 
@@ -224,11 +210,6 @@ worker.addEventListener('activate', event => {
 
 worker.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  // TEMP-DIAGNOSTIC (remove before final)
-  if (event.request.url.endsWith('/__sw_diag__')) {
-    event.respondWith(new Response(JSON.stringify(swDiag), { headers: { 'Content-Type': 'application/json' } }));
-    return;
-  }
   if (event.request.mode !== 'navigate') {
     event.respondWith(versionFor(event.clientId).then(version => answer(event.request, version)));
     return;
