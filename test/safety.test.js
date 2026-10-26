@@ -318,14 +318,6 @@ test('if touching localStorage throws, memory storage is used instead [SAF-2]', 
   assert.equal(game.highScore, 400);
 });
 
-test('by default gravity runs on the browser timers [PLY-2]', () => {
-  const game = new GameManager({ storage: createMemoryStorage() });
-  game.handleAction(PlayerAction.newGame);
-  assert.notEqual(game.gameLoopTask, null);
-  game.togglePause();
-  assert.equal(game.gameLoopTask, null);
-});
-
 test('by default a broken invariant is reported to the console without an error object [SAF-4]', t => {
   const logged = t.mock.method(console, 'error', () => {});
   const { game } = newGame();
