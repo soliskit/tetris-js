@@ -119,3 +119,150 @@ test('the offline cache includes every file the game needs to start [APP-2]', ()
 test('the service worker is registered with a relative path [APP-2] [APP-3]', () => {
   assert.match(read('script.js'), /serviceWorker\.register\('sw\.js'\)/);
 });
+
+// Service worker storage behavior. The worker runs in a small fake of the
+// Cache and Clients APIs, so the scenarios of findings F26, F27 and F36 play
+// out against the real sw.js source.
+
+import vm from 'node:vm';
+
+const SCOPE = 'https://example.github.io/tetris-js/';
+const PINS_CACHE = 'tetris-pins';
+
+// A minimal Cache API: every cache is a URL -> Response map, and reads hand
+// out clones the way the real Cache API does.
+function makeCaches() {
+  const stores = new Map();
+  const deleted = [];
+  const hooks = { onKeys: null };
+  const urlOf = key => (typeof key === 'string' ? new URL(key, SCOPE).href : key.url);
+  const makeCache = name => {
+    if (!stores.has(name)) stores.set(name, new Map());
+    const store = stores.get(name);
+    return {
+      put: async (key, response) => { store.set(urlOf(key), response); },
+      addAll: async requests => { for (const request of requests) store.set(urlOf(request), new Response('cached')); },
+      keys: async () => {
+        // The snapshot is taken before the hook runs, so a record written
+        // during this call (a concurrent page save) is invisible to this
+        // read, as in the real API.
+        const snapshot = [...store.keys()];
+        if (hooks.onKeys) await hooks.onKeys(name, store);
+        return snapshot.map(url => new Request(url));
+      },
+      match: async key => store.get(urlOf(key))?.clone(),
+      delete: async key => store.delete(urlOf(key)),
+    };
+  };
+  const caches = {
+    open: async name => makeCache(name),
+    has: async name => stores.has(name),
+    keys: async () => [...stores.keys()],
+    delete: async name => { deleted.push(name); return stores.delete(name); },
+    match: async (key, { cacheName } = {}) => (cacheName ? stores.get(cacheName)?.get(urlOf(key))?.clone() : undefined),
+  };
+  return { caches, stores, deleted, hooks };
+}
+
+// Runs the real sw.js with fakes for the worker globals; returns its handlers.
+function loadWorker(world) {
+  const handlers = {};
+  const worker = {
+    registration: { scope: SCOPE },
+    clients: {
+      matchAll: async () => world.liveClients,
+      claim: async () => {},
+    },
+    addEventListener: (type, fn) => { handlers[type] = fn; },
+    skipWaiting: () => {},
+  };
+  // Relative addresses in the worker (APP_SHELL, pin keys) resolve against
+  // the worker's scope, as they do in a real service worker.
+  const ScopedRequest = class extends Request {
+    constructor(input, init) { super(typeof input === 'string' ? new URL(input, SCOPE) : input, init); }
+  };
+  const sandbox = {
+    self: worker,
+    caches: world.caches,
+    fetch: async () => { throw new Error('offline'); },
+    Request: ScopedRequest, Response, URL, console,
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(read('sw.js'), sandbox);
+  return handlers;
+}
+
+const runEvent = async (handler, event = {}) => {
+  let done;
+  handler({ waitUntil: promise => { done = promise; }, respondWith: () => {}, ...event });
+  await done;
+};
+
+const seedVersion = async (world, name) => {
+  await (await world.caches.open(name)).put('index.html', new Response('cached'));
+};
+
+const seedPin = async (world, clientId, version, at) => {
+  await (await world.caches.open(PINS_CACHE)).put(`pins/${encodeURIComponent(clientId)}`, Response.json({ version, at }));
+};
+
+const PIN_MS_TEST = 10 * 60 * 1000;
+
+test('activation deletes only the old caches this app made [APP-6]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  // Another project's cache: same fixed name, its own addresses.
+  await (await world.caches.open('tetris')).put('https://example.github.io/other-app/index.html', new Response('theirs'));
+  // This app's old cache: only addresses under this app's scope.
+  const ours = await world.caches.open('tetris-2');
+  await ours.put('index.html', new Response('ours'));
+  await ours.put('style.css', new Response('ours'));
+  const handlers = loadWorker(world);
+  await runEvent(handlers.activate);
+  assert.ok(world.stores.has('tetris'), "another project's cache named 'tetris' is left alone");
+  assert.ok(!world.stores.has('tetris-2'), "this app's old cache 'tetris-2' is deleted");
+});
+
+test('a clock jump forward cannot cost a loading page its version [APP-2]', async () => {
+  const world = { liveClients: [{ id: 'page-1' }], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa');
+  await seedVersion(world, 'tetris-version-2-bbb');
+  // The clock jumped forward: the record looks twenty minutes old, but the
+  // page that made it is still open.
+  await seedPin(world, 'page-1', 'tetris-version-1-aaa', Date.now() - 2 * PIN_MS_TEST);
+  const handlers = loadWorker(world);
+  await runEvent(handlers.install); // downloads version 3, then cleans up
+  assert.ok(world.stores.has('tetris-version-1-aaa'), "the open page's version survives");
+  const pin = await (await world.caches.open(PINS_CACHE)).match(`pins/${encodeURIComponent('page-1')}`);
+  assert.ok(pin, "the open page's record survives");
+});
+
+test('a record whose page is gone expires by age, and its version is deleted [APP-2]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa');
+  await seedVersion(world, 'tetris-version-2-bbb');
+  await seedPin(world, 'page-gone', 'tetris-version-1-aaa', Date.now() - 2 * PIN_MS_TEST);
+  const handlers = loadWorker(world);
+  await runEvent(handlers.install);
+  assert.ok(!world.stores.has('tetris-version-1-aaa'), 'the old version is deleted once its page is gone');
+  const pin = await (await world.caches.open(PINS_CACHE)).match(`pins/${encodeURIComponent('page-gone')}`);
+  assert.ok(!pin, 'the expired record is removed');
+});
+
+test('a page record saved while cleanup runs keeps its version [APP-2]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa');
+  await seedVersion(world, 'tetris-version-2-bbb');
+  // A page saves its record just after cleanup reads the records: the first
+  // keys() call still answers the old list, but the record is already stored.
+  let hooked = true;
+  world.hooks.onKeys = async (name, store) => {
+    if (hooked && name === PINS_CACHE) {
+      hooked = false;
+      const written = Response.json({ version: 'tetris-version-1-aaa', at: Date.now() });
+      store.set(new URL(`pins/${encodeURIComponent('page-late')}`, SCOPE).href, written);
+    }
+  };
+  const handlers = loadWorker(world);
+  await runEvent(handlers.install);
+  assert.ok(world.stores.has('tetris-version-1-aaa'), "the late record's version is not deleted under it");
+});
