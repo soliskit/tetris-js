@@ -15,10 +15,13 @@ const VERSION_PREFIX = 'tetris-version-';
 // Which version each page opened with. Kept in a cache rather than in the
 // worker's memory, so a newer worker that takes over still knows.
 const PINS = 'tetris-pins';
-// How long a page keeps the version it opened with. Pages ask for all their
-// files as they start, so this only needs to outlast loading.
+// How long a page keeps the version it opened with, once the page is gone.
+// Pages ask for all their files as they start, so this only needs to
+// outlast loading.
 const PIN_MS = 10 * 60 * 1000;
-// The caches earlier workers kept, cleared out when this one takes over.
+// The caches earlier workers kept, cleared out when this one takes over,
+// but only the ones this app made: GitHub Pages serves every project of an
+// account from one origin, and they all share its caches.
 const OLD_CACHES = ['tetris', 'tetris-2'];
 const APP_SHELL = [
   './',
@@ -79,6 +82,12 @@ async function pin(clientId, version) {
   await (await caches.open(PINS)).put(pinKey(clientId), Response.json({ version, at: Date.now() }));
 }
 
+/**
+ * @param {Request} key
+ * @returns {string} The page whose record this is.
+ */
+const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/').pop() ?? '');
+
 // The version a page opened with, while it still exists, or else the newest.
 /**
  * @param {string} clientId
@@ -108,25 +117,51 @@ async function openPage(event) {
 }
 
 // Deletes the versions older than the newest complete one, except any a page
-// opened with in the last few minutes. The one before the newest is kept too:
-// a page opening just as a download finished may have picked it and not yet
-// noted that it did.
+// opened with. The one before the newest is kept too: a page opening just as
+// a download finished may have picked it and not yet noted that it did.
 async function removeOldVersions() {
   const complete = await completeVersions();
   const newest = complete[0];
   if (!newest) return;
   const kept = new Set(complete.slice(0, 2));
   const pins = await caches.open(PINS);
+  // A page that is still open keeps its version for as long as it lives:
+  // wall-clock expiry alone cannot be trusted, because a clock that jumps
+  // forward would make a loading page's record look old and get its version
+  // deleted under it. Only a record whose page is gone can expire by time.
+  // A page still loading is not yet controlled by this worker, so the list
+  // asks for uncontrolled pages too.
+  const live = new Set((await worker.clients.matchAll({ includeUncontrolled: true })).map(client => client.id));
   for (const key of await pins.keys()) {
     const pinned = await pins.match(key);
     if (!pinned) continue;
     const { version, at } = /** @type {{ version: string, at: number }} */ (await pinned.json());
-    if (Date.now() - at > PIN_MS) await pins.delete(key);
+    if (live.has(pinClient(key))) kept.add(version);
+    else if (Date.now() - at > PIN_MS) await pins.delete(key);
     else kept.add(version);
   }
   for (const name of await versionNames()) {
-    if (versionNumber(name) < versionNumber(newest) && !kept.has(name)) await caches.delete(name);
+    if (versionNumber(name) < versionNumber(newest) && !kept.has(name) && !(await isPinned(pins, name))) {
+      await caches.delete(name);
+    }
   }
+}
+
+// A page can save its record while this cleanup runs, after the records were
+// read above. Checking again just before each delete keeps that page's
+// version; only a save in the instant between this check and the delete can
+// still be missed.
+/**
+ * @param {Cache} pins
+ * @param {string} version
+ * @returns {Promise<boolean>} Any record, fresh or stale, naming this version.
+ */
+async function isPinned(pins, version) {
+  for (const key of await pins.keys()) {
+    const pinned = await pins.match(key);
+    if (pinned && /** @type {{ version: string }} */ (await pinned.json()).version === version) return true;
+  }
+  return false;
 }
 
 // Downloads every file of the game into a new version cache, in one step. If
@@ -153,11 +188,23 @@ worker.addEventListener('install', event => {
   worker.skipWaiting();
 });
 
-// Clears out the caches of earlier workers, which kept a single cache that
-// each download changed in place. Only those, by name: GitHub Pages serves
-// every project of an account from one origin, and they all share its caches.
+// Deletes one earlier cache, but only when everything in it belongs to this
+// app: every stored address under this worker's own scope. A cache holding
+// another project's addresses stays, and so does an empty one, whose maker
+// cannot be told from its contents. Keeping is the safe side: a stale cache
+// costs disk, a wrong delete costs another project its offline copy.
+/** @param {string} name */
+async function removeOldCacheIfOurs(name) {
+  if (!(await caches.has(name))) return;
+  const keys = await (await caches.open(name)).keys();
+  const scope = worker.registration.scope;
+  if (keys.length > 0 && keys.every(request => request.url.startsWith(scope))) {
+    await caches.delete(name);
+  }
+}
+
 worker.addEventListener('activate', event => {
-  event.waitUntil(Promise.all(OLD_CACHES.map(name => caches.delete(name)))
+  event.waitUntil(Promise.all(OLD_CACHES.map(removeOldCacheIfOurs))
     .then(() => worker.clients.claim()));
 });
 

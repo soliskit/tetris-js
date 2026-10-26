@@ -181,11 +181,23 @@ test('caches left by earlier versions of the game are cleared out [APP-2]', asyn
       await old.put('/?from=link', new Response('<title>Stale</title>', { headers: { 'Content-Type': 'text/html' } }));
     }
   });
-  await page.goto('/');
+  // The seed is checked before the worker runs, so a lost fixture fails here
+  // instead of reading as a kept cache. This test registers the worker by
+  // hand instead of loading '/', where the app would register it: on WebKit's
+  // test browser the seeded entries appear unreadable once the page that
+  // wrote them has gone (see "caches of other projects"), so activation runs
+  // while this page is still here.
+  expect(await page.evaluate(async () => {
+    for (const name of ['tetris', 'tetris-2']) {
+      if ((await (await caches.open(name)).keys()).length !== 1) return false;
+    }
+    return true;
+  })).toBe(true);
+  await page.evaluate(() => navigator.serviceWorker.register('/sw.js'));
   await page.evaluate(() => navigator.serviceWorker.ready);
   // Besides the new version, only the record of which version each page opened with.
   await expect.poll(() => page.evaluate(async () => (await caches.keys()).filter(name => name !== 'tetris-pins'))).toEqual([expect.stringMatching(/^tetris-version-1-/)]);
-  await page.reload();
+  await page.goto('/');
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await expect(page).toHaveTitle('Tetris');
 });
