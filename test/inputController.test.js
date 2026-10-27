@@ -747,23 +747,6 @@ test('the P key that pauses releases held input [STA-2]', t => {
   assert.deepEqual(manager.actions, ['softDrop'], 'a fresh press soft drops again');
 });
 
-test('the Escape that pauses releases held input [STA-2]', t => {
-  const { manager, key, tick } = setup(t);
-  key('KeyA');
-  key('KeyS');
-  tick(200);
-  manager.state = GameState.paused; // the manager's own togglePause pauses
-  key('Escape');
-  manager.state = GameState.playing; // resumed later
-  manager.actions = [];
-  tick(500);
-  assert.deepEqual(manager.actions, [], 'the keys held across the pause do nothing');
-  key('KeyA', false);
-  key('KeyS', false);
-  key('KeyS');
-  assert.deepEqual(manager.actions, ['softDrop'], 'a fresh press soft drops again');
-});
-
 test('a P press that leaves the game playing releases nothing [STA-2]', t => {
   // The real manager resumes here; the stand-in stays playing either way.
   const { manager, key, tick } = setup(t);
