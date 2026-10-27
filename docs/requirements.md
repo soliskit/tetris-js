@@ -34,6 +34,21 @@ Each change to game code (anything under public/) or to a requirement row is one
 
 A change to neither code nor requirement rows needs no kind. The three rules still apply: weakening a test falls under rule 2, and the gates QA-1 to QA-6 are never lowered or removed.
 
+### Exception for test cuts 3-6
+
+Rule 2 has one exception for the four unit-test cuts below. This is permission to give up these specific witnesses, not a claim that a kept test proves the same input at the same boundary. It permits no other runtime-check or test removal. Application behavior requirements and QA-1 to QA-6 stay unchanged.
+
+| Cut | Removed test | Specific witness given up | Kept evidence and its limit |
+| --- | --- | --- | --- |
+| 3 | `an error inside a timer stops the game safely and is reported [SAF-3]`, the lock-delay-timer variant in `test/safety.test.js` | An error entering the safe-stop-and-report guard from the lock-delay timer while a piece is landing | The gravity-timer test checks the shared schedule-and-guard route and reported message. Player-action and post-fault tests stay. This is not the same lock-delay landing input. |
+| 4 | `the Escape that pauses releases held input [STA-2]` in `test/inputController.test.js` | Escape's held-input-release witness | Kept P-key and gamepad Menu tests exercise the shared pause-release path. Escape keeps pause-toggle and dialog tests. A different pause key is not the same Escape input. |
+| 5 | `auto repeat stops once the game is no longer playing [INP-2]` in `test/inputController.test.js` | The direct assertion that KeyD held through 1,000 ms paused produces no repeat | A kept test holds KeyD through 200 ms paused and later checks the unreset full action history. This is indirect evidence, not the removed pause-time assertion. Gamepad pause and after-resume pause-release tests stay. |
+| 6 | `losing window focus stops the soft drop key [INP-2]` in `test/inputController.test.js` | A repeating soft-drop key stops on window blur | The kept `losing window focus releases every held key [INP-2]` test checks that a repeating move key stops and is forgotten on blur. KeyA is not the removed KeyS soft-drop input. |
+
+Each cut needs its own same-PR decision record, a filled PR description, 100% line, branch and function coverage, mutation score 100 across all seven game files on the PR's exact head, and independent review of that head by someone other than its author, named to the owner before merge. Mutants that only make tests run too long count as caught under the existing gate. A failed required check stops that cut, with no retry, repair or automatic rollback. A surviving fault means the cut does not merge and the test stays. Passing these checks is not proof that the removed specific witness is still present.
+
+The first PR uses the existing No Class Needed classification because no game code or requirement rows change. It must separately state this new policy-prose exception plainly. There is no new class and no exception for later work.
+
 ## Pieces and board
 
 | ID | Requirement |
