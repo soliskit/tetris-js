@@ -43,9 +43,9 @@ Not Established here: ordinary malformed creation, all Q1 partitions, queue beha
 
 ## Source pins
 
-- `public/game/gameManager.js:93-126,182-195,230-242,397-432`: SHA256 `31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea`.
-- `public/game/tetrominoFactory.js:91-110`: SHA256 `25e1da6c0b1992b0317aef7025fb7030803a8fd20e649a45eb2ddeaa166ae8b4`.
-- `public/game/session.js:123-126,163-169`: SHA256 `54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b`.
+- `public/game/gameManager.js:93-126,182-195,230-242,397-432`: SHA-256 `31bb2160852bd24485ba258c458b74acdec110c1e11b0d94f4f852f3cf27b9ea`.
+- `public/game/tetrominoFactory.js:91-110`: SHA-256 `25e1da6c0b1992b0317aef7025fb7030803a8fd20e649a45eb2ddeaa166ae8b4`.
+- `public/game/session.js:123-126,163-169`: SHA-256 `54acbea460218f0e0a827619eae51e265461fe9ac6575dc8bf48727f6483049b`.
 - Criteria: `docs/audit/queue-piece-check-decision.md`; R1 B3/B7; blueprint section 4.8 Q1. Source identities do not authenticate historical execution.
 
 ## Later partitions: object, numbers and one detector group
@@ -68,4 +68,4 @@ A dense queue of three ordinary generic recognized-yellow Tetromino values with 
 
 Other malformed canonical representations, ordinary creation, every mode and writer, failure histories, native execution and full Q1, R1 and SAF-4 remain open. No code, test, requirement, model, CI, settings, cache, storage or release change.
 
-Evidence: reviewed source packets `Q1-object-and-number-partition-extension.md` (SHA-256 `84088f02d83dfff80875e07142fdb002493770ebcb755665af723a0c3c8f11f4`) and `Q1-length-three-predicate-equivalence.md` (SHA-256 `cec8b73dbec439547904abd5c0027e7e21fbeb1e4da00a72fdf5f9540eede8d8`). Reads were not one atomic snapshot and no run receipt is claimed.
+Evidence: reviewed source packets `Q1-object-and-number-partition-extension.md` (SHA-256 `84088f02d83dfff80875e07142fdb002493770ebcb755665af723a0c3c8f11f4`) and `Q1-length-three-predicate-equivalence.md` (SHA-256 `cec8b73dbec439547904abd5c0027e7e21fbeb1e4da00a72fdf5f9540eede8d8`). Reads were not one atomic snapshot and no run receipt is claimed. Neither packet was recovered in the bounded all-branch git-history search as of 2026-10-26; the recorded hashes do not recover their bytes.

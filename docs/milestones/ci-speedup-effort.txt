@@ -730,7 +730,7 @@ Either method preserves the separate target/harness rule.
 22. Choices bounded by measurement
 
 Instinct makes these choices from measurements under the rules above and reports the
-results. the owner decides only when Section 1A retains the decision.
+results. The owner decides only when Section 1A retains the decision.
 
 M1. Maximum useful simultaneous hosted-job count.
 Rule: the default cap is 6 hosted jobs per workflow run (1 gate, 2 browser, 3
