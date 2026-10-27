@@ -143,3 +143,7 @@ Both suites run on every pull request and before every deploy.
 ## License
 
 [MIT](LICENSE)
+
+## Contributing
+
+See [Writing commits and pull requests](docs/contributing.md) for the message standard, optional per-clone editor setup and required description review.
