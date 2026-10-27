@@ -3,7 +3,6 @@ name: "Suggest a feature"
 about: "Suggest a change to Tetris"
 title: "Describe how this improves the game"
 labels: Enhancement
-assignees: ''
 
 ---
 
