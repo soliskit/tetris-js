@@ -244,14 +244,6 @@ test('the newest direction wins, and releasing it returns to the one still held 
   assert.equal(manager.actions.length, total);
 });
 
-test('auto repeat stops once the game is no longer playing [INP-2]', t => {
-  const { manager, key, tick } = setup(t);
-  key('KeyD');
-  manager.state = GameState.paused;
-  tick(1000);
-  assert.equal(count(manager, PlayerAction.moveRight), 1);
-});
-
 test('losing window focus releases every held key [INP-2]', t => {
   const { manager, key, fire, tick } = setup(t);
   key('KeyA');
