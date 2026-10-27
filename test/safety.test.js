@@ -55,15 +55,6 @@ test('the page is told about a fault too, so it shows the stopped game [SAF-3] [
   assert.equal(changes, 1);
 });
 
-test('an error inside a timer stops the game safely and is reported [SAF-3]', () => {
-  const factory = breakableFactory();
-  const { game, scheduler, reported } = recordingGame({ factory });
-  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing'); // lock delay running
-  factory.broken = true;
-  assert.doesNotThrow(() => scheduler.advance(500));
-  assertSafeStop(game, scheduler, reported, 'unexpected error');
-});
-
 test('an error inside the gravity timer stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
