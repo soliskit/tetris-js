@@ -28,6 +28,8 @@ Earlier update note (historical, from the pull request that added the Phase 3 li
 
 ## Table
 
+Reference note (2026-10-26): the claim/method records named in the Applicable claim and Evidence method columns - `phase-3-obligations-P3-D.txt`, `phase-3-obligations-P3-E.txt` and `phase-3-model-method-mapping.md` - were deleted 2026-10-24 at a048ecd (PR #306) and are kept in git history; last paths under `docs/tetris-audit/`. The row references are historical locators, not live files. This note changes no claim, method or status cell.
+
 | Requirement | Group | Scope | Note | Owner decision | Applicable claim | Evidence method | Certification status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | PCE-1 | Pieces and board | In Scope |  | Approved: In Scope | Summary of the claim in `phase-3-obligations-P3-C.txt`, record PCE-1 | Method/evidence in `phase-3-model-method-mapping.md`, row PCE-1; underlying P3-C record | Tested Within Stated Bounds |

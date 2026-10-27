@@ -62,7 +62,7 @@ G11. Identify the exact covered tree and reference a checksummed complete
 code-to-claim inventory. Do not require every unit inline in every record.
 G12. Delegate within-charter normative, gameplay and engineering decisions to
 Instinct, with independent exact-stage-text review before delegated approval
-and implementation. the owner retains the direct decisions in Sections 2 and 2A.
+and implementation. The owner retains the direct decisions in Sections 2 and 2A.
 
 Decision provenance: alternatives considered
 
@@ -164,7 +164,7 @@ This feature charter adds a post-certification lifecycle; it does not replace:
 - adopted trust boundaries;
 - finding/property-status distinctions.
 
-the owner remains final authority and may override this charter. The existing approved
+The owner remains final authority and may override this charter. The existing approved
 policy delegates within-charter normative, gameplay and engineering decisions to
 the delegated implementer, subject to Section 2A's independent stage-text review.
 This approved wording does not expand that authority.
@@ -179,7 +179,7 @@ default policy basis. Within that policy:
   certification policy outside the charter is not;
 - an adjacent Release Group remains a direct owner decision under G6 and Section 10.
 
-the owner retains direct decisions over:
+The owner retains direct decisions over:
 - program goals, priorities and scope outside the approved charter;
 - a material product-direction/player-experience conflict that the approved direction
   does not resolve;
@@ -215,7 +215,7 @@ Questions to the owner are limited to:
 - any interpretation or requirement change that would alter the approved program
   goal/scope or conflict with an owner-approved governing requirement;
 - anything outside the charter's delegated authority.
-the owner is not asked to choose formulas, kick tables, timer mechanics, persistence/data
+The owner is not asked to choose formulas, kick tables, timer mechanics, persistence/data
 layouts, model mechanics or test structure when those choices stay inside the approved
 charter.
 
@@ -244,7 +244,7 @@ Stage review and approval:
   approval is required only where Sections 2 and 2A retain that decision; the charter
   does not add a routine owner micro-approval for within-charter certification.
 - Merge and deploy: remain the owner's. Instinct does not merge or deploy under this
-  charter. the owner may grant a scoped, standing permission in his own words, for example
+  charter. The owner may grant a scoped, standing permission in his own words, for example
   per stage, with stated conditions. Nothing here assumes he has.
 - The following decisions need explicit scoped owner approval: weakening any
   protection or QA-1 to QA-6 scope; trusted-boundary changes; changing the
@@ -425,7 +425,7 @@ because this policy exists.
 Complete one stage before implementing the next, unless the owner approves an adjacent
 Release Group.
 
-the owner must approve any adjacent Release Group before implementation.
+The owner must approve any adjacent Release Group before implementation.
 
 Within an approved group:
 - feature implementation order remains the fixed S1-S7 order;
@@ -433,7 +433,7 @@ Within an approved group:
 - impact/evidence covers the combined candidate;
 - certification and release occur atomically.
 
-S3 + S4 is the expected first candidate. the owner has not approved that group here.
+S3 + S4 is the expected first candidate. The owner has not approved that group here.
 
 11. Post-certification stage cycle
 
@@ -550,7 +550,7 @@ Freeze:
 If merge/conflict resolution changes certified contents:
 refresh affected certification before treating the release as certified.
 
-12. Return-to-step rule
+12A. Return-to-step rule
 
 If approved requirement or normative decision text changes:
 - dependent work stops;
@@ -930,7 +930,7 @@ normative text does not count as that text's independent fidelity review: the re
 and delegated approver are distinct roles for the same exact checksum, and the review
 is recorded before delegated approval and implementation.
 
-the owner approves normative, scope, certification and release decisions only where
+The owner approves normative, scope, certification and release decisions only where
 retained by Sections 2 and 2A; within-charter delegated decisions are handled there as
 specified.
 
