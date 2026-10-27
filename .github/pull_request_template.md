@@ -4,6 +4,9 @@ A checklist for change class, behavior, safeguards, and audit records.
 
 ## What this changes
 
+<!-- Complete this description: replace the five question prompts with answers after their bold labels. Start Audit with Yes or No. For Yes, name a D-number and include docs/decisions.md in this PR; for No, explain why no record is needed. Select all applicable classes; do not combine No Class Needed with another class. The structural checker does not accept code fences, indented code, HTML elements or nested headings in this description. -->
+
+
 <!-- One or two sentences on what changes and why. -->
 
 ## Class
