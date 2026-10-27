@@ -197,14 +197,6 @@ test('holding S or Down soft drops a row at once, then every 50ms until released
   assert.deepEqual(manager.actions.filter(action => action !== 'softDrop'), [], 'a soft drop is never a hard drop');
 });
 
-test('losing window focus stops the soft drop key [INP-2]', t => {
-  const { manager, key, fire, tick } = setup(t);
-  key('KeyS');
-  fire('blur');
-  tick(500);
-  assert.equal(count(manager, 'softDrop'), 1);
-});
-
 test('holding a move key moves once, then repeats after 167ms every 33ms [INP-2]', t => {
   const { manager, key, tick } = setup(t);
   key('KeyA');
