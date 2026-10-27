@@ -92,7 +92,7 @@ Recorded: the owner chose the status word (D72 to D75). Set from a source argume
 - Queue, bag and save restore after a clear: `l1-clear-after-harness.mjs`, 800 trials (seeds 1 to 200, clear sizes 1 to 4, a Hold first on even seeds), 0 failures. The harness injects the current piece as a vertical I into column 9.
 - Repository test cases that remain the line-clear evidence: `test/gameManager.test.js` lines 281 to 288 (1 to 4 rows), 291 to 316 (rows above, split rows), 318 to 326 (one level boundary), 408 to 418 (save after a clear), 988 to 998 (a clear that ends the game); `test/safety.test.js` lines 189 to 202 (monitor silent through a full game cycle, including a clear).
 - The random traces rarely clear a line (1 and 0 clears), so the clear evidence is the 800-trial run and the repository cases above. Not covered: pieces other than a vertical I, repeated clears, clears across more than one level boundary, a real browser, and real storage.
-- These harnesses are not in the repository, so these runs cannot be replayed from it.
+- These harnesses were not in the repository when these runs were made, so the runs could not be replayed from it then. As of October 26, 2026, provenance copies of both harnesses live at `docs/audit/test-migration-provenance/l1-trace-harness.mjs` and `docs/audit/test-migration-provenance/l1-clear-after-harness.mjs`; they are reference copies of the scratch harnesses, not repository tests, and their presence does not reproduce the historical runs.
 
 ## 5. Requirement entry for the first-finger choice
 

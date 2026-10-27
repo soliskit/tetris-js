@@ -19,12 +19,12 @@ Base: `main` (D35 merged). Criteria are those under "Phase 1 exit criteria" in `
 | 7 | Scope table: every REQUIREMENTS.md ID in one row, scope and owner decision filled | `docs/phase-1-requirement-scope.md`: 55 IDs, 55 rows; D15's specific scope approval | Satisfied |
 | 8 | Applicable requirements identified for each proof obligation | D25 section 2 (O8 lists none, with the reason) | Satisfied. QA-4 and QA-5 are intentionally outside the O5 list: they are browser-test and typecheck requirements, not claim-to-code traceability, and D25 states its lists are open to correction by later phases |
 | 9 | Conflicts identified and resolved by requirement text or an explicit owner-approved clarification | D25 register rows 1 to 9; row 9 (DSP-5) by the owner's decision recorded in D25 and the reading in D30 | Satisfied as an owner-approved clarification recorded in this ledger. It is not an edit of `REQUIREMENTS.md`; that edit is a separate gate and is not granted |
-| 10 | Each decision recorded as normative text without code locations, test names, observed implementation behavior or finding history | D35 register (sections 1 to 3 separate decision text from annotations; sections 2 gives code-free restatements of D29 K2 and D27 W4) | Satisfied by D35. Historical files are not edited; annotations stay outside the decision text and outside any model input |
+| 10 | Each decision recorded as normative text without code locations, test names, observed implementation behavior or finding history | D35 register (sections 1 to 3 separate decision text from annotations; section 2 gives code-free restatements of D29 K2 and D27 W4) | Satisfied by D35. Historical files are not edited; annotations stay outside the decision text and outside any model input |
 | 11 | The owner approves the resulting requirement and security-scope decisions | Section 2 below | See section 2 |
 
 ## Approval basis (criterion 11)
 
-Behavioral decisions D16-to-D34 rest on the owner's answers to specific questions; D15 has explicit scope approval. D26-to-D35 were recorded under the October5,2026 automatic-through-Phase10 scope, retaining phase criteria, safety and reserved decisions. The owner did not review final prose or SHA-256 for D18 and later files; this record does not claim otherwise. D30, D32 and D35 are readings, sourced consequences and annotations with no new owner choice. Private proof is retained separately.
+Behavioral decisions D16-to-D34 rest on the owner's answers to specific questions; D15 has explicit scope approval. D26-to-D35 were recorded under the October 5, 2026 automatic-through-Phase 10 scope, retaining phase criteria, safety and reserved decisions. The owner did not review final prose or SHA-256 for D18 and later files; this record does not claim otherwise. D30, D32 and D35 are readings, sourced consequences and annotations with no new owner choice. Private proof is retained separately.
 
 ## Not decided here
 
