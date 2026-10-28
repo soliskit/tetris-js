@@ -6,7 +6,7 @@ import urllib.request
 from check_pr_title import check
 
 
-def run(api, repo, number):
+def run(api, repo, number, event_sha):
     prefix = '/repos/' + repo
     def unique_open_pr(head):
         matches = []
@@ -35,10 +35,11 @@ def run(api, repo, number):
         if fields(pr) != fields(again):
             raise ValueError('PR changed during read.')
         return head, title
-    head, title = snapshot()
-    target = prefix + '/statuses/' + head
-    api('POST', target, {'state': 'pending', 'context': 'PR title', 'description': 'Checking the current title.'})
+    target = prefix + '/statuses/' + event_sha
     try:
+        head, title = snapshot()
+        if head != event_sha:
+            raise ValueError('PR head differs from the event commit.')
         errors = check(title)
         if snapshot() != (head, title):
             raise ValueError('PR changed before status publication.')
@@ -64,7 +65,7 @@ def main():
         config = json.load(f)
     if config['repository'] != repo:
         raise ValueError('Configuration repository mismatch.')
-    errors = run(api, repo, number)
+    errors = run(api, repo, number, event['pull_request']['head']['sha'])
     for error in errors:
         print(error)
     return bool(errors)
