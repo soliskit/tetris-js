@@ -59,7 +59,9 @@ test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   const config = fs.readFileSync(path.join(root, 'playwright.config.js'), 'utf8');
   assert.match(config, /browserName: 'webkit', viewport: \{ width: 430, height: 932 \}/);
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8');
-  assert.match(workflow, /image: mcr\.microsoft\.com\/playwright:v1\.63\.0-noble/);
+  const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+  const playwrightVersion = lock.packages['node_modules/playwright'].version;
+  assert.ok(workflow.includes(`image: mcr.microsoft.com/playwright:v${playwrightVersion}-noble`));
   assert.match(workflow, /npm run test:e2e/);
 });
 
