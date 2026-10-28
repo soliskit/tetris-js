@@ -59,7 +59,7 @@ test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   const config = fs.readFileSync(path.join(root, 'playwright.config.js'), 'utf8');
   assert.match(config, /browserName: 'webkit', viewport: \{ width: 430, height: 932 \}/);
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8');
-  assert.match(workflow, /playwright install --with-deps chromium webkit/);
+  assert.match(workflow, /image: mcr\.microsoft\.com\/playwright:v1\.63\.0-noble/);
   assert.match(workflow, /npm run test:e2e/);
 });
 
@@ -106,3 +106,4 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
     if (/^import .* from '\.\.\/public\/game\//m.test(source)) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
   }
 });
+
