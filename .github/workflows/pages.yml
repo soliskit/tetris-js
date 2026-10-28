@@ -13,6 +13,9 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --init --ipc=host
     permissions:
       contents: read
     steps:
@@ -23,10 +26,10 @@ jobs:
           cache: npm
       - run: npm install --global npm@12.2.0
       - run: npm ci
+      - name: Check Playwright version matches the container image
+        run: node -e "process.exit(require('playwright/package.json').version==='1.63.0'?0:1)"
       - run: npm run typecheck
       - run: npm test
-      - run: sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
-      - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
 
   deploy:
