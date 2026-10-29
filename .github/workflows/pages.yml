@@ -62,7 +62,9 @@ jobs:
           echo "skipped=$(n skipped)" >> "$GITHUB_OUTPUT"
 
   # Final gate. Fails unless the test job succeeded, the unit tests and the
-  # browser tests each ran at least one test, and none were skipped.
+  # browser tests each ran at least one test. Unit tests may skip none. The
+  # browser tests may skip at most 27: the tests that skip by design on
+  # projects where they do not apply (see test.skip in e2e/*.spec.js).
   # It does not cover the mutation check.
   suites-ran:
     name: Suites ran
@@ -86,7 +88,7 @@ jobs:
             [ "$skipped" -le "$allowed" ] || { echo "  $name skipped more than allowed"; fail=1; }
           }
           check unit "$RESULT" "$UNIT_TESTS" "$UNIT_SKIPPED" 0
-          check browser "$RESULT" "$E2E_PASSED" "$E2E_SKIPPED" 0
+          check browser "$RESULT" "$E2E_PASSED" "$E2E_SKIPPED" 27
           exit "$fail"
 
   deploy:
