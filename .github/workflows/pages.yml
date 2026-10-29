@@ -67,6 +67,9 @@ jobs:
           grep -E '^ +- +[0-9]+ \[' e2e-output.txt | sed -E 's/^ +- +[0-9]+ //; s/:[0-9]+:[0-9]+ ›/ ›/' | sort > skipped-now.txt || true
           echo "SKIPPED-IDENTITIES $(wc -l < skipped-now.txt)"
           cat skipped-now.txt
+      - name: Check the skipped browser tests are the expected ones
+        shell: bash
+        run: diff .github/expected-browser-skips.txt skipped-now.txt
 
   # Final gate. Fails unless the test job succeeded, the unit tests and the
   # browser tests each ran at least one test. Unit tests may skip none. The
