@@ -459,6 +459,6 @@ test('a whole game runs to the end without errors [SAF-6] [STA-3]', async ({ pag
 });
 
 
-test('negative control: a test that always skips', async () => {
+test('negative control: a test that always skips [APP-1]', async () => {
   test.skip(true, 'negative control');
 });
