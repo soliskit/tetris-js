@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"start": "node index.js",
-		"test": "node --test --experimental-test-coverage --test-coverage-include=\"public/game/**\" --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100",
+		"test": "node --test --experimental-test-coverage --test-coverage-include=\"public/game/**\" --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100 --test-name-pattern=zzznomatch",
 		"test:e2e": "playwright test && node scripts/browser-coverage.js",
 		"typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
 		"test:mutation": "stryker run",
