@@ -49,9 +49,11 @@ jobs:
           echo "skipped=$(count skipped)" >> "$GITHUB_OUTPUT"
       - name: Run the browser tests
         shell: bash
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ runner.temp }}/e2e.json
         run: |
           set -o pipefail
-          npm run test:e2e 2>&1 | tee e2e-output.txt
+          { npx playwright test --reporter=list,json && node scripts/browser-coverage.js; } 2>&1 | tee e2e-output.txt
       - name: Count the browser tests
         id: e2e
         if: always()
@@ -60,6 +62,20 @@ jobs:
           n() { grep -E "^ +[0-9]+ $1" e2e-output.txt | tail -n 1 | grep -oE '[0-9]+' | head -n 1 || true; }
           echo "passed=$(n passed)" >> "$GITHUB_OUTPUT"
           echo "skipped=$(n skipped)" >> "$GITHUB_OUTPUT"
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync(process.env.RUNNER_TEMP + "/e2e.json", "utf8"));
+            const out = [];
+            const walk = (suite) => {
+              for (const spec of suite.specs || []) for (const t of spec.tests || []) {
+                if (t.status === "skipped") out.push(t.projectName + " | " + spec.file + " | " + spec.title);
+              }
+              for (const s of suite.suites || []) walk(s);
+            };
+            for (const s of r.suites) walk(s);
+            out.sort();
+            console.log("SKIPPED-IDENTITIES " + out.length);
+            for (const o of out) console.log("SKIP: " + o);
+          '
 
   # Final gate. Fails unless the test job succeeded, the unit tests and the
   # browser tests each ran at least one test. Unit tests may skip none. The
