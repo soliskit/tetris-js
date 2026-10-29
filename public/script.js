@@ -464,6 +464,12 @@ function tryMove(piece, step) {
 }
 
 boardCanvas.addEventListener('pointerdown', event => {
+  // Another finger while one is down does nothing to the game: the first
+  // keeps the drag, and the gesture is no longer a tap.
+  if (drag.pointerId !== null) {
+    drag.moved = true;
+    return;
+  }
   resetDragState();
   drag.pointerId = event.pointerId;
   drag.piece = gameManager.currentTetromino;
