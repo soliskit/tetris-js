@@ -1,6 +1,6 @@
 {
 	"name": "tetris",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Tetris for your web browser",
 	"main": "index.js",
 	"type": "module",
