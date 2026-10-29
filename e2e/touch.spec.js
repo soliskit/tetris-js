@@ -31,6 +31,38 @@ test('tapping the board rotates the piece, even with a little finger wobble [INP
   await expect.poll(async () => shapeOf(await t())).not.toBe(second);
 });
 
+test('a second finger on the board does nothing: the first keeps its drag, and neither lift is a tap [INP-5]', async ({ page }) => {
+  test.skip(!isChromium(page), 'only Chromium can send real touch events');
+  await playSaved(page, { piece: PieceColors.purple, position: { row: 5, column: 3 } });
+  const box = await page.locator('#tetris').boundingBox();
+  const cell = box.width / 10;
+  const finger = (id, column, row) => ({ id, x: box.x + cell * column, y: box.y + cell * row });
+  const cdp = await page.context().newCDPSession(page);
+  // Lists every finger still down; the one added or left out is the one that changed.
+  const send = (type, fingers) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: fingers });
+  const piece = () => cellsOf(page, PieceColors.purple);
+  const shape = shapeOf(await piece());
+
+  // Two fingers put down and lifted without moving: no turn.
+  await send('touchStart', [finger(0, 4, 12)]);
+  await send('touchStart', [finger(0, 4, 12), finger(1, 7, 15)]);
+  await send('touchEnd', [finger(0, 4, 12)]);
+  await send('touchEnd', []);
+  await page.waitForTimeout(300);
+  expect(shapeOf(await piece())).toBe(shape);
+
+  // The first finger drags with a second resting on the board: the piece follows the first.
+  await send('touchStart', [finger(0, 4, 12)]);
+  await send('touchStart', [finger(0, 4, 12), finger(1, 7, 15)]);
+  for (let step = 1; step <= 13; step++) await send('touchMove', [finger(0, 4 + (2.6 * step) / 13, 12), finger(1, 7, 15)]);
+  await expect.poll(async () => minColumn(await piece())).toBe(6);
+  await send('touchEnd', [finger(0, 6.6, 12)]);
+  await send('touchEnd', []);
+  await page.waitForTimeout(300);
+  expect(shapeOf(await piece())).toBe(shape);
+  expect(minColumn(await piece())).toBe(6);
+});
+
 // Use native mouse pointer events for exact CSS-pixel coordinates on both
 // engines. The existing gesture tests separately exercise Chromium touch.
 for (const { name, distances, rotates, cancel = false } of [
