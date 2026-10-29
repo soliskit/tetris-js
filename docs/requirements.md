@@ -32,7 +32,7 @@ Each change to game code (anything under public/) or to a requirement row is one
 | Clarification | Requirements, to describe what the game already does | The new rows and their tests |
 
 
-A change to neither code nor requirement rows needs no kind. The three rules still apply: weakening a test falls under rule 2, and the gates QA-1 to QA-6 are never lowered or removed.
+A change to neither code nor requirement rows needs no kind. The three rules still apply: weakening a test falls under rule 2, and the gates QA-1 to QA-6 are never lowered or removed, except for the one test named in "Exception for the second-finger test" below.
 
 ### Exception for test cuts 3-6
 
@@ -48,6 +48,13 @@ Rule 2 has one exception for the four unit-test cuts below. This is permission t
 Each cut needs its own same-PR decision record, a filled PR description, 100% line, branch and function coverage, mutation score 100 across all seven game files on the PR's exact head, and independent review of that head by someone other than its author, named to the owner before merge. Mutants that only make tests run too long count as caught under the existing gate. A failed required check stops that cut, with no retry, repair or automatic rollback. A surviving fault means the cut does not merge and the test stays. Passing these checks is not proof that the removed specific witness is still present.
 
 The first PR uses the existing No Class Needed classification because no game code or requirement rows change. It must separately state this new policy-prose exception plainly. There is no new class and no exception for later work.
+
+### Exception for the second-finger test
+QA-4 requires the browser tests to pass in WebKit at iPhone size. This exception is for exactly one test: `a second finger on the board does nothing: the first keeps its drag, and neither lift is a tap [INP-5]` in `e2e/touch.spec.js`. It is not a pass. That test does not run in WebKit or on the desktop project, and it does not verify Safari or real-device behavior.
+
+The current test setup sends two fingers at once only through Chromium's DevTools touch input. The desktop project has no touch. The test runs, and must pass, in Chromium at iPhone size.
+
+The exception covers only those two skipped project runs. They are named in `.github/expected-browser-skips.txt`, and the browser skip limit in `.github/workflows/pages.yml` is 29 so that these two entries fit. It covers no other test, no other skip and no later test. The seven WebKit skips already on that list are not reviewed or approved here. The wording of QA-1 to QA-6 does not change.
 
 ## Pieces and board
 
@@ -111,7 +118,7 @@ The first PR uses the existing No Class Needed classification because no game co
 | INP-2 | Holding a move key moves once, then again after 167 ms, then every 33 ms. The newest direction wins; releasing it goes back to one still held, on the keyboard, the stick or the directional pad. Holding S or Down soft drops a row at once, then every 50 ms, and a resting stick does not cancel it. Repeating stops when the game stops playing or the window loses focus. |
 | INP-3 | Keys pressed with Cmd, Ctrl or Alt, and the keyboard's own key repeat, are ignored. A key pressed with Cmd, Ctrl or Alt never counts as held, because macOS may not report its release. Game keys do not trigger the browser's default action (such as scrolling). |
 | INP-4 | Gamepad (standard mapping): A hard drops, B rotates, X holds, Y continues, Menu pauses or starts a new game at game over, and View starts a new game. While the pause screen asks to confirm a new game, left and right on the directional pad or stick move between Cancel and New Game, once per push, A presses the one selected and B cancels; nothing else acts. The right shoulder button also rotates and the left one rotates counterclockwise. Buttons act once per press, and two buttons for the same action pressed together act once. Menu and View act alone: other buttons pressed at the same moment do nothing, so A cannot hard drop the first piece of a game Menu just started, and if Menu and View are pressed together, Menu acts. Moving and soft dropping with the stick or directional pad carry on as held. The stick and the directional pad move with the same repeat timing as keys; holding either down soft drops every 50 ms, and up on the directional pad hard drops. A resting stick or pad does not cancel keyboard moves, and letting either go back to the middle returns to a move key still held. Disconnecting releases everything. |
-| INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. Tapping the hold box holds. |
+| INP-5 | Touch: a tap on the board rotates, allowing 10 px of finger wobble. Dragging sideways moves one column per cell, starting after half a cell; dragging down soft drops one row per cell. The piece stays on the grid and in step with the finger, even after pushing into a wall. A drag only controls the piece that was falling when it began. While a drag is under way, a second finger on the board does nothing to the piece, and the gesture does not count as a tap. Tapping the hold box holds. |
 | INP-6 | The hold box is a button to keyboards and screen readers: Tab reaches it, it is named Hold with H as its shortcut, and with keyboard focus Enter or Space hold while playing. Clicking it does not take focus, so those keys keep their game actions. |
 
 ## Display
