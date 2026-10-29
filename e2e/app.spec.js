@@ -457,3 +457,8 @@ test('a whole game runs to the end without errors [SAF-6] [STA-3]', async ({ pag
   expect((await boardCells(page)).flat().filter(Boolean).length).toBeGreaterThan(0);
   expect(errors).toEqual([]);
 });
+
+
+test('negative control: a test that always skips', async () => {
+  test.skip(true, 'negative control');
+});
