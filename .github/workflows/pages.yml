@@ -18,6 +18,11 @@ jobs:
       options: --init --ipc=host
     permissions:
       contents: read
+    outputs:
+      tests: ${{ steps.counts.outputs.tests }}
+      skipped: ${{ steps.counts.outputs.skipped }}
+      e2e_passed: ${{ steps.e2e.outputs.passed }}
+      e2e_skipped: ${{ steps.e2e.outputs.skipped }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -29,8 +34,60 @@ jobs:
       - name: Check Playwright version matches the container image
         run: node -e "process.exit(require('playwright/package.json').version==='1.64.1'?0:1)"
       - run: npm run typecheck
-      - run: npm test
-      - run: npm run test:e2e
+      - name: Run the unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.txt
+      - name: Count the unit tests
+        id: counts
+        if: always()
+        shell: bash
+        run: |
+          count() { grep -E "^(#|ℹ) $1 [0-9]+" test-output.txt | tail -n 1 | grep -oE '[0-9]+$' || true; }
+          echo "tests=$(count tests)" >> "$GITHUB_OUTPUT"
+          echo "skipped=$(count skipped)" >> "$GITHUB_OUTPUT"
+      - name: Run the browser tests
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:e2e 2>&1 | tee e2e-output.txt
+      - name: Count the browser tests
+        id: e2e
+        if: always()
+        shell: bash
+        run: |
+          n() { grep -E "^ +[0-9]+ $1" e2e-output.txt | tail -n 1 | grep -oE '[0-9]+' | head -n 1 || true; }
+          echo "passed=$(n passed)" >> "$GITHUB_OUTPUT"
+          echo "skipped=$(n skipped)" >> "$GITHUB_OUTPUT"
+
+  # Final gate. Fails unless the test job succeeded, the unit tests and the
+  # browser tests each ran at least one test, and none were skipped.
+  # It does not cover the mutation check.
+  suites-ran:
+    name: Suites ran
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULT: ${{ needs.test.result }}
+          UNIT_TESTS: ${{ needs.test.outputs.tests }}
+          UNIT_SKIPPED: ${{ needs.test.outputs.skipped }}
+          E2E_PASSED: ${{ needs.test.outputs.e2e_passed }}
+          E2E_SKIPPED: ${{ needs.test.outputs.e2e_skipped }}
+        run: |
+          fail=0
+          check() {
+            name="$1"; result="$2"; tests="${3:-0}"; skipped="${4:-0}"; allowed="$5"
+            echo "$name: result=$result tests=$tests skipped=$skipped (allowed skipped: $allowed)"
+            [ "$result" = success ] || { echo "  $name did not succeed"; fail=1; }
+            [ "$tests" -ge 1 ] || { echo "  $name counted no tests"; fail=1; }
+            [ "$skipped" -le "$allowed" ] || { echo "  $name skipped more than allowed"; fail=1; }
+          }
+          check unit "$RESULT" "$UNIT_TESTS" "$UNIT_SKIPPED" 0
+          check browser "$RESULT" "$E2E_PASSED" "$E2E_SKIPPED" 0
+          exit "$fail"
 
   deploy:
     needs: test
