@@ -45,7 +45,7 @@ Rule 2 has one exception for the four unit-test cuts below. This is permission t
 | 5 | `auto repeat stops once the game is no longer playing [INP-2]` in `test/inputController.test.js` | The direct assertion that KeyD held through 1,000 ms paused produces no repeat | A kept test holds KeyD through 200 ms paused and later checks the unreset full action history. This is indirect evidence, not the removed pause-time assertion. Gamepad pause and after-resume pause-release tests stay. |
 | 6 | `losing window focus stops the soft drop key [INP-2]` in `test/inputController.test.js` | A repeating soft-drop key stops on window blur | The kept `losing window focus releases every held key [INP-2]` test checks that a repeating move key stops and is forgotten on blur. KeyA is not the removed KeyS soft-drop input. |
 
-Each cut needs its own same-PR decision record, a filled PR description, 100% line, branch and function coverage, mutation score 100 across all seven game files on the PR's exact head, and independent review of that head by someone other than its author, named to the owner before merge. Mutants that only make tests run too long count as caught under the existing gate. A failed required check stops that cut, with no retry, repair or automatic rollback. A surviving fault means the cut does not merge and the test stays. Passing these checks is not proof that the removed specific witness is still present.
+Each cut needs a filled PR description, 100% line, branch and function coverage, mutation score 100 across all seven game files on the PR's exact head, and independent review of that head by someone other than its author, named to the owner before merge. Mutants that only make tests run too long count as caught under the existing gate. A failed required check stops that cut, with no retry, repair or automatic rollback. A surviving fault means the cut does not merge and the test stays. Passing these checks is not proof that the removed specific witness is still present.
 
 The first PR uses the existing No Class Needed classification because no game code or requirement rows change. It must separately state this new policy-prose exception plainly. There is no new class and no exception for later work.
 
@@ -144,6 +144,163 @@ The exception covers only those two skipped project runs. They are named in `.gi
 | APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait. |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster. |
 | APP-6 | GitHub Pages serves every project of an account from one origin, which they all share storage and caches with, so the game touches only its own: it stores the high score and saved game under names of its own, and deletes only caches it made. |
+
+## Detailed rules
+
+The detailed rules behind the requirement rows above: the valid-state rules for positions, pieces, controls, scores and saved data; how saving, withdrawal and reading behave; storage trust, fault reporting and timer scope; what the queue safety check must verify; and recorded gaps and defects.
+
+### Valid game state
+
+The selected rules for positions, pieces, controls, scores, and saved data, defined independently of the implementation.
+
+**B1. Scope.** These predicates define a valid state for the opening state and every committed state other than the SAF-3 safe terminal state, which keeps its own definition (SAF-3). Each predicate is evaluated on one state alone.
+
+**B2. Conventions.** Rows 0 at the top to 19 at the bottom, columns 0 to 9; a lower row has a larger number. The kinds are I, O, T, S, Z, J and L. The rotation states of each kind are the geometry of the adopted external geometry reference: the image `SRS-pieces.png` from the Tetris Wiki (1218 bytes, SHA-256 5a5c49e378cf00a2632a4cd3b5af36d3831dbbdcc64f8d7b09b93c2353821236) and the table of its states extracted from that image (SHA-256 c733639052686c488d7ed156720469a40f17963e893790ab727e9442ac7c524c). The reference is the fixed bytes identified by those checksums, not the content of any web page. It gives geometry only; wall-kick data is not part of it. In the reference each state is a set of four cells (row, column) in a box that is 4 by 4 for I, 2 by 2 for O and 3 by 3 for the other kinds, rows increasing downward and columns increasing to the right. The position of a piece is the board position of the top-left cell of its box. A block at box cell (row, column) occupies the board cell (position row + row, position column + column). The two files are retained in the repository at `docs/sources/1-SRS-pieces.png` and `docs/sources/2-srs_table.txt`. Neither governs the other. If the table and the image disagree about any state of any kind, the reference is inconsistent: no state of that kind is defined by it until it is decided. A kind has four rotation states in the table's order, spawn state first and then each clockwise rotation, except that the O kind has one valid rotation state, its first (PCE-4).
+
+**B3. Representation.** Validity is defined on semantic values: whole numbers, ordered lists and finite maps. A representation is valid only if it denotes exactly one value of the item's domain. A missing or extra entry in a collection, a sparse collection, a missing row or cell, or a value of another type is not valid. No numeric format limit is part of these rules.
+
+**B4. Game mode.** Exactly one of playing, paused and game over.
+
+**B5. Board.** Exactly 20 rows of 10 positions; each is empty or a locked block. A locked block identifies one of the seven kinds.
+
+**B6. Current falling piece.** Playing or paused: exactly one, with a kind, one of that kind's valid rotation states and a whole-number position, all four blocks on the board and on empty positions (PCE-6). Game over (ordinary): there is no semantic current falling piece. The held piece, hold-used, the bag and the touch-drag state also have no semantic value (B8, B10, B12). The piece kind, the row and column coordinates, the orientation, the lowest row reached (B9) and the reset count (B9) have no semantic value. An implementation is not required to clear a field that holds such a value. The attempted new or held piece that had no room is not a semantic current piece merely because it caused game over. No ordinary-piece validity is imposed on the SAF-3 safe terminal state. A malformed value is invalid in every mode.
+
+**B7. Upcoming pieces.** In every mode, three valid semantic pieces, each one of the seven kinds. The SAF-4 runtime-check interpretation is settled under "Queue piece check" below.
+
+**B8. Held piece and hold-used.** The held piece is none or one of the seven kinds. Hold-used represents whether Hold is unavailable for the current piece. A New Game begins with Hold available. Continue restores the saved semantic value. Playing or paused: held is none or a kind; hold-used is true or false. Game over: the held piece and hold-used have no semantic value, and an implementation is not required to clear a field that holds one. Interpretation of PLY-7 ("Hold works once per piece"), per lock cycle: Hold is available at the start of a lock cycle; any successful Hold consumes that availability; a piece brought in by that Hold does not make Hold available again; availability returns when the next piece becomes the current falling piece after the current lock cycle ends.
+
+**B9. Lowest row and reset count.**
+
+*B9.1 Validity predicates (the values; they stand alone on one state).*
+
+Values. Playing or paused: the lowest row reached is a whole number from 0 to 19 and is at least the greatest row occupied by any block of the current falling piece. The reset count is a whole number from 0 to 16. A reset count of 16 is valid only when the game is paused and the current falling piece is resting (B14). It is not valid in a playing state, for a piece that is not resting, or when there is no current falling piece. Game over: no semantic lowest row and no semantic reset count (B6).
+
+*B9.2 Meaning and operation rules (what the values denote and how legal operations change them; separate from B9.1, and not a validity predicate on one state).*
+
+Lowest row reached. It is the greatest board-row index occupied by any block of the current falling piece during its time as the current piece, with rows increasing downward. When a piece becomes the current falling piece it is the greatest row occupied by that piece's four blocks in its initial valid state, and a different piece becoming current starts a new value. After a valid move, rotation or fall of that piece, if its current greatest occupied row is greater than the stored value, the stored value becomes that row and the reset count becomes 0. Moving or rotating upward never decreases it. Returning to a row already reached does not reset the count. A move or rotation that would both restart the lock delay and reach a new lowest row sets the reset count to 0 and does not increment it.
+
+Reset count. It counts reset events since the most recent lowest-row reset. The values 0 to 15 count events within the 15-restart allowance of PLY-6. The value 16 does not represent a 16th restart. It marks a pause taken during the lock delay after the 15 were used.
+
+Reset count when a piece becomes the current falling piece. A piece becomes the current falling piece at the start of a game, when the next piece appears after a lock, and when Hold brings a piece in. At that moment the reset count is 0 and the lowest row reached is the greatest row occupied by that piece in its initial valid state. A pause and its resume do not make a piece current. Continue restores the saved reset count and lowest row exactly and does not apply this rule. A saved game in a released format required by STA-6 takes its saved reset count; the lowest row is given by L1 only when it is missing from the save, and a legacy paused, resting save with count 15 is handled by L2 only when it carries no information distinguishing a pause that took the count from 14 to 15 from a pause taken after the 15 were used (B16).
+
+Resting piece, count below 15. A legal move or rotation that leaves the piece resting and reaches no new lowest row adds 1 to the count and restarts the 0.5-second lock delay. The step from 14 to 15 is the 15th restart.
+
+Resting piece, count 15. A legal move or rotation is permitted. If the piece remains resting and reaches no new lowest row, the delay is not restarted and the already running lock deadline continues. Moving off a ledge cancels the delay. If a piece at count 15 whose delay was canceled comes to rest again without reaching a new lowest row, it locks at once (PLY-6).
+
+Pause. A pause during the lock delay cancels the delay and counts as one reset (STA-2). If the count is 14 or less, the count increases by 1, and on resume a resting piece starts the 0.5-second delay again. If the count is 15, the paused, resting state records count 16, and on resume the piece locks at once and the delay is not restarted. A resume from a paused, resting piece with count 15 starts the delay. A pause when the piece is not in a lock delay is not a reset.
+
+**B10. Bag.** Playing or paused: an ordered sequence of distinct kinds; the empty sequence is valid. Game over: the bag has no semantic value, and an implementation is not required to clear a field that holds one.
+
+**B11. Score.** In every mode, a whole number of zero or more, with no divisibility condition. SAF-4 says "valid score" without defining it; this choice is made here once.
+
+**B12. Control state.**
+- Confirmation pending: yes or no; yes only while paused. Selected choice: Cancel or New Game while pending; absent otherwise.
+- Held directions: the held controls, one token per physical control (for example keyboard A, keyboard Left, stick, pad Left). Held horizontal tokens form an ordered sequence from oldest to newest by the time each became held, each with a direction left or right; the newest-direction rule is that the direction of the last token wins, and releasing a token removes it, so the last remaining token wins. Example: A(left), D(right), Left(left), then release Left leaves A, D, and D wins. Held soft-drop tokens are a set. Tokens of the same direction are all remembered.
+- Repeat position: for moves, not repeating, waiting for the first repeat, or repeating; for soft drop, not dropping or dropping. Anything but the idle value only while playing and only with a matching direction held (INP-2: repeating stops when the game stops playing). Game over and paused: idle.
+- Touch drag: none, or a drag with its start and current points, the whole columns and rows moved, and whether it still controls the current falling piece, yes only while there is a falling piece. Game over: the touch-drag state has no semantic value, and an implementation is not required to clear a field that holds one.
+
+**B13. Runtime resource states.** Semantic running: a resource is running exactly when an outstanding scheduled firing of it exists; it is not running when none exists, and a fired or canceled firing is not outstanding. This is independent of any concrete handle; null or undefined handle handling is later correspondence. Playing: the gravity resource is running; the lock-delay resource is running exactly while the falling piece rests (B14); the horizontal-repeat resource is running exactly while a horizontal held token exists and the repeat position is not idle; the soft-drop repeat resource is running exactly while a soft-drop token is held and soft drop is dropping. The horizontal-repeat and soft-drop repeat schedules are separate resources and may be running at the same time. Paused and game over: none running. Which further resources the SAF-4 word "timer" covers is settled by U4 below, which does not change the states defined here for gravity, lock delay and the two repeat resources. A resting piece in a committed playing state with reset count 15 has an outstanding lock delay (B9), and a resting piece with reset count 16 exists only while paused, when no resource runs. The screen wake lock is not an ordinary validity condition: DSP-7 requires only best-effort behavior (the game plays normally if it is unsupported or refused, and the system may take it back), so no state of it is required of a valid game state.
+
+**B14. Derived values (semantic definitions).** Level is the score divided by 1000, rounded down, plus 1 (SCO-2). Gravity interval is max(0.25, 0.7 - 0.02 × (level - 1)) seconds (PLY-2). Resting: playing or paused with a falling piece that cannot move down one row and stay valid under B6; false when there is no falling piece. Landing position: defined only when there is a falling piece, as the lowest position it can reach straight down and stay valid under B6; when there is none, there is no landing position and no ghost. Derived state has no independent semantic authority. Whether an implementation cache or stored copy agrees with these values is later correspondence evidence and is not a validity condition.
+
+**B15. Legal-play properties.** No snapshot-validity condition requires that a committed state has no completely filled row. No snapshot-validity condition requires that hold-used true implies a held piece exists. Whether legal play or history produces or forbids either property is not decided here. Consistency of the bag, queue and current piece with dealing whole bags of seven (PCE-5) is historical, cannot be evaluated from one state under B1, and is not a snapshot-validity condition.
+
+**B16. Persisted content.** Arbitrary external data may be malformed, and invalid external data is not authoritative. A saved game is accepted whole or not at all. The pieces of an accepted saved game map to the built-in piece definitions. The gameplay contents of an accepted saved game are such that, when Continue restores them paused (STA-4), the resulting authoritative state is valid under the rules above; the saved payload's own representation of the mode is not decided here. Supported legacy formats are accepted. The level stored by the earlier format is ignored (STA-6). A saved game from before the bag was saved continues with a fresh bag (STA-4). A save newly written under these rules preserves the lowest row reached and the reset count exactly, including a reset count of 16 where applicable, so that Continue restores the same semantic values. Saved games in the released formats required by STA-6 predate the lowest row and the reset count of 16. Two compatibility defaults apply when loading them. They are deterministic defaults and are not recovered history. L1: a missing lowest row is the greatest board-row index occupied by any block of the current falling piece. L2: a legacy paused, resting saved game with reset count 15 and no information that distinguishes a pause that took the count from 14 to 15 from a pause taken after the 15 were used resumes with the lock delay starting. Accepted saved-game scores and stored high scores are whole numbers from 0 through 9,007,199,254,740,991, with no divisibility condition; this stored-score ceiling does not change the in-session score domain in B11. An accepted stored high score is in that bounded domain; a stored high-score value outside that domain is invalid and is ignored (SAF-2). Forgetting, discoverability, failure behavior, rollback, last-good-save and persistence ordering belong to the saving and withdrawal rules below and are not stated here.
+
+**B17. Presentation state.** Presentation state is non-authoritative and outside the ordinary authoritative validity predicate. Its own requirements, which may also depend on viewport, device and browser state, are evidenced separately.
+
+Current-format note: loading only the current saved-game layout supersedes the legacy acceptance and compatibility-default clauses in B9 and B16 (the supported-legacy acceptance, the ignored old level, the prebag fresh bag, and the L1 and L2 defaults) for the current-layout reader. The rest of B9 and B16 remains active, and STA-4 and STA-6 remain the current requirement contract: stored content that is present and successfully read but fails the full current layout and validation is refused, ordinary withdrawal is attempted, and its stored bytes stay.
+
+### Saving, withdrawing, and reading a game
+
+#### Save
+
+A save succeeds when the valid saved position is written and marked available for Continue. If the position writes but marking it available fails, the save failed. A failed save attempts withdrawal as described below.
+
+New saves preserve the exact reset count and lowest-row history.
+
+The stored high score is separate and is not erased by old-save policy. No future unlabeled save format is admitted and there is no indefinite legacy support. An old cached tab can still write saved-game data; that interference is a recorded open limit.
+
+#### Withdraw
+
+Withdrawal means Continue no longer offers the saved game. Deleting its stored bytes is not required.
+
+Withdrawal happens when:
+- New Game is confirmed;
+- normal game over occurs because a new or held piece has no room;
+- stored saved-game content is invalid and rejected whole;
+- stored saved-game content is present and successfully read but fails the full current layout and validation, covering old-layout, unknown-layout and malformed-current records; ordinary withdrawal is attempted and no gameplay from the refused record is loaded;
+- saving the current game fails, including failure to publish the saved position.
+
+When withdrawal happens or is attempted, this running session's withdrawn indicator is set. If writing withdrawal fails, gameplay continues and this session does not offer the previous save; only in that failure case, after a reload nothing is promised: the save may be offered again. No retry system and no new save format are required by this rule.
+
+A later error does not undo a withdrawal already made. Another session saving a game does not clear this session's withdrawn indicator. The indicator starts clear on page load and clears when this session successfully saves. It is not persisted.
+
+Continue is available only when stored eligibility is exactly the string "true", the session's withdrawn indicator is clear, and the saved content passes the persisted-content validity rules. Other stored flag values or absence are ineligible.
+
+#### Read
+
+A storage read failure is not invalid stored content and is not absence established by a successful read. A failed read may make the saved game unavailable, but does not by itself withdraw it or change stored values. Nothing is promised about when availability returns.
+
+Invalid stored content is rejected whole and withdrawn. The game does not partly load it or use conversion defaults to repair invalid content. Accepted gameplay content is restored whole and paused under the persisted-content rules. Present and successfully read content that fails the full current layout and validation is refused and ordinary withdrawal is attempted; a failed read and a successfully established absence remain distinct from this refusal and do not themselves mutate storage.
+
+#### Fault
+
+An engine fault by itself does not withdraw the saved game. Normal game over and an engine fault have different triggers.
+
+The last-good rule keeps a save successfully written with valid content even if the same step later faults, without rolling it back. On a fault stop, the last good save is kept. Only a fully finished save replaces the last-good position: a position written but not published does not become the last-good target. The mechanism, whether recovery, rollback or retention, is not selected.
+
+This does not expand the safe-terminal definition, promise rollback for ordinary state, or certify any current game-written payload as valid.
+
+#### Stored high score
+
+A stored high score is good when it is a whole number from 0 through 9,007,199,254,740,991, with no divisibility condition; otherwise it counts as zero (B16).
+
+#### Gravity timing judgment
+
+PLY-2 is judged against the delay the game requests from its scheduler, compared with max(0.25, 0.7 - 0.02 × (level - 1)) seconds (B14) expressed in milliseconds, with an absolute tolerance for numerical rounding. The tolerance is 0.000000001 millisecond. The claim covers the value requested. Conversion of that value by the browser, actual elapsed time, lateness and throttling are not claimed.
+
+#### Hand-edited saves
+
+Persisted state that was edited by hand is judged only by the untrusted-input rules: it is accepted whole if it is valid under B16, otherwise rejected whole. Gameplay requirements such as PLY-7 govern the play the game itself produces. They are not applied to the history of an accepted saved game, and no claim is made that an accepted state could be reached by legal play. No check that a result was earned through play, no anti-cheating protection and no tamper protection is claimed.
+
+### Storage trust, error reporting, and timers
+
+**U1. Storage trust.** When a browser storage operation succeeds, the game trusts that operation. The game never trusts stored contents without validation: contents read back are judged by the validity rules above, accepted whole or rejected whole. Stored data can be edited or lost, so the game promises no permanent storage and no protection against tampering. A storage failure must not stop gameplay; what the game does about the saved game after a failed write or read is decided under "Saving, withdrawing, and reading a game" above. This records a trust assumption and adds no requirement.
+
+**U2. Fault reported, SAF-5.** When drawing or reading a gamepad fails, the drawing and polling loops keep running (SAF-5). The fault counts as reported when both of these happen: (a) the player is shown a small notice that drawing or controller input had a problem, which does not interrupt play and is not a popup, and (b) a separate signal that a test can observe is raised. No fault record is required to be written to storage. U5 is unchanged by this rule and still governs the SAF-3 stop.
+
+**U3. Failed timer cancellation during a fault stop.** If cancelling a timer fails while the game is stopping safely after a fault, a timer may still fire, but it must not change the stopped game. The game remains over, the last good save is kept and the fault is reported. This interprets "no timers running" in SAF-3 for that case only. It adds no trust in a scheduler that runs a timer after a successful cancellation: U6 still applies to successful cancellation. This text states the outcome and selects no mechanism.
+
+**U4. Timer scope for SAF-3 and SAF-4.** The timers these rules cover are the gravity timer, the lock-delay timer and the held-key repeat timers. The invariant checks of SAF-4, and the safe stop of SAF-3 on a broken invariant, apply after each firing of these timers and to the actions they cause. These timers are stopped when the game is paused or over. The drawing loop and the controller-polling loop are not timers in this sense; they keep running under SAF-5 and U2. This interprets the word "timer" and does not change the check points SAF-4 names.
+
+**U5. Fault reported, SAF-3.** When the engine throws and the game stops in the SAF-3 safe state, the fault counts as reported when both of these happen: (a) the player is shown a plain message that the game stopped because of an internal error, so that no developer console is needed to see that something went wrong, and (b) a separate signal that a test can observe is raised. The criterion is independent of any particular callback or interface the implementation uses. No fault record is required to be written to storage, and the rule adds no condition on the board, queue, current piece, score or hold beyond SAF-3's own.
+
+**U6. Timer registration and cancellation.** A timer that was cancelled successfully is trusted not to run afterwards. Registering a timer and cancelling a timer are inside the SAF-3 behavior: if either throws, the engine stops in the SAF-3 safe state and the fault is reported under U5. No defense against a scheduler that runs a timer after a successful cancellation is required.
+
+Trust assumptions not yet decided: the service worker, hosting, repository settings and the random source.
+
+### Queue piece check
+
+Each required safety check must verify three real upcoming pieces, not merely a list with three slots. A list with an empty or malformed slot must not pass just because its length is three.
+
+Detector extent: interpret SAF-4's "three pieces queued" using the upcoming-piece semantics in B3 and B7: an ordered, complete list of exactly three entries, each denoting a valid semantic upcoming piece of one of the seven adopted kinds. Null entries, holes and non-piece values do not satisfy this criterion. This resolves B7's deferred runtime-check interpretation; B7's valid-state domain is unchanged.
+
+Waiting pieces do not inherit the current falling piece's board-fit, live position, lowest-row history, lock-delay or timer conditions. No specific class, object layout, checker function or duplicated geometry is required. Representation must denote the adopted semantic piece; recognizable color alone does not certify an otherwise malformed representation without a reviewed reconstruction or representation mapping.
+
+This rule covers only the upcoming queue; the current-piece check is separate.
+
+### Recorded gaps and defects
+
+What the audit recorded where the code did not meet, or was not shown to meet, the rules above. The first two entries predate a later change to the safety check, named in each entry with its evidence; they keep their recorded status, and this file does not reclassify them.
+
+**Queue checkpoint gap.** Recorded as an open gap: "The safety check counts the next pieces but does not check what is in those slots. A three-slot queue containing no real pieces can pass." The same gap was recorded for a queue of three plain numbers, a `{ length: 3 }` object, and three zero-cell pieces. After this record the safety check changed (PR #171, commit `62b1a2a`, "Check every piece in the safety check"): at current main the monitor checks every queued piece (`isValidPieceList`), and unit tests in `test/safety.test.js` pin a null entry, a hole in the list, the `{ length: 3 }` object and a zero-blocks piece in the queue. The audit did not rerun its comparisons against that change, and the finding's recorded status is unchanged; whether the gap is settled is an audit-status question this file does not answer.
+
+**Current-piece checkpoint.** The current-piece checkpoint requires a valid four-block falling piece at required safety boundaries, not only constructor validity and block overlap. Recorded as a defect by conditional source argument: an injected zero-cell piece (empty rotation shape) passed the playing-state checkpoint and one soft drop; injected one-block, five-block and four-in-a-row shapes also passed; and the paused-state checkpoint did not read the current piece at all. Ordinary gameplay creating such a piece was not established. After this record the check changed (same PR #171): at current main the monitor validates the falling piece in every state except game over (`isValidFallingPiece`), and the malformed-current suite in `test/safety.test.js` pins the no-blocks, one-block, five-block and wrong-four-blocks shapes in both playing and paused states. The audit did not rerun its comparisons, and the finding's recorded status is unchanged; whether it is settled is an audit-status question this file does not answer.
+
+**Serialization failure (confirmed defect).** An exception while serializing the saved game, before any storage call, is an engine exception, not a storage-operation failure: SAF-3 requires the safe stop and the reported fault (U5), a failed save still attempts withdrawal of the previous save, and storage errors must not stop gameplay (SAF-2). The recorded defect, scoped: an injected serialization exception during the save on Pause is caught and swallowed - the game stays paused with no safe stop and no test-observable fault signal. Current main has the same structure: `saveGameSession` in `public/game/gameManager.js` wraps serialization and the storage write in one `try`, and its `catch` only sets the session-saved flag to false. A naturally occurring serialization failure without injection remains Not Established. Any correction must preserve both the failed-save withdrawal and the SAF-2 storage-error continuation while separating non-storage engine exceptions.
+
+**Drawing console reports (adopted rule, not yet implemented).** Drawing failures produce one console report per unbroken failure streak. A successful drawing frame resets the report flag; the next failure after recovery produces a new console report. Only repeats within the same unbroken streak are suppressed. A console report is an error message in the browser's developer console. The on-screen notice limit, once per kind of error in a session, is unchanged. Console reporting is the separate test-observable signal for SAF-5 (U2). This covers drawing console reporting only, not gamepad report frequency. An idle callback that checks unchanged caches is not the successful drawing witness. Current behavior does not yet meet this rule: `renderErrorReported` in `public/script.js` is set after the first caught failure and never cleared, so no later failure in the session produces a console report.
 
 ## Process
 
