@@ -1,5 +1,3 @@
-// Port of Model/GameState.swift, Model/PlayerAction.swift and Model/GameCell.swift.
-
 // How many upcoming pieces are known and shown.
 export const UPCOMING_COUNT = 3;
 
@@ -43,9 +41,8 @@ export function createBoard(rows, columns) {
   return Array.from({ length: rows }, () => Array.from({ length: columns }, emptyCell));
 }
 
-// Port of Support/Array.swift: returns undefined instead of throwing when out
-// of bounds. (Arrays already give undefined for a missing index; only a
-// missing row needs guarding.)
+// Returns undefined for an out-of-bounds cell. Arrays already return
+// undefined for a missing index; only a missing row needs guarding.
 /**
  * @param {Board} board
  * @param {number} row

@@ -1,5 +1,4 @@
-// Browser UI: port of ContentView.swift, GameBoardView.swift,
-// TetrominoPreview.swift and ButtonView.swift. All game rules live in ./game.
+// Browser UI for the game. All game rules live in ./game.
 
 import { GameManager } from './game/gameManager.js';
 import { GameState, PlayerAction } from './game/gameState.js';
@@ -417,8 +416,8 @@ function watchPixelRatio() {
 }
 watchPixelRatio();
 
-// Touch and mouse gestures, ported from the DragGesture in ContentView.swift:
-// drag sideways to move by whole cells, drag down to soft drop, tap to rotate.
+// Touch and mouse gestures: drag sideways to move by whole cells,
+// drag down to soft drop, tap to rotate.
 // The piece always stays on the grid and in step with the finger, and a
 // gesture only ever controls the piece that was falling when it started.
 

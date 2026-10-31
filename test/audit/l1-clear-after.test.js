@@ -1,8 +1,8 @@
-// Audit migration, docs/decisions.md row D69 (L1 closed as Not Reproduced): the
+// Audit migration, decision-log row D69 (log deleted, kept in git history; L1 closed as Not Reproduced): the
 // queue, the 7-bag order and the saved game after one to four line clears.
 // Ported from the audit scratch harness l1-clear-after-harness.mjs; the
 // byte-identical original lives in
-// docs/audit/test-migration-provenance/. Deviations from the original:
+// docs/audit/test-migration-provenance/ (deleted, kept in git history). Deviations from the original:
 // repository-relative imports, node --test assertions instead of the log
 // file, and no "outside the repo" comment lines.
 import { test } from 'node:test';

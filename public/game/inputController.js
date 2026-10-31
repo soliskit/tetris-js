@@ -1,6 +1,3 @@
-// Port of Support/GameControllerManager.swift using browser keyboard events
-// and the Gamepad API. Keeps the same bindings and DAS/ARR timings.
-//
 // Keyboard: A/D move, W rotate, Z rotate counterclockwise, S soft drop,
 // Space hard drop, H hold, P or Esc pause, Enter new game, C continue. Arrow
 // keys are aliases for WASD.

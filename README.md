@@ -15,7 +15,7 @@ npm install
 npm start
 ```
 
-Then open http://localhost:3000. Set the `PORT` environment variable to use a different port.
+Then open http://localhost:4000. Set the `PORT` environment variable to use a different port.
 
 ## Deployment
 
@@ -103,14 +103,13 @@ tsconfig.json                Type checking for the game and page script
 tsconfig.sw.json             Type checking for the service worker
 stryker.config.json          Mutation testing setup
 scripts/browser-coverage.js  Browser coverage report and 100% check for the page script
-docs/                      Records of every piece of work: decisions, evidence and plans
+docs/                      Current requirements, evidence and plans
   requirements.md          Every behavior, with an ID that tests trace to
-  decisions.md          Findings, decisions and evidence limits; earlier detail remains in git history
 ```
 
 The engine takes injectable storage, scheduler and piece factory objects, so it runs in Node without a browser.
 
-Every piece of work on the project is recorded in [docs/](docs/), starting at [docs/README.md](docs/README.md): decisions, evidence and plans.
+The current contract and evidence live in [docs/](docs/), starting at [docs/README.md](docs/README.md).
 
 ## Reliability
 

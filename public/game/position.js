@@ -1,5 +1,4 @@
-// Port of Model/Position.swift. Positions are treated as immutable values,
-// matching Swift struct semantics: always create a new one instead of mutating.
+// Treat positions as immutable values: create a new one instead of mutating.
 
 /** @typedef {{ readonly row: number, readonly column: number }} Position */
 

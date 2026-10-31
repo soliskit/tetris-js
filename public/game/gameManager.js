@@ -1,6 +1,5 @@
-// Port of GameManager.swift. Swift Tasks become setTimeout handles; the
-// scheduler, storage and piece factory are injectable so the engine can run
-// in Node tests without a browser.
+// The scheduler, storage and piece factory are injectable so the engine can
+// run in Node tests without a browser.
 //
 // Fault containment: every way into the engine (player actions, soft drop
 // and timers) runs through guard(). If an operation throws, or leaves the

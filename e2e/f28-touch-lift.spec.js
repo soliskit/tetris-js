@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures.js';
 import { PieceColors, continueSavedGame, cellsOf, savedGame } from './helpers.js';
 
-// Audit migration, docs/decisions.md rows D72d and D72e (F28 TE2, Confirmed Defect
+// Audit migration, decision-log rows D72d and D72e (log deleted, kept in git history; F28 TE2, Confirmed Defect
 // at synthetic scope): in Chromium, a touch lift 60 px from touch-down with no
 // move event in between counted as a tap, although the tap rule allows only
 // 10 px. The with-move case and a real phone were not part of the finding, and
