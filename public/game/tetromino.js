@@ -1,7 +1,5 @@
-// Port of Model/Tetromino.swift.
-// Swift's Tetromino is a value type, so every method that "copies" in Swift
-// returns a new instance here. rotations and wallKickData are never mutated
-// and are shared between copies.
+// Copies are new instances that share rotations and wallKickData; neither
+// array is mutated.
 
 import { position } from './position.js';
 import { cellAt } from './gameState.js';
@@ -121,9 +119,9 @@ export class Tetromino {
     return rows;
   }
 
-  // Mutating, like the Swift `mutating func rotate`. Tries the asked for
-  // direction with its SRS kicks first, then the other direction with its
-  // own. Turning counterclockwise uses the clockwise kicks inverted.
+  // Rotates this piece in place. Tries the requested direction with its SRS
+  // kicks first, then the other direction with its own. Counterclockwise
+  // turns invert the clockwise kicks.
   /**
    * @param {Board} gameBoard
    * @param {boolean} [counterclockwise] Turn counterclockwise first.
