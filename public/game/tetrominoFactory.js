@@ -1,6 +1,5 @@
-// Port of Support/TetrominoFactory.swift: 7-bag randomizer with SRS wall kicks.
-// The Swift version keeps the bag in static state; here it is an instance so
-// the random source can be injected (for tests or a future seeded challenge).
+// 7-bag randomizer. Each factory has its own bag and accepts a random source
+// for testing.
 
 import { position } from './position.js';
 import { Tetromino } from './tetromino.js';
@@ -8,7 +7,6 @@ import { Tetromino } from './tetromino.js';
 /** @typedef {import('./position.js').Position} Position */
 /** @typedef {import('./tetromino.js').Shape} Shape */
 
-// SwiftUI system colors (iOS light appearance).
 export const PieceColors = Object.freeze({
   cyan: '#00C0E8',
   yellow: '#FFCC00',
