@@ -89,7 +89,7 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   assert.match(workflow, /npm run test:mutation/);
   // Every pull request: the changed game logic alone, or every game file
   // when the tests or the workflow change, each game file mutated in its
-  // own parallel run (D83), and one aggregate check that stands for the
+  // own parallel run (decision-log row D83, log kept in git history), and one aggregate check that stands for the
   // whole matrix so the merge rule can require it (D85).
   const pullRequests = fs.readFileSync(path.join(root, '.github/workflows/mutation-pr.yml'), 'utf8');
   assert.match(pullRequests, /pull_request:/);
@@ -108,4 +108,3 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
     if (/^import .* from '\.\.\/public\/game\//m.test(source)) assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
   }
 });
-
