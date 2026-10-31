@@ -1,4 +1,4 @@
-// Audit migration, docs/decisions.md rows D74 and D75: the settled N1 reading.
+// Audit migration, decision-log rows D74 and D75 (log deleted, kept in git history): the settled N1 reading.
 // A fault after a confirmed New Game stops the game safely, the fault is
 // recorded and reported, the old save stays withdrawn and its stored text is
 // kept (the setting S2 was kept by D75). Ported from the audit scratch script
