@@ -1,4 +1,4 @@
-# Requirements
+# Tetris Requirements
 
 The game's behavior, safeguards, and rules for changing them.
 
@@ -290,6 +290,19 @@ Waiting pieces do not inherit the current falling piece's board-fit, live positi
 
 This rule covers only the upcoming queue; the current-piece check is separate.
 
+## Process
+
+| ID | Requirement |
+| --- | --- |
+| QA-1 | Every requirement is verified by at least one test, every test names the requirements it verifies, and those requirements exist. |
+| QA-2 | The unit tests exercise every line, branch and function of the game logic (`public/game/`). `npm test` fails below 100%. Code that cannot be reached is removed rather than left untested. |
+| QA-3 | The browser tests exercise every line, branch and function of the page script (`public/script.js`), measured in Chromium. `npm run test:e2e` fails below 100%. |
+| QA-4 | The browser tests pass in WebKit (Safari's engine) at iPhone size, as well as in Chromium at iPhone and desktop sizes. |
+| QA-5 | Everything the browser loads (`public/`) passes TypeScript's strictest type checks, with types written as comments in the JavaScript. `npm run typecheck` runs before the tests in CI. |
+| QA-6 | Mutation testing (Stryker) of the game logic leaves no mutant alive: every small wrong change to `public/game/` is caught by a failing test, or makes the tests run past the time limit (for example a piece with no blocks, whose ghost falls forever). Loops in tests are bounded, so a broken game fails a test rather than hanging it. A mutant that cannot change behavior is marked in the code with the reason. `npm run test:mutation` fails if any survive. It runs weekly in CI, and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite. |
+
+## Open items
+
 ### Recorded gaps and defects
 
 What the audit recorded where the code did not meet, or was not shown to meet, the rules above. The first two entries predate a later change to the safety check, named in each entry with its evidence; they keep their recorded status, and this file does not reclassify them.
@@ -301,14 +314,3 @@ What the audit recorded where the code did not meet, or was not shown to meet, t
 **Serialization failure (confirmed defect).** An exception while serializing the saved game, before any storage call, is an engine exception, not a storage-operation failure: SAF-3 requires the safe stop and the reported fault (U5), a failed save still attempts withdrawal of the previous save, and storage errors must not stop gameplay (SAF-2). The recorded defect, scoped: an injected serialization exception during the save on Pause is caught and swallowed - the game stays paused with no safe stop and no test-observable fault signal. Current main has the same structure: `saveGameSession` in `public/game/gameManager.js` wraps serialization and the storage write in one `try`, and its `catch` only sets the session-saved flag to false. A naturally occurring serialization failure without injection remains Not Established. Any correction must preserve both the failed-save withdrawal and the SAF-2 storage-error continuation while separating non-storage engine exceptions.
 
 **Drawing console reports (adopted rule, not yet implemented).** Drawing failures produce one console report per unbroken failure streak. A successful drawing frame resets the report flag; the next failure after recovery produces a new console report. Only repeats within the same unbroken streak are suppressed. A console report is an error message in the browser's developer console. The on-screen notice limit, once per kind of error in a session, is unchanged. Console reporting is the separate test-observable signal for SAF-5 (U2). This covers drawing console reporting only, not gamepad report frequency. An idle callback that checks unchanged caches is not the successful drawing witness. Current behavior does not yet meet this rule: `renderErrorReported` in `public/script.js` is set after the first caught failure and never cleared, so no later failure in the session produces a console report.
-
-## Process
-
-| ID | Requirement |
-| --- | --- |
-| QA-1 | Every requirement is verified by at least one test, every test names the requirements it verifies, and those requirements exist. |
-| QA-2 | The unit tests exercise every line, branch and function of the game logic (`public/game/`). `npm test` fails below 100%. Code that cannot be reached is removed rather than left untested. |
-| QA-3 | The browser tests exercise every line, branch and function of the page script (`public/script.js`), measured in Chromium. `npm run test:e2e` fails below 100%. |
-| QA-4 | The browser tests pass in WebKit (Safari's engine) at iPhone size, as well as in Chromium at iPhone and desktop sizes. |
-| QA-5 | Everything the browser loads (`public/`) passes TypeScript's strictest type checks, with types written as comments in the JavaScript. `npm run typecheck` runs before the tests in CI. |
-| QA-6 | Mutation testing (Stryker) of the game logic leaves no mutant alive: every small wrong change to `public/game/` is caught by a failing test, or makes the tests run past the time limit (for example a piece with no blocks, whose ghost falls forever). Loops in tests are bounded, so a broken game fails a test rather than hanging it. A mutant that cannot change behavior is marked in the code with the reason. `npm run test:mutation` fails if any survive. It runs weekly in CI, and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite. |
