@@ -2,7 +2,7 @@
 
 What the safety audit established, what it has not, and where it stands.
 
-The audit checks the game against eight security properties (O1 to O8), from the authoritative transition boundary to an independent reference model. It ran in October 2026 and is stopped. Nothing here starts it again.
+The audit checks the game against eight security properties (O1 to O8), from the authoritative transition boundary to an independent reference model. It ran in October 2026, was stopped before its fix phase, and restarted November 1, 2026 at the owner's direction.
 
 ## What it established
 
@@ -14,7 +14,11 @@ One finding needs its status stated as last recorded. F19 (invariant-guard fault
 
 ## What stays open
 
-The audit stopped mid-classification. Twelve findings still need a final status: F8 (a Mac-only key report on a platform the game does not support); F1, F2, F10, F13, F14, F16 and F28a (recorded repairs or resolved-no-change rows whose final wording was never adopted); F33, F34, F35 and F37 (defect-confirmation narratives whose status word was proposed but not settled). Some confirmed defects remain open, among them F23 (an injected serialization exception that Pause swallows without the required stop signal) and the remaining scope of F20 (partly repaired by PR #293); two others, F26 and F36, were settled with named tests, and F19 was fixed historically. The audit stopped before its fix phase. One touch-responsiveness item stands as a Candidate by design: its single real-iPhone attempt could not show the taps were fast enough, so no status was proposed; a later real-device run can settle it.
+Every finding carries a last recorded status label: the audit's records give all 55 findings a recorded status word from the phase's October 2026 records, set under the status rules the owner established on October 17, 2026 (among them: a point that shows no break in the game, or concerns only tests or old notes, is recorded Rejected or closed). Two label wordings on three findings are not on the audit's adopted status list, and adopting them to it is one of the owner's pending word picks. The only Candidate is the touch-responsiveness item under its owner-approved exception (a later real-Safari run can settle it; tracked as issue #339). Every property O1 to O8 stands at Partially Established, and each of the 55 in-scope requirements (a different set from the 55 findings) carries a certification status. The phase's exit checks were never recorded as passed; recording that reconciliation is pending review and has not happened.
+
+Three confirmed defects are identified open without a merged fix, and the finding-to-issue mapping is still in progress, so this is not an exhaustive count: an injected serialization failure during save that Pause swallows without the required stop or report (no open GitHub issue tracks the defect yet; a defect issue is drafted and awaiting review); the remaining scope of the lock-delay history loss (issue #371, Reproduced); and the invariant check's holed-board gap (issue #358, Reproduced), watched by a known-defect todo test until its approved fix lands. F19 (invariant-guard fault reporting): fixed historically, reverified October 23, 2026 within stated scope - two Node tests break the invariant check and the guard still catches and reports the fault; browser corroboration covers a generic engine failure with injected console and draw refusals, not the Node throw routes; scripted fault injection, not an organic failure; browser viewports, not a physical device. Deployment and current behavior stayed pending later-phase evidence.
+
+The audit stopped before its fix phase. Fixes, certification, and test removals each remain owner-approved steps.
 
 ## The record
 
