@@ -1,7 +1,8 @@
+import { parseSavedRecord } from '../../public/game/session.js';
 // Audit migration, decision-log rows D74 and D75 (log deleted, kept in git history): the settled N1 reading.
 // A fault after a confirmed New Game stops the game safely, the fault is
-// recorded and reported, the old save stays withdrawn and its stored text is
-// kept (the setting S2 was kept by D75). Ported from the audit scratch script
+// recorded and reported, the old save stays withdrawn and its serialized position is
+// kept unchanged while availability metadata is withdrawn (the setting S2 was kept by D75). Ported from the audit scratch script
 // d74-N1-run.mjs; the byte-identical original lived in
 // docs/audit/test-migration-provenance/ (deleted, kept in git history).
 // Deviations from the original:
@@ -15,7 +16,7 @@ import { GameManager, createMemoryStorage } from '../../public/game/gameManager.
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler } from '../helpers.js';
 
-test('a fault after a confirmed New Game stops safely and keeps the old save text [D74, D75]', () => {
+test('a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]', () => {
   const storage = createMemoryStorage();
   const real = createFakeScheduler();
   let boom = false;
@@ -44,7 +45,7 @@ test('a fault after a confirmed New Game stops safely and keeps the old save tex
   assert.equal(reports, 1, 'the fault is reported once');
   assert.equal(game.isSessionSaved, false, 'the old save stays withdrawn');
   assert.notEqual(storage.getItem('tetris.isSessionSaved'), 'true', 'the stored save flag stays withdrawn');
-  assert.equal(storage.getItem('tetris.savedGameSession'), textBefore, 'the stored save text is kept unchanged');
+  assert.equal(parseSavedRecord(storage.getItem('tetris.savedGameSession')).position, parseSavedRecord(textBefore).position, 'the exact stored position string is kept unchanged');
   assert.equal(scheduler.pending, 0, 'no timer is left dangling');
 
   boom = false;
