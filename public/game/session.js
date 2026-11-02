@@ -211,7 +211,7 @@ export function parseUniqueJSON(text) {
       if (tokens[index] !== '}') {
         do {
           const key = JSON.parse(tokens[index++]);
-          if (names.has(key)) throw new SyntaxError('duplicate member');
+          if (names.has(key)) throw new SyntaxError();
           names.add(key);
           index++; // colon
           visit();
@@ -228,10 +228,10 @@ export function parseUniqueJSON(text) {
 }
 
 /** @param {unknown} value @param {string[]} required @param {string[]} [optional] @returns {value is Record<string, unknown>} */
-export function hasFields(value, required, optional = []) {
+export function hasFields(value, required, optional) {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     && required.every(key => Object.hasOwn(value, key))
-    && Object.keys(value).every(key => required.includes(key) || optional.includes(key));
+    && Object.keys(value).every(key => required.includes(key) || (optional && optional.includes(key)));
 }
 
 /** @param {string} text @returns {{format: string, available: boolean, position: string} | null} */
