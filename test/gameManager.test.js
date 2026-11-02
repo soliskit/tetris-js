@@ -1440,3 +1440,123 @@ test('payload write invalidates a reentrant eligibility check during publication
   game.handleAction(PlayerAction.pause);
   assert.equal(game.isSessionSaved, true, 'completed payload invalidated the earlier false cache');
 });
+
+test('assigning true on an available record is a no-op, and withdrawn records are not rewritten [STA-4] [SAF-2]', () => {
+  const { game, storage } = priorSave();
+  const before = storage.getItem(DATA);
+  game.isSessionSaved = true;
+  assert.equal(game.sessionSaveWithdrawn, false);
+  assert.equal(storage.getItem(DATA), before);
+  assert.equal(game.isSessionSaved, true);
+  game.isSessionSaved = false;
+  const withdrawn = storage.getItem(DATA);
+  const writes = [];
+  storage.setItem = (key, value) => writes.push([key, value]);
+  game.isSessionSaved = false;
+  assert.deepEqual(writes, []);
+  assert.equal(storage.getItem(DATA), withdrawn);
+});
+
+test('restoring a saved position cancels a pre-existing lock timer [STA-4] [PLY-6]', () => {
+  const { storage } = priorSave();
+  const scheduler = createFakeScheduler();
+  const game = new GameManager({ storage, scheduler });
+  game.lockDelayTask = scheduler.setTimeout(
+    () => assert.fail('obsolete lock timer fired'),
+    10
+  );
+  game.loadGameSession();
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 0);
+  scheduler.advance(20);
+});
+
+test('invalid constructed save content withdraws and reports through the guarded safe stop [STA-4] [SAF-1] [SAF-3]', () => {
+  const { game, storage, scheduler, reports, a } = priorSave();
+  // The engine state remains valid; the serializer emits invalid content.
+  const original = JSON.stringify;
+  let constructions = 0;
+  JSON.stringify = function (value, ...args) {
+    if (
+      value &&
+      Object.hasOwn(value, 'gameBoard') &&
+      Object.hasOwn(value, 'nextTetrominos')
+    ) {
+      constructions++;
+      return original({ ...value, score: -1 }, ...args);
+    }
+    return original(value, ...args);
+  };
+  try {
+    game.handleAction(PlayerAction.pause);
+  } finally {
+    JSON.stringify = original;
+  }
+  assert.equal(constructions, 1);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.gameLoopTask, null);
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(reports.length, 1);
+  assert.equal(game.faults.length, 1);
+  assert.equal(reports[0], game.faults[0]);
+  assert.equal(reports[0].reason, 'unexpected error');
+  assert.ok(reports[0].error instanceof Error);
+  const record = parseSavedRecord(storage.getItem(DATA));
+  assert.equal(record.available, false);
+  assert.equal(record.position, parseSavedRecord(a).position);
+  assert.equal(game.sessionSaveWithdrawn, true);
+});
+
+test('ordinary spawn and held-piece game over withdraw an existing available record [STA-3] [STA-4] [PLY-7]', () => {
+  for (const route of ['next', 'held']) {
+    const { game, storage } = newGame({
+      factory: sequenceFactory([purple, yellow, green])
+    });
+    if (route === 'held') {
+      game.handleAction(PlayerAction.hold);
+      game.handleAction(PlayerAction.drop);
+    }
+    game.handleAction(PlayerAction.pause);
+    const before = parseSavedRecord(storage.getItem(DATA)).position;
+    game.handleAction(PlayerAction.resume);
+    game.currentTetromino.position = position(12, 3);
+    for (let row = 0; row < 3; row++)
+      for (let column = 0; column < 10; column++)
+        game.gameBoard[row][column] = { isFilled: true, color: cyan };
+    if (route === 'next') game.generateNextTetromino();
+    else game.holdTetromino();
+    assert.equal(game.state, GameState.gameOver);
+    const record = parseSavedRecord(storage.getItem(DATA));
+    assert.equal(record.available, false);
+    assert.equal(record.position, before);
+    assert.equal(game.sessionSaveWithdrawn, true);
+  }
+});
+
+test('a resting move with no running delay starts one, and terminal line clears never save [PLY-6] [STA-3] [STA-4]', () => {
+  const { game } = newGame({ factory: fixedFactory(yellow) });
+  landOnSurface(game);
+  game.cancelLockDelay();
+  game.handleAction(PlayerAction.moveLeft);
+  assert.notEqual(game.lockDelayTask, null);
+  game.lockDelayResetCount = 15;
+  game.cancelLockDelay();
+  game.handleAction(PlayerAction.moveRight);
+  assert.equal(
+    filledCells(game),
+    4,
+    'resting count15 with no deadline locks at once'
+  );
+  let saves = 0;
+  const terminal = newGame({ factory: fixedFactory(cyan) }).game;
+  terminal.saveGameSession = () => {
+    saves++;
+  };
+  terminal.clearFullRows = () => 1;
+  terminal.generateNextTetromino = () => {
+    terminal.state = GameState.gameOver;
+  };
+  terminal.lockAndSpawnNext();
+  assert.equal(saves, 0);
+});
