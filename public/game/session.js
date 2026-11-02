@@ -20,8 +20,8 @@ import { allPieces } from './tetrominoFactory.js';
  * @property {Tetromino | null} heldTetromino
  * @property {boolean} canHoldTetromino
  * @property {Tetromino[]} bag The pieces left in the shuffled bag, dealt next.
- * @property {number} [lockDelayResetCount] Lock-delay resets used; absent in pre-fix saves.
- * @property {number} [lowestRowReached] Deepest anchor row the piece has reached; absent in pre-fix saves.
+ * @property {number} lockDelayResetCount Lock-delay resets used, with paused/resting16 distinguished.
+ * @property {number} lowestRowReached Greatest board-row index occupied by a block of the current falling piece during its history.
  */
 
 /**
@@ -44,12 +44,6 @@ export function serializeSession(game) {
 }
 
 // Type guards: saved data is untrusted, so every value starts as unknown.
-
-/**
- * @param {unknown} value
- * @returns {value is Record<string, unknown>}
- */
-const isObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
  * @param {unknown} value
@@ -88,13 +82,11 @@ function parseBoard(board, rows, columns) {
     /** @type {Cell[]} */
     const cells = [];
     for (const cell of row) {
-      if (!isObject(cell) || typeof cell.isFilled !== 'boolean') return null;
+      if (!hasFields(cell, ['isFilled', 'color']) || typeof cell.isFilled !== 'boolean') return null;
       if (cell.isFilled ? !colors.has(cell.color) : cell.color !== null) return null;
       // Checked just above: a piece color when filled, otherwise null.
       cells.push({ isFilled: cell.isFilled, color: /** @type {string | null} */ (cell.color) });
     }
-    // Full rows are cleared as soon as they form, so a saved one is corrupt.
-    if (cells.every(cell => cell.isFilled)) return null;
     result.push(cells);
   }
   return result;
@@ -108,7 +100,8 @@ function parseBoard(board, rows, columns) {
  * @returns {Tetromino | null}
  */
 function parseActivePiece(data, board) {
-  if (!isObject(data) || !isObject(data.position)) return null;
+  if (!hasFields(data, ['color', 'position', 'rotationState'], ['rotations', 'wallKickData'])
+    || !hasFields(data.position, ['row', 'column'])) return null;
   const piece = pieceWithColor(data.color);
   const { row, column } = data.position;
   if (!piece || !isInteger(row) || !isInteger(column)) return null;
@@ -125,7 +118,7 @@ function parseActivePiece(data, board) {
  * @returns {Tetromino | null}
  */
 function parseWaitingPiece(data, columns) {
-  if (!isObject(data)) return null;
+  if (!hasFields(data, ['color'], ['position', 'rotationState', 'rotations', 'wallKickData'])) return null;
   return pieceWithColor(data.color)?.spawned(columns) ?? null;
 }
 
@@ -144,26 +137,24 @@ function parseBag(colors) {
 // missing or anything in it is invalid.
 /**
  * @param {string | null} text
- * @param {{ rows: number, columns: number, maxLockDelayResets?: number }} size
+ * @param {{ rows: number, columns: number }} size
  * @returns {Session | null}
  */
-export function parseSession(text, { rows, columns, maxLockDelayResets = Infinity }) {
+export function parseSession(text, { rows, columns }) {
   /** @type {unknown} */
   let data = null;
   try {
     // A missing save (null) parses as null and is rejected below.
-    data = JSON.parse(/** @type {string} */ (text));
+    data = parseUniqueJSON(/** @type {string} */ (text));
   } catch {
     // Not JSON: data stays null and is rejected below.
   }
-  if (!isObject(data)) return null;
-  // Older layouts stored a level or left out the remaining bag.
-  if (Object.hasOwn(data, 'level')) return null;
+  if (!hasFields(data, ['gameBoard', 'score', 'currentTetromino', 'nextTetrominos', 'heldTetromino', 'canHoldTetromino', 'bag', 'lockDelayResetCount', 'lowestRowReached'])) return null;
 
   const gameBoard = parseBoard(data.gameBoard, rows, columns);
   if (!gameBoard) return null;
   const { score } = data;
-  if (!isSafeInteger(score) || score < 0 || score % 100 !== 0) return null;
+  if (!isSafeInteger(score) || score < 0) return null;
   const currentTetromino = parseActivePiece(data.currentTetromino, gameBoard);
   if (!currentTetromino) return null;
   if (!Array.isArray(data.nextTetrominos) || data.nextTetrominos.length !== UPCOMING_COUNT) return null;
@@ -182,28 +173,13 @@ export function parseSession(text, { rows, columns, maxLockDelayResets = Infinit
   const bag = parseBag(data.bag);
   if (!bag) return null;
 
-  // Lock-delay state (F20): optional members. Absent means a pre-fix save,
-  // which loads with the same fresh defaults as before. Present but invalid
-  // rejects the whole save, like any other invalid field.
-  /** @type {number | undefined} */
-  let lockDelayResetCount;
-  if (Object.hasOwn(data, 'lockDelayResetCount')) {
-    const count = data.lockDelayResetCount;
-    // Callers pass the game's reset cap; when they do not, the parameter
-    // default of Infinity leaves the count with no upper bound to check
-    // against (F38 rewrite: the cap check reads as one plain comparison, so
-    // no mutant of it is unobservable).
-    if (!isInteger(count) || count < 0 || count > maxLockDelayResets) return null;
-    lockDelayResetCount = count;
-  }
-  /** @type {number | undefined} */
-  let lowestRowReached;
-  if (Object.hasOwn(data, 'lowestRowReached')) {
-    const row = data.lowestRowReached;
-    // A remembered low shallower than the piece's current row is impossible.
-    if (!isInteger(row) || row < currentTetromino.position.row || row >= rows) return null;
-    lowestRowReached = row;
-  }
+  const lockDelayResetCount = data.lockDelayResetCount;
+  const lowestRowReached = data.lowestRowReached;
+  const greatestRow = Math.max(...currentTetromino.cells.map(cell => cell.row));
+  const resting = !currentTetromino.fits(gameBoard, position(currentTetromino.position.row + 1, currentTetromino.position.column));
+  if (!isInteger(lockDelayResetCount) || lockDelayResetCount < 0 || lockDelayResetCount > 16
+    || (lockDelayResetCount === 16 && !resting)) return null;
+  if (!isInteger(lowestRowReached) || lowestRowReached < greatestRow || lowestRowReached >= rows) return null;
 
   return {
     gameBoard,
@@ -213,7 +189,64 @@ export function parseSession(text, { rows, columns, maxLockDelayResets = Infinit
     heldTetromino,
     canHoldTetromino: data.canHoldTetromino,
     bag,
-    ...(lockDelayResetCount !== undefined ? { lockDelayResetCount } : {}),
-    ...(lowestRowReached !== undefined ? { lowestRowReached } : {})
+    lockDelayResetCount,
+    lowestRowReached
   };
+}
+
+// One atomic record owns publication. Position text is retained verbatim on withdrawal.
+export const SAVE_FORMAT = 'tetris-session-envelope';
+
+/** @param {string} text @returns {unknown} */
+export function parseUniqueJSON(text) {
+  const value = JSON.parse(text);
+  // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
+  // names, including escaped spellings of the same name, at every object depth.
+  const tokens = /** @type {RegExpMatchArray} */ (text.match(/"(?:[^"\\]|\\.)*"|[{}\[\],:]|[^\s{}\[\],:]+/g));
+  let index = 0;
+  function visit() {
+    const token = tokens[index++];
+    if (token === '{') {
+      const names = new Set();
+      if (tokens[index] !== '}') {
+        do {
+          const key = JSON.parse(tokens[index++]);
+          if (names.has(key)) throw new SyntaxError('duplicate member');
+          names.add(key);
+          index++; // colon
+          visit();
+        } while (tokens[index++] === ',');
+      } else index++;
+    } else if (token === '[') {
+      if (tokens[index] !== ']') {
+        do { visit(); } while (tokens[index++] === ',');
+      } else index++;
+    }
+  }
+  visit();
+  return value;
+}
+
+/** @param {unknown} value @param {string[]} required @param {string[]} [optional] @returns {value is Record<string, unknown>} */
+export function hasFields(value, required, optional = []) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    && required.every(key => Object.hasOwn(value, key))
+    && Object.keys(value).every(key => required.includes(key) || optional.includes(key));
+}
+
+/** @param {string} text @returns {{format: string, available: boolean, position: string} | null} */
+export function parseSavedRecord(text) {
+  try {
+    const data = parseUniqueJSON(text);
+    if (!hasFields(data, ['format', 'available', 'position']) || data.format !== SAVE_FORMAT
+      || typeof data.available !== 'boolean' || typeof data.position !== 'string') return null;
+    return { format: SAVE_FORMAT, available: data.available, position: data.position };
+  } catch {
+    return null;
+  }
+}
+
+/** @param {string} position @param {boolean} available */
+export function serializeSavedRecord(position, available) {
+  return JSON.stringify({ format: SAVE_FORMAT, available, position });
 }
