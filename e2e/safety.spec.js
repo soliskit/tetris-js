@@ -16,7 +16,7 @@ const broken = {
 };
 
 for (const [name, text] of Object.entries(broken)) {
-  test(`continuing ${name} is refused and New Game still works [SAF-1]`, async ({ page }) => {
+  test(`checking ${name} withdraws before offering Continue and New Game still works [SAF-1]`, async ({ page }) => {
     const errors = trackErrors(page);
     await page.addInitScript(value => {
       if (sessionStorage.getItem('seeded')) return;
@@ -25,9 +25,10 @@ for (const [name, text] of Object.entries(broken)) {
       localStorage.setItem('tetris.savedGameSession', value);
     }, text);
     await page.goto('/');
-    await expect(page.locator('#continueGameButton')).toBeVisible();
-    await page.locator('#continueGameButton').click();
+    await expect(page.locator('#continueGameButton')).toHaveCount(1);
     await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('tetris.isSessionSaved'))).toBe('false');
+    expect(await page.evaluate(() => localStorage.getItem('tetris.savedGameSession'))).toBe(text);
     await expect(page.locator('#newGameButton')).toBeVisible();
     await page.locator('#newGameButton').click();
     await expectLabel(page, 'Pause');

@@ -362,22 +362,31 @@ test('a withdrawal write that storage refuses counts for the rest of the session
   assert.equal(game.isSessionSaved, true, 'a save that lands governs again');
 });
 
-test('a save write that storage refuses does not withdraw the session [STA-4] [SAF-2]', () => {
+test('a refused availability write withdraws locally without replacing the prior bytes [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
-  const { game } = newGame({ storage, factory: fixedFactory(yellow) });
-  game.togglePause(); // pausing saves the game
+  const reports = [];
+  const { game, scheduler } = newGame({ storage, factory: fixedFactory(yellow), onFault: fault => reports.push(fault) });
+  game.togglePause();
   assert.equal(game.isSessionSaved, true);
-  game.togglePause(); // playing again; the withdrawal lands
-  storage.setItem('tetris.isSessionSaved', 'true'); // another tab saves the session
+  const before = storage.getItem('tetris.savedGameSession');
+  game.togglePause();
+  storage.setItem('tetris.isSessionSaved', 'true');
   const setItem = storage.setItem;
+  const writes = [];
   storage.setItem = (key, value) => {
+    writes.push([key, value]);
     if (key === 'tetris.isSessionSaved') throw new Error('storage refuses the flag write');
     setItem(key, value);
   };
-  game.togglePause(); // pausing saves: the session lands, the save-flag write is refused
-  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'the stored flag was never rewritten');
-  assert.equal(game.isSessionSaved, true, 'a refused save-flag write does not withdraw the stored save');
-  storage.setItem = setItem; // storage recovers
+  game.togglePause();
+  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true');
+  assert.equal(game.isSessionSaved, false);
+  assert.equal(storage.getItem('tetris.savedGameSession'), before);
+  assert.deepEqual(writes, [['tetris.isSessionSaved', 'true'], ['tetris.isSessionSaved', 'false']]);
+  assert.equal(game.state, GameState.paused);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(reports, []);
+  storage.setItem = setItem;
 });
 
 test('the game stores everything under names of its own [APP-6]', () => {
@@ -1151,4 +1160,285 @@ test('a session storage-write failure stays nonfatal and attempts withdrawal [SA
   assert.equal(storage.getItem(serializerSavedKey), before);
   assert.ok(writes.some(([key, value]) => key === serializerFlagKey && value === 'false'));
   assert.equal(game.isSessionSaved, false);
+});
+
+// Saving-publication regressions.
+const FLAG = 'tetris.isSessionSaved';
+const DATA = 'tetris.savedGameSession';
+const manager = storage => new GameManager({ storage, scheduler: createFakeScheduler(), factory: fixedFactory(PieceColors.cyan) });
+
+// Actual normal-action A/B trace; these literal byte checks are not a full
+// independent semantic-good-save proof or certification of the audit gap.
+function priorSave() {
+  const reports = [];
+  const { game, storage, scheduler } = newGame({ factory: fixedFactory(PieceColors.cyan), onFault: fault => reports.push(fault) });
+  game.handleAction(PlayerAction.pause);
+  const a = storage.getItem(DATA);
+  assert.equal(JSON.parse(a).currentTetromino.position.column, 3);
+  game.handleAction(PlayerAction.resume);
+  game.handleAction(PlayerAction.moveLeft);
+  return { game, storage, scheduler, reports, a };
+}
+
+for (const failedWrite of ['availability', 'position']) {
+  for (const refuseWithdrawal of [false, true]) {
+    test(`${failedWrite} failure preserves A bytes and withdraws, withdrawal refused=${refuseWithdrawal} [STA-4] [SAF-2]`, () => {
+      const { game, storage, scheduler, reports, a } = priorSave();
+      storage.setItem(FLAG, 'true');
+      const writes = [];
+      const setItem = storage.setItem;
+      storage.setItem = (key, value) => {
+        writes.push([key, value]);
+        if ((failedWrite === 'availability' && key === FLAG && value === 'true') ||
+            (failedWrite === 'position' && key === DATA) ||
+            (refuseWithdrawal && key === FLAG && value === 'false')) throw new Error('refused');
+        setItem(key, value);
+      };
+      game.handleAction(PlayerAction.pause);
+      assert.equal(game.state, GameState.paused);
+      assert.equal(scheduler.pending, 0);
+      assert.deepEqual(reports, []);
+      assert.equal(storage.getItem(DATA), a);
+      assert.equal(storage.getItem(FLAG), refuseWithdrawal ? 'true' : 'false');
+      assert.equal(game.isSessionSaved, false);
+      assert.equal(game.sessionSaveWithdrawn, true);
+      assert.deepEqual(writes.map(([key, value]) => [key, key === DATA ? 'payload' : value]),
+        failedWrite === 'availability' ? [[FLAG, 'true'], [FLAG, 'false']] : [[FLAG, 'true'], [DATA, 'payload'], [FLAG, 'false']]);
+      // Recovery of storage alone or an external publication is not a save
+      // by this session, even when the earlier withdrawal landed.
+      storage.setItem = setItem;
+      const other = manager(storage);
+      other.handleAction(PlayerAction.newGame);
+      other.handleAction(PlayerAction.pause);
+      game.storageChanged();
+      assert.equal(game.isSessionSaved, false);
+      game.isSessionSaved = true; // raw flag publication must not clear latch
+      assert.equal(game.isSessionSaved, false);
+      game.handleAction(PlayerAction.resume);
+      game.handleAction(PlayerAction.pause);
+      assert.equal(game.isSessionSaved, true);
+      assert.equal(game.sessionSaveWithdrawn, false);
+      assert.equal(JSON.parse(storage.getItem(DATA)).currentTetromino.position.column, 2);
+    });
+  }
+}
+
+for (const initiallyWithdrawn of [false, true]) {
+  test(`interleaved readers see only completed A then B, writer latch starts ${initiallyWithdrawn} [STA-4]`, () => {
+    const { game, storage, a } = priorSave();
+    storage.setItem(FLAG, 'true');
+    game.sessionSaveWithdrawn = initiallyWithdrawn;
+    const observer = manager(storage);
+    const setItem = storage.setItem;
+    const points = [];
+    storage.setItem = (key, value) => {
+      setItem(key, value);
+      if (key !== FLAG && key !== DATA) return;
+      observer.storageChanged();
+      assert.equal(observer.isSessionSaved, true);
+      observer.loadGameSession();
+      const column = observer.currentTetromino.position.column;
+      points.push([key, column]);
+      if (key === FLAG) {
+        assert.equal(storage.getItem(DATA), a);
+        assert.equal(game.sessionSaveWithdrawn, initiallyWithdrawn);
+      } else {
+        assert.notEqual(storage.getItem(DATA), a);
+        assert.equal(game.sessionSaveWithdrawn, initiallyWithdrawn, 'clears only after payload operation returns');
+      }
+    };
+    game.handleAction(PlayerAction.pause);
+    storage.setItem = setItem;
+    assert.deepEqual(points, [[FLAG, 3], [DATA, 2]]);
+    assert.equal(game.sessionSaveWithdrawn, false);
+    assert.equal(game.isSessionSaved, true);
+  });
+}
+
+test('a later engine fault retains fully completed B without rollback or withdrawal [STA-4] [SAF-3]', () => {
+  const { game, storage, scheduler, reports, a } = priorSave();
+  game.handleAction(PlayerAction.pause);
+  const b = storage.getItem(DATA);
+  assert.notEqual(b, a);
+  assert.equal(JSON.parse(b).currentTetromino.position.column, 2);
+  const fault = new Error('after completed save');
+  game.guard(() => { throw fault; });
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(storage.getItem(DATA), b);
+  assert.equal(storage.getItem(FLAG), 'true');
+  assert.equal(game.isSessionSaved, true);
+  assert.equal(reports.length, 1);
+  assert.equal(reports[0].error, fault);
+  const restored = manager(storage);
+  restored.handleAction(PlayerAction.continueGame);
+  assert.equal(restored.state, GameState.paused);
+  assert.equal(restored.currentTetromino.position.column, 2);
+});
+
+for (const bad of ['{invalid json', '{}', JSON.stringify({ score: 0 })]) {
+  for (const refuseWithdrawal of [false, true]) {
+    test(`availability rejects invalid content ${bad}, withdrawal refused=${refuseWithdrawal} [STA-4] [SAF-1]`, () => {
+      const storage = createMemoryStorage();
+      storage.setItem(FLAG, 'true');
+      storage.setItem(DATA, bad);
+      const setItem = storage.setItem;
+      const writes = [];
+      storage.setItem = (key, value) => {
+        writes.push([key, value]);
+        if (refuseWithdrawal) throw new Error('refused');
+        setItem(key, value);
+      };
+      const game = manager(storage);
+      assert.equal(game.isSessionSaved, false);
+      assert.deepEqual(writes, [[FLAG, 'false']]);
+      assert.equal(storage.getItem(DATA), bad);
+      assert.equal(game.sessionSaveWithdrawn, true);
+      for (let i = 0; i < 60; i++) assert.equal(game.isSessionSaved, false);
+      game.handleAction(PlayerAction.continueGame);
+      assert.equal(game.state, GameState.gameOver);
+      assert.deepEqual(writes, [[FLAG, 'false']], 'latch avoids repeated writes');
+    });
+  }
+}
+
+for (const key of [FLAG, DATA]) {
+  for (const kind of ['absent', 'unreadable']) {
+    test(`${key} ${kind} makes availability false without withdrawal or mutation [STA-4] [SAF-2]`, () => {
+      const { storage } = priorSave();
+      storage.setItem(FLAG, 'true');
+      const getItem = storage.getItem;
+      const writes = [];
+      storage.getItem = k => {
+        if (k === key) {
+          if (kind === 'unreadable') throw new Error('refused read');
+          return null;
+        }
+        return getItem(k);
+      };
+      storage.setItem = (k, v) => writes.push([k, v]);
+      const game = manager(storage);
+      assert.equal(game.readSaveItem(key).kind, kind);
+      assert.equal(game.isSessionSaved, false);
+      game.handleAction(PlayerAction.continueGame);
+      assert.equal(game.state, GameState.gameOver);
+      assert.equal(game.sessionSaveWithdrawn, false);
+      assert.deepEqual(writes, []);
+    });
+  }
+}
+
+for (const flag of ['', 'TRUE', 'false', '1']) {
+  test(`only exact true publishes availability, not ${JSON.stringify(flag)} [STA-4]`, () => {
+    const { storage } = priorSave();
+    storage.setItem(FLAG, flag);
+    const game = manager(storage);
+    assert.equal(game.isSessionSaved, false);
+    assert.equal(game.sessionSaveWithdrawn, false);
+  });
+}
+
+test('validity and flag reads are cached together until invalidation [DSP-3] [STA-4]', () => {
+  const { storage } = priorSave();
+  storage.setItem(FLAG, 'true');
+  const reads = { [FLAG]: 0, [DATA]: 0 };
+  const getItem = storage.getItem;
+  storage.getItem = key => { reads[key] += 1; return getItem(key); };
+  const game = manager(storage);
+  for (let i = 0; i < 60; i++) assert.equal(game.isSessionSaved, true);
+  assert.deepEqual(reads, { [FLAG]: 1, [DATA]: 1 });
+  game.storageChanged();
+  for (let i = 0; i < 60; i++) assert.equal(game.isSessionSaved, true);
+  assert.deepEqual(reads, { [FLAG]: 2, [DATA]: 2 });
+  // Successful local write attempts invalidate as well.
+  game.isSessionSaved = true;
+  assert.equal(game.isSessionSaved, true);
+  assert.deepEqual(reads, { [FLAG]: 3, [DATA]: 3 });
+  storage.setItem = () => { throw new Error('refused'); };
+  game.isSessionSaved = true;
+  assert.equal(game.isSessionSaved, true);
+  assert.deepEqual(reads, { [FLAG]: 4, [DATA]: 4 });
+});
+
+for (const changed of ['valid B', 'invalid', 'absent', 'unreadable', 'ineligible flag']) {
+  test(`Continue freshly reads after cached A, changed to ${changed} [STA-4] [SAF-1] [SAF-2]`, () => {
+    const { game: writer, storage, a } = priorSave();
+    storage.setItem(FLAG, 'true');
+    const game = manager(storage);
+    assert.equal(game.isSessionSaved, true);
+    writer.handleAction(PlayerAction.pause);
+    const b = storage.getItem(DATA);
+    assert.notEqual(a, b);
+    if (changed === 'invalid') storage.setItem(DATA, '{}');
+    if (changed === 'absent') storage.removeItem(DATA);
+    if (changed === 'unreadable') {
+      const getItem = storage.getItem;
+      storage.getItem = key => { if (key === DATA) throw new Error('refused'); return getItem(key); };
+    }
+    if (changed === 'ineligible flag') storage.setItem(FLAG, 'false');
+    const beforeBoard = game.gameBoard;
+    game.handleAction(PlayerAction.continueGame);
+    if (changed === 'valid B') {
+      assert.equal(game.state, GameState.paused);
+      assert.equal(game.currentTetromino.position.column, 2);
+      assert.notEqual(game.gameBoard, beforeBoard);
+    } else {
+      assert.equal(game.state, GameState.gameOver);
+      assert.equal(game.gameBoard, beforeBoard);
+      assert.equal(game.sessionSaveWithdrawn, changed === 'invalid');
+      assert.equal(storage.getItem(FLAG), changed === 'invalid' || changed === 'ineligible flag' ? 'false' : 'true');
+    }
+  });
+}
+
+
+test('the raw availability writer returns its outcome without clearing withdrawal [STA-4] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  const game = manager(storage);
+  game.isSessionSaved = false;
+  assert.equal(game.writeSaveFlag(true), true);
+  assert.equal(game.sessionSaveWithdrawn, true);
+  storage.setItem = () => { throw new Error('refused'); };
+  assert.equal(game.writeSaveFlag(true), false);
+  assert.equal(game.sessionSaveWithdrawn, true);
+  assert.equal(game.writeSaveFlag(false), false);
+  assert.equal(game.sessionSaveWithdrawn, true);
+});
+
+test('fresh Continue with unavailable content is a nonthrowing no-op, not an engine fault [STA-4] [SAF-2]', () => {
+  for (const value of [null, '{}']) {
+    const storage = createMemoryStorage();
+    storage.setItem(FLAG, 'true');
+    if (value !== null) storage.setItem(DATA, value);
+    const reports = [];
+    const game = new GameManager({ storage, scheduler: createFakeScheduler(), onFault: fault => reports.push(fault) });
+    const before = snapshot(game);
+    assert.doesNotThrow(() => game.loadGameSession());
+    assert.equal(snapshot(game), before);
+    assert.deepEqual(reports, []);
+  }
+});
+
+test('fresh Continue invalidates earlier cached ineligibility after restoring valid content [STA-4] [DSP-3]', () => {
+  const { storage } = priorSave();
+  storage.setItem(FLAG, 'false');
+  const game = manager(storage);
+  assert.equal(game.isSessionSaved, false);
+  storage.setItem(FLAG, 'true');
+  game.handleAction(PlayerAction.continueGame);
+  assert.equal(game.state, GameState.paused);
+  assert.equal(game.isSessionSaved, true);
+});
+
+test('payload write invalidates a reentrant eligibility check during publication [STA-4] [DSP-3]', () => {
+  const { game, storage } = priorSave();
+  storage.removeItem(DATA);
+  game.sessionSaveWithdrawn = false;
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => {
+    setItem(key, value);
+    if (key === FLAG && value === 'true') assert.equal(game.isSessionSaved, false, 'payload still absent');
+  };
+  game.handleAction(PlayerAction.pause);
+  assert.equal(game.isSessionSaved, true, 'completed payload invalidated the earlier false cache');
 });
