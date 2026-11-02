@@ -229,8 +229,17 @@ export class GameManager {
   }
 
   saveGameSession() {
+    let session;
     try {
-      this.storage.setItem(SAVED_SESSION_KEY, serializeSession(this));
+      session = serializeSession(this);
+    } catch (error) {
+      // Serialization is an engine failure, not a refused storage operation.
+      // Still withdraw the failed save before the guard reports the error.
+      this.isSessionSaved = false;
+      throw error;
+    }
+    try {
+      this.storage.setItem(SAVED_SESSION_KEY, session);
       this.isSessionSaved = true;
     } catch {
       this.isSessionSaved = false;
