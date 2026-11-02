@@ -86,9 +86,9 @@ export class GameManager {
     this.factory = factory;
     this.onFault = onFault;
     this.onChange = onChange;
-    /** @type {boolean | undefined} The saved game flag as last read from storage, until it may have changed. */
+    /** @type {boolean | undefined} Saved-content eligibility until storage may have changed. */
     this.storedIsSessionSaved = undefined;
-    /** Whether a save withdrawal that storage refused counts for this session. */
+    /** Whether this session has withdrawn its save until a full save succeeds. */
     this.sessionSaveWithdrawn = false;
     /** @type {Fault[]} */
     this.faults = [];
@@ -155,26 +155,51 @@ export class GameManager {
     }
   }
 
-  // Kept in memory, because the page checks it on every frame. A write, or
-  // a change made in another tab, makes the next check read storage again.
+  // Save reads distinguish absent content from an operation that failed.
+  /** @param {string} key @returns {{kind: 'value', value: string} | {kind: 'absent', value: null} | {kind: 'unreadable', value: null}} */
+  readSaveItem(key) {
+    try {
+      const value = this.storage.getItem(key);
+      return value === null ? { kind: 'absent', value: null } : { kind: 'value', value };
+    } catch {
+      return { kind: 'unreadable', value: null };
+    }
+  }
+
+  // Always fresh: Continue cannot restore an object from an earlier check.
+  readSavedSession() {
+    if (this.sessionSaveWithdrawn) return null;
+    const flag = this.readSaveItem(IS_SESSION_SAVED_KEY);
+    if (flag.value !== 'true') return null;
+    const content = this.readSaveItem(SAVED_SESSION_KEY);
+    if (content.kind !== 'value') return null;
+    const session = parseSession(content.value, { rows: this.rows, columns: this.columns, maxLockDelayResets: this.maxLockDelayResets });
+    if (!session) this.isSessionSaved = false;
+    return session;
+  }
+
+  // The page checks every frame; unchanged eligibility needs no more reads.
   get isSessionSaved() {
-    if (this.sessionSaveWithdrawn) return false;
-    this.storedIsSessionSaved ??= this.readItem(IS_SESSION_SAVED_KEY) === 'true';
+    this.storedIsSessionSaved ??= this.readSavedSession() !== null;
     return this.storedIsSessionSaved;
   }
 
   /** @param {boolean} value */
-  set isSessionSaved(value) {
+  writeSaveFlag(value) {
     this.storageChanged();
     try {
       this.storage.setItem(IS_SESSION_SAVED_KEY, String(value));
-      // The write landed, so the stored flag governs again.
-      this.sessionSaveWithdrawn = false;
+      return true;
     } catch {
-      // A withdrawal that cannot be written still holds for the rest of the
-      // session, or a stored "true" would keep advertising the save.
-      if (!value) this.sessionSaveWithdrawn = true;
+      return false;
     }
+  }
+
+  /** @param {boolean} value */
+  set isSessionSaved(value) {
+    // Withdrawal holds even if its write succeeds or another tab saves.
+    if (!value) this.sessionSaveWithdrawn = true;
+    this.writeSaveFlag(value);
   }
 
   // Called when another tab changes storage, so stale values are not used.
@@ -204,15 +229,9 @@ export class GameManager {
   // Loads a valid saved game. A refused save stays stored, but Continue
   // attempts to mark it unavailable. A missing or unreadable save is left alone.
   loadGameSession() {
-    if (!this.isSessionSaved) return;
-    const text = this.readItem(SAVED_SESSION_KEY);
-    // A failed read or a missing save does not change storage.
-    if (text === null) return;
-    const session = parseSession(text, { rows: this.rows, columns: this.columns, maxLockDelayResets: this.maxLockDelayResets });
-    if (!session) {
-      this.isSessionSaved = false;
-      return;
-    }
+    const session = this.readSavedSession();
+    if (!session) return;
+    this.storageChanged();
     this.state = GameState.paused;
     this.gameBoard = session.gameBoard;
     this.boardVersion += 1;
@@ -238,12 +257,19 @@ export class GameManager {
       this.isSessionSaved = false;
       throw error;
     }
+    // Publish first. Either refused write leaves the earlier payload intact.
+    if (!this.writeSaveFlag(true)) {
+      this.isSessionSaved = false;
+      return;
+    }
+    this.storageChanged();
     try {
       this.storage.setItem(SAVED_SESSION_KEY, session);
-      this.isSessionSaved = true;
     } catch {
       this.isSessionSaved = false;
+      return;
     }
+    this.sessionSaveWithdrawn = false;
   }
 
   generateNextTetromino() {
