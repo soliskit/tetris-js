@@ -1,0 +1,899 @@
+{
+  "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+  "cases": [
+    {
+      "name": "A-no-files",
+      "files": {},
+      "expected": "missing",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "B-empty-list",
+      "files": {
+        "run.json": []
+      },
+      "expected": "no-measurement",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "C-empty-functions",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": []
+          }
+        ]
+      },
+      "expected": "no-measurement",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "D-empty-ranges",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": []
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "no-measurement",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "E-zero-width",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 2,
+                    "endOffset": 2,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "no-measurement",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "E-outside",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 52,
+                    "endOffset": 54,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "no-measurement",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "F-zero-count",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "below-threshold",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "G-full",
+      "files": {
+        "run.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "success",
+      "metric_hypothesis": {
+        "lines": {
+          "total": 2,
+          "covered": 2
+        },
+        "branches": {
+          "total": 2,
+          "covered": 2
+        },
+        "functions": {
+          "total": 1,
+          "covered": 1
+        }
+      },
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "H-empty-plus-full",
+      "files": {
+        "empty.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": []
+          }
+        ],
+        "full.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "success",
+      "metric_hypothesis": {
+        "lines": {
+          "total": 2,
+          "covered": 2
+        },
+        "branches": {
+          "total": 2,
+          "covered": 2
+        },
+        "functions": {
+          "total": 1,
+          "covered": 1
+        }
+      },
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "I-split-nonempty",
+      "files": {
+        "one.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  },
+                  {
+                    "startOffset": 34,
+                    "endOffset": 35,
+                    "count": 0
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "two.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  },
+                  {
+                    "startOffset": 34,
+                    "endOffset": 35,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "success",
+      "metric_hypothesis": {
+        "lines": {
+          "total": 2,
+          "covered": 2
+        },
+        "branches": {
+          "total": 3,
+          "covered": 3
+        },
+        "functions": {
+          "total": 1,
+          "covered": 1
+        }
+      },
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-file-object",
+      "files": {
+        "bad.json": {}
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-file-object-plus-valid",
+      "files": {
+        "bad.json": {},
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-null-entry",
+      "files": {
+        "bad.json": [
+          null
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-null-entry-plus-valid",
+      "files": {
+        "bad.json": [
+          null
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-functions-object",
+      "files": {
+        "bad.json": [
+          {
+            "functions": {}
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-functions-object-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "functions": {}
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-ranges-object",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "isBlockCoverage": true,
+                "ranges": {}
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-ranges-object-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "isBlockCoverage": true,
+                "ranges": {}
+              }
+            ]
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-missing-block-flag",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "ranges": []
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-missing-block-flag-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "ranges": []
+              }
+            ]
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-string-count",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": "1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-string-count-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": "1"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-negative-count",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": -1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-negative-count-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": -1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-reverse-range",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 5,
+                    "endOffset": 2,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-reverse-range-plus-valid",
+      "files": {
+        "bad.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 5,
+                    "endOffset": 2,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "valid.json": [
+          {
+            "url": "http://localhost/script.js",
+            "source": "function pick(x) { return x ? 1 : 2; }\npick(true);\n",
+            "functions": [
+              {
+                "functionName": "",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 51,
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "functionName": "pick",
+                "isBlockCoverage": true,
+                "ranges": [
+                  {
+                    "startOffset": 0,
+                    "endOffset": 38,
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expected": "invalid",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    },
+    {
+      "name": "J-json-syntax",
+      "files": {
+        "bad.json": {
+          "RAW": "{broken"
+        }
+      },
+      "expected": "parse-error",
+      "metric_hypothesis": null,
+      "source_sha256": "29e2bd668ffbaecd5cbbe87e22b9ab2c884eee5ca9529b2876ee916641328e38"
+    }
+  ],
+  "max_invocations": 27,
+  "timeout_ms": 5000,
+  "max_output_bytes": 200000,
+  "expected_counters_are": "unexecuted hypotheses; stop on mismatch"
+}
