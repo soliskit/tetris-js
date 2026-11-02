@@ -570,6 +570,13 @@ const inputController = new InputController(gameManager, {
   },
   press: () => questionButtons.find(button => button === document.activeElement)?.click()
 });
+// Pressing the question or padding does nothing, including leaving the
+// selected answer focused. Buttons and the backdrop keep their defaults.
+newGameDialog.addEventListener('pointerdown', event => {
+  if (!event.isPrimary || event.button !== 0) return;
+  const target = /** @type {Element} */ (event.target);
+  if (target.closest('.dialog-content') && !target.closest('button')) event.preventDefault();
+});
 newGameDialog.addEventListener('click', event => {
   if (event.target === newGameDialog) gameManager.cancelNewGame();
 });
