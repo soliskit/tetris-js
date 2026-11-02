@@ -195,3 +195,68 @@ test('in-session score validity is not the saved-score ceiling or divisibility r
     assert.equal(game.findInvariantViolation(), null);
   }
 });
+
+test('record name checking visits every array element and escaped object name [STA-6] [SAF-1]', () => {
+  for (const text of [
+    '[{"x":1,"x":2}]',
+    '[{}, {"x":1,"x":2}]',
+    '{"empty":{},"later":{"x":1,"x":2}}',
+    '{"empty":[],"later":{"x":1,"x":2}}',
+    '[[],{},[{"x":1,"x":2}]]',
+    '{"a,b:c[{}]":0,"a,b:c[{}]":1}',
+    '{"a\\\"b":0,"a\\\"b":1}',
+    '{"a\\\\b":0,"a\\\\b":1}'
+  ])
+    assert.throws(() => parseUniqueJSON(text), SyntaxError, text);
+  for (const text of [
+    '[{}, {}, []]',
+    '{"empty":[],"later":{"x":1}}',
+    '[{"a,b:c[{}]":"q\\\"\\\\"},{}]'
+  ]) {
+    assert.deepEqual(parseUniqueJSON(text), JSON.parse(text));
+  }
+});
+
+test('field whitelist requires all own names and non-array records [STA-6] [SAF-1]', () => {
+  for (const value of [false, true, 0, '', 'x', null, [], undefined])
+    assert.equal(hasFields(value, []), false);
+  assert.equal(hasFields({ a: 1 }, ['a', 'b']), false);
+  for (const key of ['extra', '', 'a\u0301', '__proto__', 'constructor']) {
+    const record = JSON.parse(JSON.stringify({ a: 1, [key]: 2 }));
+    assert.equal(hasFields(record, ['a']), false, key);
+    assert.equal(hasFields(record, ['a'], [key]), true, key);
+    assert.equal(hasFields(record, ['a'], ['other']), false, key);
+  }
+  assert.equal(hasFields({ a: 1 }, ['a']), true);
+});
+
+test('cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]', () => {
+  const { game } = setup();
+  for (const change of [
+    (data) => {
+      data.gameBoard[19][0].isFilled = 0;
+    },
+    (data) => {
+      data.gameBoard[19][0].extra = true;
+    },
+    (data) => {
+      data.currentTetromino.extra = true;
+    },
+    (data) => {
+      data.currentTetromino.position.extra = true;
+    },
+    (data) => {
+      data.nextTetrominos[0].extra = true;
+    },
+    (data) => {
+      data.heldTetromino = { color: '#00C0E8', extra: true };
+    }
+  ]) {
+    const data = JSON.parse(serializeSession(game));
+    change(data);
+    assert.equal(
+      parseSession(JSON.stringify(data), { rows: 20, columns: 10 }),
+      null
+    );
+  }
+});
