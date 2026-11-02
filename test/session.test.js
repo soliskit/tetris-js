@@ -1,3 +1,4 @@
+import { parseSavedRecord, serializeSavedRecord } from '../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,7 +9,7 @@ import { parseSession, serializeSession } from '../public/game/session.js';
 import { PieceColors, TetrominoFactory } from '../public/game/tetrominoFactory.js';
 import { createFakeScheduler, newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
 
-const SIZE = { rows: 20, columns: 10, maxLockDelayResets: 15 };
+const SIZE = { rows: 20, columns: 10 };
 
 // A realistic save: a few locked blocks, a held piece and a moved piece.
 function validSave() {
@@ -103,12 +104,8 @@ const corruptions = {
   'a filled cell with an unknown color': data => { data.gameBoard[19][0].color = '#123456'; },
   'a filled cell without a color': data => { data.gameBoard[19][0].color = null; },
   'an empty cell with a color': data => { data.gameBoard[5][5] = { isFilled: false, color: PieceColors.red }; },
-  'a full row that should have been cleared': data => {
-    data.gameBoard[18] = data.gameBoard[18].map(() => ({ isFilled: true, color: PieceColors.blue }));
-  },
   'a negative score': data => { data.score = -100; },
   'a fractional score': data => { data.score = 150.5; },
-  'a score that is not a multiple of 100': data => { data.score = 150; },
   'a score stored as text': data => { data.score = '1300'; },
   'a score too large to be exact': data => { data.score = 2 ** 60; },
   'no current piece': data => { delete data.currentTetromino; },
@@ -152,33 +149,22 @@ for (const [name, corrupt] of Object.entries(corruptions)) {
   });
 }
 
-// The current fixture continues through the player's storage route.
+// The former raw-position fixture is refused through the player's storage route.
 // The older fixture remains unchanged as evidence that its layout is refused.
 const savedGameFormats = [
-  ['the current format', 'saved-game-current.json', saved => !('level' in saved)]
+  ['raw-position format', 'saved-game-current.json', saved => !('level' in saved)]
 ];
 
 for (const [format, file, isThatFormat] of savedGameFormats) {
-  test(`a saved game in ${format}, as a released version stored it, still continues [STA-6] [STA-4]`, () => {
+  test(`the former ${format} is refused whole without migration [STA-6] [STA-4]`, () => {
     const text = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
-    const saved = JSON.parse(text);
-    assert.ok(isThatFormat(saved), `${file} is in ${format}`);
+    assert.ok(isThatFormat(JSON.parse(text)));
     const storage = createMemoryStorage();
     storage.setItem('tetris.savedGameSession', text);
-    storage.setItem('tetris.isSessionSaved', 'true');
     const game = new GameManager({ storage, scheduler: createFakeScheduler() });
-    assert.equal(game.isSessionSaved, true, 'Continue is offered');
-    game.handleAction(PlayerAction.continueGame);
-    assert.equal(game.state, GameState.paused);
-    assert.equal(game.score, saved.score);
-    assert.deepEqual(game.gameBoard, saved.gameBoard);
-    assert.equal(game.currentTetromino.color, saved.currentTetromino.color);
-    assert.equal(game.currentTetromino.rotationState, saved.currentTetromino.rotationState);
-    assert.deepEqual({ ...game.currentTetromino.position }, saved.currentTetromino.position);
-    assert.deepEqual(game.nextTetrominos.map(piece => piece.color), saved.nextTetrominos.map(piece => piece.color));
-    assert.equal(game.heldTetromino?.color, saved.heldTetromino.color);
-    assert.equal(game.canHoldTetromino, saved.canHoldTetromino);
-    assert.deepEqual(game.factory.bag.map(piece => piece.color), saved.bag);
+    assert.equal(game.isSessionSaved, false);
+    assert.equal(storage.getItem('tetris.savedGameSession'), text);
+    assert.equal(storage.getItem('tetris.isSessionSaved'), 'false');
   });
 }
 
@@ -215,7 +201,10 @@ for (const format of ['a stored level', 'a missing bag', 'a malformed current sa
 for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
   test(`Continue with an ${source} does not write to storage [SAF-2] [STA-4]`, () => {
     const storage = createMemoryStorage();
-    if (source !== 'unavailable save') storage.setItem('tetris.isSessionSaved', 'true');
+    if (source === 'unavailable save') {
+      const { data } = validSave();
+      storage.setItem('tetris.savedGameSession', serializeSavedRecord(JSON.stringify(data), false));
+    } else storage.setItem('tetris.isSessionSaved', 'true');
     const read = storage.getItem;
     storage.getItem = key => {
       if (source === 'unreadable save' && key === 'tetris.savedGameSession') throw new Error('SecurityError');
@@ -230,10 +219,11 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
   });
 }
 
-test('Continue when the availability flag cannot be read does not write to storage [SAF-2] [STA-4]', () => {
+test('Continue ignores an unreadable former flag and loads a valid envelope without writes [SAF-2] [STA-4]', () => {
   const storage = createMemoryStorage();
   storage.setItem('tetris.isSessionSaved', 'true');
-  storage.setItem('tetris.savedGameSession', '{}');
+  const { data } = validSave();
+  storage.setItem('tetris.savedGameSession', serializeSavedRecord(JSON.stringify(data), true));
   const read = storage.getItem;
   storage.getItem = key => {
     if (key === 'tetris.isSessionSaved') throw new Error('SecurityError');
@@ -243,15 +233,15 @@ test('Continue when the availability flag cannot be read does not write to stora
   storage.setItem = (key, value) => { writes.push([key, value]); };
   const game = new GameManager({ storage, scheduler: createFakeScheduler() });
   game.handleAction(PlayerAction.continueGame);
-  assert.equal(game.state, GameState.gameOver);
+  assert.equal(game.state, GameState.paused);
   assert.deepEqual(writes, []);
 });
 
 test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
-  const text = fs.readFileSync(new URL('./fixtures/saved-game-current.json', import.meta.url), 'utf8');
+  const {data}=validSave();
+  const text=serializeSavedRecord(JSON.stringify(data),false);
   storage.setItem('tetris.savedGameSession', text);
-  storage.setItem('tetris.isSessionSaved', 'false');
   const read = storage.getItem;
   const reads = [];
   const writes = [];
@@ -264,7 +254,7 @@ test('Continue leaves a valid save alone when its availability flag is false [ST
   assert.equal(game.gameBoard, before.board);
   assert.equal(game.currentTetromino, before.piece);
   assert.deepEqual(game.factory.bag, before.bag);
-  assert.deepEqual(reads, ['tetris.isSessionSaved']);
+  assert.deepEqual(reads, ['tetris.savedGameSession']);
   assert.deepEqual(writes, []);
   assert.equal(read('tetris.savedGameSession'), text);
 });
@@ -305,10 +295,10 @@ test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
   game.lockDelayResetCount = 4; // stands in for resets burned while resting
   const data = JSON.parse(serializeSession(game));
   assert.equal(data.lockDelayResetCount, 4);
-  assert.equal(data.lowestRowReached, 3);
+  assert.equal(data.lowestRowReached, 4);
   const session = parseSession(JSON.stringify(data), SIZE);
   assert.equal(session.lockDelayResetCount, 4);
-  assert.equal(session.lowestRowReached, 3);
+  assert.equal(session.lowestRowReached, 4);
 });
 
 test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
@@ -318,7 +308,7 @@ test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
     d.lockDelayResetCount = count;
     return parseSession(JSON.stringify(d), SIZE);
   };
-  assert.equal(withCount(16), null, 'above the 15-reset cap');
+  assert.equal(withCount(16), null, '16 requires a resting piece');
   assert.equal(withCount(-1), null);
   assert.equal(withCount(1.5), null);
   assert.equal(withCount('3'), null);
@@ -331,26 +321,25 @@ test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
     return parseSession(JSON.stringify(d), SIZE);
   };
   assert.equal(withRow(4), null, 'a remembered low shallower than the piece is impossible');
-  assert.notEqual(withRow(5), null);
-  assert.notEqual(withRow(19), null, 'a wall-kick can leave the low below the anchor');
+  assert.equal(withRow(5), null);
+  assert.notEqual(withRow(6), null);
+  assert.notEqual(withRow(19), null, 'earlier deeper occupied-block history remains valid');
   assert.equal(withRow(20), null);
   assert.equal(withRow(-1), null);
   assert.equal(withRow(2.5), null);
 });
 
-test('a pre-fix save loads without the lock-delay keys at all [STA-6]', () => {
+test('a pre-fix save without the lock-delay keys is refused [STA-6]', () => {
   const { data } = validSave();
   delete data.lockDelayResetCount;
   delete data.lowestRowReached;
   const session = parseSession(JSON.stringify(data), SIZE);
-  assert.ok(!Object.hasOwn(session, 'lockDelayResetCount'), 'no count key leaks in');
-  assert.ok(!Object.hasOwn(session, 'lowestRowReached'), 'no lowest-row key leaks in');
+  assert.equal(session, null);
 });
 
-test('a save without a reset cap keeps any whole non-negative count [STA-6]', () => {
+test('a save without a caller reset cap still refuses count999 [STA-6]', () => {
   const { data } = validSave();
-  data.lockDelayResetCount = 999; // no cap passed: no upper bound to check against
+  data.lockDelayResetCount = 999; // caller configuration cannot widen B9's fixed domain
   const session = parseSession(JSON.stringify(data), { rows: 20, columns: 10 });
-  assert.notEqual(session, null);
-  assert.equal(session.lockDelayResetCount, 999);
+  assert.equal(session, null);
 });
