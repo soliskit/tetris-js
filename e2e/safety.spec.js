@@ -1,3 +1,4 @@
+import {parseSavedRecord,serializeSavedRecord} from '../public/game/session.js';
 // Fault injection in the real page: corrupted saves, drawing errors and
 // blocked storage must never crash or freeze the game.
 
@@ -7,16 +8,16 @@ import { expectLabel, filledCount, savedGame, PieceColors, trackErrors } from '.
 const good = savedGame({ piece: PieceColors.purple });
 const broken = {
   'text that is not JSON': '{"gameBoard": [',
-  'a save missing its upcoming pieces': JSON.stringify({ ...JSON.parse(good['tetris.savedGameSession']), nextTetrominos: undefined }),
+  'a save missing its upcoming pieces': serializeSavedRecord(JSON.stringify({ ...JSON.parse(parseSavedRecord(good['tetris.savedGameSession']).position), nextTetrominos: undefined }),true),
   'a save with the piece inside locked blocks': (() => {
-    const data = JSON.parse(good['tetris.savedGameSession']);
+    const data = JSON.parse(parseSavedRecord(good['tetris.savedGameSession']).position);
     data.gameBoard[1][4] = { isFilled: true, color: PieceColors.red };
-    return JSON.stringify(data);
+    return serializeSavedRecord(JSON.stringify(data),true);
   })()
 };
 
 for (const [name, text] of Object.entries(broken)) {
-  test(`continuing ${name} is refused and New Game still works [SAF-1]`, async ({ page }) => {
+  test(`checking ${name} withdraws before offering Continue and New Game still works [SAF-1]`, async ({ page }) => {
     const errors = trackErrors(page);
     await page.addInitScript(value => {
       if (sessionStorage.getItem('seeded')) return;
@@ -25,9 +26,10 @@ for (const [name, text] of Object.entries(broken)) {
       localStorage.setItem('tetris.savedGameSession', value);
     }, text);
     await page.goto('/');
-    await expect(page.locator('#continueGameButton')).toBeVisible();
-    await page.locator('#continueGameButton').click();
+    await expect(page.locator('#continueGameButton')).toHaveCount(1);
     await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('tetris.isSessionSaved'))).toBe('false');
+    expect(await page.evaluate(() => localStorage.getItem('tetris.savedGameSession'))).toBe(text);
     await expect(page.locator('#newGameButton')).toBeVisible();
     await page.locator('#newGameButton').click();
     await expectLabel(page, 'Pause');
