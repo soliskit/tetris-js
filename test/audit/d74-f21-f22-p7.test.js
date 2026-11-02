@@ -8,6 +8,7 @@
 // output, and the score-for-level port (level is now derived from the score,
 // so the F22 check sets the writable score field instead of the removed level
 // setter).
+import { parseSavedRecord, serializeSavedRecord } from '../../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -58,10 +59,10 @@ test('P7: a hand-edited save granting one more hold is accepted after loading [D
   game.saveGameSession();
 
   const key = 'tetris.savedGameSession';
-  const data = JSON.parse(storage.getItem(key));
+  const data = JSON.parse(parseSavedRecord(storage.getItem(key)).position);
   assert.equal(data.canHoldTetromino, false, 'the used hold is stored');
   data.canHoldTetromino = true;
-  storage.setItem(key, JSON.stringify(data));
+  storage.setItem(key, serializeSavedRecord(JSON.stringify(data), true));
 
   const loaded = new GameManager({ scheduler: createFakeScheduler(), storage });
   loaded.loadGameSession();

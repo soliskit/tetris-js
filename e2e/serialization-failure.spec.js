@@ -19,7 +19,7 @@ for (const refusedWithdrawal of [false, true]) {
     await page.locator('#playPauseButton').click();
     const before = await page.evaluate(() => localStorage.getItem('tetris.savedGameSession'));
     expect(typeof before).toBe('string');
-    expect(JSON.parse(before).gameBoard).toHaveLength(20);
+    expect(JSON.parse(JSON.parse(before).position).gameBoard).toHaveLength(20);
     await page.locator('#playPauseButton').click();
     await expect(page.locator('#playPauseButton')).toHaveAttribute('aria-label', 'Pause');
     await page.evaluate(refusedWithdrawal => {
@@ -38,7 +38,7 @@ for (const refusedWithdrawal of [false, true]) {
       window.testGame.storage = {
         getItem: key => storage.getItem(key),
         setItem: (key, value) => {
-          if (key === 'tetris.isSessionSaved' && value === 'false') {
+          if (key === 'tetris.savedGameSession' && JSON.parse(value).available === false) {
             window.withdrawalAttempts += 1;
             if (refusedWithdrawal) throw new Error('withdrawal refused');
           }
@@ -61,7 +61,7 @@ for (const refusedWithdrawal of [false, true]) {
           state: game.state, gravity: game.gameLoopTask, lock: game.lockDelayTask,
           attempts: window.serializerAttempts, eligible: game.isSessionSaved,
           withdrawalAttempts: window.withdrawalAttempts,
-          storedFlag: localStorage.getItem('tetris.isSessionSaved'),
+          storedAvailable: JSON.parse(localStorage.getItem('tetris.savedGameSession')).available,
           originalError: game.faults.at(-1)?.error === window.serializerError,
           reason: game.faults.at(-1)?.reason,
           bytes: localStorage.getItem('tetris.savedGameSession')
@@ -72,11 +72,12 @@ for (const refusedWithdrawal of [false, true]) {
       expect(result.lock).toBeNull();
       expect(result.attempts).toBe(1);
       expect(result.withdrawalAttempts).toBe(1);
-      expect(result.storedFlag).toBe(refusedWithdrawal ? 'true' : 'false');
+      expect(result.storedAvailable).toBe(refusedWithdrawal);
       expect(result.eligible).toBe(false);
       expect(result.originalError).toBe(true);
       expect(result.reason).toBe('unexpected error');
-      expect(result.bytes).toBe(before);
+      expect(JSON.parse(result.bytes).position).toBe(JSON.parse(before).position);
+      if(refusedWithdrawal) expect(result.bytes).toBe(before);
       expect(reports.some(text => text.includes('Tetris stopped safely: unexpected error Error: injected session serialization failure'))).toBe(true);
       await page.screenshot({ path: testInfo.outputPath('serialization-fault-notice.png') });
     } finally {

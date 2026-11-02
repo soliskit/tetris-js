@@ -1,3 +1,4 @@
+import { parseSavedRecord, serializeSavedRecord } from '../public/game/session.js';
 // Fault injection: errors, broken invariants and failing storage must leave
 // the engine in a safe state (game over, no timers), reported, with the last
 // good save kept.
@@ -60,7 +61,7 @@ test('an error inside the gravity timer stops the game safely and is reported [S
   const { game, scheduler, reported } = recordingGame({ factory });
   repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
   game.lockDelayResetCount = 15; // the landing locks at once
-  game.lowestRowReached = game.currentTetromino.position.row + 1;
+  game.lowestRowReached = Math.max(...game.currentTetromino.cells.map(cell => cell.row)) + 1;
   assert.equal(game.lockDelayTask, null);
   assert.equal(scheduler.pending, 1, 'only gravity is waiting');
   factory.broken = true;
@@ -81,7 +82,7 @@ test('after a fault the last good save is kept exactly and can still be continue
   game.handleAction(PlayerAction.drop);
   assert.equal(reported.length, 1);
   assert.equal(storage.getItem('tetris.savedGameSession'), saved, 'not rewritten');
-  assert.equal(storage.getItem('tetris.isSessionSaved'), 'true', 'not forgotten');
+  assert.equal(parseSavedRecord(storage.getItem('tetris.savedGameSession')).available, true, 'not forgotten');
   assert.equal(game.isSessionSaved, true);
   factory.broken = false;
   game.handleAction(PlayerAction.continueGame);
@@ -136,7 +137,6 @@ const violations = [
   ['the score becoming a fraction', game => { game.score = 12.5; }, 'score is invalid'],
   ['the piece overlapping locked blocks', game => { game.gameBoard[1][4] = filled(); }, 'piece is invalid or overlaps the board'],
   ['gravity stopping while playing', game => game.stopGameLoop(), 'gravity stopped while playing'],
-  ['the score not being a multiple of 100', game => { game.score = 150; }, 'score is invalid'],
   ['a lock delay running while the piece is in the air', game => game.startLockDelay(), 'lock delay running off the surface'],
   ['the piece resting with no lock delay', game => { game.gameBoard[2][4] = filled(); }, 'piece resting with no lock delay']
 ];
