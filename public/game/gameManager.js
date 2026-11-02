@@ -253,7 +253,7 @@ export class GameManager {
     let record;
     try {
       session = serializeSession(this);
-      if (!parseSession(session, { rows: this.rows, columns: this.columns })) throw new Error('cannot publish invalid saved position');
+      if (!parseSession(session, { rows: this.rows, columns: this.columns })) throw new Error();
       record = serializeSavedRecord(session, true);
     } catch (error) {
       // Serialization is an engine failure, not a refused storage operation.
