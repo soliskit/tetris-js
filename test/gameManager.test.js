@@ -1032,3 +1032,123 @@ test('holding during the lock delay when the held piece has no room ends the gam
   assert.equal(scheduler.pending, 0);
   assert.deepEqual(faults, []);
 });
+
+// Serializer fault regressions use injected failures, not organic errors.
+const serializerSavedKey = 'tetris.savedGameSession';
+const serializerFlagKey = 'tetris.isSessionSaved';
+
+function rememberWrittenBytes(game, storage) {
+  game.handleAction(PlayerAction.pause);
+  const bytes = storage.getItem(serializerSavedKey);
+  const payload = JSON.parse(bytes);
+  // This is an engine-written byte-retention witness, not an independent
+  // proof of B9/B16 semantic validity or the F29 last-good-save target.
+  assert.equal(storage.getItem(serializerFlagKey), 'true');
+  assert.equal(payload.score, 0);
+  assert.equal(payload.gameBoard.length, 20);
+  for (const row of payload.gameBoard) {
+    assert.equal(row.length, 10);
+    for (const cell of row) assert.deepEqual(cell, { isFilled: false, color: null });
+  }
+  assert.equal(payload.currentTetromino.color, PieceColors.cyan);
+  assert.deepEqual(payload.currentTetromino.position, { row: 0, column: 3 });
+  assert.equal(payload.currentTetromino.rotationState, 0);
+  assert.equal(payload.lockDelayResetCount, 0);
+  assert.equal(payload.lowestRowReached, 0);
+  assert.equal(payload.nextTetrominos.length, 3);
+  assert.equal(payload.heldTetromino, null);
+  assert.equal(payload.canHoldTetromino, true);
+  assert.deepEqual(payload.bag, []);
+  game.handleAction(PlayerAction.resume);
+  return bytes;
+}
+
+for (const route of ['Pause', 'line clear']) {
+  for (const refusedWithdrawal of [false, true]) {
+    test(`a serializer failure on ${route} stops safely even with withdrawal refused=${refusedWithdrawal} [SAF-3] [STA-4] [SAF-2]`, () => {
+      const reports = [];
+      const { game, storage, scheduler } = newGame({
+        factory: fixedFactory(cyan),
+        onFault: fault => reports.push(fault)
+      });
+      const before = rememberWrittenBytes(game, storage);
+      if (route === 'line clear') {
+        // Disclosed board setup: real locked-block colors, one open column,
+        // no overlap with the spawned I and no already-full row.
+        for (let column = 0; column < 9; column++) {
+          game.gameBoard[19][column] = { isFilled: true, color: PieceColors.blue };
+        }
+      }
+      const writes = [];
+      const setItem = storage.setItem;
+      storage.setItem = (key, value) => {
+        writes.push([key, value]);
+        if (refusedWithdrawal && key === serializerFlagKey && value === 'false') throw new Error('withdrawal refused');
+        setItem(key, value);
+      };
+      const original = JSON.stringify;
+      const error = new Error('injected session serialization failure');
+      let injections = 0;
+      JSON.stringify = function(value, ...args) {
+        if (value && Object.hasOwn(value, 'gameBoard') && Object.hasOwn(value, 'nextTetrominos')) {
+          injections += 1;
+          throw error;
+        }
+        return original(value, ...args);
+      };
+      try {
+        if (route === 'Pause') game.handleAction(PlayerAction.pause);
+        else dropVerticalIIntoColumn9(game);
+      } finally {
+        JSON.stringify = original;
+        storage.setItem = setItem;
+      }
+      assert.equal(injections, 1, 'the guarded route reached the session serializer');
+      if (route === 'line clear') assert.equal(game.score, 100, 'an actual line cleared before saving');
+      assert.equal(game.state, GameState.gameOver);
+      assert.equal(game.gameLoopTask, null);
+      assert.equal(game.lockDelayTask, null);
+      assert.equal(scheduler.pending, 0, 'no outstanding engine timer firing');
+      assert.equal(reports.length, 1);
+      assert.equal(reports[0].reason, 'unexpected error');
+      assert.equal(reports[0].error, error, 'withdrawal failure cannot replace the original error');
+      assert.equal(storage.getItem(serializerSavedKey), before, 'literal earlier engine-written bytes remain');
+      assert.equal(writes.some(([key]) => key === serializerSavedKey), false, 'no payload write after serialization failed');
+      assert.ok(writes.some(([key, value]) => key === serializerFlagKey && value === 'false'), 'withdrawal was attempted');
+      assert.equal(game.isSessionSaved, false, 'withdrawal holds for this session');
+      assert.equal(storage.getItem(serializerFlagKey), refusedWithdrawal ? 'true' : 'false');
+      // No reload promise for refused withdrawal. A new local save after
+      // recovery is a normal successful-save control, not restoration of it.
+      game.handleAction(PlayerAction.newGame);
+      game.handleAction(PlayerAction.pause);
+      assert.equal(game.state, GameState.paused);
+      assert.equal(game.isSessionSaved, true);
+      assert.equal(storage.getItem(serializerFlagKey), 'true');
+      assert.equal(reports.length, 1);
+    });
+  }
+}
+
+test('a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]', () => {
+  const reports = [];
+  const { game, storage, scheduler } = newGame({ factory: fixedFactory(cyan), onFault: fault => reports.push(fault) });
+  const before = rememberWrittenBytes(game, storage);
+  const setItem = storage.setItem;
+  const writes = [];
+  storage.setItem = (key, value) => {
+    writes.push([key, value]);
+    if (key === serializerSavedKey) throw new Error('session write refused');
+    setItem(key, value);
+  };
+  try {
+    game.handleAction(PlayerAction.pause);
+  } finally {
+    storage.setItem = setItem;
+  }
+  assert.equal(game.state, GameState.paused);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(reports, []);
+  assert.equal(storage.getItem(serializerSavedKey), before);
+  assert.ok(writes.some(([key, value]) => key === serializerFlagKey && value === 'false'));
+  assert.equal(game.isSessionSaved, false);
+});
