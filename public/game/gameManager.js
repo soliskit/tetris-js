@@ -8,7 +8,7 @@
 
 import { below, position } from './position.js';
 import { GameState, PlayerAction, UPCOMING_COUNT, createBoard } from './gameState.js';
-import { parseSession, serializeSession } from './session.js';
+import { parseSession, serializeSession, parseSavedRecord, serializeSavedRecord } from './session.js';
 import { isValidFallingPiece, isValidPieceList } from './tetromino.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
@@ -86,9 +86,9 @@ export class GameManager {
     this.factory = factory;
     this.onFault = onFault;
     this.onChange = onChange;
-    /** @type {boolean | undefined} The saved game flag as last read from storage, until it may have changed. */
+    /** @type {boolean | undefined} Saved-content eligibility until storage may have changed. */
     this.storedIsSessionSaved = undefined;
-    /** Whether a save withdrawal that storage refused counts for this session. */
+    /** Whether this session has withdrawn its save until a full save succeeds. */
     this.sessionSaveWithdrawn = false;
     /** @type {Fault[]} */
     this.faults = [];
@@ -155,25 +155,52 @@ export class GameManager {
     }
   }
 
-  // Kept in memory, because the page checks it on every frame. A write, or
-  // a change made in another tab, makes the next check read storage again.
+  // Save reads distinguish absent content from an operation that failed.
+  /** @param {string} key @returns {{kind: 'value', value: string} | {kind: 'absent', value: null} | {kind: 'unreadable', value: null}} */
+  readSaveItem(key) {
+    try {
+      const value = this.storage.getItem(key);
+      return value === null ? { kind: 'absent', value: null } : { kind: 'value', value };
+    } catch {
+      return { kind: 'unreadable', value: null };
+    }
+  }
+
+  // Always fresh: Continue cannot restore an object from an earlier check.
+  readSavedSession() {
+    if (this.sessionSaveWithdrawn) return null;
+    const content = this.readSaveItem(SAVED_SESSION_KEY);
+    if (content.kind !== 'value') return null;
+    const record = parseSavedRecord(content.value);
+    const session = record && parseSession(record.position, { rows: this.rows, columns: this.columns });
+    if (!session) this.isSessionSaved = false;
+    return record?.available ? session : null;
+  }
+
+  // The page checks every frame; unchanged eligibility needs no more reads.
   get isSessionSaved() {
-    if (this.sessionSaveWithdrawn) return false;
-    this.storedIsSessionSaved ??= this.readItem(IS_SESSION_SAVED_KEY) === 'true';
+    this.storedIsSessionSaved ??= this.readSavedSession() !== null;
     return this.storedIsSessionSaved;
   }
 
   /** @param {boolean} value */
   set isSessionSaved(value) {
+    if (value) return; // Publication happens only in saveGameSession.
+    this.sessionSaveWithdrawn = true;
     this.storageChanged();
+    const content = this.readSaveItem(SAVED_SESSION_KEY);
+    if (content.kind !== 'value') return;
+    const record = parseSavedRecord(content.value);
+    const valid = record && parseSession(record.position, { rows: this.rows, columns: this.columns });
     try {
-      this.storage.setItem(IS_SESSION_SAVED_KEY, String(value));
-      // The write landed, so the stored flag governs again.
-      this.sessionSaveWithdrawn = false;
+      if (record && valid) {
+        if (record.available) this.storage.setItem(SAVED_SESSION_KEY, serializeSavedRecord(record.position, false));
+      } else {
+        // Refused content is retained verbatim, including malformed envelopes.
+        this.storage.setItem(IS_SESSION_SAVED_KEY, 'false');
+      }
     } catch {
-      // A withdrawal that cannot be written still holds for the rest of the
-      // session, or a stored "true" would keep advertising the save.
-      if (!value) this.sessionSaveWithdrawn = true;
+      // This session stays withdrawn even when storage refuses the write.
     }
   }
 
@@ -204,15 +231,9 @@ export class GameManager {
   // Loads a valid saved game. A refused save stays stored, but Continue
   // attempts to mark it unavailable. A missing or unreadable save is left alone.
   loadGameSession() {
-    if (!this.isSessionSaved) return;
-    const text = this.readItem(SAVED_SESSION_KEY);
-    // A failed read or a missing save does not change storage.
-    if (text === null) return;
-    const session = parseSession(text, { rows: this.rows, columns: this.columns, maxLockDelayResets: this.maxLockDelayResets });
-    if (!session) {
-      this.isSessionSaved = false;
-      return;
-    }
+    const session = this.readSavedSession();
+    if (!session) return;
+    this.storageChanged();
     this.state = GameState.paused;
     this.gameBoard = session.gameBoard;
     this.boardVersion += 1;
@@ -222,16 +243,18 @@ export class GameManager {
     this.heldTetromino = session.heldTetromino;
     this.canHoldTetromino = session.canHoldTetromino;
     this.factory.resetBag?.(session.bag);
-    this.resetLockDelayForNewPiece();
-    // Pre-fix saves lack both fields and keep the fresh defaults just set.
-    if (session.lockDelayResetCount !== undefined) this.lockDelayResetCount = session.lockDelayResetCount;
-    if (session.lowestRowReached !== undefined) this.lowestRowReached = session.lowestRowReached;
+    this.cancelLockDelay();
+    this.lockDelayResetCount = session.lockDelayResetCount;
+    this.lowestRowReached = session.lowestRowReached;
   }
 
   saveGameSession() {
     let session;
+    let record;
     try {
       session = serializeSession(this);
+      if (!parseSession(session, { rows: this.rows, columns: this.columns })) throw new Error('cannot publish invalid saved position');
+      record = serializeSavedRecord(session, true);
     } catch (error) {
       // Serialization is an engine failure, not a refused storage operation.
       // Still withdraw the failed save before the guard reports the error.
@@ -239,11 +262,13 @@ export class GameManager {
       throw error;
     }
     try {
-      this.storage.setItem(SAVED_SESSION_KEY, session);
-      this.isSessionSaved = true;
+      this.storage.setItem(SAVED_SESSION_KEY, record);
     } catch {
       this.isSessionSaved = false;
+      return;
     }
+    this.storageChanged();
+    this.sessionSaveWithdrawn = false;
   }
 
   generateNextTetromino() {
@@ -306,28 +331,29 @@ export class GameManager {
   }
 
   resetLockDelay() {
-    this.noteLowestRow();
+    const reachedNewLow = this.noteLowestRow();
     if (this.lockDelayTask === null) {
       this.landIfResting();
     } else if (!this.isOnSurface) {
       this.cancelLockDelay();
-      this.lockDelayResetCount += 1;
-    } else if (this.lockDelayResetCount < this.maxLockDelayResets) {
-      this.lockDelayResetCount += 1;
+    } else if (reachedNewLow || this.lockDelayResetCount < this.maxLockDelayResets) {
+      if (!reachedNewLow) this.lockDelayResetCount += 1;
       this.startLockDelay();
     }
   }
 
   noteLowestRow() {
-    if (this.currentTetromino.position.row <= this.lowestRowReached) return;
-    this.lowestRowReached = this.currentTetromino.position.row;
+    const row = Math.max(...this.currentTetromino.cells.map(cell => cell.row));
+    if (row <= this.lowestRowReached) return false;
+    this.lowestRowReached = row;
     this.lockDelayResetCount = 0;
+    return true;
   }
 
   resetLockDelayForNewPiece() {
     this.cancelLockDelay();
     this.lockDelayResetCount = 0;
-    this.lowestRowReached = this.currentTetromino.position.row;
+    this.lowestRowReached = Math.max(...this.currentTetromino.cells.map(cell => cell.row));
   }
 
   cancelLockDelay() {
@@ -438,7 +464,7 @@ export class GameManager {
     const upcoming = this.nextTetrominos;
     if (upcoming.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
     if (!isValidPieceList(upcoming)) return 'upcoming piece is not a valid piece';
-    if (!Number.isSafeInteger(this.score) || this.score < 0 || this.score % 100 !== 0) return 'score is invalid';
+    if (!Number.isInteger(this.score) || this.score < 0) return 'score is invalid';
     if (this.state !== GameState.gameOver && !isValidFallingPiece(this.currentTetromino, board)) return 'piece is invalid or overlaps the board';
     if (this.state === GameState.playing) {
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
@@ -511,9 +537,8 @@ export class GameManager {
         this.state = GameState.paused;
         this.stopGameLoop();
         if (this.lockDelayTask !== null) {
-          // The pause counts as one reset, but never the last one: resume
-          // must start the delay again, and at the cap resume locks at once.
-          this.lockDelayResetCount = Math.min(this.lockDelayResetCount + 1, this.maxLockDelayResets - 1);
+          // A pause after the 15th restart records 16, not another restart.
+          this.lockDelayResetCount += 1;
         }
         this.cancelLockDelay();
         this.saveGameSession();
@@ -521,7 +546,8 @@ export class GameManager {
       case PlayerAction.resume:
         if (this.state !== GameState.paused) return;
         this.state = GameState.playing;
-        this.landIfResting();
+        if (this.isOnSurface && this.lockDelayResetCount === 16) this.lockAndSpawnNext();
+        else if (this.isOnSurface) this.startLockDelay();
         if (this.state === GameState.playing) this.startGameLoop();
         break;
       case PlayerAction.moveLeft:
