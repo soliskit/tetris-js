@@ -237,7 +237,7 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
   const {spawn}=await import('node:child_process');
   const {once}=await import('node:events');
   const folder=fs.mkdtempSync(path.join(os.tmpdir(),'qa2-watch-'));
-  let child,childClosed=false;
+  let child,childClosed=false,childClosedAt=null;
   try{
     gameFixture(folder);
   fs.writeFileSync(path.join(folder,'watch.test.mjs'),"import './public/game/logic.js';\n");
@@ -255,7 +255,7 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
     let output='',errorOutput='';
     child.stdout.on('data',b=>{output+=b;});
     child.stderr.on('data',b=>{errorOutput+=b;});
-    child.once('close',()=>{childClosed=true;});
+    child.once('close',()=>{childClosed=true;childClosedAt=process.hrtime.bigint();});
     const closed=once(child,'close');
     for(let watchSettleAttempt=0;watchSettleAttempt<3;watchSettleAttempt++){
       const watchSettleElapsedMs=Number(process.hrtime.bigint()-watchLaunchedAt)/1e6;
@@ -269,10 +269,12 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
     assert.ok(aliveCheckpoint.elapsedMs>=1500,'watch alive checkpoint must follow the full 1.5s settle');
     assert.doesNotMatch(errorOutput,/node:test run\(\) is being called recursively/);
   assert.doesNotMatch(output,/QA-2: owning finite/);
+    const sigintRequestedAt=process.hrtime.bigint();
     const interruption={requestedSignal:'SIGINT',delivered:child.kill('SIGINT')};
     let deadline;
   let result;
     try{result=await Promise.race([closed,new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('watch close deadline')),12000);})]);}finally{clearTimeout(deadline);}
+    interruption.sigintRequestedAtMs=Number(sigintRequestedAt)/1e6;interruption.closeAtMs=Number(childClosedAt)/1e6;
     subrunTelemetry({ domain: 'watch-supervisor', status: result[0], signal: result[1],
       aliveCheckpoint, interruption,
       inheritedEnvironment: environmentEvidence(watchInherited),
@@ -286,6 +288,9 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
     assert.doesNotMatch(errorOutput,/node:test run\(\) is being called recursively/,
       'standalone watch fixture unexpectedly took recursive-skip path before close');
     assert.ok(result[0]!==0||result[1]!==null,errorOutput);
+    const sigintToCloseMs=Number(childClosedAt-sigintRequestedAt)/1e6;
+    assert.ok(Number.isFinite(sigintToCloseMs)&&sigintToCloseMs>=0&&sigintToCloseMs<=12000,
+      'watch sigint-to-close interval must be finite, nonnegative, and within the 12s close deadline');
   assert.doesNotMatch(output,/QA-2: owning finite/);
   }finally{
     if(child && !childClosed){
