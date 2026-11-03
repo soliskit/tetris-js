@@ -251,20 +251,30 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
       cwd:folder,stdio:['ignore','pipe','pipe'],
       env: watchEffective,
     });
+    const watchLaunchedAt=process.hrtime.bigint();
     let output='',errorOutput='';
     child.stdout.on('data',b=>{output+=b;});
     child.stderr.on('data',b=>{errorOutput+=b;});
     child.once('close',()=>{childClosed=true;});
     const closed=once(child,'close');
-    await new Promise(resolve=>setTimeout(resolve,1500));
+    for(let watchSettleAttempt=0;watchSettleAttempt<3;watchSettleAttempt++){
+      const watchSettleElapsedMs=Number(process.hrtime.bigint()-watchLaunchedAt)/1e6;
+      if(watchSettleElapsedMs>=1500)break;
+      await new Promise(resolve=>setTimeout(resolve,1500-watchSettleElapsedMs+5));
+    }
+    const aliveCheckpoint=Object.freeze({elapsedMs:Number(process.hrtime.bigint()-watchLaunchedAt)/1e6,
+      exitCode:child.exitCode,signalCode:child.signalCode});
     assert.equal(child.exitCode,null,'watch must not be killed for missing readiness');
+    assert.equal(child.signalCode,null,'watch must not be signaled before interruption');
+    assert.ok(aliveCheckpoint.elapsedMs>=1500,'watch alive checkpoint must follow the full 1.5s settle');
     assert.doesNotMatch(errorOutput,/node:test run\(\) is being called recursively/);
   assert.doesNotMatch(output,/QA-2: owning finite/);
-    child.kill('SIGINT');
+    const interruption={requestedSignal:'SIGINT',delivered:child.kill('SIGINT')};
     let deadline;
   let result;
     try{result=await Promise.race([closed,new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('watch close deadline')),12000);})]);}finally{clearTimeout(deadline);}
     subrunTelemetry({ domain: 'watch-supervisor', status: result[0], signal: result[1],
+      aliveCheckpoint, interruption,
       inheritedEnvironment: environmentEvidence(watchInherited),
       effectiveEnvironment: environmentEvidence(watchEffective),
       recursiveSkipWarningObserved: errorOutput.includes('node:test run() is being called recursively'),
