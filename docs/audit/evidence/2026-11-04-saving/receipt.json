@@ -162,7 +162,8 @@
     }
   ],
   "harnesses": {
-    "original-validity-extract.test.js": "f298f4c1dcdbb47ba46fb7c6c594ab18bbac84a28d5b595055ef932e1e7ff825",
-    "withdrawal-contrast.mjs": "a31e81c1e61ca57a82948e11a3f8c255aa6a78c5154fd6aa73edea80204036d0"
-  }
+    "withdrawal-contrast.mjs": "a31e81c1e61ca57a82948e11a3f8c255aa6a78c5154fd6aa73edea80204036d0",
+    "original-validity-extract.test.js.txt": "f298f4c1dcdbb47ba46fb7c6c594ab18bbac84a28d5b595055ef932e1e7ff825"
+  },
+  "publication_note": "The original-validity extraction harness is archived as .test.js.txt to keep documentary source out of default Node test discovery. Its bytes and SHA-256 are unchanged. The recorded executions used test/original-validity-extract.test.js beside the pinned source test helpers; those historical commands are unchanged. No execution is performed by this packaging change."
 }
