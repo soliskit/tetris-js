@@ -486,3 +486,36 @@ test.describe('layout', () => {
     })).toBe(true);
   });
 });
+
+for (const [kind, start, final] of [
+  ['exact award', Number.MAX_SAFE_INTEGER - 100, Number.MAX_SAFE_INTEGER],
+  ['crossing award', Number.MAX_SAFE_INTEGER - 50, Number.MAX_SAFE_INTEGER - 50],
+  ['restored ceiling', Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]
+]) {
+  test(`score limit ${kind} uses ordinary Game Over on the page [SCO-1] [SCO-2] [STA-3] [STA-4] [SAF-4]`, async ({ page }, testInfo) => {
+    await continueSavedGame(page, savedGame({ piece: PieceColors.cyan, board: rowsExcept([19], [9]), score: start }));
+    const before = await page.evaluate(() => JSON.parse(localStorage.getItem('tetris.savedGameSession')).position);
+    await page.keyboard.press('KeyP');
+    if (kind !== 'restored ceiling') {
+      await page.keyboard.press('ArrowUp');
+      for (let step = 0; step < 4; step++) await page.keyboard.press('ArrowRight');
+      await page.keyboard.press('Space');
+    }
+    await expect(page.locator('#gameOverMessage')).toBeVisible();
+    await expect(page.locator('#score')).toHaveText(`Score: ${final}`);
+    await expect(page.locator('#highScore')).toHaveText(`High Score: ${final}`);
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await expect(page.locator('#gameOverMessage')).toHaveText('Game Over');
+    await expect(page.locator('#gameOverMessage')).not.toHaveClass(/engine-fault/);
+    const terminal = await boardCells(page);
+    if (kind !== 'restored ceiling') expect(terminal.flat().filter(Boolean)).toHaveLength(3);
+    await page.keyboard.down('ArrowLeft');
+    await page.waitForTimeout(800);
+    await page.keyboard.up('ArrowLeft');
+    expect(await boardCells(page)).toEqual(terminal);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tetris.savedGameSession')))).toMatchObject({ available: false, position: before });
+    await page.screenshot({ path: `/tmp/tetris-score-${testInfo.project.name}-${kind.replaceAll(' ', '-')}.png` });
+    await page.reload();
+    await expect(page.locator('#continueGameButton')).toBeHidden();
+  });
+}
