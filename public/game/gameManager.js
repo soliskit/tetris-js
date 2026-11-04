@@ -397,11 +397,11 @@ export class GameManager {
     this.boardVersion += 1;
     if (crossesLimit) {
       this.endScoreLimitedGame();
-      return true;
+    } else {
+      this.score += award;
+      this.highScore = Math.max(this.highScore, this.score);
+      if (this.score === Number.MAX_SAFE_INTEGER) this.endScoreLimitedGame();
     }
-    this.score += award;
-    this.highScore = Math.max(this.highScore, this.score);
-    if (this.score === Number.MAX_SAFE_INTEGER) this.endScoreLimitedGame();
     return true;
   }
 
