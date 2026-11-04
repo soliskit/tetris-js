@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]
+ok 1 - normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]
+  ---
+  duration_ms: 345.998814
+  type: 'test'
+  ...
+# Subtest: independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]
+ok 2 - independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]
+  ---
+  duration_ms: 1.282299
+  type: 'test'
+  ...
+# Subtest: rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]
+ok 3 - rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]
+  ---
+  duration_ms: 1.113792
+  type: 'test'
+  ...
+# Subtest: independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]
+ok 4 - independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]
+  ---
+  duration_ms: 2.967416
+  type: 'test'
+  ...
+# Subtest: independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]
+ok 5 - independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.636774
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 425.485555

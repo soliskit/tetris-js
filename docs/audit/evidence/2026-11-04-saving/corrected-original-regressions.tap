@@ -1,0 +1,1175 @@
+TAP version 13
+# Subtest: a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]
+ok 1 - a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]
+  ---
+  duration_ms: 9.010251
+  type: 'test'
+  ...
+# Tetris stopped safely: unexpected error Error
+#     at GameManager.saveGameSession (file://SOURCE_ROOT/public/game/gameManager.js:256:85)
+#     at GameManager.lockAndSpawnNext (file://SOURCE_ROOT/public/game/gameManager.js:369:12)
+#     at GameManager.hardDrop (file://SOURCE_ROOT/public/game/gameManager.js:594:10)
+#     at GameManager.performAction (file://SOURCE_ROOT/public/game/gameManager.js:569:14)
+#     at file://SOURCE_ROOT/public/game/gameManager.js:509:27
+#     at GameManager.runChecked (file://SOURCE_ROOT/public/game/gameManager.js:446:7)
+#     at GameManager.guard (file://SOURCE_ROOT/public/game/gameManager.js:437:10)
+#     at GameManager.handleAction (file://SOURCE_ROOT/public/game/gameManager.js:509:10)
+#     at dropVerticalIIntoColumn9 (file://SOURCE_ROOT/test/helpers.js:113:8)
+#     at TestContext.<anonymous> (file://SOURCE_ROOT/test/gameManager.test.js:310:3)
+# (node:15074) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a new game manager waits at game over with an empty board and three upcoming pieces [STA-1] [PCE-1] [PLY-8]
+ok 2 - a new game manager waits at game over with an empty board and three upcoming pieces [STA-1] [PCE-1] [PLY-8]
+  ---
+  duration_ms: 2.92472
+  type: 'test'
+  ...
+# Subtest: without injected storage it falls back to memory when localStorage is missing [SAF-2]
+ok 3 - without injected storage it falls back to memory when localStorage is missing [SAF-2]
+  ---
+  duration_ms: 0.434531
+  type: 'test'
+  ...
+# Subtest: moves, rotations, holds and drops do nothing at game over [STA-1]
+ok 4 - moves, rotations, holds and drops do nothing at game over [STA-1]
+  ---
+  duration_ms: 3.281819
+  type: 'test'
+  ...
+# Subtest: moves, rotations, holds, drops and gravity do nothing while paused [STA-2]
+ok 5 - moves, rotations, holds, drops and gravity do nothing while paused [STA-2]
+  ---
+  duration_ms: 10.884951
+  type: 'test'
+  ...
+# Subtest: new game is ignored while playing [STA-1]
+ok 6 - new game is ignored while playing [STA-1]
+  ---
+  duration_ms: 0.363007
+  type: 'test'
+  ...
+# Subtest: new game after game over resets the board, score, level and held piece [STA-1]
+ok 7 - new game after game over resets the board, score, level and held piece [STA-1]
+  ---
+  duration_ms: 0.526605
+  type: 'test'
+  ...
+# Subtest: new game while paused asks first, and once confirmed gives up that game and starts afresh, forgetting its save [STA-1]
+ok 8 - new game while paused asks first, and once confirmed gives up that game and starts afresh, forgetting its save [STA-1]
+  ---
+  duration_ms: 3.92792
+  type: 'test'
+  ...
+# Subtest: cancelling the New Game question keeps the paused game, and so does anything else before it is answered [STA-1]
+ok 9 - cancelling the New Game question keeps the paused game, and so does anything else before it is answered [STA-1]
+  ---
+  duration_ms: 4.540239
+  type: 'test'
+  ...
+# Subtest: new game at game over starts at once, without asking [STA-1]
+ok 10 - new game at game over starts at once, without asking [STA-1]
+  ---
+  duration_ms: 0.422379
+  type: 'test'
+  ...
+# Subtest: the board version counts every change to the locked blocks, and nothing else [DSP-3]
+ok 11 - the board version counts every change to the locked blocks, and nothing else [DSP-3]
+  ---
+  duration_ms: 4.248033
+  type: 'test'
+  ...
+# Subtest: moving left and right stops at the walls [PLY-1] [PCE-6]
+ok 12 - moving left and right stops at the walls [PLY-1] [PCE-6]
+  ---
+  duration_ms: 0.707814
+  type: 'test'
+  ...
+# Subtest: moving is blocked by locked blocks [PLY-1] [PCE-6]
+ok 13 - moving is blocked by locked blocks [PLY-1] [PCE-6]
+  ---
+  duration_ms: 0.329389
+  type: 'test'
+  ...
+# Subtest: soft drop moves down one row and restarts the gravity timer [PLY-3]
+ok 14 - soft drop moves down one row and restarts the gravity timer [PLY-3]
+  ---
+  duration_ms: 0.370626
+  type: 'test'
+  ...
+# Subtest: gravity uses the current level speed [PLY-2]
+ok 15 - gravity uses the current level speed [PLY-2]
+  ---
+  duration_ms: 0.185271
+  type: 'test'
+  ...
+# Subtest: the ghost piece shows where the piece would land without moving it [PLY-5]
+ok 16 - the ghost piece shows where the piece would land without moving it [PLY-5]
+  ---
+  duration_ms: 0.703195
+  type: 'test'
+  ...
+# Subtest: hard drop lands on the stack and brings in the next piece [PLY-4] [PLY-8]
+ok 17 - hard drop lands on the stack and brings in the next piece [PLY-4] [PLY-8]
+  ---
+  duration_ms: 0.682468
+  type: 'test'
+  ...
+# Subtest: clearing 1 line at once scores 100 [SCO-1]
+ok 18 - clearing 1 line at once scores 100 [SCO-1]
+  ---
+  duration_ms: 1.622888
+  type: 'test'
+  ...
+# Subtest: clearing 2 lines at once scores 300 [SCO-1]
+ok 19 - clearing 2 lines at once scores 300 [SCO-1]
+  ---
+  duration_ms: 1.105788
+  type: 'test'
+  ...
+# Subtest: clearing 3 lines at once scores 500 [SCO-1]
+ok 20 - clearing 3 lines at once scores 500 [SCO-1]
+  ---
+  duration_ms: 0.837748
+  type: 'test'
+  ...
+# Subtest: clearing 4 lines at once scores 800 [SCO-1]
+ok 21 - clearing 4 lines at once scores 800 [SCO-1]
+  ---
+  duration_ms: 1.309198
+  type: 'test'
+  ...
+# Subtest: rows above a cleared line move down unchanged [SCO-1]
+ok 22 - rows above a cleared line move down unchanged [SCO-1]
+  ---
+  duration_ms: 0.865832
+  type: 'test'
+  ...
+# Subtest: lines that are not next to each other clear together [SCO-1]
+ok 23 - lines that are not next to each other clear together [SCO-1]
+  ---
+  duration_ms: 1.94292
+  type: 'test'
+  ...
+# Subtest: the level goes up every 1000 points and speeds up gravity [SCO-2] [PLY-2]
+ok 24 - the level goes up every 1000 points and speeds up gravity [SCO-2] [PLY-2]
+  ---
+  duration_ms: 3.071333
+  type: 'test'
+  ...
+# Subtest: the high score is saved when beaten and kept when not [SCO-3]
+ok 25 - the high score is saved when beaten and kept when not [SCO-3]
+  ---
+  duration_ms: 2.733813
+  type: 'test'
+  ...
+# Subtest: a withdrawal write that storage refuses counts for the rest of the session [STA-4] [SAF-2]
+ok 26 - a withdrawal write that storage refuses counts for the rest of the session [STA-4] [SAF-2]
+  ---
+  duration_ms: 2.150365
+  type: 'test'
+  ...
+# Subtest: a refused availability write withdraws locally without replacing the prior bytes [STA-4] [SAF-2]
+ok 27 - a refused availability write withdraws locally without replacing the prior bytes [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.803021
+  type: 'test'
+  ...
+# Subtest: the game stores everything under names of its own [APP-6]
+ok 28 - the game stores everything under names of its own [APP-6]
+  ---
+  duration_ms: 1.233151
+  type: 'test'
+  ...
+# Subtest: the engine reports every action and timer, so the page draws only then [DSP-3]
+ok 29 - the engine reports every action and timer, so the page draws only then [DSP-3]
+  ---
+  duration_ms: 0.633406
+  type: 'test'
+  ...
+# Subtest: checking for a saved game reads storage once, not on every frame [DSP-3]
+ok 30 - checking for a saved game reads storage once, not on every frame [DSP-3]
+  ---
+  duration_ms: 0.952554
+  type: 'test'
+  ...
+# Subtest: a game saved in another tab can be continued once storage reports the change [STA-4]
+ok 31 - a game saved in another tab can be continued once storage reports the change [STA-4]
+  ---
+  duration_ms: 1.281442
+  type: 'test'
+  ...
+# Subtest: the session is saved after a line clear but not after a plain lock [STA-4]
+ok 32 - the session is saved after a line clear but not after a plain lock [STA-4]
+  ---
+  duration_ms: 1.131549
+  type: 'test'
+  ...
+# Subtest: a piece brought to rest by gravity locks 0.5s after touching down [PLY-6]
+ok 33 - a piece brought to rest by gravity locks 0.5s after touching down [PLY-6]
+  ---
+  duration_ms: 0.774452
+  type: 'test'
+  ...
+# Subtest: moving off a ledge cancels the lock delay and the piece keeps falling [PLY-6]
+ok 34 - moving off a ledge cancels the lock delay and the piece keeps falling [PLY-6]
+  ---
+  duration_ms: 0.369985
+  type: 'test'
+  ...
+# Subtest: reaching a new lowest row resets the lock delay move count [PLY-6]
+ok 35 - reaching a new lowest row resets the lock delay move count [PLY-6]
+  ---
+  duration_ms: 0.389489
+  type: 'test'
+  ...
+# Subtest: a continued game keeps the lock-delay count and lowest row [PLY-6] [STA-4]
+ok 36 - a continued game keeps the lock-delay count and lowest row [PLY-6] [STA-4]
+  ---
+  duration_ms: 1.636173
+  type: 'test'
+  ...
+# Subtest: a save missing required history is refused whole [PLY-6] [STA-6]
+ok 37 - a save missing required history is refused whole [PLY-6] [STA-6]
+  ---
+  duration_ms: 1.081409
+  type: 'test'
+  ...
+# Subtest: a continued save restores a remembered low below the piece [PLY-6] [STA-4]
+ok 38 - a continued save restores a remembered low below the piece [PLY-6] [STA-4]
+  ---
+  duration_ms: 0.963151
+  type: 'test'
+  ...
+# Subtest: the counterclockwise action turns the piece the other way [PCE-4] [INP-1]
+ok 39 - the counterclockwise action turns the piece the other way [PCE-4] [INP-1]
+  ---
+  duration_ms: 0.47276
+  type: 'test'
+  ...
+# Subtest: rotating on the surface restarts the lock delay [PLY-6]
+ok 40 - rotating on the surface restarts the lock delay [PLY-6]
+  ---
+  duration_ms: 0.672932
+  type: 'test'
+  ...
+# Subtest: once the 15 resets are used up, landing locks immediately [PLY-6]
+ok 41 - once the 15 resets are used up, landing locks immediately [PLY-6]
+  ---
+  duration_ms: 0.37346
+  type: 'test'
+  ...
+# Subtest: the first hold stores the piece at its spawn state and brings in the next one [PLY-7]
+ok 42 - the first hold stores the piece at its spawn state and brings in the next one [PLY-7]
+  ---
+  duration_ms: 0.800566
+  type: 'test'
+  ...
+# Subtest: hold is available again after the next piece locks, and swaps back [PLY-7]
+ok 43 - hold is available again after the next piece locks, and swaps back [PLY-7]
+  ---
+  duration_ms: 0.30234
+  type: 'test'
+  ...
+# Subtest: holding when the held piece has no room to spawn ends the game [PLY-7] [STA-3]
+ok 44 - holding when the held piece has no room to spawn ends the game [PLY-7] [STA-3]
+  ---
+  duration_ms: 0.245631
+  type: 'test'
+  ...
+# Subtest: pause freezes gravity until resumed [STA-2]
+ok 45 - pause freezes gravity until resumed [STA-2]
+  ---
+  duration_ms: 0.552622
+  type: 'test'
+  ...
+# Subtest: pausing during the lock delay cancels it and counts as a reset, and resuming starts it again [STA-2] [PLY-6]
+ok 46 - pausing during the lock delay cancels it and counts as a reset, and resuming starts it again [STA-2] [PLY-6]
+  ---
+  duration_ms: 0.636766
+  type: 'test'
+  ...
+# Subtest: pause records 15 or 16 and resume distinguishes a delay from immediate lock [STA-2] [PLY-6]
+ok 47 - pause records 15 or 16 and resume distinguishes a delay from immediate lock [STA-2] [PLY-6]
+  ---
+  duration_ms: 1.318467
+  type: 'test'
+  ...
+# Subtest: resuming into a lock that ends the game leaves no timers running [STA-2] [STA-3] [SAF-4]
+ok 48 - resuming into a lock that ends the game leaves no timers running [STA-2] [STA-3] [SAF-4]
+  ---
+  duration_ms: 0.778148
+  type: 'test'
+  ...
+# Subtest: toggling pause does nothing at game over [STA-2]
+ok 49 - toggling pause does nothing at game over [STA-2]
+  ---
+  duration_ms: 0.593766
+  type: 'test'
+  ...
+# Subtest: continue restores the board, score, level and every piece [STA-4]
+ok 50 - continue restores the board, score, level and every piece [STA-4]
+  ---
+  duration_ms: 1.160532
+  type: 'test'
+  ...
+# Subtest: every game starts with a full bag, so its first seven pieces are all different [PCE-5] [STA-1]
+ok 51 - every game starts with a full bag, so its first seven pieces are all different [PCE-5] [STA-1]
+  ---
+  duration_ms: 11.312173
+  type: 'test'
+  ...
+# Subtest: continue carries on with the saved bag, so each piece still comes once per seven [PCE-5] [STA-4]
+ok 52 - continue carries on with the saved bag, so each piece still comes once per seven [PCE-5] [STA-4]
+  ---
+  duration_ms: 1.580385
+  type: 'test'
+  ...
+# Subtest: Continue refuses a save without a bag and leaves the current bag alone [PCE-5] [STA-6]
+ok 53 - Continue refuses a save without a bag and leaves the current bag alone [PCE-5] [STA-6]
+  ---
+  duration_ms: 0.943463
+  type: 'test'
+  ...
+# Subtest: continue without a saved game stays at game over [STA-4]
+ok 54 - continue without a saved game stays at game over [STA-4]
+  ---
+  duration_ms: 0.143938
+  type: 'test'
+  ...
+# Subtest: continue with a corrupted save stays at game over and forgets it [STA-4] [SAF-1]
+ok 55 - continue with a corrupted save stays at game over and forgets it [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.205583
+  type: 'test'
+  ...
+# Subtest: a failing session save does not break pausing [SAF-2]
+ok 56 - a failing session save does not break pausing [SAF-2]
+  ---
+  duration_ms: 0.543117
+  type: 'test'
+  ...
+# Subtest: the game keeps working when storage rejects every write [SAF-2]
+ok 57 - the game keeps working when storage rejects every write [SAF-2]
+  ---
+  duration_ms: 1.240557
+  type: 'test'
+  ...
+# Subtest: memory storage keeps values as strings [SAF-2]
+ok 58 - memory storage keeps values as strings [SAF-2]
+  ---
+  duration_ms: 0.118598
+  type: 'test'
+  ...
+# Subtest: in 200 random games the rules always hold [SAF-6] [PCE-6] [SAF-4]
+ok 59 - in 200 random games the rules always hold [SAF-6] [PCE-6] [SAF-4]
+  ---
+  duration_ms: 705.460514
+  type: 'test'
+  ...
+# Subtest: saves keep the prefixed storage key with the new labeled format [STA-4] [SCO-3]
+ok 60 - saves keep the prefixed storage key with the new labeled format [STA-4] [SCO-3]
+  ---
+  duration_ms: 0.518823
+  type: 'test'
+  ...
+# Subtest: by default gravity runs on the browser timers, and a soft drop replaces the pending tick [PLY-2] [PLY-3]
+ok 61 - by default gravity runs on the browser timers, and a soft drop replaces the pending tick [PLY-2] [PLY-3]
+  ---
+  duration_ms: 0.793558
+  type: 'test'
+  ...
+# Subtest: a new game starts with a fresh lock delay, whatever the last game left behind [PLY-6] [STA-1]
+ok 62 - a new game starts with a fresh lock delay, whatever the last game left behind [PLY-6] [STA-1]
+  ---
+  duration_ms: 0.210519
+  type: 'test'
+  ...
+# Subtest: if a save fails after an earlier one worked, the old save is no longer offered [STA-4] [SAF-2]
+ok 63 - if a save fails after an earlier one worked, the old save is no longer offered [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.095883
+  type: 'test'
+  ...
+# Subtest: a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]
+ok 64 - a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]
+  ---
+  duration_ms: 0.34555
+  type: 'test'
+  ...
+# Subtest: after a piece locks, the next piece waits a full gravity interval before falling [PLY-2] [PLY-6]
+ok 65 - after a piece locks, the next piece waits a full gravity interval before falling [PLY-2] [PLY-6]
+  ---
+  duration_ms: 0.353613
+  type: 'test'
+  ...
+# Subtest: a hard drop gives the next piece a full gravity interval [PLY-2] [PLY-4]
+ok 66 - a hard drop gives the next piece a full gravity interval [PLY-2] [PLY-4]
+  ---
+  duration_ms: 0.157658
+  type: 'test'
+  ...
+# Subtest: moves, rotations and pauses in the air do not use up lock delay resets [PLY-6] [STA-2]
+ok 67 - moves, rotations and pauses in the air do not use up lock delay resets [PLY-6] [STA-2]
+  ---
+  duration_ms: 0.611683
+  type: 'test'
+  ...
+# Subtest: the 16th move on the surface does not extend the lock delay [PLY-6]
+ok 68 - the 16th move on the surface does not extend the lock delay [PLY-6]
+  ---
+  duration_ms: 0.255453
+  type: 'test'
+  ...
+# Subtest: pressing rotate when the piece cannot turn does not extend the lock delay [PLY-6]
+ok 69 - pressing rotate when the piece cannot turn does not extend the lock delay [PLY-6]
+  ---
+  duration_ms: 0.230865
+  type: 'test'
+  ...
+# Subtest: a rotation that kicks the piece down to a new lowest row resets the lock delay count [PLY-6]
+ok 70 - a rotation that kicks the piece down to a new lowest row resets the lock delay count [PLY-6]
+  ---
+  duration_ms: 0.238076
+  type: 'test'
+  ...
+# Subtest: a line clear that ends the game does not leave a save to continue [STA-3] [STA-4]
+ok 71 - a line clear that ends the game does not leave a save to continue [STA-3] [STA-4]
+  ---
+  duration_ms: 0.212937
+  type: 'test'
+  ...
+# Subtest: continue is ignored during a game even when a save exists [STA-4]
+ok 72 - continue is ignored during a game even when a save exists [STA-4]
+  ---
+  duration_ms: 0.475093
+  type: 'test'
+  ...
+# Subtest: a piece swapped in from hold starts with a fresh lock delay [PLY-6] [PLY-7]
+ok 73 - a piece swapped in from hold starts with a fresh lock delay [PLY-6] [PLY-7]
+  ---
+  duration_ms: 0.237646
+  type: 'test'
+  ...
+# Subtest: a first hold that brings in a piece with no room ends the game with no timers [STA-3] [PLY-7]
+ok 74 - a first hold that brings in a piece with no room ends the game with no timers [STA-3] [PLY-7]
+  ---
+  duration_ms: 0.169294
+  type: 'test'
+  ...
+# Subtest: holding during the lock delay when the held piece has no room ends the game with no timers [PLY-6] [PLY-7] [STA-3]
+ok 75 - holding during the lock delay when the held piece has no room ends the game with no timers [PLY-6] [PLY-7] [STA-3]
+  ---
+  duration_ms: 0.181568
+  type: 'test'
+  ...
+# Subtest: a serializer failure on Pause stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+ok 76 - a serializer failure on Pause stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 2.497221
+  type: 'test'
+  ...
+# Subtest: a serializer failure on Pause stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+ok 77 - a serializer failure on Pause stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.933302
+  type: 'test'
+  ...
+# Subtest: a serializer failure on line clear stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+ok 78 - a serializer failure on line clear stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.538767
+  type: 'test'
+  ...
+# Subtest: a serializer failure on line clear stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+ok 79 - a serializer failure on line clear stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 2.27563
+  type: 'test'
+  ...
+# Subtest: a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]
+ok 80 - a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]
+  ---
+  duration_ms: 1.187749
+  type: 'test'
+  ...
+# Subtest: atomic record failure preserves A bytes and withdraws, withdrawal refused=false [STA-4] [SAF-2]
+ok 81 - atomic record failure preserves A bytes and withdraws, withdrawal refused=false [STA-4] [SAF-2]
+  ---
+  duration_ms: 2.188826
+  type: 'test'
+  ...
+# Subtest: atomic record failure preserves A bytes and withdraws, withdrawal refused=true [STA-4] [SAF-2]
+ok 82 - atomic record failure preserves A bytes and withdraws, withdrawal refused=true [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.865126
+  type: 'test'
+  ...
+# Subtest: interleaved readers see only completed A then B, writer latch starts false [STA-4]
+ok 83 - interleaved readers see only completed A then B, writer latch starts false [STA-4]
+  ---
+  duration_ms: 1.301841
+  type: 'test'
+  ...
+# Subtest: interleaved readers see only completed A then B, writer latch starts true [STA-4]
+ok 84 - interleaved readers see only completed A then B, writer latch starts true [STA-4]
+  ---
+  duration_ms: 1.245676
+  type: 'test'
+  ...
+# Subtest: a later engine fault retains fully completed B without rollback or withdrawal [STA-4] [SAF-3]
+ok 85 - a later engine fault retains fully completed B without rollback or withdrawal [STA-4] [SAF-3]
+  ---
+  duration_ms: 1.427767
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {invalid json, withdrawal refused=false [STA-4] [SAF-1]
+ok 86 - availability rejects invalid content {invalid json, withdrawal refused=false [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.223587
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {invalid json, withdrawal refused=true [STA-4] [SAF-1]
+ok 87 - availability rejects invalid content {invalid json, withdrawal refused=true [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.11424
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {}, withdrawal refused=false [STA-4] [SAF-1]
+ok 88 - availability rejects invalid content {}, withdrawal refused=false [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.161714
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {}, withdrawal refused=true [STA-4] [SAF-1]
+ok 89 - availability rejects invalid content {}, withdrawal refused=true [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.099099
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {"score":0}, withdrawal refused=false [STA-4] [SAF-1]
+ok 90 - availability rejects invalid content {"score":0}, withdrawal refused=false [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.075638
+  type: 'test'
+  ...
+# Subtest: availability rejects invalid content {"score":0}, withdrawal refused=true [STA-4] [SAF-1]
+ok 91 - availability rejects invalid content {"score":0}, withdrawal refused=true [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.065476
+  type: 'test'
+  ...
+# Subtest: tetris.savedGameSession absent makes availability false without withdrawal or mutation [STA-4] [SAF-2]
+ok 92 - tetris.savedGameSession absent makes availability false without withdrawal or mutation [STA-4] [SAF-2]
+  ---
+  duration_ms: 0.756074
+  type: 'test'
+  ...
+# Subtest: tetris.savedGameSession unreadable makes availability false without withdrawal or mutation [STA-4] [SAF-2]
+ok 93 - tetris.savedGameSession unreadable makes availability false without withdrawal or mutation [STA-4] [SAF-2]
+  ---
+  duration_ms: 0.55392
+  type: 'test'
+  ...
+# Subtest: the former flag does not govern new-format availability, including "" [STA-4]
+ok 94 - the former flag does not govern new-format availability, including "" [STA-4]
+  ---
+  duration_ms: 1.515967
+  type: 'test'
+  ...
+# Subtest: the former flag does not govern new-format availability, including "TRUE" [STA-4]
+ok 95 - the former flag does not govern new-format availability, including "TRUE" [STA-4]
+  ---
+  duration_ms: 0.570477
+  type: 'test'
+  ...
+# Subtest: the former flag does not govern new-format availability, including "false" [STA-4]
+ok 96 - the former flag does not govern new-format availability, including "false" [STA-4]
+  ---
+  duration_ms: 0.635185
+  type: 'test'
+  ...
+# Subtest: the former flag does not govern new-format availability, including "1" [STA-4]
+ok 97 - the former flag does not govern new-format availability, including "1" [STA-4]
+  ---
+  duration_ms: 0.671729
+  type: 'test'
+  ...
+# Subtest: one complete record read is cached until actual invalidation [DSP-3] [STA-4]
+ok 98 - one complete record read is cached until actual invalidation [DSP-3] [STA-4]
+  ---
+  duration_ms: 1.59422
+  type: 'test'
+  ...
+# Subtest: Continue freshly reads after cached A, changed to valid B [STA-4] [SAF-1] [SAF-2]
+ok 99 - Continue freshly reads after cached A, changed to valid B [STA-4] [SAF-1] [SAF-2]
+  ---
+  duration_ms: 1.244611
+  type: 'test'
+  ...
+# Subtest: Continue freshly reads after cached A, changed to invalid [STA-4] [SAF-1] [SAF-2]
+ok 100 - Continue freshly reads after cached A, changed to invalid [STA-4] [SAF-1] [SAF-2]
+  ---
+  duration_ms: 0.886502
+  type: 'test'
+  ...
+# Subtest: Continue freshly reads after cached A, changed to absent [STA-4] [SAF-1] [SAF-2]
+ok 101 - Continue freshly reads after cached A, changed to absent [STA-4] [SAF-1] [SAF-2]
+  ---
+  duration_ms: 0.760014
+  type: 'test'
+  ...
+# Subtest: Continue freshly reads after cached A, changed to unreadable [STA-4] [SAF-1] [SAF-2]
+ok 102 - Continue freshly reads after cached A, changed to unreadable [STA-4] [SAF-1] [SAF-2]
+  ---
+  duration_ms: 1.006576
+  type: 'test'
+  ...
+# Subtest: Continue freshly reads after cached A, changed to unavailable record [STA-4] [SAF-1] [SAF-2]
+ok 103 - Continue freshly reads after cached A, changed to unavailable record [STA-4] [SAF-1] [SAF-2]
+  ---
+  duration_ms: 1.044627
+  type: 'test'
+  ...
+# Subtest: assigning true cannot publish or clear local withdrawal [STA-4] [SAF-2]
+ok 104 - assigning true cannot publish or clear local withdrawal [STA-4] [SAF-2]
+  ---
+  duration_ms: 0.616132
+  type: 'test'
+  ...
+# Subtest: fresh Continue with unavailable content is a nonthrowing no-op, not an engine fault [STA-4] [SAF-2]
+ok 105 - fresh Continue with unavailable content is a nonthrowing no-op, not an engine fault [STA-4] [SAF-2]
+  ---
+  duration_ms: 0.487605
+  type: 'test'
+  ...
+# Subtest: fresh Continue invalidates earlier cached ineligibility after restoring valid content [STA-4] [DSP-3]
+ok 106 - fresh Continue invalidates earlier cached ineligibility after restoring valid content [STA-4] [DSP-3]
+  ---
+  duration_ms: 1.932448
+  type: 'test'
+  ...
+# Subtest: payload write invalidates a reentrant eligibility check during publication [STA-4] [DSP-3]
+ok 107 - payload write invalidates a reentrant eligibility check during publication [STA-4] [DSP-3]
+  ---
+  duration_ms: 0.921093
+  type: 'test'
+  ...
+# Subtest: assigning true on an available record is a no-op, and withdrawn records are not rewritten [STA-4] [SAF-2]
+ok 108 - assigning true on an available record is a no-op, and withdrawn records are not rewritten [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.082312
+  type: 'test'
+  ...
+# Subtest: restoring a saved position cancels a pre-existing lock timer [STA-4] [PLY-6]
+ok 109 - restoring a saved position cancels a pre-existing lock timer [STA-4] [PLY-6]
+  ---
+  duration_ms: 0.70791
+  type: 'test'
+  ...
+# Subtest: invalid constructed save content withdraws and reports through the guarded safe stop [STA-4] [SAF-1] [SAF-3]
+ok 110 - invalid constructed save content withdraws and reports through the guarded safe stop [STA-4] [SAF-1] [SAF-3]
+  ---
+  duration_ms: 1.12792
+  type: 'test'
+  ...
+# Subtest: ordinary spawn and held-piece game over withdraw an existing available record [STA-3] [STA-4] [PLY-7]
+ok 111 - ordinary spawn and held-piece game over withdraw an existing available record [STA-3] [STA-4] [PLY-7]
+  ---
+  duration_ms: 1.391661
+  type: 'test'
+  ...
+# Subtest: a resting move with no running delay starts one, and terminal line clears never save [PLY-6] [STA-3] [STA-4]
+ok 112 - a resting move with no running delay starts one, and terminal line clears never save [PLY-6] [STA-3] [STA-4]
+  ---
+  duration_ms: 0.606774
+  type: 'test'
+  ...
+# Subtest: record grammar rejects duplicate escaped members and malformed metadata [STA-6] [SAF-1]
+ok 113 - record grammar rejects duplicate escaped members and malformed metadata [STA-6] [SAF-1]
+  ---
+  duration_ms: 1.630141
+  type: 'test'
+  ...
+# Subtest: withdrawn record stays unavailable after refused new save and withdrawal [STA-4] [SAF-2]
+ok 114 - withdrawn record stays unavailable after refused new save and withdrawal [STA-4] [SAF-2]
+  ---
+  duration_ms: 7.420931
+  type: 'test'
+  ...
+# Subtest: complete save publishes valid position atomically and later fault retains it [STA-4] [SAF-3]
+ok 115 - complete save publishes valid position atomically and later fault retains it [STA-4] [SAF-3]
+  ---
+  duration_ms: 3.292642
+  type: 'test'
+  ...
+# Subtest: raw old or invalid records are retained whole and unreadable records are not written [STA-6] [SAF-2]
+ok 116 - raw old or invalid records are retained whole and unreadable records are not written [STA-6] [SAF-2]
+  ---
+  duration_ms: 0.449668
+  type: 'test'
+  ...
+# Subtest: persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]
+ok 117 - persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]
+  ---
+  duration_ms: 2.985597
+  type: 'test'
+  ...
+# Subtest: count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]
+ok 118 - count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]
+  ---
+  duration_ms: 6.038982
+  type: 'test'
+  ...
+# Subtest: lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]
+ok 119 - lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]
+  ---
+  duration_ms: 1.977186
+  type: 'test'
+  ...
+# Subtest: in-session score validity is not the saved-score ceiling or divisibility rule [SAF-4] [SCO-2]
+ok 120 - in-session score validity is not the saved-score ceiling or divisibility rule [SAF-4] [SCO-2]
+  ---
+  duration_ms: 0.818499
+  type: 'test'
+  ...
+# Subtest: record name checking visits every array element and escaped object name [STA-6] [SAF-1]
+ok 121 - record name checking visits every array element and escaped object name [STA-6] [SAF-1]
+  ---
+  duration_ms: 0.991388
+  type: 'test'
+  ...
+# Subtest: field whitelist requires all own names and non-array records [STA-6] [SAF-1]
+ok 122 - field whitelist requires all own names and non-array records [STA-6] [SAF-1]
+  ---
+  duration_ms: 0.474126
+  type: 'test'
+  ...
+# Subtest: cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]
+ok 123 - cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]
+  ---
+  duration_ms: 5.154519
+  type: 'test'
+  ...
+# Subtest: normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]
+ok 124 - normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]
+  ---
+  duration_ms: 319.9629
+  type: 'test'
+  ...
+# Subtest: independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]
+ok 125 - independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]
+  ---
+  duration_ms: 1.424771
+  type: 'test'
+  ...
+# Subtest: rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]
+ok 126 - rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]
+  ---
+  duration_ms: 0.914191
+  type: 'test'
+  ...
+# Subtest: independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]
+ok 127 - independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]
+  ---
+  duration_ms: 2.147056
+  type: 'test'
+  ...
+# Subtest: independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]
+ok 128 - independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]
+  ---
+  duration_ms: 0.609067
+  type: 'test'
+  ...
+# Subtest: a saved game reads back exactly [SAF-1] [STA-4]
+ok 129 - a saved game reads back exactly [SAF-1] [STA-4]
+  ---
+  duration_ms: 5.43731
+  type: 'test'
+  ...
+# Subtest: the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]
+ok 130 - the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]
+  ---
+  duration_ms: 1.409648
+  type: 'test'
+  ...
+# Subtest: a piece source without a bag saves an empty one [SAF-1] [STA-4]
+ok 131 - a piece source without a bag saves an empty one [SAF-1] [STA-4]
+  ---
+  duration_ms: 2.027395
+  type: 'test'
+  ...
+# Subtest: a save without the remaining bag is refused [SAF-1] [STA-6]
+ok 132 - a save without the remaining bag is refused [SAF-1] [STA-6]
+  ---
+  duration_ms: 0.86312
+  type: 'test'
+  ...
+# Subtest: a save without a held piece is valid [SAF-1]
+ok 133 - a save without a held piece is valid [SAF-1]
+  ---
+  duration_ms: 1.570357
+  type: 'test'
+  ...
+# Subtest: saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]
+ok 134 - saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]
+  ---
+  duration_ms: 1.457363
+  type: 'test'
+  ...
+# Subtest: pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]
+ok 135 - pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]
+  ---
+  duration_ms: 1.19007
+  type: 'test'
+  ...
+# Subtest: waiting pieces come back ready to spawn [SAF-1]
+ok 136 - waiting pieces come back ready to spawn [SAF-1]
+  ---
+  duration_ms: 0.836289
+  type: 'test'
+  ...
+# Subtest: a save with text that is not JSON is rejected [SAF-1]
+ok 137 - a save with text that is not JSON is rejected [SAF-1]
+  ---
+  duration_ms: 0.47171
+  type: 'test'
+  ...
+# Subtest: a save with nothing saved is rejected [SAF-1]
+ok 138 - a save with nothing saved is rejected [SAF-1]
+  ---
+  duration_ms: 0.752742
+  type: 'test'
+  ...
+# Subtest: a save with JSON null is rejected [SAF-1]
+ok 139 - a save with JSON null is rejected [SAF-1]
+  ---
+  duration_ms: 0.740383
+  type: 'test'
+  ...
+# Subtest: a save with a list instead of an object is rejected [SAF-1]
+ok 140 - a save with a list instead of an object is rejected [SAF-1]
+  ---
+  duration_ms: 0.266369
+  type: 'test'
+  ...
+# Subtest: a save with a number is rejected [SAF-1]
+ok 141 - a save with a number is rejected [SAF-1]
+  ---
+  duration_ms: 0.321111
+  type: 'test'
+  ...
+# Subtest: a save with no board is rejected [SAF-1]
+ok 142 - a save with no board is rejected [SAF-1]
+  ---
+  duration_ms: 0.395868
+  type: 'test'
+  ...
+# Subtest: a save with a board with 19 rows is rejected [SAF-1]
+ok 143 - a save with a board with 19 rows is rejected [SAF-1]
+  ---
+  duration_ms: 0.455078
+  type: 'test'
+  ...
+# Subtest: a save with a board row with 11 cells is rejected [SAF-1]
+ok 144 - a save with a board row with 11 cells is rejected [SAF-1]
+  ---
+  duration_ms: 0.893768
+  type: 'test'
+  ...
+# Subtest: a save with a board row that is not a list is rejected [SAF-1]
+ok 145 - a save with a board row that is not a list is rejected [SAF-1]
+  ---
+  duration_ms: 0.548855
+  type: 'test'
+  ...
+# Subtest: a save with a cell that is not an object is rejected [SAF-1]
+ok 146 - a save with a cell that is not an object is rejected [SAF-1]
+  ---
+  duration_ms: 0.712876
+  type: 'test'
+  ...
+# Subtest: a save with a cell without isFilled is rejected [SAF-1]
+ok 147 - a save with a cell without isFilled is rejected [SAF-1]
+  ---
+  duration_ms: 1.001074
+  type: 'test'
+  ...
+# Subtest: a save with a filled cell with an unknown color is rejected [SAF-1]
+ok 148 - a save with a filled cell with an unknown color is rejected [SAF-1]
+  ---
+  duration_ms: 0.468735
+  type: 'test'
+  ...
+# Subtest: a save with a filled cell without a color is rejected [SAF-1]
+ok 149 - a save with a filled cell without a color is rejected [SAF-1]
+  ---
+  duration_ms: 0.516701
+  type: 'test'
+  ...
+# Subtest: a save with an empty cell with a color is rejected [SAF-1]
+ok 150 - a save with an empty cell with a color is rejected [SAF-1]
+  ---
+  duration_ms: 0.807283
+  type: 'test'
+  ...
+# Subtest: a save with a negative score is rejected [SAF-1]
+ok 151 - a save with a negative score is rejected [SAF-1]
+  ---
+  duration_ms: 0.634688
+  type: 'test'
+  ...
+# Subtest: a save with a fractional score is rejected [SAF-1]
+ok 152 - a save with a fractional score is rejected [SAF-1]
+  ---
+  duration_ms: 0.525811
+  type: 'test'
+  ...
+# Subtest: a save with a score stored as text is rejected [SAF-1]
+ok 153 - a save with a score stored as text is rejected [SAF-1]
+  ---
+  duration_ms: 0.526517
+  type: 'test'
+  ...
+# Subtest: a save with a score too large to be exact is rejected [SAF-1]
+ok 154 - a save with a score too large to be exact is rejected [SAF-1]
+  ---
+  duration_ms: 0.759104
+  type: 'test'
+  ...
+# Subtest: a save with no current piece is rejected [SAF-1]
+ok 155 - a save with no current piece is rejected [SAF-1]
+  ---
+  duration_ms: 0.703091
+  type: 'test'
+  ...
+# Subtest: a save with a current piece of an unknown type is rejected [SAF-1]
+ok 156 - a save with a current piece of an unknown type is rejected [SAF-1]
+  ---
+  duration_ms: 0.745088
+  type: 'test'
+  ...
+# Subtest: a save with a current piece without a position is rejected [SAF-1]
+ok 157 - a save with a current piece without a position is rejected [SAF-1]
+  ---
+  duration_ms: 1.067248
+  type: 'test'
+  ...
+# Subtest: a save with a current piece at a fractional column is rejected [SAF-1]
+ok 158 - a save with a current piece at a fractional column is rejected [SAF-1]
+  ---
+  duration_ms: 0.539221
+  type: 'test'
+  ...
+# Subtest: a save with a current piece with rotation 4 is rejected [SAF-1]
+ok 159 - a save with a current piece with rotation 4 is rejected [SAF-1]
+  ---
+  duration_ms: 0.689621
+  type: 'test'
+  ...
+# Subtest: a save with a current piece with rotation -1 is rejected [SAF-1]
+ok 160 - a save with a current piece with rotation -1 is rejected [SAF-1]
+  ---
+  duration_ms: 1.272849
+  type: 'test'
+  ...
+# Subtest: a save with a current piece with rotation 1.5 is rejected [SAF-1]
+ok 161 - a save with a current piece with rotation 1.5 is rejected [SAF-1]
+  ---
+  duration_ms: 1.069995
+  type: 'test'
+  ...
+# Subtest: a save with a current piece with a rotation one past its last is rejected [SAF-1]
+ok 162 - a save with a current piece with a rotation one past its last is rejected [SAF-1]
+  ---
+  duration_ms: 1.42163
+  type: 'test'
+  ...
+# Subtest: a save with a current piece outside the board is rejected [SAF-1]
+ok 163 - a save with a current piece outside the board is rejected [SAF-1]
+  ---
+  duration_ms: 1.146306
+  type: 'test'
+  ...
+# Subtest: a save with a current piece inside locked blocks is rejected [SAF-1]
+ok 164 - a save with a current piece inside locked blocks is rejected [SAF-1]
+  ---
+  duration_ms: 0.519716
+  type: 'test'
+  ...
+# Subtest: a save with no upcoming pieces is rejected [SAF-1]
+ok 165 - a save with no upcoming pieces is rejected [SAF-1]
+  ---
+  duration_ms: 0.406633
+  type: 'test'
+  ...
+# Subtest: a save with two upcoming pieces is rejected [SAF-1]
+ok 166 - a save with two upcoming pieces is rejected [SAF-1]
+  ---
+  duration_ms: 0.407712
+  type: 'test'
+  ...
+# Subtest: a save with an upcoming piece of an unknown type is rejected [SAF-1]
+ok 167 - a save with an upcoming piece of an unknown type is rejected [SAF-1]
+  ---
+  duration_ms: 0.518633
+  type: 'test'
+  ...
+# Subtest: a save with an upcoming piece that is not an object is rejected [SAF-1]
+ok 168 - a save with an upcoming piece that is not an object is rejected [SAF-1]
+  ---
+  duration_ms: 0.678245
+  type: 'test'
+  ...
+# Subtest: a save with a held piece of an unknown type is rejected [SAF-1]
+ok 169 - a save with a held piece of an unknown type is rejected [SAF-1]
+  ---
+  duration_ms: 1.197539
+  type: 'test'
+  ...
+# Subtest: a save with a held piece that is a string is rejected [SAF-1]
+ok 170 - a save with a held piece that is a string is rejected [SAF-1]
+  ---
+  duration_ms: 0.575034
+  type: 'test'
+  ...
+# Subtest: a save with a missing held piece field is rejected [SAF-1]
+ok 171 - a save with a missing held piece field is rejected [SAF-1]
+  ---
+  duration_ms: 0.443689
+  type: 'test'
+  ...
+# Subtest: a save with can hold stored as text is rejected [SAF-1]
+ok 172 - a save with can hold stored as text is rejected [SAF-1]
+  ---
+  duration_ms: 0.447459
+  type: 'test'
+  ...
+# Subtest: a save with a bag that is text is rejected [SAF-1]
+ok 173 - a save with a bag that is text is rejected [SAF-1]
+  ---
+  duration_ms: 0.478765
+  type: 'test'
+  ...
+# Subtest: a save with a bag that is null is rejected [SAF-1]
+ok 174 - a save with a bag that is null is rejected [SAF-1]
+  ---
+  duration_ms: 0.884252
+  type: 'test'
+  ...
+# Subtest: a save with a bag with an unknown piece is rejected [SAF-1]
+ok 175 - a save with a bag with an unknown piece is rejected [SAF-1]
+  ---
+  duration_ms: 1.011209
+  type: 'test'
+  ...
+# Subtest: a save with a bag with a piece stored as an object is rejected [SAF-1]
+ok 176 - a save with a bag with a piece stored as an object is rejected [SAF-1]
+  ---
+  duration_ms: 0.514032
+  type: 'test'
+  ...
+# Subtest: a save with a bag with the same piece twice is rejected [SAF-1]
+ok 177 - a save with a bag with the same piece twice is rejected [SAF-1]
+  ---
+  duration_ms: 0.904689
+  type: 'test'
+  ...
+# Subtest: the former raw-position format is refused whole without migration [STA-6] [STA-4]
+ok 178 - the former raw-position format is refused whole without migration [STA-6] [STA-4]
+  ---
+  duration_ms: 0.755164
+  type: 'test'
+  ...
+# Subtest: Continue refuses a stored level without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+ok 179 - Continue refuses a stored level without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+  ---
+  duration_ms: 0.632582
+  type: 'test'
+  ...
+# Subtest: Continue refuses a missing bag without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+ok 180 - Continue refuses a missing bag without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+  ---
+  duration_ms: 0.477729
+  type: 'test'
+  ...
+# Subtest: Continue refuses a malformed current save without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+ok 181 - Continue refuses a malformed current save without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]
+  ---
+  duration_ms: 0.17494
+  type: 'test'
+  ...
+# Subtest: Continue with an unreadable save does not write to storage [SAF-2] [STA-4]
+ok 182 - Continue with an unreadable save does not write to storage [SAF-2] [STA-4]
+  ---
+  duration_ms: 0.185614
+  type: 'test'
+  ...
+# Subtest: Continue with an missing save does not write to storage [SAF-2] [STA-4]
+ok 183 - Continue with an missing save does not write to storage [SAF-2] [STA-4]
+  ---
+  duration_ms: 0.098606
+  type: 'test'
+  ...
+# Subtest: Continue with an unavailable save does not write to storage [SAF-2] [STA-4]
+ok 184 - Continue with an unavailable save does not write to storage [SAF-2] [STA-4]
+  ---
+  duration_ms: 1.133194
+  type: 'test'
+  ...
+# Subtest: Continue ignores an unreadable former flag and loads a valid envelope without writes [SAF-2] [STA-4]
+ok 185 - Continue ignores an unreadable former flag and loads a valid envelope without writes [SAF-2] [STA-4]
+  ---
+  duration_ms: 0.681795
+  type: 'test'
+  ...
+# Subtest: Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]
+ok 186 - Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]
+  ---
+  duration_ms: 0.629986
+  type: 'test'
+  ...
+# Subtest: refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]
+ok 187 - refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]
+  ---
+  duration_ms: 0.529362
+  type: 'test'
+  ...
+# Subtest: a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]
+ok 188 - a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]
+  ---
+  duration_ms: 0.153572
+  type: 'test'
+  ...
+# Subtest: the lock-delay state is saved and read back [PLY-6] [STA-4]
+ok 189 - the lock-delay state is saved and read back [PLY-6] [STA-4]
+  ---
+  duration_ms: 0.646614
+  type: 'test'
+  ...
+# Subtest: a save with invalid lock-delay state is refused [SAF-1] [STA-6]
+ok 190 - a save with invalid lock-delay state is refused [SAF-1] [STA-6]
+  ---
+  duration_ms: 5.739821
+  type: 'test'
+  ...
+# Subtest: a pre-fix save without the lock-delay keys is refused [STA-6]
+ok 191 - a pre-fix save without the lock-delay keys is refused [STA-6]
+  ---
+  duration_ms: 0.580114
+  type: 'test'
+  ...
+# Subtest: a save without a caller reset cap still refuses count999 [STA-6]
+ok 192 - a save without a caller reset cap still refuses count999 [STA-6]
+  ---
+  duration_ms: 0.687702
+  type: 'test'
+  ...
+1..192
+# tests 192
+# suites 0
+# pass 192
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1605.898403
