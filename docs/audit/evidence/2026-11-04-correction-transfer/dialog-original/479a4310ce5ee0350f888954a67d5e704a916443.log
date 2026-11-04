@@ -1,5 +1,4 @@
 
-
 Running 3 tests using 1 worker
 
   ✓  1 [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected Cancel and Enter uses it [STA-1] [INP-4] (847ms)
