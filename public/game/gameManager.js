@@ -364,6 +364,7 @@ export class GameManager {
   lockAndSpawnNext() {
     this.lockTetrominoInPlace();
     const clearedLines = this.clearFullRows();
+    if (this.state !== GameState.playing) return;
     this.generateNextTetromino();
     if (clearedLines && this.state === GameState.playing) {
       this.saveGameSession();
@@ -385,6 +386,8 @@ export class GameManager {
       if (row.every(cell => cell.isFilled)) completedLineIndices.push(index);
     });
     if (completedLineIndices.length === 0) return false;
+    const award = LINE_SCORES[completedLineIndices.length];
+    const crossesLimit = award > Number.MAX_SAFE_INTEGER - this.score;
     // Remove from the bottom up so earlier removals do not shift later ones.
     for (const index of completedLineIndices.reverse()) {
       this.gameBoard.splice(index, 1);
@@ -392,9 +395,22 @@ export class GameManager {
     const newLines = createBoard(completedLineIndices.length, this.columns);
     this.gameBoard.unshift(...newLines);
     this.boardVersion += 1;
-    this.score += LINE_SCORES[completedLineIndices.length];
-    this.highScore = Math.max(this.highScore, this.score);
+    if (crossesLimit) {
+      this.endScoreLimitedGame();
+    } else {
+      this.score += award;
+      this.highScore = Math.max(this.highScore, this.score);
+      if (this.score === Number.MAX_SAFE_INTEGER) this.endScoreLimitedGame();
+    }
     return true;
+  }
+
+  endScoreLimitedGame() {
+    this.highScore = Math.max(this.highScore, this.score);
+    this.state = GameState.gameOver;
+    this.stopGameLoop();
+    this.cancelLockDelay();
+    this.isSessionSaved = false;
   }
 
   get ghostTetromino() {
@@ -464,7 +480,7 @@ export class GameManager {
     const upcoming = this.nextTetrominos;
     if (upcoming.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
     if (!isValidPieceList(upcoming)) return 'upcoming piece is not a valid piece';
-    if (!Number.isInteger(this.score) || this.score < 0) return 'score is invalid';
+    if (!Number.isSafeInteger(this.score) || this.score < 0) return 'score is invalid';
     if (this.state !== GameState.gameOver && !isValidFallingPiece(this.currentTetromino, board)) return 'piece is invalid or overlaps the board';
     if (this.state === GameState.playing) {
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
@@ -545,6 +561,10 @@ export class GameManager {
         break;
       case PlayerAction.resume:
         if (this.state !== GameState.paused) return;
+        if (this.score === Number.MAX_SAFE_INTEGER) {
+          this.endScoreLimitedGame();
+          return;
+        }
         this.state = GameState.playing;
         if (this.isOnSurface && this.lockDelayResetCount === 16) this.lockAndSpawnNext();
         else if (this.isOnSurface) this.startLockDelay();
