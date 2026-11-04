@@ -188,12 +188,14 @@ test('lowest-row history tracks occupied current-piece blocks and allows older d
   );
 });
 
-test('in-session score validity is not the saved-score ceiling or divisibility rule [SAF-4] [SCO-2]', () => {
+test('in-session scores use the safe ceiling without divisibility [SAF-4] [SCO-2]', () => {
   const { game } = setup();
-  for (const score of [151, Number.MAX_SAFE_INTEGER + 1]) {
+  for (const score of [151, Number.MAX_SAFE_INTEGER]) {
     game.score = score;
     assert.equal(game.findInvariantViolation(), null);
   }
+  game.score = Number.MAX_SAFE_INTEGER + 1;
+  assert.equal(game.findInvariantViolation(), 'score is invalid');
 });
 
 test('record name checking visits every array element and escaped object name [STA-6] [SAF-1]', () => {
