@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: a serializer failure on Pause stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+ok 1 - a serializer failure on Pause stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 5.136281
+  type: 'test'
+  ...
+# Subtest: a serializer failure on Pause stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+ok 2 - a serializer failure on Pause stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.371687
+  type: 'test'
+  ...
+# Subtest: a serializer failure on line clear stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+ok 3 - a serializer failure on line clear stops safely even with withdrawal refused=false [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 3.350833
+  type: 'test'
+  ...
+# Subtest: a serializer failure on line clear stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+ok 4 - a serializer failure on line clear stops safely even with withdrawal refused=true [SAF-3] [STA-4] [SAF-2]
+  ---
+  duration_ms: 1.959061
+  type: 'test'
+  ...
+# Subtest: a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]
+ok 5 - a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]
+  ---
+  duration_ms: 1.770421
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 99.937598

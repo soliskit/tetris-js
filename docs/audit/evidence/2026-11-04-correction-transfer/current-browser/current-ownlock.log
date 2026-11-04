@@ -1,0 +1,12 @@
+
+Running 7 tests using 1 worker
+
+  ✓  1 [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected Cancel and Enter uses it [STA-1] [INP-4] (782ms)
+  ✓  2 [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected New Game and Enter uses it [STA-1] [INP-4] (706ms)
+  ✓  3 [desktop] › e2e/dialog-selection.spec.js:45:1 › only a primary left pointer press inside question content suppresses focus default [STA-1] (202ms)
+  ✓  4 [desktop] › e2e/save-publication.spec.js:4:1 › refused record and withdrawal writes keep prior bytes and hide Continue on the page [STA-4] [SAF-2] (376ms)
+  ✓  5 [desktop] › e2e/save-publication.spec.js:39:1 › invalid content never offers Continue and is withdrawn during availability checking [STA-4] [SAF-1] (172ms)
+  ✓  6 [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=false [SAF-3] [STA-4] [SAF-2] (726ms)
+  ✓  7 [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=true [SAF-3] [STA-4] [SAF-2] (763ms)
+
+  7 passed (4.5s)

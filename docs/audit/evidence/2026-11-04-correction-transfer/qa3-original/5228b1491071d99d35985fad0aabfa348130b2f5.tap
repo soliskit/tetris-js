@@ -1,0 +1,172 @@
+TAP version 13
+# Subtest: browser gate A-no-files [QA-3]
+ok 1 - browser gate A-no-files [QA-3]
+  ---
+  duration_ms: 52.630973
+  type: 'test'
+  ...
+# Subtest: browser gate B-empty-list [QA-3]
+ok 2 - browser gate B-empty-list [QA-3]
+  ---
+  duration_ms: 48.475968
+  type: 'test'
+  ...
+# Subtest: browser gate C-empty-functions [QA-3]
+ok 3 - browser gate C-empty-functions [QA-3]
+  ---
+  duration_ms: 48.709338
+  type: 'test'
+  ...
+# Subtest: browser gate D-empty-ranges [QA-3]
+ok 4 - browser gate D-empty-ranges [QA-3]
+  ---
+  duration_ms: 41.670143
+  type: 'test'
+  ...
+# Subtest: browser gate E-zero-width [QA-3]
+ok 5 - browser gate E-zero-width [QA-3]
+  ---
+  duration_ms: 48.786731
+  type: 'test'
+  ...
+# Subtest: browser gate E-outside [QA-3]
+ok 6 - browser gate E-outside [QA-3]
+  ---
+  duration_ms: 49.064617
+  type: 'test'
+  ...
+# Subtest: browser gate F-zero-count [QA-3]
+ok 7 - browser gate F-zero-count [QA-3]
+  ---
+  duration_ms: 55.130678
+  type: 'test'
+  ...
+# Subtest: browser gate G-full [QA-3]
+ok 8 - browser gate G-full [QA-3]
+  ---
+  duration_ms: 57.715738
+  type: 'test'
+  ...
+# Subtest: browser gate H-empty-plus-full [QA-3]
+ok 9 - browser gate H-empty-plus-full [QA-3]
+  ---
+  duration_ms: 54.66664
+  type: 'test'
+  ...
+# Subtest: browser gate I-split-nonempty [QA-3]
+ok 10 - browser gate I-split-nonempty [QA-3]
+  ---
+  duration_ms: 62.698043
+  type: 'test'
+  ...
+# Subtest: browser gate J-file-object [QA-3]
+ok 11 - browser gate J-file-object [QA-3]
+  ---
+  duration_ms: 50.810574
+  type: 'test'
+  ...
+# Subtest: browser gate J-file-object-plus-valid [QA-3]
+ok 12 - browser gate J-file-object-plus-valid [QA-3]
+  ---
+  duration_ms: 52.509348
+  type: 'test'
+  ...
+# Subtest: browser gate J-null-entry [QA-3]
+ok 13 - browser gate J-null-entry [QA-3]
+  ---
+  duration_ms: 45.253856
+  type: 'test'
+  ...
+# Subtest: browser gate J-null-entry-plus-valid [QA-3]
+ok 14 - browser gate J-null-entry-plus-valid [QA-3]
+  ---
+  duration_ms: 50.905323
+  type: 'test'
+  ...
+# Subtest: browser gate J-functions-object [QA-3]
+ok 15 - browser gate J-functions-object [QA-3]
+  ---
+  duration_ms: 49.633256
+  type: 'test'
+  ...
+# Subtest: browser gate J-functions-object-plus-valid [QA-3]
+ok 16 - browser gate J-functions-object-plus-valid [QA-3]
+  ---
+  duration_ms: 74.20569
+  type: 'test'
+  ...
+# Subtest: browser gate J-ranges-object [QA-3]
+ok 17 - browser gate J-ranges-object [QA-3]
+  ---
+  duration_ms: 58.090687
+  type: 'test'
+  ...
+# Subtest: browser gate J-ranges-object-plus-valid [QA-3]
+ok 18 - browser gate J-ranges-object-plus-valid [QA-3]
+  ---
+  duration_ms: 50.766921
+  type: 'test'
+  ...
+# Subtest: browser gate J-missing-block-flag [QA-3]
+ok 19 - browser gate J-missing-block-flag [QA-3]
+  ---
+  duration_ms: 52.999716
+  type: 'test'
+  ...
+# Subtest: browser gate J-missing-block-flag-plus-valid [QA-3]
+ok 20 - browser gate J-missing-block-flag-plus-valid [QA-3]
+  ---
+  duration_ms: 52.174909
+  type: 'test'
+  ...
+# Subtest: browser gate J-string-count [QA-3]
+ok 21 - browser gate J-string-count [QA-3]
+  ---
+  duration_ms: 47.694788
+  type: 'test'
+  ...
+# Subtest: browser gate J-string-count-plus-valid [QA-3]
+ok 22 - browser gate J-string-count-plus-valid [QA-3]
+  ---
+  duration_ms: 50.693606
+  type: 'test'
+  ...
+# Subtest: browser gate J-negative-count [QA-3]
+ok 23 - browser gate J-negative-count [QA-3]
+  ---
+  duration_ms: 51.028429
+  type: 'test'
+  ...
+# Subtest: browser gate J-negative-count-plus-valid [QA-3]
+ok 24 - browser gate J-negative-count-plus-valid [QA-3]
+  ---
+  duration_ms: 47.824306
+  type: 'test'
+  ...
+# Subtest: browser gate J-reverse-range [QA-3]
+ok 25 - browser gate J-reverse-range [QA-3]
+  ---
+  duration_ms: 47.633553
+  type: 'test'
+  ...
+# Subtest: browser gate J-reverse-range-plus-valid [QA-3]
+ok 26 - browser gate J-reverse-range-plus-valid [QA-3]
+  ---
+  duration_ms: 51.83326
+  type: 'test'
+  ...
+# Subtest: browser gate J-json-syntax [QA-3]
+ok 27 - browser gate J-json-syntax [QA-3]
+  ---
+  duration_ms: 48.887641
+  type: 'test'
+  ...
+1..27
+# tests 27
+# suites 0
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1476.982206

@@ -1,0 +1,64 @@
+
+Running 2 tests using 1 worker
+
+  ✘  1 [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=false [SAF-3] [STA-4] [SAF-2] (5.5s)
+  ✘  2 [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=true [SAF-3] [STA-4] [SAF-2] (5.5s)
+
+
+  1) [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=false [SAF-3] [STA-4] [SAF-2] 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('#gameOverMessage')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" locator('#gameOverMessage') with timeout 5000ms
+      - waiting for locator('#gameOverMessage')
+        14 × locator resolved to <p hidden="" aria-hidden="true" id="gameOverMessage" class="board-message"></p>
+           - unexpected value "hidden"
+
+
+      53 |     try {
+      54 |       await page.locator('#playPauseButton').click();
+    > 55 |       await expect(page.locator('#gameOverMessage')).toBeVisible();
+         |                                                      ^
+      56 |       await expect(page.locator('#gameOverMessage')).toHaveText('The game stopped because of an internal error.');
+      57 |       await expect(page.locator('#announcer')).toHaveText('The game stopped because of an internal error.');
+      58 |       const result = await page.evaluate(() => {
+        at <checkout-594a6905b788ac490ad349913074ca7ae3e7f250>/e2e/serialization-failure.spec.js:55:54
+
+    Error Context: test-results/serialization-failure-seri-f6299-ed-false-SAF-3-STA-4-SAF-2--desktop/error-context.md
+
+  2) [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=true [SAF-3] [STA-4] [SAF-2] 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('#gameOverMessage')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeVisible" locator('#gameOverMessage') with timeout 5000ms
+      - waiting for locator('#gameOverMessage')
+        14 × locator resolved to <p hidden="" aria-hidden="true" id="gameOverMessage" class="board-message"></p>
+           - unexpected value "hidden"
+
+
+      53 |     try {
+      54 |       await page.locator('#playPauseButton').click();
+    > 55 |       await expect(page.locator('#gameOverMessage')).toBeVisible();
+         |                                                      ^
+      56 |       await expect(page.locator('#gameOverMessage')).toHaveText('The game stopped because of an internal error.');
+      57 |       await expect(page.locator('#announcer')).toHaveText('The game stopped because of an internal error.');
+      58 |       const result = await page.evaluate(() => {
+        at <checkout-594a6905b788ac490ad349913074ca7ae3e7f250>/e2e/serialization-failure.spec.js:55:54
+
+    Error Context: test-results/serialization-failure-seri-78403-sed-true-SAF-3-STA-4-SAF-2--desktop/error-context.md
+
+  2 failed
+    [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=false [SAF-3] [STA-4] [SAF-2] 
+    [desktop] › e2e/serialization-failure.spec.js:6:3 › serialization failure on page Pause shows the internal-error notice with withdrawal refused=true [SAF-3] [STA-4] [SAF-2] 

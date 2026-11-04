@@ -1,0 +1,72 @@
+{
+  "method": "Current untouched tracked source and browserharnesses, originalconfig/fixtures. Own current package-lock dependencies installed npmci --ignore-scripts --no-audit --no-fund. Node26.13.0/npm11.20below12.2floor; EBADENGINE recorded. DesktopChromium1worker/noretries, selectedprotections only, no fullmatrix/device/nativequalification.",
+  "pin": "11ad0a7d5d765c5e19cfecd4e5b93b7fda675032",
+  "started": "2026-11-04T19:27:00.746322+00:00",
+  "exit": 0,
+  "command": [
+    "node",
+    "<checkout-11ad0a7d5d765c5e19cfecd4e5b93b7fda675032>/node_modules/playwright/cli.js",
+    "test",
+    "e2e/dialog-selection.spec.js",
+    "e2e/serialization-failure.spec.js",
+    "e2e/save-publication.spec.js",
+    "--project=desktop",
+    "--workers=1",
+    "--reporter=list"
+  ],
+  "identities": {
+    "e2e/dialog-selection.spec.js": "c3308eb1e5f8aa38634615a20b1f8a67e2be46693c7d0b1991d34adce6bf8b31",
+    "e2e/serialization-failure.spec.js": "20b8fdd0d4be70f3e67148da6a4ee5667f84b6141ce993922e0d965cd040d8fb",
+    "e2e/save-publication.spec.js": "05141df35bb07282f20dbdf4198e7c1b24cf790bc6d00226ebff0cef3693d4df",
+    "public/game/gameManager.js": "ac1a005eea8535e184354e52e12588b08763c0b1517ae99181caa760810337c2",
+    "public/game/session.js": "2b2f80a79b36690c327defcde090fae66afe241f7fd0f158ab42f034794792f3",
+    "public/script.js": "9e30936865b59ebb49131e478d61db206cf2258c9711beb9912b0a4c9d4a4dee",
+    "e2e/fixtures.js": "ae232242ff43bae1cff86e5f5b554d0adaa69979d84f8780dbbc42cd1f28194a",
+    "playwright.config.js": "5922351868b402681d70b98904334f828c04c4ace5249de1ee861941a5880034",
+    "package-lock.json": "06fbf45766f68d13a313fbbfc5706d590538dd5af2ce5461228e7f34f9aec89a"
+  },
+  "outputsha256": "de5e956c21e098d3c904c320e68d7a5da2e9e1c3a3476d1d3c92408f3c622c9c",
+  "visualinspection": "Fresh ownlock screenshots all4 inspected: both retainedansweroutlines, pausedscore300board; both readableinternalerrornotices on stoppedscore0board. No clipping.",
+  "qualification": "Supersedes first7passrun which used mismatched historicaldeps. No supportednpm-environment claim.",
+  "installlogsha256": "a0c459304ef821e60943462a20184663608926e1872f5db1e35def7cb92d0e5b",
+  "outputfile": "current-ownlock.log",
+  "publication": "Only workstation paths normalized; original hashes preserved, publication hashes listed separately.",
+  "published_artifacts": {
+    "ownlock-install.log": {
+      "bytes": 275,
+      "sha256": "a0c459304ef821e60943462a20184663608926e1872f5db1e35def7cb92d0e5b"
+    },
+    "serialization-failure-seri-f6299-ed-false-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "save-publication.spec.js.txt": {
+      "bytes": 2455,
+      "sha256": "05141df35bb07282f20dbdf4198e7c1b24cf790bc6d00226ebff0cef3693d4df"
+    },
+    "serialization-failure-seri-78403-sed-true-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "current-ownlock.log": {
+      "bytes": 1244,
+      "sha256": "de5e956c21e098d3c904c320e68d7a5da2e9e1c3a3476d1d3c92408f3c622c9c"
+    },
+    "serialization-failure.spec.js.txt": {
+      "bytes": 4591,
+      "sha256": "20b8fdd0d4be70f3e67148da6a4ee5667f84b6141ce993922e0d965cd040d8fb"
+    },
+    "dialog-selection-interior--8e846--Enter-uses-it-STA-1-INP-4--desktop-retained-answer.png": {
+      "bytes": 496796,
+      "sha256": "4a6ff929084953c9b9c1a4708b7385021d3486c31c9825ff7f781ff2d77d483f"
+    },
+    "dialog-selection-interior--b2a5a--Enter-uses-it-STA-1-INP-4--desktop-retained-answer.png": {
+      "bytes": 497021,
+      "sha256": "43710eb9b7d62fcb0d7243187e51ffd23d5af52a451a7884f09ddc113cc26bba"
+    },
+    "dialog-selection.spec.js.txt": {
+      "bytes": 3013,
+      "sha256": "c3308eb1e5f8aa38634615a20b1f8a67e2be46693c7d0b1991d34adce6bf8b31"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "method": "Unchanged whole original PR456 corrected gameManager.test.js at both original baseline and corrected pins, filtered to original four serializer tests and storage refusal control. Fresh local execution, not original historical output. Production unchanged. Other tests not run, no full suite, coverage or browser claim.",
+  "node": "v26.13.0",
+  "results": [
+    {
+      "pin": "594a6905b788ac490ad349913074ca7ae3e7f250",
+      "started": "2026-11-04T18:56:44.939456+00:00",
+      "exit": 1,
+      "original_corrected_test_file_sha256": "57d19eb59b618a8dc34168e44d30e6a745ac41d3a942b064ba62206f206cbca2",
+      "production_unchanged": true,
+      "tap_sha256": "e12f7f93a3461a3966ad6f1fee0998f3515f61b772dbea9459411e3f66998b71",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=serializer failure|session storage-write failure",
+        "test/gameManager.test.js"
+      ]
+    },
+    {
+      "pin": "4b65955c3e86f22e9334c86e388e531454915f75",
+      "started": "2026-11-04T18:56:45.509634+00:00",
+      "exit": 0,
+      "original_corrected_test_file_sha256": "57d19eb59b618a8dc34168e44d30e6a745ac41d3a942b064ba62206f206cbca2",
+      "production_unchanged": true,
+      "tap_sha256": "9be6481e4330b1f3ef729c92ebbd5e442ff46555c448ed4e816ae8fde802ec78",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=serializer failure|session storage-write failure",
+        "test/gameManager.test.js"
+      ]
+    }
+  ],
+  "publication": "Raw receipt source/output hashes retained. Published outputs normalize workstation paths only.",
+  "published_artifacts": {
+    "4b65955c3e86f22e9334c86e388e531454915f75.tap": {
+      "bytes": 1469,
+      "sha256": "9be6481e4330b1f3ef729c92ebbd5e442ff46555c448ed4e816ae8fde802ec78"
+    },
+    "594a6905b788ac490ad349913074ca7ae3e7f250.tap": {
+      "bytes": 4503,
+      "sha256": "274c2ee7ca42a07295e86da626351bd5d5f7c05df13358afbf25a7705999d292"
+    }
+  }
+}

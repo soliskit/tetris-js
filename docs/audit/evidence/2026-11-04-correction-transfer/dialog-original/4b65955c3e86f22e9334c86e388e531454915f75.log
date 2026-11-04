@@ -1,0 +1,90 @@
+
+Running 3 tests using 1 worker
+
+  ✘  1 [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected Cancel and Enter uses it [STA-1] [INP-4] (5.3s)
+  ✘  2 [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected New Game and Enter uses it [STA-1] [INP-4] (5.4s)
+  ✘  3 [desktop] › e2e/dialog-selection.spec.js:45:1 › only a primary left pointer press inside question content suppresses focus default [STA-1] (307ms)
+
+
+  1) [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected Cancel and Enter uses it [STA-1] [INP-4] 
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  locator('#cancelNewGameButton')
+    Expected: focused
+    Received: inactive
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeFocused" locator('#cancelNewGameButton') with timeout 5000ms
+      - waiting for locator('#cancelNewGameButton')
+        14 × locator resolved to <button autofocus="" class="glass" id="cancelNewGameButton">Cancel</button>
+           - unexpected value "inactive"
+
+
+      19 |         await content.click({ position: { x: 10, y: height / 2 } });
+      20 |       }
+    > 21 |       await expect(selected).toBeFocused();
+         |                              ^
+      22 |       expect(await selected.evaluate(button => {
+      23 |         const style = getComputedStyle(button);
+      24 |         return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
+        at <checkout>/e2e/dialog-selection.spec.js:21:30
+
+    Error Context: test-results/dialog-selection-interior--b2a5a--Enter-uses-it-STA-1-INP-4--desktop/error-context.md
+
+  2) [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected New Game and Enter uses it [STA-1] [INP-4] 
+
+    Error: expect(locator).toBeFocused() failed
+
+    Locator:  locator('#confirmNewGameButton')
+    Expected: focused
+    Received: inactive
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeFocused" locator('#confirmNewGameButton') with timeout 5000ms
+      - waiting for locator('#confirmNewGameButton')
+        14 × locator resolved to <button class="glass" id="confirmNewGameButton">New Game</button>
+           - unexpected value "inactive"
+
+
+      19 |         await content.click({ position: { x: 10, y: height / 2 } });
+      20 |       }
+    > 21 |       await expect(selected).toBeFocused();
+         |                              ^
+      22 |       expect(await selected.evaluate(button => {
+      23 |         const style = getComputedStyle(button);
+      24 |         return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
+        at <checkout>/e2e/dialog-selection.spec.js:21:30
+
+    Error Context: test-results/dialog-selection-interior--8e846--Enter-uses-it-STA-1-INP-4--desktop/error-context.md
+
+  3) [desktop] › e2e/dialog-selection.spec.js:45:1 › only a primary left pointer press inside question content suppresses focus default [STA-1] 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 1
+
+      Array [
+        false,
+        false,
+    -   true,
+    +   false,
+      ]
+
+      58 |     });
+      59 |   });
+    > 60 |   expect(prevented).toEqual([false, false, true]);
+         |                     ^
+      61 | });
+      62 |
+        at <checkout>/e2e/dialog-selection.spec.js:60:21
+
+    Error Context: test-results/dialog-selection-only-a-pr-8a60e-resses-focus-default-STA-1--desktop/error-context.md
+
+  3 failed
+    [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected Cancel and Enter uses it [STA-1] [INP-4] 
+    [desktop] › e2e/dialog-selection.spec.js:5:3 › interior question clicks preserve selected New Game and Enter uses it [STA-1] [INP-4] 
+    [desktop] › e2e/dialog-selection.spec.js:45:1 › only a primary left pointer press inside question content suppresses focus default [STA-1] 
