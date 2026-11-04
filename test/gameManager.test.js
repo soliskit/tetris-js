@@ -1662,6 +1662,48 @@ for (const [name, start, final] of [
   });
 }
 
+test('a crossing award ends normally with a real lock delay pending [SCO-1] [STA-3] [STA-4] [SAF-4]', () => {
+  const faults = [];
+  const { game, scheduler, storage } = newGame({ factory: fixedFactory(PieceColors.cyan), onFault: fault => faults.push(fault) });
+  const final = Number.MAX_SAFE_INTEGER - 50;
+  game.score = final;
+  game.togglePause();
+  const saved = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+  game.togglePause();
+  let generated = 0;
+  const generate = game.factory.generate;
+  game.factory.generate = () => { generated += 1; return generate(); };
+  fillRows(game, [19], [9]);
+  game.handleAction(PlayerAction.rotate);
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveRight);
+  landOnSurface(game);
+  assert.equal(game.state, GameState.playing);
+  assert.notEqual(game.lockDelayTask, null, 'touchdown starts a real lock delay');
+  assert.ok(scheduler.pending > 0);
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(filledCells(game), 3);
+  assert.ok(game.gameBoard[19][9].isFilled);
+  assert.equal(game.gameBoard[16][9].isFilled, false);
+  assert.equal(game.score, final);
+  assert.equal(game.highScore, final);
+  assert.equal(generated, 0);
+  assert.equal(game.gameLoopTask, null);
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(game.isSessionSaved, false);
+  const withdrawn = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+  assert.equal(withdrawn.available, false);
+  assert.equal(withdrawn.position, saved.position);
+  assert.deepEqual(faults, [], 'ordinary score-limit ending does not enter fault containment');
+  assert.equal(game.findInvariantViolation(), null);
+  const terminal = snapshot(game);
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), terminal);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
+});
+
 test('a saved score at the ceiling restores paused and ends on resume [STA-4] [SCO-2] [SAF-4]', () => {
   const faults = [];
   const { game, scheduler, storage } = newGame({ onFault: fault => faults.push(fault) });
