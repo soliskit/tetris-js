@@ -481,3 +481,15 @@ test('a rotation index one past the last rotation is caught [SAF-4]', () => {
   game.guard(() => {});
   assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
 });
+
+test('an error during a soft drop is contained [SAF-3]', () => {
+  const factory = breakableFactory();
+  const { game, scheduler, reported } = recordingGame({ factory });
+  repeatUntil(() => game.currentTetromino.dropDistance(game.gameBoard) === 1, () => game.softDrop(), 'the piece one row above landing');
+  game.lockDelayResetCount = 15; // the landing locks at once
+  // Saved-position history uses the lowest occupied block, not the shape anchor.
+  game.lowestRowReached = Math.max(...game.currentTetromino.cells.map(cell => cell.row)) + 1;
+  factory.broken = true;
+  assert.doesNotThrow(() => game.softDrop());
+  assertSafeStop(game, scheduler, reported, 'unexpected error');
+});

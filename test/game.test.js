@@ -135,3 +135,13 @@ test('drop interval speeds up with level and bottoms out at 0.25s [PLY-2] [SCO-2
   game.score = 99000; // level 100
   assert.equal(game.standardDropInterval, 0.25);
 });
+
+test('wall kick lets an I piece rotate against the left wall [PCE-4]', () => {
+  const board = createBoard(20, 10);
+  const i = pieceByColor(PieceColors.cyan).spawned(10);
+  i.rotate(board); // vertical, in column 2 of its box
+  i.position = position(5, -2); // flush against the left wall
+  i.rotate(board);
+  assert.equal(i.rotationState, 2);
+  assert.ok(i.cells.every(cell => cell.column >= 0));
+});
