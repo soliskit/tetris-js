@@ -1729,3 +1729,20 @@ test('a safe nonmultiple score can still earn a full award below the limit [SCO-
   assert.equal(game.score, 251);
   assert.equal(game.state, GameState.playing);
 });
+
+test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+  storage.setItem('tetris.highScore', 'not a number');
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+});
+
+test('topping out stops all timers [STA-3]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  repeatUntil(() => game.state !== GameState.playing, () => game.handleAction(PlayerAction.drop), 'the game ending');
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  const before = snapshot(game);
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), before);
+});

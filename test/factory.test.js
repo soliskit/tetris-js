@@ -45,6 +45,10 @@ test('the default factory uses Math.random [PCE-5]', () => {
   const factory = new TetrominoFactory();
   assert.equal(factory.random, Math.random);
   assert.equal(new Set(colorsOf(factory, 7)).size, 7);
+  for (let bag = 1; bag < 3; bag++) {
+    const refillColors = new Set(Array.from({ length: 7 }, () => factory.generate().color));
+    assert.equal(refillColors.size, 7, `unseeded refill ${bag}`);
+  }
 });
 
 test('resetting the bag starts a full one, or carries on with the pieces given [PCE-5]', () => {
