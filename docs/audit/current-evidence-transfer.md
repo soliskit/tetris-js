@@ -52,7 +52,7 @@ All eight original property methods and limits have also been recovered. Their h
 
 ## Confirmed-defect reconciliation
 
-The full 55-finding reconciliation retains 17 historical Fixed records at their stated bounds, including intentional changes where named. It neither reopens nor strengthens them. F23 has the actual serializer correction in PR #456. F21 retains its injected holed-board case and the unresolved requirement-interpretation boundary in issue #358. Q3 and Row 4 retain the earlier explicit fix deferrals; neither is completed by this record. S5 is Reproduced for rows 5, 10 and 61, with no new defect claimed by its adopted disposition. Row 68 is Reproduced desktop evidence with a device gap, not an automatic new Confirmed Defect.
+The full 55-finding reconciliation retains 17 historical Fixed records at their stated bounds, including intentional changes where named. It neither reopens nor strengthens them. F23 has the actual serializer correction in PR #456. F21 retains its injected holed-board case and the unresolved requirement-interpretation boundary in issue #358. Q3 retains the earlier explicit fix deferral; it is not completed by this record. Row 4's earlier deferral is superseded: PR #427 (merged October 29, 2026) closed issue #317 as completed. S5 is Reproduced for rows 5, 10 and 61, with no new defect claimed by its adopted disposition. Row 68 is Reproduced desktop evidence with a device gap, not an automatic new Confirmed Defect.
 
 Issues #445, #450 and #426 are closed after their corrections. Issues #358 and #371 remain open at their stated injected scopes. Issue existence does not approve a repair or establish a requirement violation outside that scope.
 
