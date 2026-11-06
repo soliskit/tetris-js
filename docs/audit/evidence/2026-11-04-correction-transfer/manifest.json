@@ -1,0 +1,106 @@
+{
+  "base": "11ad0a7d5d765c5e19cfecd4e5b93b7fda675032",
+  "scope": "Documentation-only selected correction evidence; no status or phase exit.",
+  "files": {
+    "docs/audit/evidence/2026-11-04-correction-transfer/dialog-original/receipt.json": {
+      "bytes": 2254,
+      "sha256": "ede1a55dd32cef06aabf87474367b77cf761e6de09b00d8b6505d0568d534652"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/dialog-original/4b65955c3e86f22e9334c86e388e531454915f75.log": {
+      "bytes": 3988,
+      "sha256": "958c12cc045eb79b846ee8fbf74b504e14262123961443ffaa64042f20e41934"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/dialog-original/479a4310ce5ee0350f888954a67d5e704a916443.log": {
+      "bytes": 518,
+      "sha256": "f21c2ac18544be1afebecdc0e122e7b386ab8b4ae626c8d18489f7362ae45231"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/receipt.json": {
+      "bytes": 4171,
+      "sha256": "1df3a1b8c382be0a36ac446b030bfedd9b481567a0daf69bc0646ec7ca53a44e"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/4b65955c3e86f22e9334c86e388e531454915f75.log": {
+      "bytes": 441,
+      "sha256": "1caf67d494e1f5316a3b95be6e2e13f248005de3b0f00736107fdfbed83ac2a5"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/594a6905b788ac490ad349913074ca7ae3e7f250.log": {
+      "bytes": 3587,
+      "sha256": "6d303515a93e3a5ed1924d00ce1f3d1eff9552052dd7d9324305f705dec37681"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/serialization-failure-seri-f6299-ed-false-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/serialization-failure-seri-78403-sed-true-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-original/serialization-failure.spec.js.txt": {
+      "bytes": 4428,
+      "sha256": "f3d3ad234e406154e94cd889d69c5c92ba5bd9c79eb3f2dd18777fd145938ff3"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-unit/4b65955c3e86f22e9334c86e388e531454915f75.tap": {
+      "bytes": 1469,
+      "sha256": "9be6481e4330b1f3ef729c92ebbd5e442ff46555c448ed4e816ae8fde802ec78"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-unit/receipt.json": {
+      "bytes": 2022,
+      "sha256": "751f73afe192595b2e2ece8c0634aff3f0181d52aa7dd356ab32a0dc55e7383a"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/serializer-unit/594a6905b788ac490ad349913074ca7ae3e7f250.tap": {
+      "bytes": 4503,
+      "sha256": "274c2ee7ca42a07295e86da626351bd5d5f7c05df13358afbf25a7705999d292"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/qa3-original/5a2076ae800455702e05e46fc646b785069a2dfa.tap": {
+      "bytes": 30247,
+      "sha256": "f06a054e3140c2969a59bd319eb91b7d311e6991634cd6981540c07b4cfaeda0"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/qa3-original/receipt.json": {
+      "bytes": 2379,
+      "sha256": "5110c3ad04aa23e4f41390368769a6721915bebda55e52600443db8750dd65d5"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/qa3-original/5228b1491071d99d35985fad0aabfa348130b2f5.tap": {
+      "bytes": 4106,
+      "sha256": "11aac485fb97641a288dc81421adaa7e9e650f42a01094c6fde415d278679d40"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/ownlock-install.log": {
+      "bytes": 275,
+      "sha256": "a0c459304ef821e60943462a20184663608926e1872f5db1e35def7cb92d0e5b"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/receipt.json": {
+      "bytes": 3959,
+      "sha256": "d3ec55716bee79f0312ba87097d15adbb05072eeaf0fb561ae667f95e49c3e04"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/serialization-failure-seri-f6299-ed-false-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/save-publication.spec.js.txt": {
+      "bytes": 2455,
+      "sha256": "05141df35bb07282f20dbdf4198e7c1b24cf790bc6d00226ebff0cef3693d4df"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/serialization-failure-seri-78403-sed-true-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/current-ownlock.log": {
+      "bytes": 1244,
+      "sha256": "de5e956c21e098d3c904c320e68d7a5da2e9e1c3a3476d1d3c92408f3c622c9c"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/serialization-failure.spec.js.txt": {
+      "bytes": 4591,
+      "sha256": "20b8fdd0d4be70f3e67148da6a4ee5667f84b6141ce993922e0d965cd040d8fb"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/dialog-selection-interior--8e846--Enter-uses-it-STA-1-INP-4--desktop-retained-answer.png": {
+      "bytes": 496796,
+      "sha256": "4a6ff929084953c9b9c1a4708b7385021d3486c31c9825ff7f781ff2d77d483f"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/dialog-selection-interior--b2a5a--Enter-uses-it-STA-1-INP-4--desktop-retained-answer.png": {
+      "bytes": 497021,
+      "sha256": "43710eb9b7d62fcb0d7243187e51ffd23d5af52a451a7884f09ddc113cc26bba"
+    },
+    "docs/audit/evidence/2026-11-04-correction-transfer/current-browser/dialog-selection.spec.js.txt": {
+      "bytes": 3013,
+      "sha256": "c3308eb1e5f8aa38634615a20b1f8a67e2be46693c7d0b1991d34adce6bf8b31"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+TAP version 13
+# Subtest: persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]
+not ok 1 - persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]
+  ---
+  duration_ms: 2.75468
+  type: 'test'
+  location: 'SOURCE_ROOT/test/original-validity-extract.test.js:20:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading 'score')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file://SOURCE_ROOT/test/original-validity-extract.test.js:30:68)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.start (node:internal/test_runner/test:1262:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]
+not ok 2 - count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]
+  ---
+  duration_ms: 3.203202
+  type: 'test'
+  location: 'SOURCE_ROOT/test/original-validity-extract.test.js:41:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    14 !== 16
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 16
+  actual: 14
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://SOURCE_ROOT/test/original-validity-extract.test.js:51:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]
+not ok 3 - lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]
+  ---
+  duration_ms: 0.671026
+  type: 'test'
+  location: 'SOURCE_ROOT/test/original-validity-extract.test.js:72:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://SOURCE_ROOT/test/original-validity-extract.test.js:78:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# Subtest: in-session score validity is not the saved-score ceiling or divisibility rule [SAF-4] [SCO-2]
+not ok 4 - in-session score validity is not the saved-score ceiling or divisibility rule [SAF-4] [SCO-2]
+  ---
+  duration_ms: 0.716216
+  type: 'test'
+  location: 'SOURCE_ROOT/test/original-validity-extract.test.js:94:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'score is invalid'
+    - null
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: ~
+  actual: 'score is invalid'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://SOURCE_ROOT/test/original-validity-extract.test.js:98:12)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 0
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 82.853538

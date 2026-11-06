@@ -1,0 +1,7 @@
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'tetris@1.0.0',
+npm warn EBADENGINE   required: { node: '>=26 <27', npm: '>=12.2.0' },
+npm warn EBADENGINE   current: { node: 'v26.13.0', npm: '11.20.0' }
+npm warn EBADENGINE }
+
+added 229 packages in 3s

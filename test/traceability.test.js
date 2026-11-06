@@ -63,7 +63,8 @@ test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   const workflow = fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8');
   const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
   const playwrightVersion = lock.packages['node_modules/playwright'].version;
-  assert.ok(workflow.includes(`image: mcr.microsoft.com/playwright:v${playwrightVersion}-noble`));
+  assert.ok(workflow.includes('run: npx playwright install --with-deps chromium webkit'));
+  assert.ok(workflow.includes(`require('playwright/package.json').version==='${playwrightVersion}'`));
   assert.match(workflow, /npm run test:e2e/);
 });
 

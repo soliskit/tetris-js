@@ -812,3 +812,132 @@ test('a key held across game over and Continue still counts as held [STA-2]', t 
   assert.ok(count(manager, 'moveRight') > 0, 'the still-held key moves again');
   key('KeyD', false);
 });
+
+test('the directional pad moves left and right with the same auto repeat as the stick [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['left'] });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveLeft), 1);
+  controller.pollGamepads(); // still held: no extra move
+  tick(167);
+  assert.equal(count(manager, PlayerAction.moveLeft), 2);
+  pads[0] = gamepad({ pressed: ['right'] });
+  controller.pollGamepads();
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft, PlayerAction.moveLeft, PlayerAction.moveRight]);
+});
+
+test('holding down on the directional pad soft drops every 50ms [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['down'] });
+  controller.pollGamepads();
+  tick(50);
+  assert.equal(count(manager, 'softDrop'), 1);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 3);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.equal(count(manager, 'softDrop'), 3);
+  assert.deepEqual(manager.actions.filter(action => action !== 'softDrop'), [], 'down on the pad does nothing else');
+});
+
+test('letting the stick return to the middle stops moving without any other action [INP-4]', t => {
+  const { manager, controller, pads, tick } = setup(t);
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  tick(500);
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight]);
+});
+
+test('pausing while a move key is held stops the auto repeat, and resume needs a fresh press [STA-2]', t => {
+  const { manager, key, tick } = setup(t);
+  manager.togglePause = () => {
+    manager.actions.push('togglePause');
+    manager.state = manager.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  key('KeyA');
+  tick(250);
+  assert.ok(count(manager, PlayerAction.moveLeft) > 1, 'the held key repeats while playing');
+  key('KeyP'); // pause with the key still held
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'no repeat timer is left running while paused');
+  key('KeyP', false);
+  key('KeyP'); // resume with the key still held
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'the held key does nothing until a fresh press');
+  key('KeyA', false);
+  key('KeyA');
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft], 'a fresh press moves again');
+});
+
+test('pausing while soft drop is held cancels its timer, and resume needs a fresh press [STA-2]', t => {
+  const { manager, key, tick } = setup(t);
+  manager.togglePause = () => {
+    manager.actions.push('togglePause');
+    manager.state = manager.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  key('KeyS');
+  tick(150);
+  assert.ok(count(manager, 'softDrop') > 1, 'the held key soft drops while playing');
+  key('KeyP'); // pause with soft drop still held
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'no soft drop timer is left running while paused');
+  key('KeyP', false);
+  key('KeyP'); // resume with soft drop still held
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'the held key does nothing until a fresh press');
+  key('KeyS', false);
+  key('KeyS');
+  assert.deepEqual(manager.actions, ['softDrop'], 'a fresh press soft drops again');
+});
+
+test('a stick direction held across a keyboard pause does not move after resume until it is pushed again [STA-2]', t => {
+  const { manager, controller, pads, key, tick } = setup(t);
+  manager.togglePause = () => {
+    manager.actions.push('togglePause');
+    manager.state = manager.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  tick(250);
+  assert.ok(count(manager, PlayerAction.moveLeft) > 1, 'the held stick moves while playing');
+  key('KeyP'); // pause with the stick still held
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'no repeat timer is left running while paused');
+  key('KeyP', false);
+  key('KeyP'); // resume with the stick still held
+  controller.pollGamepads();
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'the held stick does nothing until a fresh push');
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft], 'a fresh push moves again');
+});
+
+test('the Menu press that pauses does not resume the game while still held [STA-2]', t => {
+  const { manager, controller, pads } = setup(t);
+  manager.togglePause = () => {
+    manager.actions.push('togglePause');
+    manager.state = manager.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  pads[0] = gamepad({ pressed: ['menu'] });
+  controller.pollGamepads();
+  controller.pollGamepads();
+  controller.pollGamepads();
+  assert.deepEqual(manager.actions, ['togglePause'], 'the game stays paused until Menu is let go and pressed again');
+  assert.equal(manager.state, GameState.paused);
+});

@@ -1560,3 +1560,189 @@ test('a resting move with no running delay starts one, and terminal line clears 
   terminal.lockAndSpawnNext();
   assert.equal(saves, 0);
 });
+
+
+test('moving onto a ledge starts the lock delay at once, without using a reset [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  game.gameBoard[7][3] = filled();
+  for (let i = 0; i < 5; i++) game.softDrop(); // rows 5 and 6, just above the ledge's row
+  assert.equal(game.lockDelayTask, null);
+  game.handleAction(PlayerAction.moveLeft);
+  assert.notEqual(game.lockDelayTask, null);
+  assert.equal(game.lockDelayResetCount, 0);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 1);
+  scheduler.advance(1);
+  assert.equal(filledCells(game), 5);
+  assert.deepEqual(faults, []);
+});
+
+test('turning onto a ledge starts the lock delay at once [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(purple), onFault: fault => faults.push(fault) });
+  game.gameBoard[8][4] = filled();
+  for (let i = 0; i < 5; i++) game.softDrop();
+  assert.equal(game.lockDelayTask, null);
+  game.handleAction(PlayerAction.rotate); // the stem now points down at the ledge
+  assert.equal(game.currentTetromino.rotationState, 1);
+  assert.equal(game.isOnSurface, true);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 5);
+  assert.deepEqual(faults, []);
+});
+
+test('a new piece that appears resting on the stack starts its lock delay at once [PLY-6]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow), onFault: fault => faults.push(fault) });
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
+  game.gameBoard[2][4] = filled(); // under where the next piece appears
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.currentTetromino.position.row, 0);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(499);
+  assert.equal(filledCells(game), 5);
+  scheduler.advance(1);
+  assert.equal(filledCells(game), 9);
+  assert.deepEqual(faults, []);
+});
+
+test('a held piece swapped in resting on the stack starts its lock delay at once [PLY-6] [PLY-7]', () => {
+  const faults = [];
+  const { game, scheduler } = newGame({ factory: sequenceFactory([purple, yellow, green]), onFault: fault => faults.push(fault) });
+  game.handleAction(PlayerAction.hold); // holds T, plays O
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveLeft);
+  game.handleAction(PlayerAction.drop); // O locks, plays S
+  game.gameBoard[2][4] = filled(); // under where the T appears
+  game.handleAction(PlayerAction.hold);
+  assert.equal(game.currentTetromino.color, purple);
+  assert.notEqual(game.lockDelayTask, null);
+  scheduler.advance(500);
+  assert.equal(filledCells(game), 9);
+  assert.deepEqual(faults, []);
+});
+
+for (const [name, start, final] of [
+  ['exact hit', Number.MAX_SAFE_INTEGER - 100, Number.MAX_SAFE_INTEGER],
+  ['crossing award', Number.MAX_SAFE_INTEGER - 50, Number.MAX_SAFE_INTEGER - 50]
+]) {
+  test(`score limit ends on ${name} without another piece, save or timer [SCO-1] [SCO-2] [STA-3] [STA-4] [SAF-4]`, () => {
+    const faults = [];
+    const { game, scheduler, storage } = newGame({ factory: fixedFactory(PieceColors.cyan), onFault: fault => faults.push(fault) });
+    game.score = start;
+    game.togglePause();
+    const saved = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+    game.togglePause();
+    let generated = 0;
+    const generate = game.factory.generate;
+    game.factory.generate = () => { generated += 1; return generate(); };
+    fillRows(game, [19], [9]);
+    dropVerticalIIntoColumn9(game);
+    assert.equal(game.state, GameState.gameOver);
+    assert.equal(filledCells(game), 3, 'the completed row disappears and the three blocks above move down');
+    assert.ok(game.gameBoard[19][9].isFilled);
+    assert.equal(game.gameBoard[16][9].isFilled, false);
+    assert.equal(game.score, final);
+    assert.equal(game.highScore, final);
+    assert.equal(game.level, Math.floor(final / 1000) + 1);
+    assert.equal(generated, 0);
+    assert.equal(scheduler.pending, 0);
+    assert.equal(game.isSessionSaved, false);
+    const withdrawn = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+    assert.equal(withdrawn.available, false);
+    assert.equal(withdrawn.position, saved.position);
+    assert.deepEqual(faults, []);
+    assert.equal(game.findInvariantViolation(), null);
+    scheduler.advance(10000);
+    assert.equal(game.score, final);
+    assert.equal(scheduler.pending, 0);
+    const fresh = new GameManager({ storage, scheduler });
+    assert.equal(fresh.isSessionSaved, false);
+  });
+}
+
+test('a crossing award ends normally with a real lock delay pending [SCO-1] [STA-3] [STA-4] [SAF-4]', () => {
+  const faults = [];
+  const { game, scheduler, storage } = newGame({ factory: fixedFactory(PieceColors.cyan), onFault: fault => faults.push(fault) });
+  const final = Number.MAX_SAFE_INTEGER - 50;
+  game.score = final;
+  game.togglePause();
+  const saved = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+  game.togglePause();
+  let generated = 0;
+  const generate = game.factory.generate;
+  game.factory.generate = () => { generated += 1; return generate(); };
+  fillRows(game, [19], [9]);
+  game.handleAction(PlayerAction.rotate);
+  for (let i = 0; i < 4; i++) game.handleAction(PlayerAction.moveRight);
+  landOnSurface(game);
+  assert.equal(game.state, GameState.playing);
+  assert.notEqual(game.lockDelayTask, null, 'touchdown starts a real lock delay');
+  assert.ok(scheduler.pending > 0);
+  game.handleAction(PlayerAction.drop);
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(filledCells(game), 3);
+  assert.ok(game.gameBoard[19][9].isFilled);
+  assert.equal(game.gameBoard[16][9].isFilled, false);
+  assert.equal(game.score, final);
+  assert.equal(game.highScore, final);
+  assert.equal(generated, 0);
+  assert.equal(game.gameLoopTask, null);
+  assert.equal(game.lockDelayTask, null);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(game.isSessionSaved, false);
+  const withdrawn = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+  assert.equal(withdrawn.available, false);
+  assert.equal(withdrawn.position, saved.position);
+  assert.deepEqual(faults, [], 'ordinary score-limit ending does not enter fault containment');
+  assert.equal(game.findInvariantViolation(), null);
+  const terminal = snapshot(game);
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), terminal);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
+});
+
+test('a saved score at the ceiling restores paused and ends on resume [STA-4] [SCO-2] [SAF-4]', () => {
+  const faults = [];
+  const { game, scheduler, storage } = newGame({ onFault: fault => faults.push(fault) });
+  game.score = Number.MAX_SAFE_INTEGER;
+  game.togglePause();
+  const restored = new GameManager({ storage, scheduler, onFault: fault => faults.push(fault) });
+  restored.handleAction(PlayerAction.continueGame);
+  assert.equal(restored.state, GameState.paused);
+  assert.equal(restored.score, Number.MAX_SAFE_INTEGER);
+  restored.handleAction(PlayerAction.resume);
+  assert.equal(restored.state, GameState.gameOver);
+  assert.equal(restored.score, Number.MAX_SAFE_INTEGER);
+  assert.equal(restored.isSessionSaved, false);
+  assert.equal(scheduler.pending, 0);
+  assert.deepEqual(faults, []);
+});
+
+test('a safe nonmultiple score can still earn a full award below the limit [SCO-1] [STA-4]', () => {
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  game.score = 151;
+  fillRows(game, [19], [9]);
+  dropVerticalIIntoColumn9(game);
+  assert.equal(game.score, 251);
+  assert.equal(game.state, GameState.playing);
+});
+
+test('a missing or invalid stored high score reads as 0 [SCO-3] [SAF-2]', () => {
+  const storage = createMemoryStorage();
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+  storage.setItem('tetris.highScore', 'not a number');
+  assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0);
+});
+
+test('topping out stops all timers [STA-3]', () => {
+  const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
+  repeatUntil(() => game.state !== GameState.playing, () => game.handleAction(PlayerAction.drop), 'the game ending');
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  const before = snapshot(game);
+  scheduler.advance(10000);
+  assert.equal(snapshot(game), before);
+});

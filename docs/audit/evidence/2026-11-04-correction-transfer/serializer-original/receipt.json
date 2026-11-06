@@ -1,0 +1,74 @@
+{
+  "method": "Fresh original PR456 unchanged whole serialization-failure Playwright test file at original baseline and corrected source. Desktop Chromium only, original config/fixtures, one worker, no retries, unchanged tracked source. Headless simulated input does not establish physical controller/iPhone/Safari behavior. npm11.20.0 dependency-install floor caveat as QA3 receipt, Node26.13.0. Shared locked dependencies package-lock identical to these original commits.",
+  "results": [
+    {
+      "pin": "594a6905b788ac490ad349913074ca7ae3e7f250",
+      "started": "2026-11-04T19:23:28.883681+00:00",
+      "exit": 1,
+      "command": [
+        "node",
+        "node_modules/playwright/cli.js",
+        "test",
+        "e2e/serialization-failure.spec.js",
+        "--project=desktop",
+        "--workers=1",
+        "--reporter=list"
+      ],
+      "harness_sha256": "f3d3ad234e406154e94cd889d69c5c92ba5bd9c79eb3f2dd18777fd145938ff3",
+      "output_sha256": "4b0345944547dfa2a157ab979022e48c4f4f009fd5192a3b3d8b15ba74d3a239",
+      "script_sha256": "989564430131f72037aa2e762668965d9f097699bc4e4e15fb3d8db2269605c7",
+      "manager_sha256": "23e6c6a83be23eec086de0f2f348915ddbde2e9e029fa691e155f79339ac1599",
+      "fixtures_sha256": "ae232242ff43bae1cff86e5f5b554d0adaa69979d84f8780dbbc42cd1f28194a",
+      "config_sha256": "5922351868b402681d70b98904334f828c04c4ace5249de1ee861941a5880034",
+      "lockfile_sha256": "a2dfa803a90182125e0c8b4800aadc7cc5472f25997ab5479bdf2beb505ddffc",
+      "harness_overlay_equals_original_corrected": true
+    },
+    {
+      "pin": "4b65955c3e86f22e9334c86e388e531454915f75",
+      "started": "2026-11-04T19:23:41.462125+00:00",
+      "exit": 0,
+      "command": [
+        "node",
+        "node_modules/playwright/cli.js",
+        "test",
+        "e2e/serialization-failure.spec.js",
+        "--project=desktop",
+        "--workers=1",
+        "--reporter=list"
+      ],
+      "harness_sha256": "f3d3ad234e406154e94cd889d69c5c92ba5bd9c79eb3f2dd18777fd145938ff3",
+      "output_sha256": "1caf67d494e1f5316a3b95be6e2e13f248005de3b0f00736107fdfbed83ac2a5",
+      "script_sha256": "989564430131f72037aa2e762668965d9f097699bc4e4e15fb3d8db2269605c7",
+      "manager_sha256": "32e498774326e150eb68878f1ce287e4852817c3834a40c4542a60350823ba9c",
+      "fixtures_sha256": "ae232242ff43bae1cff86e5f5b554d0adaa69979d84f8780dbbc42cd1f28194a",
+      "config_sha256": "5922351868b402681d70b98904334f828c04c4ace5249de1ee861941a5880034",
+      "lockfile_sha256": "a2dfa803a90182125e0c8b4800aadc7cc5472f25997ab5479bdf2beb505ddffc",
+      "harness_overlay_equals_original_corrected": true
+    }
+  ],
+  "visual_inspection": "Both corrected accepted/refused-withdrawal screenshots inspected: readable internal-error notice in stopped board, score0, NewGame control; no cropped notice. Baseline fails before screenshot and before later assertions.",
+  "failure_cutpoint": "Both baseline cases first fail visible gameOverMessage at line55; subsequent notice/announcer/state/resources/error/literalbytes assertions unexecuted on baseline. Both corrected whole tests pass.",
+  "publication": "Only workstation paths normalized; original hashes preserved, publication hashes listed separately.",
+  "published_artifacts": {
+    "4b65955c3e86f22e9334c86e388e531454915f75.log": {
+      "bytes": 441,
+      "sha256": "1caf67d494e1f5316a3b95be6e2e13f248005de3b0f00736107fdfbed83ac2a5"
+    },
+    "594a6905b788ac490ad349913074ca7ae3e7f250.log": {
+      "bytes": 3587,
+      "sha256": "6d303515a93e3a5ed1924d00ce1f3d1eff9552052dd7d9324305f705dec37681"
+    },
+    "serialization-failure-seri-f6299-ed-false-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "serialization-failure-seri-78403-sed-true-SAF-3-STA-4-SAF-2--desktop-serialization-fault-notice.png": {
+      "bytes": 575783,
+      "sha256": "cf0a996fb219c9fbc36bd6b81ad8667aae7f501b57261eba1038482d99ffcc01"
+    },
+    "serialization-failure.spec.js.txt": {
+      "bytes": 4428,
+      "sha256": "f3d3ad234e406154e94cd889d69c5c92ba5bd9c79eb3f2dd18777fd145938ff3"
+    }
+  }
+}
