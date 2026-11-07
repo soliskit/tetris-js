@@ -519,3 +519,42 @@ for (const [kind, start, final] of [
     await expect(page.locator('#continueGameButton')).toBeHidden();
   });
 }
+
+test.describe('controller disconnect release boundary', () => {
+  for (const removedIndex of [0, 1]) {
+    test(`disconnecting pad ${removedIndex} spends the surviving held drop until a fresh press [INP-4]`, async ({ page }) => {
+      await page.clock.install();
+      await page.clock.pauseAt(new Date());
+      await page.addInitScript(() => {
+        const pads = [0, 1].map(index => ({ id: `test-pad-${index}`, index, connected: true, buttons: Array.from({ length: 16 }, () => ({ pressed: false })), axes: [0, 0] }));
+        Object.defineProperty(window, 'testPads', { value: pads });
+        Object.defineProperty(navigator, 'getGamepads', { value: () => pads.map(pad => pad.connected ? pad : null), configurable: true });
+      });
+      await page.goto('/');
+      await page.keyboard.press('Enter');
+      await page.clock.runFor(32);
+      await expect.poll(() => filledCount(page)).toBe(4);
+      const survivorIndex = removedIndex === 0 ? 1 : 0;
+      await page.evaluate(index => { window.testPads[index].buttons[0].pressed = true; }, survivorIndex);
+      await page.clock.runFor(32);
+      // Only the first connected pad is polled. If it survives, its initial
+      // press drops once; an unselected survivor has not acted yet.
+      const before = removedIndex === 0 ? 4 : 8;
+      await expect.poll(() => filledCount(page)).toBe(before);
+      await page.evaluate(index => {
+        const pad = window.testPads[index];
+        pad.connected = false;
+        const event = new Event('gamepaddisconnected');
+        Object.defineProperty(event, 'gamepad', { value: pad });
+        window.dispatchEvent(event);
+      }, removedIndex);
+      await page.clock.runFor(220);
+      expect(await filledCount(page)).toBe(before);
+      await page.evaluate(index => { window.testPads[index].buttons[0].pressed = false; }, survivorIndex);
+      await page.clock.runFor(32);
+      await page.evaluate(index => { window.testPads[index].buttons[0].pressed = true; }, survivorIndex);
+      await page.clock.runFor(32);
+      await expect.poll(() => filledCount(page)).toBe(before + 4);
+    });
+  }
+});
