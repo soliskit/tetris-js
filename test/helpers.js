@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 
 import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
-import { allPieces } from '../public/game/tetrominoFactory.js';
+import { allPieces, PieceColors } from '../public/game/tetrominoFactory.js';
 
 // Manual clock so timer driven behavior (gravity, lock delay) is deterministic.
 export function createFakeScheduler() {
@@ -89,7 +89,7 @@ export function newGame(options = {}) {
   return { game, scheduler, storage };
 }
 
-export function filled(color = '#fff') {
+export function filled(color = PieceColors.cyan) {
   return { isFilled: true, color };
 }
 

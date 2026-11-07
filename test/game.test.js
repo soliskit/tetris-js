@@ -49,7 +49,7 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
   const { game, storage } = newGame({ factory: fixedFactory(PieceColors.cyan) });
   for (let row = 16; row < 20; row++) {
     for (let column = 0; column < 9; column++) {
-      game.gameBoard[row][column] = { isFilled: true, color: '#fff' };
+      game.gameBoard[row][column] = { isFilled: true, color: PieceColors.cyan };
     }
   }
   game.handleAction(PlayerAction.rotate); // vertical I at column 5

@@ -168,6 +168,7 @@ function expectedRotations(spawn, turns) {
 }
 
 // Keyed by the piece's fixed color.
+/** @type {ReadonlyMap<unknown, ReturnType<typeof expectedRotations>>} */
 const EXPECTED = new Map([
   ['#00C0E8', expectedRotations(['....', 'XXXX', '....', '....'], 4)],
   ['#FFCC00', expectedRotations(['XX', 'XX'], 1)],
@@ -259,4 +260,35 @@ export function isValidFallingPiece(piece, board) {
   const shape = Number.isInteger(rotationState) ? expected[/** @type {number} */ (rotationState)] : undefined;
   if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
   return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[/** @type {number} */ (row) + r]?.[/** @type {number} */ (column) + c]?.isFilled === false));
+}
+
+
+// The board part of the engine's safety check: every row present and dense,
+// every cell a real cell.
+
+/**
+ * Every row is present and dense, and every cell is a real cell: exactly
+ * isFilled and color, empty or a locked block of one of the seven kinds.
+ * The 20-by-10 dimensions are owned by the monitor's shape check, which
+ * runs before this validator.
+ * @param {unknown} board
+ * @returns {boolean}
+ */
+export function isValidBoard(board) {
+  return isDense(board) && /** @type {unknown[]} */ (board).every(row =>
+    isDense(row) && /** @type {unknown[]} */ (row).every(isValidCell));
+}
+
+/**
+ * A cell is an object, not a list, with exactly two own properties -
+ * isFilled and color - each read once.
+ * @param {unknown} cell
+ * @returns {boolean}
+ */
+function isValidCell(cell) {
+  if (typeof cell !== 'object' || cell === null || Array.isArray(cell)) return false;
+  if (Reflect.ownKeys(cell).length !== 2 || !Object.hasOwn(cell, 'isFilled') || !Object.hasOwn(cell, 'color')) return false;
+  const { isFilled, color } = /** @type {{ isFilled: unknown, color: unknown }} */ (cell);
+  if (typeof isFilled !== 'boolean') return false;
+  return isFilled ? EXPECTED.has(color) : color === null;
 }
