@@ -168,6 +168,7 @@ function expectedRotations(spawn, turns) {
 }
 
 // Keyed by the piece's fixed color.
+/** @type {ReadonlyMap<unknown, ReturnType<typeof expectedRotations>>} */
 const EXPECTED = new Map([
   ['#00C0E8', expectedRotations(['....', 'XXXX', '....', '....'], 4)],
   ['#FFCC00', expectedRotations(['XX', 'XX'], 1)],
@@ -289,5 +290,5 @@ function isValidCell(cell) {
   if (Reflect.ownKeys(cell).length !== 2 || !Object.hasOwn(cell, 'isFilled') || !Object.hasOwn(cell, 'color')) return false;
   const { isFilled, color } = /** @type {{ isFilled: unknown, color: unknown }} */ (cell);
   if (typeof isFilled !== 'boolean') return false;
-  return isFilled ? typeof color === 'string' && EXPECTED.has(color) : color === null;
+  return isFilled ? EXPECTED.has(color) : color === null;
 }
