@@ -300,8 +300,8 @@ test('storage whose reads throw still gives a playable game [SAF-2]', () => {
   assert.deepEqual(reported, []);
 });
 
-test('a stored high score that is negative or fractional reads as 0 [SAF-2]', () => {
-  for (const value of ['-50', '12.5', 'Infinity', '1e400']) {
+test('a stored high score that is negative, fractional or above the safe limit reads as 0 [SAF-2]', () => {
+  for (const value of ['-50', '12.5', 'Infinity', '1e400', '9007199254741000']) {
     const storage = createMemoryStorage();
     storage.setItem('tetris.highScore', value);
     assert.equal(new GameManager({ scheduler: createFakeScheduler(), storage }).highScore, 0, value);
