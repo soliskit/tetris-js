@@ -3,7 +3,7 @@ import {parseSavedRecord,serializeSavedRecord} from '../public/game/session.js';
 // blocked storage must never crash or freeze the game.
 
 import { test, expect } from './fixtures.js';
-import { expectLabel, filledCount, savedGame, PieceColors, trackErrors } from './helpers.js';
+import { expectLabel, filledCount, savedGame, PieceColors, trackErrors, boardCells } from './helpers.js';
 
 const good = savedGame({ piece: PieceColors.purple });
 const broken = {
@@ -77,4 +77,175 @@ test('the game plays normally when storage is blocked [SAF-2]', async ({ page })
   await page.keyboard.press('KeyP');
   await expectLabel(page, 'Pause');
   expect(errors).toEqual([]);
+});
+
+test.describe('refused draw requests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install();
+    await page.clock.pauseAt(new Date());
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'getGamepads', { value: () => [], configurable: true });
+      const frame = window.requestAnimationFrame.bind(window);
+      const timer = window.setTimeout.bind(window);
+      const report = console.error;
+      window.refuseFrames = 0;
+      window.drawFrameRequests = 0;
+      window.retryRequests = 0;
+      window.refuseRetryTimer = false;
+      window.refuseDrawReport = false;
+      window.requestAnimationFrame = callback => {
+        if ((new Error().stack ?? '').includes('requestDraw')) {
+          window.drawFrameRequests++;
+          if (window.refuseFrames > 0) {
+            window.refuseFrames--;
+            throw new Error('injected frame refusal');
+          }
+        }
+        return frame(callback);
+      };
+      window.setTimeout = (callback, delay, ...args) => {
+        if (delay === 100 && (new Error().stack ?? '').includes('requestDraw')) {
+          window.retryRequests++;
+          if (window.refuseRetryTimer) throw new Error('injected retry timer refusal');
+        }
+        return timer(callback, delay, ...args);
+      };
+      console.error = (...args) => {
+        if (window.refuseDrawReport && String(args[0]).includes('draw request')) throw new Error('injected report refusal');
+        return report(...args);
+      };
+    });
+    await page.goto('/');
+    await page.keyboard.press('Enter');
+    await page.clock.runFor(32);
+    await expect.poll(() => filledCount(page)).toBe(4);
+  });
+
+  for (const refusals of [1, 2]) {
+    test(`a draw request gets one 100 ms retry after ${refusals} frame refusals [SAF-5]`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+      const logged = [];
+      page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+      const before = await boardCells(page);
+      const requests = await page.evaluate(() => window.drawFrameRequests);
+      await page.evaluate(count => { window.refuseFrames = count; }, refusals);
+      await page.keyboard.press('KeyD');
+      await page.clock.runFor(99);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
+      expect(await boardCells(page)).toEqual(before);
+      await page.clock.runFor(1);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+      await page.clock.runFor(250);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+      expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+      if (refusals === 1) expect(await boardCells(page)).not.toEqual(before);
+      else expect(await boardCells(page)).toEqual(before);
+      await page.keyboard.press('KeyP');
+      await page.clock.runFor(32);
+      await expectLabel(page, 'Resume');
+      expect(await boardCells(page)).not.toEqual(before);
+      expect(logged.some(text => text.includes('draw request') && text.includes('injected frame refusal'))).toBe(true);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('a genuine redraw cancels its pending fallback rather than double-drawing [SAF-5] [DSP-3]', async ({ page }) => {
+    const requests = await page.evaluate(() => window.drawFrameRequests);
+    await page.evaluate(() => { window.refuseFrames = 1; });
+    await page.keyboard.press('KeyD');
+    await page.keyboard.press('KeyP');
+    await page.clock.runFor(250);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    await expectLabel(page, 'Resume');
+  });
+
+  test('a refused fallback timer reports once and waits for a genuine redraw [SAF-5]', async ({ page }) => {
+    const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+    const logged = [];
+    page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+    const before = await boardCells(page);
+    const requests = await page.evaluate(() => window.drawFrameRequests);
+    await page.evaluate(() => { window.refuseFrames = 1; window.refuseRetryTimer = true; });
+    await page.keyboard.press('KeyD');
+    await page.clock.runFor(250);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    expect(await boardCells(page)).toEqual(before);
+    expect(logged.some(text => text.includes('injected frame refusal'))).toBe(true);
+    expect(logged.some(text => text.includes('injected retry timer refusal'))).toBe(true);
+    await page.evaluate(() => { window.refuseRetryTimer = false; });
+    await page.keyboard.press('KeyP');
+    await page.clock.runFor(32);
+    await expectLabel(page, 'Resume');
+    expect(await boardCells(page)).not.toEqual(before);
+    expect(errors).toEqual([]);
+  });
+
+  for (const hideAfterFallback of [false, true]) {
+    test(`hiding ${hideAfterFallback ? 'after a refused fallback' : 'while retrying'} keeps Pause and redraws on return [SAF-5] [STA-5]`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.evaluate(() => { window.refuseFrames = 2; });
+      await page.keyboard.press('KeyD');
+      if (hideAfterFallback) await page.clock.runFor(100);
+      await page.evaluate(() => {
+        window.refuseFrames = 10;
+        Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+        Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      const hiddenRequests = await page.evaluate(() => window.drawFrameRequests);
+      await page.clock.runFor(500);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(hiddenRequests);
+      await page.evaluate(() => {
+        window.refuseFrames = 0;
+        Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+        Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      await page.clock.runFor(32);
+      await expectLabel(page, 'Resume');
+      await page.clock.runFor(250);
+      await expectLabel(page, 'Resume');
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test('a retry callback does not request a frame if hidden before its event is handled [SAF-5] [STA-5]', async ({ page }) => {
+    const requests = await page.evaluate(() => window.drawFrameRequests);
+    await page.evaluate(() => { window.refuseFrames = 1; });
+    await page.keyboard.press('KeyD');
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+    });
+    await page.clock.runFor(132);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await page.clock.runFor(32);
+    await expectLabel(page, 'Resume');
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+      Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await page.clock.runFor(32);
+    await expectLabel(page, 'Resume');
+  });
+
+  test('a refused error report cannot suppress the one redraw retry [SAF-5]', async ({ page }) => {
+    const errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+    const before = await boardCells(page);
+    await page.evaluate(() => { window.refuseFrames = 1; window.refuseDrawReport = true; });
+    await page.keyboard.press('KeyD');
+    await page.clock.runFor(132);
+    expect(await boardCells(page)).not.toEqual(before);
+    await expectLabel(page, 'Pause');
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    expect(errors).toEqual([]);
+  });
 });
