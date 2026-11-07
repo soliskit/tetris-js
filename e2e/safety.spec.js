@@ -216,6 +216,99 @@ test.describe('refused draw requests', () => {
     });
   }
 
+  test('a new refused redraw gets one retry after the previous retry was refused [SAF-5]', async ({
+    page
+  }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    const before = await boardCells(page);
+    const requests = await page.evaluate(() => window.drawFrameRequests);
+    await page.evaluate(() => {
+      window.refuseFrames = 4;
+    });
+    await page.keyboard.press('KeyD');
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 1
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    await page.clock.runFor(99);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 1
+    );
+    await page.clock.runFor(1);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
+    await page.clock.runFor(250);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    await page.keyboard.press('KeyP');
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 3
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(2);
+    await page.clock.runFor(99);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 3
+    );
+    await page.clock.runFor(1);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 4
+    );
+    await page.clock.runFor(250);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 4
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(2);
+    expect(await boardCells(page)).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+
+  test('a new refused redraw replaces its pending retry [SAF-5]', async ({
+    page
+  }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    const before = await boardCells(page);
+    const requests = await page.evaluate(() => window.drawFrameRequests);
+    await page.evaluate(() => {
+      window.refuseFrames = 2;
+    });
+    await page.keyboard.press('KeyD');
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 1
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(1);
+    await page.clock.runFor(50);
+    await page.keyboard.press('KeyP');
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(2);
+    await page.clock.runFor(50);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
+    await page.clock.runFor(49);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
+    await page.clock.runFor(1);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 3
+    );
+    await page.clock.runFor(250);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 3
+    );
+    expect(await page.evaluate(() => window.retryRequests)).toBe(2);
+    await expectLabel(page, 'Resume');
+    expect(await boardCells(page)).not.toEqual(before);
+    expect(errors).toEqual([]);
+  });
+
   test('a genuine redraw cancels its pending fallback rather than double-drawing [SAF-5] [DSP-3]', async ({
     page
   }) => {
