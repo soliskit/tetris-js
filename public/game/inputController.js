@@ -76,9 +76,10 @@ export class InputController {
     this.heldButtons = new Set();
     /** @type {PlayerActionValue | null} Held on the stick or directional pad. */
     this.padDirection = null;
+    this.padDirectionSpent = false;
     /** Whether the stick or directional pad is held down. */
     this.padDown = false;
-    /** Whether a pad down held while paused has been spent. */
+    /** Whether a pad down held outside play has been spent. */
     this.padDownSpent = false;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
@@ -127,9 +128,9 @@ export class InputController {
     // as held: macOS sends no keyup for a key let go while Cmd is down, so
     // it would stay held forever.
     if (pressed && modifierHeld) return;
-    // Held keys matter only during play: a key pressed while paused must
-    // not count as held when play resumes.
-    if (pressed && this.gameManager.state !== GameState.paused) this.heldKeys.add(key);
+    // Held keys matter only during play: a key pressed on a menu must
+    // not count as held when play starts or resumes.
+    if (pressed && !event.repeat && this.gameManager.state === GameState.playing) this.heldKeys.add(key);
     else if (!pressed) this.heldKeys.delete(key);
 
     // While the pause screen asks to confirm New Game, keys belong to its
@@ -164,7 +165,7 @@ export class InputController {
       }
     } else if (key === 'KeyS') {
       // One row at once, then the steady soft drop while held.
-      if (pressed) this.gameManager.softDrop();
+      if (pressed && this.gameManager.state === GameState.playing) this.gameManager.softDrop();
       this.updateSoftDrop();
     } else if (pressed && (key === 'KeyP' || key === 'Escape')) {
       this.gameManager.togglePause();
@@ -195,6 +196,7 @@ export class InputController {
    * @param {number} yAxis Stick, -1 down to 1 up.
    */
   processInput(pressed, xAxis, yAxis) {
+    const wasPlaying = this.gameManager.state === GameState.playing;
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
     const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
@@ -234,19 +236,21 @@ export class InputController {
       for (const action of actions) this.gameManager.handleAction(action);
     }
 
-    // A pad down held while paused is spent: it soft drops nothing until
+    // A pad down held outside play is spent: it soft drops nothing until
     // it is let go and pushed again during play.
     const padDown = yAxis < -0.5 || pressed.has('down');
-    if (padDown && this.gameManager.state === GameState.paused) this.padDownSpent = true;
+    if (padDown && !wasPlaying) this.padDownSpent = true;
     else if (!padDown) this.padDownSpent = false;
     this.padDown = padDown && !this.padDownSpent;
     this.updateSoftDrop();
 
     // Polling runs every frame, so only react to stick and pad changes;
     // otherwise a centered stick would cancel keyboard movement.
+    if (!wasPlaying) this.padDirectionSpent = direction !== null;
+    else if (direction !== this.padDirection) this.padDirectionSpent = false;
     if (direction === this.padDirection) return;
     this.padDirection = direction;
-    if (direction) {
+    if (direction && !this.padDirectionSpent) {
       this.startMoving(direction);
     } else {
       this.resumeHeldMovement();
@@ -258,7 +262,7 @@ export class InputController {
   resumeHeldMovement() {
     const held = this.heldKeys.has('KeyA') ? PlayerAction.moveLeft
       : this.heldKeys.has('KeyD') ? PlayerAction.moveRight
-        : this.padDirection;
+        : this.padDirectionSpent ? null : this.padDirection;
     if (held) {
       this.startMoving(held);
     } else {
@@ -268,7 +272,7 @@ export class InputController {
 
   /** @param {PlayerActionValue} action */
   startMoving(action) {
-    if (this.gameManager.state === GameState.paused) return;
+    if (this.gameManager.state !== GameState.playing) return;
     if (this.movement === action) return;
     this.movement = action;
     clearTimeout(this.movementTimer);
@@ -301,6 +305,7 @@ export class InputController {
   }
 
   startSoftDrop() {
+    if (this.gameManager.state !== GameState.playing) return;
     if (this.softDropTimer !== undefined) return;
     this.softDropTimer = setInterval(() => {
       if (this.gameManager.state !== GameState.playing) {
@@ -316,7 +321,7 @@ export class InputController {
     this.softDropTimer = undefined;
   }
 
-  // Pausing releases everything held: both repeat timers stop and the held
+  // Pausing or reaching Game Over releases held movement: both repeat timers stop and the held
   // keys are forgotten, so a key still held when play resumes does nothing
   // until it is let go and pressed again. Buttons and the stick keep
   // tracking what is physically held, so a held Menu cannot resume the game
@@ -324,6 +329,9 @@ export class InputController {
   // (the poll acts only on changes), and a pad down held into the pause
   // stays spent until let go.
   releaseForPause() {
+    this.padDirectionSpent = this.padDirection !== null;
+    if (this.padDown) this.padDownSpent = true;
+    this.padDown = false;
     this.stopMoving();
     this.stopSoftDrop();
     this.heldKeys.clear();
@@ -334,6 +342,7 @@ export class InputController {
     this.stopSoftDrop();
     this.heldButtons = new Set();
     this.padDirection = null;
+    this.padDirectionSpent = false;
     this.padDown = false;
     this.padDownSpent = false;
     this.heldKeys.clear();

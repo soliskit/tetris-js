@@ -16,6 +16,7 @@ const gameManager = new GameManager({ onChange: engineChanged, onFault: reportEn
 // A fault stays over (or never reaches this callback), so only a completed
 // New Game or accepted Continue clears the cause on the default page route.
 function engineChanged() {
+  if (gameManager.state === GameState.gameOver) inputController.releaseForPause();
   if (gameManager.state !== GameState.gameOver) engineFaultNotice = false;
   requestDraw();
 }
