@@ -1159,6 +1159,7 @@ test('any controller disconnect stops keyboard and surviving pad repeats until f
 
 test('disconnect with no remaining controller forgets old pad holds and allows fresh input [INP-4]', t => {
   const { manager, controller, fire, pads, key, tick } = setup(t);
+  const report = t.mock.method(console, 'error', () => {});
   for (const supported of [true, false]) {
     pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
     controller.pollGamepads();
@@ -1167,6 +1168,10 @@ test('disconnect with no remaining controller forgets old pad holds and allows f
     const read = navigator.getGamepads;
     if (!supported) navigator.getGamepads = undefined;
     fire('gamepaddisconnected', { gamepad: pads[0] });
+    assert.equal(report.mock.callCount(), 0, 'no remaining pad or missing API is not a read refusal');
+    assert.deepEqual([...controller.heldButtons], [], 'no remaining pad means no remembered buttons');
+    assert.equal(controller.padDirection, null, 'no remaining pad means no remembered direction');
+    assert.equal(controller.padDownSpent, false, 'no remaining pad means no spent down hold');
     manager.actions = [];
     tick(500);
     assert.deepEqual(manager.actions, [], 'no held timer survives the disconnect');
@@ -1220,4 +1225,43 @@ test('disconnect stops simultaneous holds in either pad order [INP-4]', t => {
     assert.deepEqual(manager.actions, [], 'button, movement and down stay stopped together');
   }
   controller.releaseAllInput();
+});
+
+
+test('a neutral disconnect snapshot leaves the first new pad push fresh [INP-4]', t => {
+  const { manager, controller, fire, pads, tick } = setup(t);
+  const report = t.mock.method(console, 'error', () => {});
+  for (const [axes, fresh, action] of [
+    [[0, 0], { x: 1 }, PlayerAction.moveRight],
+    [[-0.5, 0], { x: -1 }, PlayerAction.moveLeft],
+    [[0.5, 0], { x: 1 }, PlayerAction.moveRight],
+    [[0, 0.5], { y: 1 }, 'softDrop']
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = null; // Sparse slots are ordinary, not read errors.
+    pads[1] = { ...gamepad(), axes, buttons: [{ pressed: false }] };
+    fire('gamepaddisconnected');
+    assert.equal(report.mock.callCount(), 0, 'sparse pad slots and short button arrays are valid');
+    manager.actions = [];
+    pads[1] = gamepad(fresh);
+    controller.pollGamepads(); // No intervening neutral poll may be needed.
+    tick(100);
+    assert.ok(count(manager, action) > 0, 'first fresh push works after a neutral snapshot');
+  }
+  controller.releaseAllInput();
+});
+
+test('blur still clears a held pad down and stops its repeat timer [INP-2] [INP-4]', t => {
+  const { manager, controller, fire, pads, key, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['down'] });
+  controller.pollGamepads();
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 2, 'pad down was repeating before blur');
+  fire('blur');
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'blur stops the active pad-down timer');
+  key('KeyS', false); // Updating keyboard input must not revive forgotten pad down.
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'blur stops and forgets the held pad down');
 });
