@@ -1021,3 +1021,71 @@ test('a key release before the first restarted pad poll cannot revive spent soft
   tick(50);
   assert.deepEqual(manager.actions, ['softDrop'], 'release and fresh push works');
 });
+
+test('a keyboard release cannot revive a pad direction spent before New Game [INP-4]', t => {
+  const { manager, controller, key, tick } = setup(t);
+  manager.state = GameState.gameOver;
+  controller.processInput(new Set(), -1, 0);
+  manager.state = GameState.playing;
+  key('KeyD', false); // Before the first pad poll after a page-button restart.
+  tick(200);
+  assert.deepEqual(manager.actions, [], 'the old stick cannot move through a keyboard release');
+  controller.processInput(new Set(), -1, 0);
+  key('KeyD', false); // Also after an unchanged poll of the old stick hold.
+  tick(200);
+  assert.deepEqual(manager.actions, [], 'an unchanged poll must not make the old hold fresh');
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(), -1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft], 'release and fresh push moves');
+});
+
+test('a keyboard release cannot revive a direction held through the Game Over callback [INP-4]', t => {
+  const { manager, controller, key, tick } = setup(t);
+  controller.processInput(new Set(), -1, 0);
+  manager.state = GameState.gameOver;
+  controller.releaseForPause();
+  manager.actions = [];
+  manager.state = GameState.playing;
+  key('KeyD', false);
+  tick(200);
+  assert.deepEqual(manager.actions, [], 'the old direction stays spent before any new pad poll');
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(), 1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveRight], 'a fresh direction works');
+});
+
+test('a nonplaying soft-drop request leaves no scheduled firing [INP-2]', t => {
+  const { manager, controller, tick } = setup(t);
+  manager.state = GameState.gameOver;
+  controller.startSoftDrop();
+  assert.equal(controller.softDropTimer, undefined, 'Game Over cannot schedule a soft-drop timer');
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+});
+
+test('a fresh pad down after a neutral pause works before any neutral poll [STA-2] [INP-4]', t => {
+  const { manager, controller, tick } = setup(t);
+  manager.state = GameState.paused;
+  controller.releaseForPause();
+  manager.state = GameState.playing;
+  controller.processInput(new Set(['down']), 0, 0);
+  tick(50);
+  assert.deepEqual(manager.actions, ['softDrop'], 'a new down push is not spent by a neutral pause');
+});
+
+test('a direction used in the New Game question cannot move the new piece through keyboard release [INP-4]', t => {
+  const { key, tick } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game, { move() {}, press() {} });
+  game.togglePause();
+  controller.releaseForPause(); // The page releases input on Pause.
+  game.handleAction(PlayerAction.newGame);
+  assert.equal(game.isConfirmingNewGame, true);
+  controller.processInput(new Set(), -1, 0); // Select a question button.
+  game.handleAction(PlayerAction.newGame); // Confirm on the page.
+  assert.equal(game.state, GameState.playing);
+  const column = game.currentTetromino.position.column;
+  key('KeyD', false); // Before any post-start gamepad poll.
+  tick(200);
+  assert.equal(game.currentTetromino.position.column, column, 'the question direction was not a new gameplay push');
+});

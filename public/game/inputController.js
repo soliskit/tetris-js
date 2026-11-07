@@ -76,6 +76,7 @@ export class InputController {
     this.heldButtons = new Set();
     /** @type {PlayerActionValue | null} Held on the stick or directional pad. */
     this.padDirection = null;
+    // Stryker disable next-line BooleanLiteral: No direction can move; a fresh push replaces this flag before use.
     this.padDirectionSpent = false;
     /** Whether the stick or directional pad is held down. */
     this.padDown = false;
@@ -213,6 +214,7 @@ export class InputController {
       else if (newPresses.has('b')) this.gameManager.cancelNewGame();
       else if (direction && direction !== this.padDirection) this.questionButtons.move(direction === PlayerAction.moveLeft ? -1 : 1);
       this.padDirection = direction;
+      this.padDirectionSpent = true;
       return;
     }
 
@@ -246,7 +248,7 @@ export class InputController {
 
     // Polling runs every frame, so only react to stick and pad changes;
     // otherwise a centered stick would cancel keyboard movement.
-    if (!wasPlaying) this.padDirectionSpent = direction !== null;
+    if (!wasPlaying) this.padDirectionSpent = true;
     else if (direction !== this.padDirection) this.padDirectionSpent = false;
     if (direction === this.padDirection) return;
     this.padDirection = direction;
@@ -329,7 +331,7 @@ export class InputController {
   // (the poll acts only on changes), and a pad down held into the pause
   // stays spent until let go.
   releaseForPause() {
-    this.padDirectionSpent = this.padDirection !== null;
+    this.padDirectionSpent = true;
     if (this.padDown) this.padDownSpent = true;
     this.padDown = false;
     this.stopMoving();
@@ -342,6 +344,7 @@ export class InputController {
     this.stopSoftDrop();
     this.heldButtons = new Set();
     this.padDirection = null;
+    // Stryker disable next-line BooleanLiteral: No direction can move; a fresh push replaces this flag before use.
     this.padDirectionSpent = false;
     this.padDown = false;
     this.padDownSpent = false;
