@@ -21,7 +21,7 @@ import { createFakeScheduler, newGame } from '../helpers.js';
 // CI green while the defect waits for its approved fix; the fix's pull request
 // removes the mark. The callback runs in full on every push, so the CI log
 // shows the defect record on each run.
-test('F21: the invariant check flags a board with a missing row or cell [D74]', { todo: 'F21 (D74): Confirmed Defect, injected scope - the invariant check accepts holed boards; the fix PR removes this mark' }, () => {
+test('F21: the invariant check flags a board with a missing row or cell [D74]', () => {
   for (const [label, mutate] of [
     ['delete a whole row', g => { delete g.gameBoard[5]; }],
     ['row replaced by a sparse 10-slot array', g => { g.gameBoard[3] = new Array(10); }],

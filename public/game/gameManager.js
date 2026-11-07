@@ -9,7 +9,7 @@
 import { below, position } from './position.js';
 import { GameState, PlayerAction, UPCOMING_COUNT, createBoard } from './gameState.js';
 import { parseSession, serializeSession, parseSavedRecord, serializeSavedRecord } from './session.js';
-import { isValidFallingPiece, isValidPieceList } from './tetromino.js';
+import { isValidBoard, isValidFallingPiece, isValidPieceList } from './tetromino.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
 /** @typedef {import('./gameState.js').Board} Board */
@@ -477,6 +477,7 @@ export class GameManager {
     if (!Array.isArray(board) || board.length !== this.rows || !board.every(row => Array.isArray(row) && row.length === this.columns)) {
       return 'board is not 20 by 10';
     }
+    if (!isValidBoard(board)) return 'board contains an invalid cell';
     const upcoming = this.nextTetrominos;
     if (upcoming.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
     if (!isValidPieceList(upcoming)) return 'upcoming piece is not a valid piece';
