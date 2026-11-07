@@ -53,10 +53,14 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   page
 }) => {
   test.skip(!isChromium(page), 'only Chromium can send real touch events');
-  await playSaved(page, {
-    piece: PieceColors.purple,
-    position: { row: 5, column: 3 }
-  });
+  await page.clock.install();
+  await continueSavedGame(
+    page,
+    savedGame({ piece: PieceColors.purple, position: { row: 5, column: 3 } })
+  );
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await page.keyboard.press('KeyP');
+  await page.clock.runFor(17);
   const box = await page.locator('#tetris').boundingBox();
   const cell = box.width / 10;
   const finger = (id, column, row) => ({
@@ -68,7 +72,12 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   // Lists every finger still down; the one added or left out is the one that changed.
   const send = (type, fingers) =>
     cdp.send('Input.dispatchTouchEvent', { type, touchPoints: fingers });
-  const piece = () => cellsOf(page, PieceColors.purple);
+  const piece = async () => {
+    await page.clock.runFor(17);
+    const cells = await cellsOf(page, PieceColors.purple);
+    expect(cells).toHaveLength(4);
+    return cells;
+  };
   const shape = shapeOf(await piece());
 
   // Two fingers put down and lifted without moving: no turn.
@@ -76,23 +85,39 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   await send('touchStart', [finger(0, 4, 12), finger(1, 7, 15)]);
   await send('touchEnd', [finger(0, 4, 12)]);
   await send('touchEnd', []);
-  await page.waitForTimeout(300);
+  await page.clock.runFor(17);
   expect(shapeOf(await piece())).toBe(shape);
 
   // The first finger drags with a second resting on the board: the piece follows the first.
   await send('touchStart', [finger(0, 4, 12)]);
   await send('touchStart', [finger(0, 4, 12), finger(1, 7, 15)]);
+  const beforeSecondaryMove = await piece();
+  await send('touchMove', [finger(0, 4, 12), finger(1, 9, 17)]);
+  expect(await piece()).toEqual(beforeSecondaryMove);
   for (let step = 1; step <= 13; step++)
     await send('touchMove', [
       finger(0, 4 + (2.6 * step) / 13, 12),
-      finger(1, 7, 15)
+      finger(1, 9, 17)
     ]);
   await expect.poll(async () => minColumn(await piece())).toBe(6);
   await send('touchEnd', [finger(0, 6.6, 12)]);
+  // Lifting the secondary finger does not end the primary drag.
+  for (let step = 1; step <= 5; step++)
+    await send('touchMove', [finger(0, 6.6 - step / 5, 12)]);
+  expect(minColumn(await piece())).toBe(5);
   await send('touchEnd', []);
-  await page.waitForTimeout(300);
   expect(shapeOf(await piece())).toBe(shape);
-  expect(minColumn(await piece())).toBe(6);
+  expect(minColumn(await piece())).toBe(5);
+
+  // If the primary lifts first, the remaining finger cannot take over or tap.
+  await send('touchStart', [finger(0, 4, 12)]);
+  await send('touchStart', [finger(0, 4, 12), finger(1, 7, 15)]);
+  const beforePrimaryLift = await piece();
+  await send('touchEnd', [finger(1, 7, 15)]);
+  await send('touchMove', [finger(1, 9, 17)]);
+  expect(await piece()).toEqual(beforePrimaryLift);
+  await send('touchEnd', []);
+  expect(await piece()).toEqual(beforePrimaryLift);
 });
 
 // Use native mouse pointer events for exact CSS-pixel coordinates on both
@@ -222,6 +247,56 @@ test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async 
     .poll(async () => minRow(await cellsOf(page, PieceColors.purple)))
     .toBeGreaterThanOrEqual(5);
   await touch.up();
+
+  await page.clock.install();
+  // The original positive-control drag above stays. Reload a supported
+  // piece for the blocked-distance scenario without changing the test set.
+  await page.addInitScript(
+    (values) => {
+      for (const [key, value] of Object.entries(values))
+        localStorage.setItem(key, value);
+    },
+    savedGame({
+      piece: PieceColors.yellow,
+      position: { row: 10, column: 3 },
+      board: [
+        [12, 3],
+        [12, 4]
+      ]
+    })
+  );
+  await page.goto('/');
+  await page.keyboard.press('KeyC');
+  await expect(page.locator('#playPauseButton')).toHaveAttribute(
+    'aria-label',
+    'Resume'
+  );
+  // Freeze while the continued game is still paused; waitForFunction in the
+  // startup helper needs frames, but gravity must not run during this drag.
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await page.keyboard.press('KeyP');
+  const blockedTouch = await boardTouch(page);
+  const piece = async () => {
+    await page.clock.runFor(17);
+    const cells = await cellsOf(page, PieceColors.yellow);
+    expect(cells).toHaveLength(4); // A locked piece plus the next same-color piece would leave eight.
+    return cells;
+  };
+  const initial = await piece();
+  expect(minRow(initial)).toBe(10);
+  await blockedTouch.down(4, 11);
+  await blockedTouch.moveBy(0, 3.2, 12);
+  expect(await piece()).toEqual(initial);
+  await blockedTouch.moveBy(3, 0, 12);
+  const aside = await piece();
+  expect(minRow(aside)).toBe(10);
+  expect(minColumn(aside)).toBe(minColumn(initial) + 3);
+  // Both floor(3.2 + 1.5) - floor(3.2) and trunc(1.5) equal one.
+  await blockedTouch.moveBy(0, 1.5, 8);
+  const freshDown = await piece();
+  expect(minRow(freshDown)).toBe(11);
+  expect(minColumn(freshDown)).toBe(minColumn(aside));
+  await blockedTouch.up();
 });
 
 test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async ({

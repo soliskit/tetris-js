@@ -86,7 +86,7 @@ export class InputController {
     window.addEventListener('keydown', event => this.handleKey(event, true));
     window.addEventListener('keyup', event => this.handleKey(event, false));
     window.addEventListener('blur', () => this.releaseAllInput());
-    window.addEventListener('gamepaddisconnected', () => this.releaseAllInput());
+    window.addEventListener('gamepaddisconnected', () => this.releaseForDisconnect());
     window.addEventListener('gamepadconnected', () => this.startPolling());
     // The page pauses when hidden, so release held input then too: hiding
     // does not blur the window on every platform.
@@ -337,6 +337,31 @@ export class InputController {
     this.stopMoving();
     this.stopSoftDrop();
     this.heldKeys.clear();
+  }
+
+  // A disconnect stops every input, including an already-held surviving
+  // pad that polling had not selected. Remember its current holds without
+  // acting on them, so the next poll needs a release and a fresh press.
+  releaseForDisconnect() {
+    this.releaseForPause();
+    try {
+      const gamepad = navigator.getGamepads?.().find(pad => pad?.connected);
+      if (!gamepad) {
+        this.releaseAllInput();
+        return;
+      }
+      this.heldButtons = new Set(
+        Object.entries(PAD_BUTTONS)
+          .filter(([, index]) => gamepad.buttons[index]?.pressed)
+          .map(([name]) => name)
+      );
+      this.padDirection = gamepad.axes[0] < -0.5 || this.heldButtons.has('left') ? PlayerAction.moveLeft
+        : gamepad.axes[0] > 0.5 || this.heldButtons.has('right') ? PlayerAction.moveRight
+          : null;
+      this.padDownSpent = gamepad.axes[1] > 0.5 || this.heldButtons.has('down');
+    } catch (error) {
+      console.error('Tetris gamepad error:', error);
+    }
   }
 
   releaseAllInput() {

@@ -617,6 +617,8 @@ test('after disconnecting with the stick down, the soft drop key works on its ow
   pads[0] = gamepad({ y: 1 });
   controller.pollGamepads();
   fire('gamepaddisconnected');
+  controller.pollGamepads();
+  controller.pollGamepads();
   key('KeyS');
   key('KeyS', false);
   tick(500);
@@ -628,6 +630,8 @@ test('disconnecting the gamepad releases the stick [INP-4]', (t) => {
   pads[0] = gamepad({ y: 1 });
   controller.pollGamepads();
   fire('gamepaddisconnected');
+  controller.pollGamepads();
+  controller.pollGamepads();
   tick(500);
   assert.equal(count(manager, 'softDrop'), 0);
 });
@@ -1485,5 +1489,256 @@ test('a direction used in the New Game question cannot move the new piece throug
     game.currentTetromino.position.column,
     column,
     'the question direction was not a new gameplay push'
+  );
+});
+
+test('any controller disconnect spends surviving held buttons until release and press [INP-4]', (t) => {
+  const { manager, controller, fire, pads } = setup(t);
+  for (const switchSelected of [false, true]) {
+    for (const button of [
+      'a',
+      'b',
+      'x',
+      'y',
+      'lb',
+      'rb',
+      'up',
+      'menu',
+      'view'
+    ]) {
+      controller.releaseAllInput();
+      pads[0] = gamepad({ pressed: switchSelected ? [] : [button] });
+      pads[1] = gamepad({ pressed: switchSelected ? [button] : [] });
+      controller.pollGamepads();
+      const removed = switchSelected ? 0 : 1;
+      pads[removed].connected = false;
+      const survivor = switchSelected ? 1 : 0;
+      fire('gamepaddisconnected', { gamepad: pads[removed] });
+      manager.actions = [];
+      controller.pollGamepads();
+      controller.pollGamepads();
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${button}: old hold is inactive, selected pad changed: ${switchSelected}`
+      );
+      pads[survivor] = gamepad();
+      controller.pollGamepads();
+      pads[survivor] = gamepad({ pressed: [button] });
+      controller.pollGamepads();
+      assert.equal(manager.actions.length, 1, `${button}: fresh press works`);
+    }
+  }
+});
+
+test('any controller disconnect stops keyboard and surviving pad repeats until fresh input [INP-4]', (t) => {
+  const { manager, controller, fire, pads, key, tick } = setup(t);
+  for (const switchSelected of [false, true]) {
+    for (const input of [
+      { x: -1 },
+      { x: 1 },
+      { y: 1 },
+      { pressed: ['left'] },
+      { pressed: ['right'] },
+      { pressed: ['down'] }
+    ]) {
+      controller.releaseAllInput();
+      pads[0] = gamepad(switchSelected ? {} : input);
+      pads[1] = gamepad(switchSelected ? input : {});
+      key('KeyA');
+      key('KeyS');
+      controller.pollGamepads();
+      const removed = switchSelected ? 0 : 1;
+      const survivor = switchSelected ? 1 : 0;
+      pads[removed].connected = false;
+      fire('gamepaddisconnected', { gamepad: pads[removed] });
+      manager.actions = [];
+      controller.pollGamepads();
+      tick(500);
+      controller.pollGamepads();
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `old holds inactive: ${JSON.stringify(input)}, selected pad changed: ${switchSelected}`
+      );
+      key('KeyA', false);
+      key('KeyS', false);
+      pads[survivor] = gamepad();
+      controller.pollGamepads();
+      pads[survivor] = gamepad(input);
+      controller.pollGamepads();
+      tick(100);
+      assert.ok(manager.actions.length > 0, 'fresh pad push works');
+      pads[survivor] = gamepad();
+      controller.pollGamepads();
+      manager.actions = [];
+      key('KeyS');
+      assert.deepEqual(
+        manager.actions,
+        ['softDrop'],
+        'fresh keyboard press works'
+      );
+      key('KeyS', false);
+    }
+  }
+  controller.releaseAllInput();
+});
+
+test('disconnect with no remaining controller forgets old pad holds and allows fresh input [INP-4]', (t) => {
+  const { manager, controller, fire, pads, key, tick } = setup(t);
+  const report = t.mock.method(console, 'error', () => {});
+  for (const supported of [true, false]) {
+    pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
+    controller.pollGamepads();
+    key('KeyS');
+    pads[0].connected = false;
+    const read = navigator.getGamepads;
+    if (!supported) navigator.getGamepads = undefined;
+    fire('gamepaddisconnected', { gamepad: pads[0] });
+    assert.equal(
+      report.mock.callCount(),
+      0,
+      'no remaining pad or missing API is not a read refusal'
+    );
+    assert.deepEqual(
+      [...controller.heldButtons],
+      [],
+      'no remaining pad means no remembered buttons'
+    );
+    assert.equal(
+      controller.padDirection,
+      null,
+      'no remaining pad means no remembered direction'
+    );
+    assert.equal(
+      controller.padDownSpent,
+      false,
+      'no remaining pad means no spent down hold'
+    );
+    manager.actions = [];
+    tick(500);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'no held timer survives the disconnect'
+    );
+    navigator.getGamepads = read;
+    key('KeyS', false);
+    key('KeyS');
+    assert.equal(count(manager, 'softDrop'), 1, 'fresh keyboard input works');
+    key('KeyS', false);
+    controller.releaseAllInput();
+  }
+});
+
+test('a failed disconnect read reports the refusal and keeps known holds inactive [SAF-5] [INP-4]', (t) => {
+  const { manager, controller, fire, pads, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
+  controller.pollGamepads();
+  const read = navigator.getGamepads;
+  const refused = new Error('gamepad read refused');
+  const report = t.mock.method(console, 'error', () => {});
+  navigator.getGamepads = () => {
+    throw refused;
+  };
+  assert.doesNotThrow(() => fire('gamepaddisconnected'));
+  assert.deepEqual(report.mock.calls[0].arguments, [
+    'Tetris gamepad error:',
+    refused
+  ]);
+  manager.actions = [];
+  tick(500);
+  navigator.getGamepads = read;
+  controller.pollGamepads();
+  tick(500);
+  assert.deepEqual(
+    manager.actions,
+    [],
+    'the already known pad cannot repeat after the refused read'
+  );
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ pressed: ['a'] });
+  controller.pollGamepads();
+  assert.deepEqual(
+    manager.actions,
+    [PlayerAction.drop],
+    'fresh input works after read recovery'
+  );
+});
+
+test('disconnect stops simultaneous holds in either pad order [INP-4]', (t) => {
+  const { manager, controller, fire, pads, tick } = setup(t);
+  for (const removed of [0, 1]) {
+    controller.releaseAllInput();
+    pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
+    pads[1] = gamepad({ pressed: ['b', 'down'], x: 1 });
+    controller.pollGamepads();
+    pads[removed].connected = false;
+    fire('gamepaddisconnected', { gamepad: pads[removed] });
+    manager.actions = [];
+    for (let poll = 0; poll < 5; poll++) {
+      controller.pollGamepads();
+      tick(100);
+    }
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'button, movement and down stay stopped together'
+    );
+  }
+  controller.releaseAllInput();
+});
+
+test('a neutral disconnect snapshot leaves the first new pad push fresh [INP-4]', (t) => {
+  const { manager, controller, fire, pads, tick } = setup(t);
+  const report = t.mock.method(console, 'error', () => {});
+  for (const [axes, fresh, action] of [
+    [[0, 0], { x: 1 }, PlayerAction.moveRight],
+    [[-0.5, 0], { x: -1 }, PlayerAction.moveLeft],
+    [[0.5, 0], { x: 1 }, PlayerAction.moveRight],
+    [[0, 0.5], { y: 1 }, 'softDrop']
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = null; // Sparse slots are ordinary, not read errors.
+    pads[1] = { ...gamepad(), axes, buttons: [{ pressed: false }] };
+    fire('gamepaddisconnected');
+    assert.equal(
+      report.mock.callCount(),
+      0,
+      'sparse pad slots and short button arrays are valid'
+    );
+    manager.actions = [];
+    pads[1] = gamepad(fresh);
+    controller.pollGamepads(); // No intervening neutral poll may be needed.
+    tick(100);
+    assert.ok(
+      count(manager, action) > 0,
+      'first fresh push works after a neutral snapshot'
+    );
+  }
+  controller.releaseAllInput();
+});
+
+test('blur still clears a held pad down and stops its repeat timer [INP-2] [INP-4]', (t) => {
+  const { manager, controller, fire, pads, key, tick } = setup(t);
+  pads[0] = gamepad({ pressed: ['down'] });
+  controller.pollGamepads();
+  tick(100);
+  assert.equal(
+    count(manager, 'softDrop'),
+    2,
+    'pad down was repeating before blur'
+  );
+  fire('blur');
+  manager.actions = [];
+  tick(500);
+  assert.deepEqual(manager.actions, [], 'blur stops the active pad-down timer');
+  key('KeyS', false); // Updating keyboard input must not revive forgotten pad down.
+  tick(500);
+  assert.deepEqual(
+    manager.actions,
+    [],
+    'blur stops and forgets the held pad down'
   );
 });
