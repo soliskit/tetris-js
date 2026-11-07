@@ -381,9 +381,26 @@ function drawSafely(draw) {
 // action and timer, and the page asks after storage changes and drawing
 // errors. In between the page sleeps instead of waking up every frame.
 let drawRequested = false;
+/** @type {number | undefined} */
+let drawRetryTimer;
 
-function requestDraw() {
+function cancelDrawRetry() {
+  clearTimeout(drawRetryTimer);
+  drawRetryTimer = undefined;
+}
+
+/** @param {unknown} error */
+function reportDrawRequestError(error) {
+  try {
+    console.error('Tetris draw request error:', error);
+  } catch {
+    // A refused report must not lose the redraw or stop a valid game.
+  }
+}
+
+function requestDraw(allowRetry = true) {
   if (drawRequested) return;
+  cancelDrawRetry();
   drawRequested = true;
   try {
     requestAnimationFrame(() => {
@@ -392,7 +409,19 @@ function requestDraw() {
     });
   } catch (error) {
     drawRequested = false;
-    throw error;
+    reportDrawRequestError(error);
+    if (allowRetry && document.visibilityState === 'visible') {
+      try {
+        drawRetryTimer = setTimeout(() => {
+          drawRetryTimer = undefined;
+          if (document.visibilityState === 'visible') requestDraw(false);
+        }, 100);
+      } catch (error) {
+        reportDrawRequestError(error);
+      }
+    }
+    // The engine's state and drawing caches retain what still needs drawing.
+    // A refused fallback waits for a genuine trigger or visibility return.
   }
 }
 
@@ -593,7 +622,11 @@ playPauseButton.addEventListener('click', () => {
 
 // Matches the scenePhase handler: pause when the page is hidden.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') return;
+  if (document.visibilityState === 'visible') {
+    requestDraw();
+    return;
+  }
+  cancelDrawRetry();
   resetDragState();
   if (gameManager.state === GameState.playing) gameManager.handleAction(PlayerAction.pause);
 });
