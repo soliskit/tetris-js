@@ -18,6 +18,7 @@ import {
   sequenceFactory,
   repeatUntil
 } from './helpers.js';
+import { oracle } from './saveOracle.js';
 
 const { cyan, yellow, purple, green, red, orange } = PieceColors;
 
@@ -1223,6 +1224,24 @@ for (const failedWrite of ['atomic record']) {
     });
   }
 }
+
+test('a prior game-written save passes the independent oracle after a refused rewrite [STA-4] [SAF-2]', () => {
+  const { game, storage, reports, a } = priorSave();
+  oracle(a);
+  const setItem = storage.setItem;
+  storage.setItem = (key, value) => {
+    if (key === DATA) throw new Error('refused');
+    setItem(key, value);
+  };
+  game.handleAction(PlayerAction.pause);
+  storage.setItem = setItem;
+  assert.equal(game.state, GameState.paused);
+  assert.deepEqual(reports, []);
+  assert.equal(storage.getItem(DATA), a);
+  assert.equal(oracle(storage.getItem(DATA)).currentTetromino.position.column, 3);
+  assert.equal(game.isSessionSaved, false);
+  assert.equal(game.sessionSaveWithdrawn, true);
+});
 
 for (const initiallyWithdrawn of [false, true]) {
   test(`interleaved readers see only completed A then B, writer latch starts ${initiallyWithdrawn} [STA-4]`, () => {
