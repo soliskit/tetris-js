@@ -1,25 +1,45 @@
-import {parseSavedRecord,serializeSavedRecord} from '../public/game/session.js';
+import {
+  parseSavedRecord,
+  serializeSavedRecord
+} from '../public/game/session.js';
 // Fault injection in the real page: corrupted saves, drawing errors and
 // blocked storage must never crash or freeze the game.
 
 import { test, expect } from './fixtures.js';
-import { expectLabel, filledCount, savedGame, PieceColors, trackErrors, boardCells } from './helpers.js';
+import {
+  expectLabel,
+  filledCount,
+  savedGame,
+  PieceColors,
+  trackErrors,
+  boardCells
+} from './helpers.js';
 
 const good = savedGame({ piece: PieceColors.purple });
 const broken = {
   'text that is not JSON': '{"gameBoard": [',
-  'a save missing its upcoming pieces': serializeSavedRecord(JSON.stringify({ ...JSON.parse(parseSavedRecord(good['tetris.savedGameSession']).position), nextTetrominos: undefined }),true),
+  'a save missing its upcoming pieces': serializeSavedRecord(
+    JSON.stringify({
+      ...JSON.parse(parseSavedRecord(good['tetris.savedGameSession']).position),
+      nextTetrominos: undefined
+    }),
+    true
+  ),
   'a save with the piece inside locked blocks': (() => {
-    const data = JSON.parse(parseSavedRecord(good['tetris.savedGameSession']).position);
+    const data = JSON.parse(
+      parseSavedRecord(good['tetris.savedGameSession']).position
+    );
     data.gameBoard[1][4] = { isFilled: true, color: PieceColors.red };
-    return serializeSavedRecord(JSON.stringify(data),true);
+    return serializeSavedRecord(JSON.stringify(data), true);
   })()
 };
 
 for (const [name, text] of Object.entries(broken)) {
-  test(`checking ${name} withdraws before offering Continue and New Game still works [SAF-1]`, async ({ page }) => {
+  test(`checking ${name} withdraws before offering Continue and New Game still works [SAF-1]`, async ({
+    page
+  }) => {
     const errors = trackErrors(page);
-    await page.addInitScript(value => {
+    await page.addInitScript((value) => {
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
       localStorage.setItem('tetris.isSessionSaved', 'true');
@@ -28,8 +48,14 @@ for (const [name, text] of Object.entries(broken)) {
     await page.goto('/');
     await expect(page.locator('#continueGameButton')).toHaveCount(1);
     await expect(page.locator('#continueGameButton')).toBeHidden();
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('tetris.isSessionSaved'))).toBe('false');
-    expect(await page.evaluate(() => localStorage.getItem('tetris.savedGameSession'))).toBe(text);
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem('tetris.isSessionSaved'))
+      )
+      .toBe('false');
+    expect(
+      await page.evaluate(() => localStorage.getItem('tetris.savedGameSession'))
+    ).toBe(text);
     await expect(page.locator('#newGameButton')).toBeVisible();
     await page.locator('#newGameButton').click();
     await expectLabel(page, 'Pause');
@@ -38,9 +64,13 @@ for (const [name, text] of Object.entries(broken)) {
   });
 }
 
-test('an error while drawing does not stop the game from drawing [SAF-5]', async ({ page }) => {
+test('an error while drawing does not stop the game from drawing [SAF-5]', async ({
+  page
+}) => {
   const logged = [];
-  page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+  page.on('console', (message) => {
+    if (message.type() === 'error') logged.push(message.text());
+  });
   await page.addInitScript(() => {
     const fill = CanvasRenderingContext2D.prototype.fill;
     window.failNextDraw = false;
@@ -55,17 +85,27 @@ test('an error while drawing does not stop the game from drawing [SAF-5]', async
   await page.goto('/');
   await page.keyboard.press('Enter');
   await expect.poll(() => filledCount(page)).toBe(4);
-  await page.evaluate(() => { window.failNextDraw = true; });
+  await page.evaluate(() => {
+    window.failNextDraw = true;
+  });
   await page.keyboard.press('Space');
   await expect.poll(() => filledCount(page)).toBe(8);
-  expect(logged.filter(text => text.includes('Tetris drawing error'))).toHaveLength(1);
+  expect(
+    logged.filter((text) => text.includes('Tetris drawing error'))
+  ).toHaveLength(1);
 });
 
-test('the game plays normally when storage is blocked [SAF-2]', async ({ page }) => {
+test('the game plays normally when storage is blocked [SAF-2]', async ({
+  page
+}) => {
   const errors = trackErrors(page);
   await page.addInitScript(() => {
-    Storage.prototype.getItem = () => { throw new DOMException('blocked', 'SecurityError'); };
-    Storage.prototype.setItem = () => { throw new DOMException('full', 'QuotaExceededError'); };
+    Storage.prototype.getItem = () => {
+      throw new DOMException('blocked', 'SecurityError');
+    };
+    Storage.prototype.setItem = () => {
+      throw new DOMException('full', 'QuotaExceededError');
+    };
   });
   await page.goto('/');
   await page.keyboard.press('Enter');
@@ -84,7 +124,10 @@ test.describe('refused draw requests', () => {
     await page.clock.install();
     await page.clock.pauseAt(new Date());
     await page.addInitScript(() => {
-      Object.defineProperty(navigator, 'getGamepads', { value: () => [], configurable: true });
+      Object.defineProperty(navigator, 'getGamepads', {
+        value: () => [],
+        configurable: true
+      });
       const frame = window.requestAnimationFrame.bind(window);
       const timer = window.setTimeout.bind(window);
       const report = console.error;
@@ -93,7 +136,7 @@ test.describe('refused draw requests', () => {
       window.retryRequests = 0;
       window.refuseRetryTimer = false;
       window.refuseDrawReport = false;
-      window.requestAnimationFrame = callback => {
+      window.requestAnimationFrame = (callback) => {
         if ((new Error().stack ?? '').includes('requestDraw')) {
           window.drawFrameRequests++;
           if (window.refuseFrames > 0) {
@@ -104,14 +147,19 @@ test.describe('refused draw requests', () => {
         return frame(callback);
       };
       window.setTimeout = (callback, delay, ...args) => {
-        if (delay === 100 && (new Error().stack ?? '').includes('requestDraw')) {
+        if (
+          delay === 100 &&
+          (new Error().stack ?? '').includes('requestDraw')
+        ) {
           window.retryRequests++;
-          if (window.refuseRetryTimer) throw new Error('injected retry timer refusal');
+          if (window.refuseRetryTimer)
+            throw new Error('injected retry timer refusal');
         }
         return timer(callback, delay, ...args);
       };
       console.error = (...args) => {
-        if (window.refuseDrawReport && String(args[0]).includes('draw request')) throw new Error('injected report refusal');
+        if (window.refuseDrawReport && String(args[0]).includes('draw request'))
+          throw new Error('injected report refusal');
         return report(...args);
       };
     });
@@ -122,22 +170,34 @@ test.describe('refused draw requests', () => {
   });
 
   for (const refusals of [1, 2]) {
-    test(`a draw request gets one 100 ms retry after ${refusals} frame refusals [SAF-5]`, async ({ page }) => {
+    test(`a draw request gets one 100 ms retry after ${refusals} frame refusals [SAF-5]`, async ({
+      page
+    }) => {
       const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
+      page.on('pageerror', (error) => errors.push(error.message));
       const logged = [];
-      page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+      page.on('console', (message) => {
+        if (message.type() === 'error') logged.push(message.text());
+      });
       const before = await boardCells(page);
       const requests = await page.evaluate(() => window.drawFrameRequests);
-      await page.evaluate(count => { window.refuseFrames = count; }, refusals);
+      await page.evaluate((count) => {
+        window.refuseFrames = count;
+      }, refusals);
       await page.keyboard.press('KeyD');
       await page.clock.runFor(99);
-      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+        requests + 1
+      );
       expect(await boardCells(page)).toEqual(before);
       await page.clock.runFor(1);
-      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+        requests + 2
+      );
       await page.clock.runFor(250);
-      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+        requests + 2
+      );
       expect(await page.evaluate(() => window.retryRequests)).toBe(1);
       if (refusals === 1) expect(await boardCells(page)).not.toEqual(before);
       else expect(await boardCells(page)).toEqual(before);
@@ -145,38 +205,65 @@ test.describe('refused draw requests', () => {
       await page.clock.runFor(32);
       await expectLabel(page, 'Resume');
       expect(await boardCells(page)).not.toEqual(before);
-      expect(logged.some(text => text.includes('draw request') && text.includes('injected frame refusal'))).toBe(true);
+      expect(
+        logged.some(
+          (text) =>
+            text.includes('draw request') &&
+            text.includes('injected frame refusal')
+        )
+      ).toBe(true);
       expect(errors).toEqual([]);
     });
   }
 
-  test('a genuine redraw cancels its pending fallback rather than double-drawing [SAF-5] [DSP-3]', async ({ page }) => {
+  test('a genuine redraw cancels its pending fallback rather than double-drawing [SAF-5] [DSP-3]', async ({
+    page
+  }) => {
     const requests = await page.evaluate(() => window.drawFrameRequests);
-    await page.evaluate(() => { window.refuseFrames = 1; });
+    await page.evaluate(() => {
+      window.refuseFrames = 1;
+    });
     await page.keyboard.press('KeyD');
     await page.keyboard.press('KeyP');
     await page.clock.runFor(250);
-    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 2);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 2
+    );
     expect(await page.evaluate(() => window.retryRequests)).toBe(1);
     await expectLabel(page, 'Resume');
   });
 
-  test('a refused fallback timer reports once and waits for a genuine redraw [SAF-5]', async ({ page }) => {
+  test('a refused fallback timer reports once and waits for a genuine redraw [SAF-5]', async ({
+    page
+  }) => {
     const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
+    page.on('pageerror', (error) => errors.push(error.message));
     const logged = [];
-    page.on('console', message => { if (message.type() === 'error') logged.push(message.text()); });
+    page.on('console', (message) => {
+      if (message.type() === 'error') logged.push(message.text());
+    });
     const before = await boardCells(page);
     const requests = await page.evaluate(() => window.drawFrameRequests);
-    await page.evaluate(() => { window.refuseFrames = 1; window.refuseRetryTimer = true; });
+    await page.evaluate(() => {
+      window.refuseFrames = 1;
+      window.refuseRetryTimer = true;
+    });
     await page.keyboard.press('KeyD');
     await page.clock.runFor(250);
-    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 1
+    );
     expect(await page.evaluate(() => window.retryRequests)).toBe(1);
     expect(await boardCells(page)).toEqual(before);
-    expect(logged.some(text => text.includes('injected frame refusal'))).toBe(true);
-    expect(logged.some(text => text.includes('injected retry timer refusal'))).toBe(true);
-    await page.evaluate(() => { window.refuseRetryTimer = false; });
+    expect(logged.some((text) => text.includes('injected frame refusal'))).toBe(
+      true
+    );
+    expect(
+      logged.some((text) => text.includes('injected retry timer refusal'))
+    ).toBe(true);
+    await page.evaluate(() => {
+      window.refuseRetryTimer = false;
+    });
     await page.keyboard.press('KeyP');
     await page.clock.runFor(32);
     await expectLabel(page, 'Resume');
@@ -185,25 +272,45 @@ test.describe('refused draw requests', () => {
   });
 
   for (const hideAfterFallback of [false, true]) {
-    test(`hiding ${hideAfterFallback ? 'after a refused fallback' : 'while retrying'} keeps Pause and redraws on return [SAF-5] [STA-5]`, async ({ page }) => {
+    test(`hiding ${hideAfterFallback ? 'after a refused fallback' : 'while retrying'} keeps Pause and redraws on return [SAF-5] [STA-5]`, async ({
+      page
+    }) => {
       const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
-      await page.evaluate(() => { window.refuseFrames = 2; });
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.evaluate(() => {
+        window.refuseFrames = 2;
+      });
       await page.keyboard.press('KeyD');
       if (hideAfterFallback) await page.clock.runFor(100);
       await page.evaluate(() => {
         window.refuseFrames = 10;
-        Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-        Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'hidden',
+          configurable: true
+        });
+        Object.defineProperty(document, 'hidden', {
+          value: true,
+          configurable: true
+        });
         document.dispatchEvent(new Event('visibilitychange'));
       });
-      const hiddenRequests = await page.evaluate(() => window.drawFrameRequests);
+      const hiddenRequests = await page.evaluate(
+        () => window.drawFrameRequests
+      );
       await page.clock.runFor(500);
-      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(hiddenRequests);
+      expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+        hiddenRequests
+      );
       await page.evaluate(() => {
         window.refuseFrames = 0;
-        Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-        Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+        Object.defineProperty(document, 'visibilityState', {
+          value: 'visible',
+          configurable: true
+        });
+        Object.defineProperty(document, 'hidden', {
+          value: false,
+          configurable: true
+        });
         document.dispatchEvent(new Event('visibilitychange'));
       });
       await page.clock.runFor(32);
@@ -214,33 +321,58 @@ test.describe('refused draw requests', () => {
     });
   }
 
-  test('a retry callback does not request a frame if hidden before its event is handled [SAF-5] [STA-5]', async ({ page }) => {
+  test('a retry callback does not request a frame if hidden before its event is handled [SAF-5] [STA-5]', async ({
+    page
+  }) => {
     const requests = await page.evaluate(() => window.drawFrameRequests);
-    await page.evaluate(() => { window.refuseFrames = 1; });
+    await page.evaluate(() => {
+      window.refuseFrames = 1;
+    });
     await page.keyboard.press('KeyD');
     await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
-      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'hidden',
+        configurable: true
+      });
+      Object.defineProperty(document, 'hidden', {
+        value: true,
+        configurable: true
+      });
     });
     await page.clock.runFor(132);
-    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(requests + 1);
-    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    expect(await page.evaluate(() => window.drawFrameRequests)).toBe(
+      requests + 1
+    );
+    await page.evaluate(() =>
+      document.dispatchEvent(new Event('visibilitychange'))
+    );
     await page.clock.runFor(32);
     await expectLabel(page, 'Resume');
     await page.evaluate(() => {
-      Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
-      Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+      Object.defineProperty(document, 'visibilityState', {
+        value: 'visible',
+        configurable: true
+      });
+      Object.defineProperty(document, 'hidden', {
+        value: false,
+        configurable: true
+      });
       document.dispatchEvent(new Event('visibilitychange'));
     });
     await page.clock.runFor(32);
     await expectLabel(page, 'Resume');
   });
 
-  test('a refused error report cannot suppress the one redraw retry [SAF-5]', async ({ page }) => {
+  test('a refused error report cannot suppress the one redraw retry [SAF-5]', async ({
+    page
+  }) => {
     const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
+    page.on('pageerror', (error) => errors.push(error.message));
     const before = await boardCells(page);
-    await page.evaluate(() => { window.refuseFrames = 1; window.refuseDrawReport = true; });
+    await page.evaluate(() => {
+      window.refuseFrames = 1;
+      window.refuseDrawReport = true;
+    });
     await page.keyboard.press('KeyD');
     await page.clock.runFor(132);
     expect(await boardCells(page)).not.toEqual(before);
