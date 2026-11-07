@@ -1,7 +1,4 @@
-import {
-  parseSavedRecord,
-  serializeSavedRecord
-} from '../public/game/session.js';
+import { parseSavedRecord } from '../public/game/session.js';
 // Fault injection: errors, broken invariants and failing storage must leave
 // the engine in a safe state (game over, no timers), reported, with the last
 // good save kept.

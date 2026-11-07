@@ -11,10 +11,7 @@ import {
   createBoard
 } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
-import {
-  TetrominoFactory,
-  PieceColors
-} from '../public/game/tetrominoFactory.js';
+import { PieceColors } from '../public/game/tetrominoFactory.js';
 import {
   createFakeScheduler,
   fixedFactory,

@@ -34,7 +34,7 @@ async function fault(page, options = {}) {
         throw new Error('report refused');
       };
     if (options.refuseDraw)
-      window.requestAnimationFrame = (callback) => {
+      window.requestAnimationFrame = () => {
         window.requestAnimationFrame = draw;
         throw new Error('draw refused');
       };

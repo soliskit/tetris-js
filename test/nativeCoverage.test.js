@@ -514,7 +514,7 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
     try {
       result = await Promise.race([
         closed,
-        new Promise((_, reject) => {
+        new Promise((_resolve, reject) => {
           deadline = setTimeout(
             () => reject(new Error('watch close deadline')),
             12000
@@ -572,7 +572,7 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
       try {
         await Promise.race([
           reaped,
-          new Promise((_, reject) => {
+          new Promise((_resolve, reject) => {
             cleanupDeadline = setTimeout(
               () =>
                 reject(
@@ -987,7 +987,9 @@ for (const method of ['openSync', 'writeSync', 'closeSync', 'renameSync'])
         for (const fd of opened) {
           try {
             fs.closeSync(fd);
-          } catch {}
+          } catch {
+            // best-effort fd cleanup during injection
+          }
         }
       }
     }));
@@ -1500,7 +1502,7 @@ test('source descriptor read failure remains an explicit identity failure [QA-2]
     }
   }));
 test('inherited worker or mismatched parent never patches native entry points [QA-2]', () =>
-  temporary((folder) => {
+  temporary(() => {
     const { runInNewContext } = require('node:vm');
     let internalReads = 0;
     for (const isMainThread of [true, false]) {

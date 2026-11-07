@@ -1,7 +1,4 @@
-import {
-  parseSavedRecord,
-  serializeSavedRecord
-} from '../public/game/session.js';
+import { serializeSavedRecord } from '../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

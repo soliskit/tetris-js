@@ -308,6 +308,7 @@ if (isMainThread && String(process.ppid) === process.env.TETRIS_QA2_PARENT) {
         fail();
         return Reflect.apply(saved.post, this, args);
       }
+      // eslint-disable-next-line @typescript-eslint/no-this-alias -- the owning reporter instance is tracked across calls
       owner = this;
       let t;
       capture(() => {
