@@ -5,7 +5,10 @@
 
 import assert from 'node:assert/strict';
 
-import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
+import {
+  GameManager,
+  createMemoryStorage
+} from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
 import { allPieces, PieceColors } from '../public/game/tetrominoFactory.js';
 
@@ -27,7 +30,9 @@ export function createFakeScheduler() {
       const end = now + ms;
       for (let fired = 0; ; fired++) {
         assert.ok(fired < 10000, 'timers keep firing without time passing');
-        const due = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+        const due = [...timers.entries()]
+          .filter(([, t]) => t.at <= end)
+          .sort((a, b) => a[1].at - b[1].at)[0];
         if (!due) break;
         const [handle, timer] = due;
         timers.delete(handle);
@@ -52,7 +57,7 @@ export function repeatUntil(done, step, what, limit = 100) {
 }
 
 export function pieceByColor(color) {
-  return allPieces().find(piece => piece.color === color);
+  return allPieces().find((piece) => piece.color === color);
 }
 
 // Factory that always hands out the same piece type.
@@ -67,7 +72,9 @@ export function sequenceFactory(colors) {
   let index = 0;
   return {
     generate: () => pieceByColor(colors[index++ % colors.length]),
-    restart: () => { index = 0; }
+    restart: () => {
+      index = 0;
+    }
   };
 }
 
@@ -97,13 +104,14 @@ export function filled(color = PieceColors.cyan) {
 export function fillRows(game, rows, exceptColumns = []) {
   for (const row of rows) {
     for (let column = 0; column < game.columns; column++) {
-      if (!exceptColumns.includes(column)) game.gameBoard[row][column] = filled();
+      if (!exceptColumns.includes(column))
+        game.gameBoard[row][column] = filled();
     }
   }
 }
 
 export function filledCells(game) {
-  return game.gameBoard.flat().filter(cell => cell.isFilled).length;
+  return game.gameBoard.flat().filter((cell) => cell.isFilled).length;
 }
 
 // Drops the current I piece vertically into column 9. It must have just spawned.
@@ -115,5 +123,5 @@ export function dropVerticalIIntoColumn9(game) {
 
 // Renders a shape as strings, for readable assertions.
 export function shapeStrings(shape) {
-  return shape.map(row => row.map(block => (block ? 'X' : '.')).join(''));
+  return shape.map((row) => row.map((block) => (block ? 'X' : '.')).join(''));
 }

@@ -1,25 +1,51 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
-import { GameState, PlayerAction, createBoard } from '../public/game/gameState.js';
+import {
+  GameManager,
+  createMemoryStorage
+} from '../public/game/gameManager.js';
+import {
+  GameState,
+  PlayerAction,
+  createBoard
+} from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
-import { TetrominoFactory, PieceColors } from '../public/game/tetrominoFactory.js';
-import { createFakeScheduler, fixedFactory, newGame, pieceByColor, repeatUntil } from './helpers.js';
+import {
+  TetrominoFactory,
+  PieceColors
+} from '../public/game/tetrominoFactory.js';
+import {
+  createFakeScheduler,
+  fixedFactory,
+  newGame,
+  pieceByColor,
+  repeatUntil
+} from './helpers.js';
 
 test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', () => {
   const t = pieceByColor(PieceColors.purple);
   assert.equal(t.rotations.length, 4);
-  const toStrings = shape => shape.map(row => row.map(b => (b ? 'X' : '.')).join(''));
+  const toStrings = (shape) =>
+    shape.map((row) => row.map((b) => (b ? 'X' : '.')).join(''));
   assert.deepEqual(toStrings(t.rotations[1]), ['.X.', '.XX', '.X.']);
   assert.deepEqual(toStrings(t.rotations[2]), ['...', 'XXX', '.X.']);
   assert.equal(pieceByColor(PieceColors.yellow).rotations.length, 1);
 });
 
 test('pieces spawn centered [PCE-3]', () => {
-  assert.deepEqual(pieceByColor(PieceColors.cyan).spawned(10).position, position(0, 3));
-  assert.deepEqual(pieceByColor(PieceColors.yellow).spawned(10).position, position(0, 4));
-  assert.deepEqual(pieceByColor(PieceColors.red).spawned(10).position, position(0, 3));
+  assert.deepEqual(
+    pieceByColor(PieceColors.cyan).spawned(10).position,
+    position(0, 3)
+  );
+  assert.deepEqual(
+    pieceByColor(PieceColors.yellow).spawned(10).position,
+    position(0, 4)
+  );
+  assert.deepEqual(
+    pieceByColor(PieceColors.red).spawned(10).position,
+    position(0, 3)
+  );
 });
 
 test('new game starts playing with three upcoming pieces [STA-1] [PLY-8]', () => {
@@ -46,7 +72,9 @@ test('hard drop locks the piece at the ghost position [PLY-4] [PLY-5]', () => {
 });
 
 test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-4]', () => {
-  const { game, storage } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const { game, storage } = newGame({
+    factory: fixedFactory(PieceColors.cyan)
+  });
   for (let row = 16; row < 20; row++) {
     for (let column = 0; column < 9; column++) {
       game.gameBoard[row][column] = { isFilled: true, color: PieceColors.cyan };
@@ -57,15 +85,24 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
   game.handleAction(PlayerAction.drop);
   assert.equal(game.score, 800);
   assert.equal(game.highScore, 800);
-  assert.ok(game.gameBoard.every(row => row.every(cell => !cell.isFilled)));
+  assert.ok(game.gameBoard.every((row) => row.every((cell) => !cell.isFilled)));
   assert.equal(game.isSessionSaved, true);
   assert.ok(storage.getItem('tetris.savedGameSession'));
 });
 
 test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
-  const { game, scheduler } = newGame({ factory: fixedFactory(PieceColors.yellow) });
-  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
-  assert.ok(game.lockDelayTask !== null, 'the soft drop that lands it starts the lock delay');
+  const { game, scheduler } = newGame({
+    factory: fixedFactory(PieceColors.yellow)
+  });
+  repeatUntil(
+    () => game.isOnSurface,
+    () => game.softDrop(),
+    'the piece landing'
+  );
+  assert.ok(
+    game.lockDelayTask !== null,
+    'the soft drop that lands it starts the lock delay'
+  );
   scheduler.advance(400);
   assert.ok(!game.gameBoard[19][4].isFilled);
   scheduler.advance(100);
@@ -73,17 +110,25 @@ test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
 });
 
 test('moving on the surface resets the lock delay, up to 15 times [PLY-6]', () => {
-  const { game, scheduler } = newGame({ factory: fixedFactory(PieceColors.yellow) });
-  repeatUntil(() => game.isOnSurface, () => game.softDrop(), 'the piece landing');
+  const { game, scheduler } = newGame({
+    factory: fixedFactory(PieceColors.yellow)
+  });
+  repeatUntil(
+    () => game.isOnSurface,
+    () => game.softDrop(),
+    'the piece landing'
+  );
   game.softDrop();
   for (let i = 0; i < 15; i++) {
     scheduler.advance(400);
-    game.handleAction(i % 2 === 0 ? PlayerAction.moveLeft : PlayerAction.moveRight);
+    game.handleAction(
+      i % 2 === 0 ? PlayerAction.moveLeft : PlayerAction.moveRight
+    );
   }
   assert.equal(game.lockDelayResetCount, 15);
-  assert.ok(game.gameBoard.every(row => row.every(cell => !cell.isFilled)));
+  assert.ok(game.gameBoard.every((row) => row.every((cell) => !cell.isFilled)));
   scheduler.advance(500);
-  assert.ok(game.gameBoard[19].some(cell => cell.isFilled));
+  assert.ok(game.gameBoard[19].some((cell) => cell.isFilled));
 });
 
 test('hold swaps once per piece [PLY-7]', () => {
@@ -111,7 +156,10 @@ test('pause saves and continue restores the session [STA-4]', () => {
   const restored = new GameManager({ scheduler, storage });
   restored.handleAction(PlayerAction.continueGame);
   assert.equal(restored.state, GameState.paused);
-  assert.deepEqual(restored.currentTetromino.position, game.currentTetromino.position);
+  assert.deepEqual(
+    restored.currentTetromino.position,
+    game.currentTetromino.position
+  );
   assert.deepEqual(restored.currentTetromino, game.currentTetromino);
   restored.togglePause();
   assert.equal(restored.state, GameState.playing);
@@ -128,7 +176,10 @@ test('topping out ends the game and clears the saved session [STA-3]', () => {
 });
 
 test('drop interval speeds up with level and bottoms out at 0.25s [PLY-2] [SCO-2]', () => {
-  const game = new GameManager({ scheduler: createFakeScheduler(), storage: createMemoryStorage() });
+  const game = new GameManager({
+    scheduler: createFakeScheduler(),
+    storage: createMemoryStorage()
+  });
   assert.equal(game.standardDropInterval, 0.7);
   game.score = 10000; // level 11
   assert.ok(Math.abs(game.standardDropInterval - 0.5) < 1e-9);
@@ -143,5 +194,5 @@ test('wall kick lets an I piece rotate against the left wall [PCE-4]', () => {
   i.position = position(5, -2); // flush against the left wall
   i.rotate(board);
   assert.equal(i.rotationState, 2);
-  assert.ok(i.cells.every(cell => cell.column >= 0));
+  assert.ok(i.cells.every((cell) => cell.column >= 0));
 });

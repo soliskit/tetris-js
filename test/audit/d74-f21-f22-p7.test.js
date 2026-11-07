@@ -8,11 +8,17 @@
 // output, and the score-for-level port (level is now derived from the score,
 // so the F22 check sets the writable score field instead of the removed level
 // setter).
-import { parseSavedRecord, serializeSavedRecord } from '../../public/game/session.js';
+import {
+  parseSavedRecord,
+  serializeSavedRecord
+} from '../../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { GameManager, createMemoryStorage } from '../../public/game/gameManager.js';
+import {
+  GameManager,
+  createMemoryStorage
+} from '../../public/game/gameManager.js';
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler, newGame } from '../helpers.js';
 
@@ -23,9 +29,24 @@ import { createFakeScheduler, newGame } from '../helpers.js';
 // shows the defect record on each run.
 test('F21: the invariant check flags a board with a missing row or cell [D74]', () => {
   for (const [label, mutate] of [
-    ['delete a whole row', g => { delete g.gameBoard[5]; }],
-    ['row replaced by a sparse 10-slot array', g => { g.gameBoard[3] = new Array(10); }],
-    ['one cell hole in a row', g => { delete g.gameBoard[7][3]; }]
+    [
+      'delete a whole row',
+      (g) => {
+        delete g.gameBoard[5];
+      }
+    ],
+    [
+      'row replaced by a sparse 10-slot array',
+      (g) => {
+        g.gameBoard[3] = new Array(10);
+      }
+    ],
+    [
+      'one cell hole in a row',
+      (g) => {
+        delete g.gameBoard[7][3];
+      }
+    ]
   ]) {
     const { game } = newGame();
     mutate(game);
@@ -42,7 +63,10 @@ test('F22: the requested gravity delay matches the formula at levels 1 to 2000 [
     game.score = (level - 1) * 1000;
     const got = game.standardDropInterval * 1000;
     const want = Math.max(250, 700 - 20 * (level - 1));
-    assert.ok(Math.abs(got - want) <= 1e-9, `level ${level}: got ${got}, want ${want}`);
+    assert.ok(
+      Math.abs(got - want) <= 1e-9,
+      `level ${level}: got ${got}, want ${want}`
+    );
   }
 });
 

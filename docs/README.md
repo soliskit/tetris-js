@@ -18,6 +18,6 @@ Three files give the whole project. The rest is drill-down.
 
 Each piece of work gets its own folder and a row in this table. Work order and current status are tracked in the [Tetris Project](https://github.com/users/soliskit/projects/6).
 
-| Record | Coverage | Contents |
-| --- | --- | --- |
+| Record                         | Coverage             | Contents                                                                                 |
+| ------------------------------ | -------------------- | ---------------------------------------------------------------------------------------- |
 | [tetris-audit](audit/story.md) | October 2026 records | The audit record is summarized in docs/audit/story.md; the full record is in git history |
