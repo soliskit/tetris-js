@@ -23,7 +23,8 @@ export function savedGame({
   board = [],
   position,
   rotationState = 0,
-  score = 0
+  score = 0,
+  lockDelayResetCount = 0
 }) {
   const storage = createMemoryStorage();
   const shape = allPieces().find((p) => p.color === piece);
@@ -41,6 +42,8 @@ export function savedGame({
   game.lowestRowReached = Math.max(
     ...game.currentTetromino.cells.map((cell) => cell.row)
   );
+  // With the resets used up, landing locks at once (PLY-6).
+  game.lockDelayResetCount = lockDelayResetCount;
   game.score = score;
   game.handleAction(PlayerAction.pause);
   return {
