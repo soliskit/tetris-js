@@ -257,8 +257,8 @@ test('while the pause screen asks to confirm New Game, keys are left to its dial
   key('ArrowLeft', false);
   assert.deepEqual(manager.actions, ['cancelNewGame', 'move 1', 'move -1']);
   manager.actions = [];
-  // A key pressed while the dialog is open does not count as held once play
-  // resumes: pausing releases held keys, so resume needs a fresh press.
+  // A dialog key is physically remembered but is not an active gameplay
+  // hold: resume still needs a release and fresh press.
   key('KeyD');
   manager.isConfirmingNewGame = false;
   manager.state = GameState.playing;
@@ -359,6 +359,12 @@ test('losing window focus releases every held key [INP-2]', (t) => {
     count(manager, PlayerAction.moveLeft),
     1,
     'A is no longer treated as held'
+  );
+  key('KeyA');
+  assert.equal(
+    count(manager, PlayerAction.moveLeft),
+    2,
+    'blur makes the next down fresh'
   );
 });
 
@@ -948,6 +954,14 @@ test('hiding the page releases held input even when the window does not blur [ST
     manager.actions,
     [],
     'the key held across the hide does not soft drop again'
+  );
+  key('KeyS', true, { repeat: true });
+  key('KeyS');
+  tick(200);
+  assert.deepEqual(
+    manager.actions,
+    [],
+    'duplicate down stays spent after hidden resume'
   );
   key('KeyS', false);
   key('KeyS');
@@ -2131,6 +2145,26 @@ test('disconnect preserves confirmation selection for unchanged mixed pad holds 
     controller.pollGamepads();
     assert.deepEqual(manager.actions, ['move 1'], 'fresh push selects once');
   }
+  // Probe the snapshot before any unchanged or neutral poll overwrites it.
+  for (const [x, direction, expected] of [
+    [0, 'right', 'move 1'],
+    [-0.5, 'left', 'move -1'],
+    [0.5, 'right', 'move 1']
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = gamepad({ x });
+    controller.pollGamepads();
+    manager.actions = [];
+    fire('gamepaddisconnected');
+    pads[0] = gamepad({ pressed: [direction] });
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(
+      manager.actions,
+      [expected],
+      `snapshot ${x}: fresh push selects once`
+    );
+  }
 });
 
 test('duplicate physical key presses preserve priority and elapsed repeat timing [B12] [INP-2]', (t) => {
@@ -2138,6 +2172,7 @@ test('duplicate physical key presses preserve priority and elapsed repeat timing
   key('KeyA');
   key('KeyD');
   tick(100);
+  key('KeyA', true, { repeat: true });
   key('KeyA');
   assert.deepEqual(manager.actions, [
     PlayerAction.moveLeft,
@@ -2164,6 +2199,7 @@ test('duplicate physical key presses preserve priority and elapsed repeat timing
   );
   key('KeyS');
   tick(20);
+  key('KeyS', true, { repeat: true });
   key('KeyS');
   assert.equal(
     count(manager, 'softDrop'),
@@ -2280,4 +2316,161 @@ test('a paused movement attempt cannot schedule or send an action [STA-2] [INP-2
   controller.startMoving(PlayerAction.moveLeft);
   tick(200);
   assert.deepEqual(manager.actions, []);
+});
+
+// These controlled duplicate sequences are robustness inputs, not OS-frequency claims.
+test('held movement and soft-drop duplicates stay spent across Menu pause until release [STA-2] [INP-2]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.togglePause = function () {
+    this.state =
+      this.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  for (const [code, action, interval] of [
+    ['KeyA', PlayerAction.moveLeft, 167],
+    ['ArrowLeft', PlayerAction.moveLeft, 167],
+    ['KeyD', PlayerAction.moveRight, 167],
+    ['ArrowRight', PlayerAction.moveRight, 167],
+    ['KeyS', 'softDrop', 50],
+    ['ArrowDown', 'softDrop', 50]
+  ]) {
+    for (const firstDownWhilePaused of [false, true]) {
+      controller.releaseAllInput();
+      manager.state = GameState.playing;
+      if (!firstDownWhilePaused) key(code);
+      controller.processInput(new Set(['menu']), 0, 0);
+      assert.equal(manager.state, GameState.paused);
+      controller.processInput(new Set(), 0, 0);
+      if (firstDownWhilePaused) key(code);
+      controller.processInput(new Set(['menu']), 0, 0);
+      assert.equal(manager.state, GameState.playing);
+      manager.actions = [];
+      // Unrelated keyup must not revive a paused active hold (mutant175).
+      key(action === PlayerAction.moveRight ? 'KeyA' : 'KeyD', false);
+      tick(200);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: paused hold remains inactive`
+      );
+      key(code, true, { repeat: true });
+      key(code);
+      tick(200);
+      assert.deepEqual(manager.actions, [], `${code}: duplicate stays spent`);
+      key(code, false);
+      key(code);
+      assert.deepEqual(manager.actions, [action], `${code}: real fresh press`);
+      tick(interval);
+      assert.deepEqual(
+        manager.actions,
+        [action, action],
+        `${code}: fresh repeat timing`
+      );
+    }
+  }
+});
+
+test('Game Over callback spends held keyboard controls through real New Game restart [STA-2] [INP-2]', (t) => {
+  const { controller, key, tick } = setup(t);
+  let observedGame;
+  const { game } = newGame({
+    factory: fixedFactory(PieceColors.cyan),
+    onChange() {
+      // Same wiring as public/script.js engineChanged, not a state shortcut.
+      if (observedGame?.state === GameState.gameOver)
+        controller.releaseForPause();
+    }
+  });
+  observedGame = game;
+  controller.gameManager = game;
+  const actions = [];
+  const handleAction = game.handleAction.bind(game);
+  game.handleAction = (action) => {
+    actions.push(action);
+    handleAction(action);
+  };
+  const softDrop = game.softDrop.bind(game);
+  game.softDrop = () => {
+    actions.push('softDrop');
+    softDrop();
+  };
+  for (const [code, action, interval] of [
+    ['KeyA', PlayerAction.moveLeft, 167],
+    ['ArrowLeft', PlayerAction.moveLeft, 167],
+    ['KeyD', PlayerAction.moveRight, 167],
+    ['ArrowRight', PlayerAction.moveRight, 167],
+    ['KeyS', 'softDrop', 50],
+    ['ArrowDown', 'softDrop', 50]
+  ]) {
+    for (const firstDownWhileOver of [false, true]) {
+      controller.releaseAllInput();
+      if (!firstDownWhileOver) key(code);
+      // Repeated legal hard drops top out this deterministic narrow stack.
+      for (
+        let drops = 0;
+        drops < 100 && game.state === GameState.playing;
+        drops++
+      )
+        game.handleAction(PlayerAction.drop);
+      assert.equal(
+        game.state,
+        GameState.gameOver,
+        'legal drops reach Game Over'
+      );
+      if (firstDownWhileOver) key(code);
+      controller.processInput(new Set(['view']), 0, 0);
+      assert.equal(
+        game.state,
+        GameState.playing,
+        'New Game from Game Over starts play'
+      );
+      controller.processInput(new Set(), 0, 0);
+      actions.length = 0;
+      key(action === PlayerAction.moveRight ? 'KeyA' : 'KeyD', false);
+      key(code, true, { repeat: true });
+      key(code);
+      tick(200);
+      assert.deepEqual(
+        actions,
+        [],
+        `${code}: restart cannot revive a spent key`
+      );
+      key(code, false);
+      key(code);
+      assert.deepEqual(
+        actions,
+        [action],
+        `${code}: release and fresh press works`
+      );
+      tick(interval);
+      assert.deepEqual(
+        actions,
+        [action, action],
+        `${code}: original repeat cadence`
+      );
+    }
+  }
+});
+
+test('full input reset and controller disconnect keep keyboard downs fresh [INP-2] [INP-4]', (t) => {
+  const { controller, manager, key, fire, pads } = setup(t);
+  for (const reset of ['full', 'disconnect-survivor', 'disconnect-last']) {
+    controller.releaseAllInput();
+    key('KeyA');
+    key('KeyS');
+    if (reset === 'full') controller.releaseAllInput();
+    else {
+      pads[0] = reset === 'disconnect-survivor' ? gamepad() : null;
+      fire('gamepaddisconnected');
+    }
+    manager.actions = [];
+    key('KeyA');
+    key('KeyS');
+    assert.deepEqual(
+      manager.actions,
+      [PlayerAction.moveLeft, 'softDrop'],
+      `${reset}: next downs fresh without keyup`
+    );
+    key('KeyA', false);
+    key('KeyS', false);
+  }
 });

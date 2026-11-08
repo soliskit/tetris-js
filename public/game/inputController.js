@@ -144,9 +144,9 @@ export class InputController {
     // as held: macOS sends no keyup for a key let go while Cmd is down, so
     // it would stay held forever.
     if (pressed && modifierHeld) return;
-    // Held keys matter only during play: a key pressed on a menu must
-    // not count as held when play starts or resumes.
-    if (pressed && !event.repeat && this.gameManager.state === GameState.playing) this.heldKeys.add(event.code);
+    // Remember physical keys even outside play, separately from active holds:
+    // a duplicate down without a release must not become fresh on resume.
+    if (pressed && !event.repeat) this.heldKeys.add(event.code);
     else if (!pressed) this.heldKeys.delete(event.code);
 
     // While the pause screen asks to confirm New Game, keys belong to its
@@ -363,7 +363,7 @@ export class InputController {
   }
 
   // Pausing or reaching Game Over releases held movement: both repeat timers stop and the held
-  // keys are forgotten, so a key still held when play resumes does nothing
+  // physical keys stay remembered, so a key still held when play resumes does nothing
   // until it is let go and pressed again. Buttons and the stick keep
   // tracking what is physically held, so a held Menu cannot resume the game
   // on the next poll, a held stick direction does not move after resume
@@ -374,7 +374,6 @@ export class InputController {
     this.heldDrops.clear();
     this.stopMoving();
     this.stopSoftDrop();
-    this.heldKeys.clear();
   }
 
   // A disconnect stops every input, including an already-held surviving
@@ -382,6 +381,8 @@ export class InputController {
   // acting on them, so the next poll needs a release and a fresh press.
   releaseForDisconnect() {
     this.releaseForPause();
+    // Disconnect remains a keyboard reset, unlike an ordinary pause.
+    this.heldKeys.clear();
     try {
       const gamepad = navigator.getGamepads?.().find(pad => pad?.connected);
       if (!gamepad) {
