@@ -166,7 +166,9 @@ test('the game plays normally when storage is blocked [SAF-2]', async ({
 test.describe('refused draw requests', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.install();
-    await page.clock.pauseAt(new Date());
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.setFixedTime(now);
+    await page.clock.pauseAt(now);
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'getGamepads', {
         value: () => [],
