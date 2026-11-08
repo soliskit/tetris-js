@@ -382,6 +382,43 @@ test('a drag that outlives its piece leaves the next piece alone [INP-5]', async
   await touch.up();
 });
 
+test('a drag step that locks its piece ends the drag for the rest of that move [INP-5]', async ({
+  page
+}) => {
+  // The saved square has used its fifteen lock-delay resets, so landing
+  // locks at once (PLY-6). One move event carries the finger past two
+  // cells: the first step lands and locks the square, and the event's
+  // remaining step must not reach the piece that just appeared.
+  await page.clock.install();
+  await continueSavedGame(
+    page,
+    savedGame({
+      piece: PieceColors.yellow,
+      position: { row: 10, column: 0 },
+      board: [[12, 2]],
+      lockDelayResetCount: 15
+    })
+  );
+  // Freeze while the continued game is still paused, so gravity cannot
+  // step the square to a new low and refund its lock-delay resets.
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+  await page.keyboard.press('KeyP');
+  const touch = await boardTouch(page);
+  await touch.down(1, 11);
+  await touch.moveBy(2.2, 0, 1); // one event, two steps
+  await page.clock.runFor(17);
+  const yellow = await cellsOf(page, PieceColors.yellow);
+  // The dragged square locked where the first step put it.
+  expect(yellow.filter(([r]) => r >= 9).sort()).toEqual([
+    [10, 1],
+    [10, 2],
+    [11, 1],
+    [11, 2]
+  ]);
+  // The next square stays in its starting columns, unmoved by the drag.
+  expect(minColumn(yellow.filter(([r]) => r < 9))).toBe(4);
+});
+
 test('a piece pushed against a ledge slides in once it drops below it [INP-5]', async ({
   page
 }) => {
