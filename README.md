@@ -23,33 +23,33 @@ The game is fully static, so the `public` folder is published to GitHub Pages by
 
 ## Features
 
-* 10 by 20 board with a ghost piece showing where the current piece will land
-* 7 bag randomizer so every piece appears once per bag
-* Super Rotation System wall kicks
-* Hold piece (once per drop) and a preview of the next three pieces
-* Lock delay of 0.5 seconds from the moment a piece comes to rest, reset by moving on the surface up to 15 times
-* Scoring of 100, 300, 500 and 800 points for 1 to 4 lines
-* Level rises every 1000 points, speeding up gravity from 0.7s down to 0.25s per row
-* High score and paused games are saved in `localStorage`, so you can continue later
-* The game pauses automatically when the tab is hidden
-* New Game on the pause screen asks before giving up the current game and starting another
-* Installable as an app: use Add to Home Screen (iPhone, Android) or the install button in the address bar (desktop Chrome and Edge) to play full screen without the browser bar, even offline
+- 10 by 20 board with a ghost piece showing where the current piece will land
+- 7 bag randomizer so every piece appears once per bag
+- Super Rotation System wall kicks
+- Hold piece (once per drop) and a preview of the next three pieces
+- Lock delay of 0.5 seconds from the moment a piece comes to rest, reset by moving on the surface up to 15 times
+- Scoring of 100, 300, 500 and 800 points for 1 to 4 lines
+- Level rises every 1000 points, speeding up gravity from 0.7s down to 0.25s per row
+- High score and paused games are saved in `localStorage`, so you can continue later
+- The game pauses automatically when the tab is hidden
+- New Game on the pause screen asks before giving up the current game and starting another
+- Installable as an app: use Add to Home Screen (iPhone, Android) or the install button in the address bar (desktop Chrome and Edge) to play full screen without the browser bar, even offline
 
 ## Controls
 
 ### Keyboard
 
-| Action | Keys |
-| --- | --- |
-| Move left / right | A / D or Left / Right arrows |
-| Rotate clockwise | W or Up arrow |
-| Rotate counterclockwise | Z |
-| Soft drop | S or Down arrow |
-| Hard drop | Space |
-| Hold | H |
-| Pause | P or Esc |
-| New game | Enter |
-| Continue saved game | C |
+| Action                  | Keys                         |
+| ----------------------- | ---------------------------- |
+| Move left / right       | A / D or Left / Right arrows |
+| Rotate clockwise        | W or Up arrow                |
+| Rotate counterclockwise | Z                            |
+| Soft drop               | S or Down arrow              |
+| Hard drop               | Space                        |
+| Hold                    | H                            |
+| Pause                   | P or Esc                     |
+| New game                | Enter                        |
+| Continue saved game     | C                            |
 
 Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft drop drops a row at once, then every 50ms. On the pause screen, New Game asks first with Cancel selected, so pressing Enter twice keeps the game. The hold box can also be reached with Tab, then pressed with Enter or Space.
 
@@ -57,25 +57,25 @@ Holding a move key repeats the move (167ms delay, then every 33ms). Holding soft
 
 Any controller with the standard mapping works through the Gamepad API.
 
-| Action | Input |
-| --- | --- |
-| Move left / right | Left stick or directional pad |
-| Soft drop | Left stick or directional pad down |
-| Hard drop | A or directional pad up |
-| Rotate clockwise | B or right shoulder (RB) |
-| Rotate counterclockwise | Left shoulder (LB) |
-| Hold | X |
-| Continue saved game | Y |
-| Pause or new game | Menu / Start |
-| New game | View / Select (on the pause screen, then A to confirm or B to cancel) |
+| Action                  | Input                                                                 |
+| ----------------------- | --------------------------------------------------------------------- |
+| Move left / right       | Left stick or directional pad                                         |
+| Soft drop               | Left stick or directional pad down                                    |
+| Hard drop               | A or directional pad up                                               |
+| Rotate clockwise        | B or right shoulder (RB)                                              |
+| Rotate counterclockwise | Left shoulder (LB)                                                    |
+| Hold                    | X                                                                     |
+| Continue saved game     | Y                                                                     |
+| Pause or new game       | Menu / Start                                                          |
+| New game                | View / Select (on the pause screen, then A to confirm or B to cancel) |
 
 ### Touch and mouse
 
-* Drag sideways on the board to move the piece
-* Drag down to soft drop
-* Tap the board to rotate
-* Tap the hold preview to hold
-* Use the on-screen buttons for new game, continue and pause
+- Drag sideways on the board to move the piece
+- Drag down to soft drop
+- Tap the board to rotate
+- Tap the hold preview to hold
+- Use the on-screen buttons for new game, continue and pause
 
 ## Project Structure
 
@@ -115,13 +115,13 @@ The current contract and evidence live in [docs/](docs/), starting at [docs/READ
 
 The game is built the way safety-critical software is:
 
-* **Written requirements.** [REQUIREMENTS.md](docs/requirements.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
-* **Full coverage.** The unit tests run every line, branch and function of the game logic, and the browser tests do the same for the page script (`public/script.js`, measured in Chromium). `npm test` and `npm run test:e2e` fail below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested. After a browser test run, `coverage/browser-report/index.html` shows the page script line by line.
-* **Type checking.** TypeScript's strictest checks run over everything the browser loads, with the types written as comments in the JavaScript, so there is no build step. `npm run typecheck` catches misspelled properties, wrong argument types and values that might be missing before any code runs.
-* **Mutation testing.** Stryker makes about a thousand small wrong changes to the game logic, one at a time (turning `<` into `<=`, deleting a line, flipping a condition), and runs the tests against each. Every one must make a test fail. Coverage shows the tests run every line; this shows they would notice if a line were wrong. The full run takes about 40 minutes. It runs weekly and on demand (`npm run test:mutation`, report in `reports/mutation/index.html`), and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite.
-* **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built-in shapes. A corrupted or edited save is refused whole.
-* **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
-* **Fault injection tests** prove each of these by breaking things on purpose.
+- **Written requirements.** [REQUIREMENTS.md](docs/requirements.md) lists every behavior with an ID. Each test names the requirements it verifies, and a test fails the build if any requirement is untested or any test is untraced.
+- **Full coverage.** The unit tests run every line, branch and function of the game logic, and the browser tests do the same for the page script (`public/script.js`, measured in Chromium). `npm test` and `npm run test:e2e` fail below 100%, so untested code cannot be added. Code that can never run is removed instead of left untested. After a browser test run, `coverage/browser-report/index.html` shows the page script line by line.
+- **Type checking.** TypeScript's strictest checks run over everything the browser loads, with the types written as comments in the JavaScript, so there is no build step. `npm run typecheck` catches misspelled properties, wrong argument types and values that might be missing before any code runs.
+- **Mutation testing.** Stryker makes about a thousand small wrong changes to the game logic, one at a time (turning `<` into `<=`, deleting a line, flipping a condition), and runs the tests against each. Every one must make a test fail. Coverage shows the tests run every line; this shows they would notice if a line were wrong. The full run takes about 40 minutes. It runs weekly and on demand (`npm run test:mutation`, report in `reports/mutation/index.html`), and on every pull request that changes the game logic or its tests: a change to the game logic alone mutates just the changed files, and a change to the tests runs the full suite.
+- **Untrusted saves.** Saved games are checked field by field before loading, and pieces are rebuilt from the built-in shapes. A corrupted or edited save is refused whole.
+- **Fault containment.** Every action and timer runs inside a guard. If anything throws, or the game's invariants break (board size, piece overlap, score, timers), the game stops safely at game over, reports the fault and keeps the last good save. Drawing and gamepad loops recover from errors on the next frame. Blocked or full storage never stops play.
+- **Fault injection tests** prove each of these by breaking things on purpose.
 
 ## Tests
 

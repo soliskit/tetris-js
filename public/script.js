@@ -286,7 +286,7 @@ function setWakeLock(wanted) {
 }
 
 function requestWakeLock() {
-  navigator.wakeLock.request('screen').then(sentinel => {
+  return navigator.wakeLock.request('screen').then(sentinel => {
     // Play may have stopped, or a newer request won, while this one waited.
     if (!wakeLockWanted || wakeLock) {
       sentinel.release();
@@ -300,6 +300,7 @@ function requestWakeLock() {
       wakeLock = null;
       requestWakeLock();
     });
+    return null;
   }, () => {});
 }
 

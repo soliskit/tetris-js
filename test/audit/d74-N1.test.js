@@ -12,7 +12,10 @@ import { parseSavedRecord } from '../../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { GameManager, createMemoryStorage } from '../../public/game/gameManager.js';
+import {
+  GameManager,
+  createMemoryStorage
+} from '../../public/game/gameManager.js';
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler } from '../helpers.js';
 
@@ -21,10 +24,15 @@ test('a fault after a confirmed New Game stops safely and keeps the old position
   const real = createFakeScheduler();
   let boom = false;
   const scheduler = {
-    setTimeout: (cb, ms) => { if (boom) throw new Error('scheduler fault'); return real.setTimeout(cb, ms); },
-    clearTimeout: h => real.clearTimeout(h),
-    advance: ms => real.advance(ms),
-    get pending() { return real.pending; }
+    setTimeout: (cb, ms) => {
+      if (boom) throw new Error('scheduler fault');
+      return real.setTimeout(cb, ms);
+    },
+    clearTimeout: (h) => real.clearTimeout(h),
+    advance: (ms) => real.advance(ms),
+    get pending() {
+      return real.pending;
+    }
   };
   const game = new GameManager({ scheduler, storage });
   game.handleAction(PlayerAction.newGame);
@@ -35,17 +43,31 @@ test('a fault after a confirmed New Game stops safely and keeps the old position
   assert.ok(textBefore.length > 0);
 
   let reports = 0;
-  game.onFault = () => { reports++; };
+  game.onFault = () => {
+    reports++;
+  };
   boom = true;
   game.handleAction(PlayerAction.newGame); // asks first on the pause screen
   game.handleAction(PlayerAction.newGame); // confirms; the scheduler fault fires here
 
-  assert.equal(game.state, GameState.gameOver, 'the game stops safely at game over');
+  assert.equal(
+    game.state,
+    GameState.gameOver,
+    'the game stops safely at game over'
+  );
   assert.equal(game.faults.length, 1, 'the fault is recorded');
   assert.equal(reports, 1, 'the fault is reported once');
   assert.equal(game.isSessionSaved, false, 'the old save stays withdrawn');
-  assert.notEqual(storage.getItem('tetris.isSessionSaved'), 'true', 'the stored save flag stays withdrawn');
-  assert.equal(parseSavedRecord(storage.getItem('tetris.savedGameSession')).position, parseSavedRecord(textBefore).position, 'the exact stored position string is kept unchanged');
+  assert.notEqual(
+    storage.getItem('tetris.isSessionSaved'),
+    'true',
+    'the stored save flag stays withdrawn'
+  );
+  assert.equal(
+    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position,
+    parseSavedRecord(textBefore).position,
+    'the exact stored position string is kept unchanged'
+  );
   assert.equal(scheduler.pending, 0, 'no timer is left dangling');
 
   boom = false;

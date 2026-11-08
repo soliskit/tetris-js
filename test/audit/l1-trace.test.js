@@ -19,13 +19,25 @@ import { newGame, seededRandom } from '../helpers.js';
 const validGains = new Set([0, 100, 300, 500, 800]);
 
 function runTrace(seed, lockTarget) {
-  const maxGames = 5000, maxSteps = 2000;
+  const maxGames = 5000,
+    maxSteps = 2000;
   const random = seededRandom(seed);
-  const actions = [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.rotate, PlayerAction.hold];
-  let locks = 0, clears = 0, games = 0, violations = 0, faults = 0;
+  const actions = [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.rotate,
+    PlayerAction.hold
+  ];
+  let locks = 0,
+    clears = 0,
+    games = 0,
+    violations = 0,
+    faults = 0;
   const gainCounts = {};
   for (let round = 0; round < maxGames && locks < lockTarget; round++) {
-    const { game, scheduler } = newGame({ factory: new TetrominoFactory(random) });
+    const { game, scheduler } = newGame({
+      factory: new TetrominoFactory(random)
+    });
     games++;
     const orig = game.lockAndSpawnNext.bind(game);
     game.lockAndSpawnNext = () => {
@@ -36,17 +48,32 @@ function runTrace(seed, lockTarget) {
       gainCounts[gain] = (gainCounts[gain] || 0) + 1;
       if (gain > 0) clears++;
     };
-    for (let step = 0; step < maxSteps && game.state !== GameState.gameOver && locks < lockTarget; step++) {
+    for (
+      let step = 0;
+      step < maxSteps &&
+      game.state !== GameState.gameOver &&
+      locks < lockTarget;
+      step++
+    ) {
       const before = game.score;
       const roll = random();
-      if (roll < 0.5) game.handleAction(actions[Math.floor(random() * actions.length)]);
+      if (roll < 0.5)
+        game.handleAction(actions[Math.floor(random() * actions.length)]);
       else if (roll < 0.53) game.handleAction(PlayerAction.drop);
       else if (roll < 0.6) game.softDrop();
-      else if (roll < 0.61) { game.togglePause(); game.togglePause(); }
-      else scheduler.advance(Math.floor(random() * 400));
-      const ok = validGains.has(game.score - before) && game.level === Math.floor(game.score / 1000) + 1
-        && game.gameBoard.length === 20 && game.gameBoard.every(r => r.length === 10) && game.nextTetrominos.length === 3
-        && (game.state !== GameState.playing || (game.currentTetromino.fits(game.gameBoard) && game.ghostTetromino.fits(game.gameBoard)));
+      else if (roll < 0.61) {
+        game.togglePause();
+        game.togglePause();
+      } else scheduler.advance(Math.floor(random() * 400));
+      const ok =
+        validGains.has(game.score - before) &&
+        game.level === Math.floor(game.score / 1000) + 1 &&
+        game.gameBoard.length === 20 &&
+        game.gameBoard.every((r) => r.length === 10) &&
+        game.nextTetrominos.length === 3 &&
+        (game.state !== GameState.playing ||
+          (game.currentTetromino.fits(game.gameBoard) &&
+            game.ghostTetromino.fits(game.gameBoard)));
       if (!ok) violations++;
     }
     faults += game.faults.length;
@@ -58,7 +85,11 @@ for (const seed of [20261017, 2024]) {
   test(`bounded random trace keeps the score invariant, seed ${seed}, 500 locks [D69]`, () => {
     const result = runTrace(seed, 500);
     assert.equal(result.locks, 500, 'the bounded run reaches its lock cap');
-    assert.equal(result.violations, 0, `invariant violations in ${JSON.stringify(result.gainCounts)}`);
+    assert.equal(
+      result.violations,
+      0,
+      `invariant violations in ${JSON.stringify(result.gainCounts)}`
+    );
     assert.equal(result.faults, 0, 'monitor faults');
   });
 }

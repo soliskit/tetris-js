@@ -206,14 +206,14 @@ test('record name checking visits every array element and escaped object name [S
     '{"empty":[],"later":{"x":1,"x":2}}',
     '[[],{},[{"x":1,"x":2}]]',
     '{"a,b:c[{}]":0,"a,b:c[{}]":1}',
-    '{"a\\\"b":0,"a\\\"b":1}',
+    '{"a\\"b":0,"a\\"b":1}',
     '{"a\\\\b":0,"a\\\\b":1}'
   ])
     assert.throws(() => parseUniqueJSON(text), SyntaxError, text);
   for (const text of [
     '[{}, {}, []]',
     '{"empty":[],"later":{"x":1}}',
-    '[{"a,b:c[{}]":"q\\\"\\\\"},{}]'
+    '[{"a,b:c[{}]":"q\\"\\\\"},{}]'
   ]) {
     assert.deepEqual(parseUniqueJSON(text), JSON.parse(text));
   }
