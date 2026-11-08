@@ -1,6 +1,6 @@
 // Browser UI for the game. All game rules live in ./game.
 
-import { GameManager } from './game/gameManager.js';
+import { GameManager, GAME_STORAGE_KEYS } from './game/gameManager.js';
 import { GameState, PlayerAction } from './game/gameState.js';
 import { InputController } from './game/inputController.js';
 
@@ -648,8 +648,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Another tab saving or ending a game changes whether this one can continue,
-// and a high score set there changes the one shown here.
-window.addEventListener('storage', () => {
+// and a high score set there changes the one shown here. Other projects share
+// this origin's storage, so only the game's own keys (and clear-all, whose
+// event has no key) count as changes (DSP-5).
+window.addEventListener('storage', (event) => {
+  if (event.key !== null && !GAME_STORAGE_KEYS.includes(event.key)) return;
   gameManager.storageChanged();
   lastSnapshot = '';
   requestDraw();
