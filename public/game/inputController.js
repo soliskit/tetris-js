@@ -82,10 +82,15 @@ export class InputController {
     this.padDown = false;
     /** Whether a pad down held outside play has been spent. */
     this.padDownSpent = false;
+    /** Blur blocks horizontal and down pad input until both return to rest. */
+    this.padNeedsRest = false;
 
     window.addEventListener('keydown', event => this.handleKey(event, true));
     window.addEventListener('keyup', event => this.handleKey(event, false));
-    window.addEventListener('blur', () => this.releaseAllInput());
+    window.addEventListener('blur', () => {
+      this.releaseAllInput();
+      this.padNeedsRest = true;
+    });
     window.addEventListener('gamepaddisconnected', () => this.releaseForDisconnect());
     window.addEventListener('gamepadconnected', () => this.startPolling());
     // The page pauses when hidden, so release held input then too: hiding
@@ -200,9 +205,13 @@ export class InputController {
     const wasPlaying = this.gameManager.state === GameState.playing;
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
-    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
+    let direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
       : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight
         : null;
+    const padDown = yAxis < -0.5 || pressed.has('down');
+    // A direction read after blur may be the old hold. Even an opposite
+    // direction must wait for rest; focus alone does not prove a release.
+    if (direction === null && !padDown) this.padNeedsRest = false;
 
     // While the pause screen asks to confirm New Game, left and right on the
     // stick or directional pad move between its buttons, once per push, A
@@ -217,6 +226,9 @@ export class InputController {
       this.padDirectionSpent = true;
       return;
     }
+
+    // Blur suppresses gameplay movement, not the confirmation buttons.
+    if (this.padNeedsRest) direction = null;
 
     // Menu and View change what the game is doing, so they act alone: a
     // button pressed at the same moment would act on the new state, such as
@@ -240,10 +252,9 @@ export class InputController {
 
     // A pad down held outside play is spent: it soft drops nothing until
     // it is let go and pushed again during play.
-    const padDown = yAxis < -0.5 || pressed.has('down');
     if (padDown && !wasPlaying) this.padDownSpent = true;
     else if (!padDown) this.padDownSpent = false;
-    this.padDown = padDown && !this.padDownSpent;
+    this.padDown = padDown && !this.padDownSpent && !this.padNeedsRest;
     this.updateSoftDrop();
 
     // Polling runs every frame, so only react to stick and pad changes;
