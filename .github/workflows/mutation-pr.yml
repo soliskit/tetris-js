@@ -1,23 +1,29 @@
 name: Mutation testing on pull requests
 
-# Every pull request runs this workflow: the plan step decides which game
-# files to mutate, and the aggregate check at the end stands for the whole
-# matrix, so the merge rule can require one stable check name and stay
-# satisfied as game files are added or renamed (D85). Mutation testing
-# fails a pull request if any mutant that can change behavior survives.
-# The threshold is stryker.config.json's (break at 100); mutants that make
-# the tests run too long count as caught, and the exclusions marked in the
-# code stay excluded. The plan step lists the game files from the
-# public/game tree, and each file is mutated in its own parallel run, so
+# Every pull request runs this workflow. The plan job puts every changed
+# path in one of three classes: a finitely enumerated set of files
+# (.gitignore, LICENSE, README.md) mutates nothing when every changed
+# path is in it and stays a regular non-executable file; source, tests,
+# fixtures, e2e, manifests, CI config and workflow changes run every
+# game file; a path the classifier cannot place runs every game file
+# too, and if the diff itself cannot be computed the plan job fails
+# instead of guessing. An addition or deletion runs every game file; a
+# detected rename is classified on both its old and new paths; a
+# symlink, executable bit or typechange runs every game file. docs/ is
+# NOT in the zero set: test/traceability.test.js and the audit tests
+# read it, so a docs change can change what the tests assert. The
+# aggregate check at the end stands for the whole matrix, so the merge
+# rule can require one stable check name and stay satisfied as game
+# files are added or renamed (D85). Mutation testing fails a pull
+# request if any mutant that can change behavior survives. The threshold
+# is stryker.config.json's (break at 100); mutants that make the tests
+# run too long count as caught, and the exclusions marked in the code
+# stay excluded. Each game file is mutated in its own parallel run, so
 # the full check takes about as long as its largest file and new game
-# files are picked up on their own. A change to the game logic alone
-# mutates just the changed files. A change to the tests runs every game
-# file, since a test can be weakened without touching the game logic, and
-# so does a change to this workflow, so the gate itself is tested. A plan
-# that finds no game file to mutate passes with no runs. The weekly full
-# run stays as is.
+# files are picked up on their own. The weekly full run stays as is.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -30,32 +36,112 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
-      files: ${{ steps.list.outputs.files }}
-      has_files: ${{ steps.list.outputs.has_files }}
+      verdict: ${{ steps.classify.outputs.verdict }}
+      files: ${{ steps.classify.outputs.files }}
+      base_sha: ${{ steps.classify.outputs.base_sha }}
+      merge_base: ${{ steps.classify.outputs.merge_base }}
+      head_sha: ${{ steps.classify.outputs.head_sha }}
     steps:
       - uses: actions/checkout@v7
         with:
-          # The base branch's history, to see what the pull request changes.
+          # The base branch's full history, so the fork point exists.
           fetch-depth: 0
-      - id: list
+      - id: classify
+        shell: bash
         run: |
-          changed=$(git diff --name-only --diff-filter=d "origin/$GITHUB_BASE_REF...HEAD")
-          if grep -qE '^(test/|\.github/workflows/mutation-pr\.yml$)' <<< "$changed"; then
-            echo "The tests or this workflow changed, so every game file is mutated."
-            files=$(find public/game -name '*.js' | sort)
-          else
-            files=$(grep -E '^public/game/.+\.js$' <<< "$changed" || true)
+          set -euo pipefail
+          # Resolve the moving base ref to a literal SHA, record the literal
+          # fork point and head; only literal SHAs are ever diffed. These
+          # SHAs certify the selection only; the mutation runs check out
+          # the pull request's merge state as before, so the tested tree
+          # is the checkout's, not necessarily this head.
+          git fetch --no-tags origin "+refs/heads/$GITHUB_BASE_REF:refs/remotes/origin/$GITHUB_BASE_REF"
+          base_sha=$(git rev-parse "origin/$GITHUB_BASE_REF")
+          head_sha="${{ github.event.pull_request.head.sha }}"
+          echo "base_sha=$base_sha" | tee -a "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" | tee -a "$GITHUB_OUTPUT"
+          if ! git cat-file -e "$head_sha"; then
+            git fetch --no-tags origin "$head_sha"
           fi
-          echo "Game files to mutate: ${files:-none}"
-          matrix=$(jq -n -c --arg f "$files" \
-            '{include: ($f | split("\n") | map(select(length > 0)) | map({file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js") | gsub("/"; "-"))}))}')
-          echo "files=$matrix" >> "$GITHUB_OUTPUT"
-          count=$(jq -r '.include | length' <<< "$matrix")
-          echo "has_files=$([ "$count" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if ! merge_base=$(git merge-base "$base_sha" "$head_sha"); then
+            echo "The fork point cannot be resolved; failing closed."
+            exit 1
+          fi
+          echo "merge_base=$merge_base" | tee -a "$GITHUB_OUTPUT"
+          # Endpoint delta (the two-endpoint form of A...B): what this pull
+          # request itself changes, from the fork point to its head.
+          # --raw -z carries both revisions' modes and both paths on a
+          # rename, NUL-safe. -M keeps rename detection on; a detected
+          # rename classifies the old AND the new path.
+          git diff --raw -z -M "$merge_base" "$head_sha" > "$RUNNER_TEMP/diff.raw"
+          verdict=zero
+          changed=0
+          classify() {
+            case "$1" in
+              # The finitely enumerated zero-impact files; docs/ is excluded
+              # on purpose (the tests read it). Anything else is FULL.
+              .gitignore|LICENSE|README.md) return 0 ;;
+              *) verdict=full ;;
+            esac
+          }
+          while IFS= read -r -d '' meta; do
+            [ -n "$meta" ] || continue
+            IFS= read -r -d '' path1
+            changed=1
+            srcmode=$(echo "$meta" | awk '{print substr($1, 2)}')  # strip the leading colon
+            dstmode=$(echo "$meta" | awk '{print $2}')
+            status=$(echo "$meta" | awk '{print $5}')
+            # Strict rule: BOTH revisions of every changed file must be
+            # regular non-executable files. An addition or deletion (the
+            # absent side is 000000), a symlink, an executable bit or a
+            # typechange is FULL - no new path ever lands in ZERO.
+            [ "$srcmode" = "100644" ] || verdict=full
+            [ "$dstmode" = "100644" ] || verdict=full
+            case "$status" in
+              R*|C*)
+                IFS= read -r -d '' path2
+                classify "$path1"
+                classify "$path2"
+                ;;
+              *)
+                classify "$path1"
+                ;;
+            esac
+          done < "$RUNNER_TEMP/diff.raw"
+          if [ "$changed" -eq 0 ]; then
+            echo "The pull request changes no files: a legitimate, reported empty diff."
+          fi
+          echo "verdict=$verdict" | tee -a "$GITHUB_OUTPUT"
+          if [ "$verdict" = full ]; then
+            # NUL-safe listing; the producer's exit is checked before the
+            # list is consumed, so a listing failure fails the plan instead
+            # of yielding a partial expected set.
+            if ! git ls-tree -r -z --name-only "$head_sha" -- public/game > "$RUNNER_TEMP/games.list"; then
+              echo "Cannot list the game files at the head; failing closed."
+              exit 1
+            fi
+            mapfile -d '' -t game_files < "$RUNNER_TEMP/games.list"
+            if [ "${#game_files[@]}" -eq 0 ]; then
+              echo "Full sweep requested but no game files exist at the head; failing closed."
+              exit 1
+            fi
+            # Only simple, portable file names are supported so every shard
+            # name below is safe. Anything else fails the plan rather than
+            # the matrix naming.
+            for f in "${game_files[@]}"; do
+              [[ "$f" =~ ^public/game/[A-Za-z0-9_-]+\.js$ ]] || { echo "Unsupported game file name: $f; failing closed."; exit 1; }
+            done
+            matrix=$(jq -n -c --args '{include: [$ARGS.positional[] | {file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js"))}]}' "${game_files[@]}")
+            echo "files=$matrix" >> "$GITHUB_OUTPUT"
+            echo "Full sweep: ${#game_files[@]} game files."
+          else
+            echo "files={\"include\":[]}" >> "$GITHUB_OUTPUT"
+            echo "Zero mutation targets: every changed path is an enumerated regular non-executable file."
+          fi
   mutation:
     name: mutation (${{ matrix.name }})
     needs: plan
-    if: needs.plan.outputs.has_files == 'true'
+    if: needs.plan.outputs.verdict == 'full'
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.files) }}
@@ -71,26 +157,70 @@ jobs:
       - run: npm ci
       - name: Mutate ${{ matrix.file }}
         run: npx stryker run --mutate "${{ matrix.file }}"
+      # Done-marker accounting, deliberately narrow: a marker attests that
+      # a shard with this name finished successfully in some attempt of
+      # this workflow run. overwrite keeps a re-run attempt able to
+      # re-publish. The finalize job's pass conditions are spelled out on
+      # that job.
+      - name: Record this shard as done
+        if: success()
+        run: echo "${{ matrix.file }}" > "done-${{ matrix.name }}.txt"
+      - name: Publish the done marker
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-done-${{ matrix.name }}
+          path: done-${{ matrix.name }}.txt
+          retention-days: 1
+          overwrite: true
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: mutation-report-${{ matrix.name }}
           path: reports/mutation/
+          overwrite: true
   # One check that stands for the whole matrix, so the merge rule requires
   # a single check name that stays stable as game files come and go. It
-  # runs however the runs ended: a plan with nothing to mutate passes, and
-  # any failed or cancelled mutation run fails the check.
+  # runs however the runs ended. It passes only when all of these hold:
+  # the plan job succeeded; and either the plan recorded a legitimate
+  # zero, or the aggregate matrix result is success AND the plan's
+  # expected shard names exactly match the done-marker names collected
+  # in this workflow run. The markers are same-workflow-run filename
+  # accounting - they may come from an earlier attempt of this run, so
+  # they are not independent proof that the current attempt executed
+  # every shard.
   finalize:
     name: mutation (all)
     needs: [plan, mutation]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Every mutation run passed
+      - name: Plan and mutation results
         run: |
-          if [ "${{ needs.plan.outputs.has_files }}" = "false" ]; then
-            echo "No game file to mutate."
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "The plan job ended as: ${{ needs.plan.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.plan.outputs.verdict }}" = "zero" ]; then
+            echo "The plan recorded a legitimate zero: nothing to mutate."
           elif [ "${{ needs.mutation.result }}" != "success" ]; then
             echo "The mutation runs ended as: ${{ needs.mutation.result }}"
             exit 1
           fi
+      - name: Collect the done markers
+        if: needs.plan.outputs.verdict == 'full'
+        uses: actions/download-artifact@v7
+        with:
+          pattern: mutation-done-*
+          merge-multiple: true
+      - name: Every expected shard is accounted for
+        if: needs.plan.outputs.verdict == 'full'
+        run: |
+          set -euo pipefail
+          jq -r '[.include[].name] | sort | .[]' <<< '${{ needs.plan.outputs.files }}' > expected.txt
+          ls done-*.txt | sed -e 's/^done-//' -e 's/\.txt$//' | sort -u > actual.txt
+          if ! diff -u expected.txt actual.txt; then
+            echo "The mutation matrix does not match the plan's expected shard set."
+            exit 1
+          fi
+          echo "All $(wc -l < expected.txt) expected shards are accounted for."
