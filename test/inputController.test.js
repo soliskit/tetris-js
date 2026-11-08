@@ -1057,19 +1057,20 @@ test('a visibility change that does not hide the page keeps held input [STA-2] [
   );
 });
 
-test('losing window focus lets a spent pad down drop again after resume [STA-2] [INP-2] [INP-4]', (t) => {
+test('losing window focus keeps a spent pad down inactive after resume [STA-2] [INP-2] [INP-4]', (t) => {
   const { manager, controller, pads, fire, tick } = setup(t);
   manager.state = GameState.paused;
   pads[0] = gamepad({ pressed: ['down'] }); // pad down held while paused, so it is spent
   controller.pollGamepads();
-  fire('blur'); // focus is lost: everything held is released and forgotten
+  fire('blur'); // focus is lost: the next poll must not revive the hold
   manager.state = GameState.playing;
   manager.actions = [];
   controller.pollGamepads(); // the pad is still physically down
   tick(500);
-  assert.ok(
-    count(manager, 'softDrop') > 0,
-    'the blur forgot the spending, so the held pad soft drops'
+  assert.equal(
+    count(manager, 'softDrop'),
+    0,
+    'held pad down stays inactive after blur and resume'
   );
 });
 
@@ -1741,4 +1742,166 @@ test('blur still clears a held pad down and stops its repeat timer [INP-2] [INP-
     [],
     'blur stops and forgets the held pad down'
   );
+});
+
+for (const [name, held, opposite] of [
+  ['stick left', { x: -1 }, { x: 1 }],
+  ['stick right', { x: 1 }, { x: -1 }],
+  ['pad left', { pressed: ['left'] }, { pressed: ['right'] }],
+  ['pad right', { pressed: ['right'] }, { pressed: ['left'] }]
+]) {
+  test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
+    const { manager, controller, pads, fire, tick, key } = setup(t);
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(200);
+    assert.ok(manager.actions.length > 1, 'movement repeats before blur');
+    fire('blur');
+    manager.actions = [];
+    controller.pollGamepads();
+    tick(400);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'a held direction cannot restart after blur'
+    );
+    fire('focus');
+    pads[0] = gamepad(opposite);
+    controller.pollGamepads();
+    tick(400);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'focus and an opposite push do not replace rest'
+    );
+    key('KeyD');
+    key('KeyD', false);
+    manager.actions = [];
+    tick(200);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'releasing a fresh key cannot resume the spent pad'
+    );
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(200);
+    assert.ok(
+      manager.actions.length > 1,
+      'a fresh push after rest moves and repeats'
+    );
+  });
+}
+
+test('blur cannot move the real falling piece again before stick rest [INP-2]', (t) => {
+  const { fire, pads, tick } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game, { move() {}, press() {} });
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  fire('blur');
+  const column = game.currentTetromino.position.column;
+  controller.pollGamepads();
+  tick(200);
+  assert.equal(game.currentTetromino.position.column, column);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  assert.equal(game.currentTetromino.position.column, column - 1);
+});
+
+test('blur leaves confirmation-button selection available [INP-4]', (t) => {
+  const { manager, controller, fire } = setup(t);
+  fire('blur');
+  manager.isConfirmingNewGame = true;
+  controller.processInput(new Set(['left']), 0, 0);
+  assert.deepEqual(manager.actions, ['move -1']);
+});
+
+for (const [name, held] of [
+  ['stick down', { y: 1 }],
+  ['pad down', { pressed: ['down'] }]
+]) {
+  test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
+    const { manager, controller, pads, fire, tick, key } = setup(t);
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.equal(count(manager, 'softDrop'), 2);
+    fire('blur');
+    manager.actions = [];
+    controller.pollGamepads();
+    fire('focus');
+    controller.pollGamepads();
+    tick(500);
+    assert.deepEqual(manager.actions, [], 'held down cannot restart');
+    key('KeyS');
+    assert.equal(count(manager, 'softDrop'), 1, 'a fresh keyboard press works');
+    key('KeyS', false);
+    manager.actions = [];
+    tick(100);
+    assert.deepEqual(manager.actions, [], 'key release cannot revive pad down');
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.equal(
+      count(manager, 'softDrop'),
+      2,
+      'rest and fresh push re-arm down'
+    );
+  });
+}
+
+test('blur requires both horizontal and down controls at rest before gameplay resumes [INP-2]', (t) => {
+  const { manager, controller, pads, fire, tick } = setup(t);
+  pads[0] = gamepad({ x: -1, pressed: ['down'] });
+  controller.pollGamepads();
+  fire('blur');
+  manager.actions = [];
+  for (const held of [
+    { pressed: ['down'] },
+    { x: 1 },
+    { pressed: ['left', 'down'] }
+  ]) {
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'partial rest does not re-arm either input'
+    );
+  }
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ x: 1, pressed: ['down'] });
+  controller.pollGamepads();
+  tick(100);
+  assert.equal(count(manager, 'moveRight'), 1);
+  assert.equal(count(manager, 'softDrop'), 2);
+});
+
+test('blur cannot soft drop the real falling piece before down returns to rest [INP-2]', (t) => {
+  const { fire, pads, tick } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game, { move() {}, press() {} });
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  fire('blur');
+  const row = game.currentTetromino.position.row;
+  controller.pollGamepads();
+  tick(200);
+  assert.equal(game.currentTetromino.position.row, row);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  assert.equal(game.currentTetromino.position.row, row + 1);
 });
