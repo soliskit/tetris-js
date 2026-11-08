@@ -581,6 +581,9 @@ heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction
 heldCanvas.addEventListener('mousedown', event => event.preventDefault());
 heldCanvas.addEventListener('keydown', event => {
   if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
+  // A key pressed with Cmd, Ctrl or Alt is the browser's shortcut and
+  // never holds (INP-3): leave it alone, like the input controller does.
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
   event.preventDefault();
   event.stopPropagation();
   gameManager.handleAction(PlayerAction.hold);
