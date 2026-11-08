@@ -2352,6 +2352,18 @@ test('held movement and soft-drop duplicates stay spent across Menu pause until 
         [],
         `${code}: paused hold remains inactive`
       );
+      key(code);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: duplicate without repeat stays spent`
+      );
+      tick(200);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: duplicate without repeat cannot arm movement or drop`
+      );
       key(code, true, { repeat: true });
       key(code);
       tick(200);
