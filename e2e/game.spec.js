@@ -579,27 +579,144 @@ test.describe('playing with the keyboard', () => {
 
   // The game's own keys still count as changes made in another tab. Kept in
   // a separate test so the control's reads cannot touch the counter above.
+  // TEMPORARY DIAGNOSTIC, pending a separately approved removal: on the CI
+  // WebKit project this test's probe recorded no storage events within the
+  // poll window, while the foreign-key witness in the same run observed its
+  // event. The tested condition is the original control; the added
+  // instrumentation shifts execution timing.
   test('a game key written in another tab still counts as a change [DSP-5]', async ({
     page,
     context
   }) => {
+    const pageErrors = [];
+    const pageConsole = [];
+    const otherTabErrors = [];
+    const otherTabConsole = [];
+    page.on('pageerror', (error) => pageErrors.push(String(error)));
+    page.on('console', (message) => pageConsole.push(message.text()));
     await page.addInitScript(() => {
-      window.seenStorageKeys = [];
+      window.seenStorageEventsInit = [];
       window.addEventListener('storage', (event) => {
-        window.seenStorageKeys.push(event.key);
+        window.seenStorageEventsInit.push({
+          key: event.key,
+          oldValue: event.oldValue,
+          newValue: event.newValue,
+          url: event.url,
+          isLocalStorage: event.storageArea === window.localStorage
+        });
       });
     });
     await page.goto('/');
+    // The label text is initial static markup, so it proves only that the
+    // page arrived.
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
+    otherTab.on('pageerror', (error) => otherTabErrors.push(String(error)));
+    otherTab.on('console', (message) => otherTabConsole.push(message.text()));
     await otherTab.goto('/');
+    // Diagnostic: a second listener attached after load, in the same
+    // execution context, to compare with the init-script listener.
+    await page.evaluate(() => {
+      window.seenStorageEventsReady = [];
+      window.addEventListener('storage', (event) => {
+        window.seenStorageEventsReady.push({
+          key: event.key,
+          oldValue: event.oldValue,
+          newValue: event.newValue,
+          url: event.url,
+          isLocalStorage: event.storageArea === window.localStorage
+        });
+      });
+    });
+    const stateOf = () => ({
+      url: location.href,
+      origin: location.origin,
+      visibilityState: document.visibilityState,
+      readyState: document.readyState,
+      hasFocus: document.hasFocus()
+    });
+    // Diagnostic: both tabs' state before the write.
+    const stateBefore = {
+      here: await page.evaluate(stateOf),
+      there: await otherTab.evaluate(stateOf)
+    };
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );
-    // The game key's event arrives first...
-    await expect
-      .poll(() => page.evaluate(() => window.seenStorageKeys))
-      .toContain('tetris.highScore');
+    // Diagnostic: the written value's readback in both tabs, so a missing
+    // event is not confused with a missing write.
+    const writeReadback = {
+      there: await otherTab.evaluate(() =>
+        localStorage.getItem('tetris.highScore')
+      ),
+      here: await page.evaluate(() => localStorage.getItem('tetris.highScore'))
+    };
+    // The game key's event arrives first... The tested condition keeps the
+    // original poll; the outcome is recorded, not thrown, so the evidence
+    // below logs either way.
+    let ackError;
+    try {
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            window.seenStorageEventsInit.map((entry) => entry.key)
+          )
+        )
+        .toContain('tetris.highScore');
+    } catch (error) {
+      ackError = error;
+    }
+    // Diagnostic: a foreign key write as a counter-probe, bounded tighter
+    // than the witness, asks whether any event reaches this tab's
+    // listeners at all; the app ignores the foreign key by design.
+    await otherTab.evaluate(() => localStorage.setItem('other.app', 'probe'));
+    const foreignProbe = { init: false, ready: false };
+    try {
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() =>
+              window.seenStorageEventsInit.map((entry) => entry.key)
+            ),
+          { timeout: 2000 }
+        )
+        .toContain('other.app');
+      foreignProbe.init = true;
+    } catch {
+      // Recorded as false in the diagnostic output.
+    }
+    try {
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() =>
+              window.seenStorageEventsReady.map((entry) => entry.key)
+            ),
+          { timeout: 2000 }
+        )
+        .toContain('other.app');
+      foreignProbe.ready = true;
+    } catch {
+      // Recorded as false in the diagnostic output.
+    }
+    console.log(
+      'DIAG-CONTROL ' +
+        JSON.stringify({
+          ack: ackError ? 'timeout' : 'observed',
+          stateBefore,
+          writeReadback,
+          foreignProbe,
+          initListener: await page.evaluate(() => window.seenStorageEventsInit),
+          readyListener: await page.evaluate(
+            () => window.seenStorageEventsReady
+          ),
+          pageErrors,
+          otherTabErrors,
+          pageConsole,
+          otherTabConsole
+        })
+    );
+    if (ackError) throw ackError;
     // ...and the app reacts to it.
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
     // Clearing all storage can remove the game's keys, so it still counts.
