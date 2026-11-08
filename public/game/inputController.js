@@ -76,12 +76,14 @@ export class InputController {
     this.heldButtons = new Set();
     /** @type {PlayerActionValue | null} Held on the stick or directional pad. */
     this.padDirection = null;
-    // Stryker disable next-line BooleanLiteral: No direction can move; a fresh push replaces this flag before use.
-    this.padDirectionSpent = false;
-    /** Whether the stick or directional pad is held down. */
-    this.padDown = false;
-    /** Whether a pad down held outside play has been spent. */
-    this.padDownSpent = false;
+    /** @type {Map<string, PlayerActionValue>} Active physical controls, oldest first. */
+    this.heldDirections = new Map();
+    /** @type {Set<string>} */
+    this.heldDrops = new Set();
+    /** @type {Map<string, PlayerActionValue>} Last physical pad snapshot, including spent holds. */
+    this.padDirections = new Map();
+    /** @type {Set<string>} */
+    this.padDrops = new Set();
     /** Blur blocks horizontal and down pad input until both return to rest. */
     this.padNeedsRest = false;
 
@@ -129,6 +131,8 @@ export class InputController {
    */
   handleKey(event, pressed) {
     const key = KEY_ALIASES[event.code] ?? event.code;
+    const token = `key:${event.code}`;
+    const fresh = !this.heldKeys.has(event.code);
     const modifierHeld = event.metaKey || event.ctrlKey || event.altKey;
     // A key pressed with a modifier is left to the browser and never counts
     // as held: macOS sends no keyup for a key let go while Cmd is down, so
@@ -136,8 +140,8 @@ export class InputController {
     if (pressed && modifierHeld) return;
     // Held keys matter only during play: a key pressed on a menu must
     // not count as held when play starts or resumes.
-    if (pressed && !event.repeat && this.gameManager.state === GameState.playing) this.heldKeys.add(key);
-    else if (!pressed) this.heldKeys.delete(key);
+    if (pressed && !event.repeat && this.gameManager.state === GameState.playing) this.heldKeys.add(event.code);
+    else if (!pressed) this.heldKeys.delete(event.code);
 
     // While the pause screen asks to confirm New Game, keys belong to its
     // dialog and press its buttons, except a held key repeating: the Enter
@@ -164,14 +168,16 @@ export class InputController {
     if (pressed && event.repeat) return;
 
     if (key === 'KeyA' || key === 'KeyD') {
-      if (pressed) {
-        this.startMoving(key === 'KeyA' ? PlayerAction.moveLeft : PlayerAction.moveRight);
-      } else {
-        this.resumeHeldMovement();
-      }
+      if (pressed && fresh && this.gameManager.state === GameState.playing) {
+        this.heldDirections.set(token, key === 'KeyA' ? PlayerAction.moveLeft : PlayerAction.moveRight);
+      } else if (!pressed) this.heldDirections.delete(token);
+      this.resumeHeldMovement();
     } else if (key === 'KeyS') {
-      // One row at once, then the steady soft drop while held.
-      if (pressed && this.gameManager.state === GameState.playing) this.gameManager.softDrop();
+      if (pressed && fresh && this.gameManager.state === GameState.playing) {
+        this.heldDrops.add(token);
+        // One row at once, then steady soft drop while any token is held.
+        this.gameManager.softDrop();
+      } else if (!pressed) this.heldDrops.delete(token);
       this.updateSoftDrop();
     } else if (pressed && (key === 'KeyP' || key === 'Escape')) {
       this.gameManager.togglePause();
@@ -205,14 +211,16 @@ export class InputController {
     const wasPlaying = this.gameManager.state === GameState.playing;
     const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
     this.heldButtons = pressed;
-    let direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
-      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight
-        : null;
-    const padDown = yAxis < -0.5 || pressed.has('down');
-    // A direction read after blur may be the old hold. Even an opposite
-    // direction must wait for rest; focus alone does not prove a release.
-    if (direction === null && !padDown) this.padNeedsRest = false;
-
+    const [directions, drops] = this.readPadControls(pressed, xAxis, yAxis);
+    // Dialog navigation keeps its existing left-first physical selection.
+    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
+      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight : null;
+    // Blur requires horizontal and down controls to return to rest together.
+    if (directions.size === 0 && drops.size === 0) this.padNeedsRest = false;
+    const previousDirections = this.padDirections;
+    const previousDrops = this.padDrops;
+    this.padDirections = directions;
+    this.padDrops = drops;
     // While the pause screen asks to confirm New Game, left and right on the
     // stick or directional pad move between its buttons, once per push, A
     // presses the selected one and B cancels; nothing else acts. The pad's
@@ -223,12 +231,8 @@ export class InputController {
       else if (newPresses.has('b')) this.gameManager.cancelNewGame();
       else if (direction && direction !== this.padDirection) this.questionButtons.move(direction === PlayerAction.moveLeft ? -1 : 1);
       this.padDirection = direction;
-      this.padDirectionSpent = true;
       return;
     }
-
-    // Blur suppresses gameplay movement, not the confirmation buttons.
-    if (this.padNeedsRest) direction = null;
 
     // Menu and View change what the game is doing, so they act alone: a
     // button pressed at the same moment would act on the new state, such as
@@ -250,37 +254,55 @@ export class InputController {
       for (const action of actions) this.gameManager.handleAction(action);
     }
 
-    // A pad down held outside play is spent: it soft drops nothing until
-    // it is let go and pushed again during play.
-    if (padDown && !wasPlaying) this.padDownSpent = true;
-    else if (!padDown) this.padDownSpent = false;
-    this.padDown = padDown && !this.padDownSpent && !this.padNeedsRest;
-    this.updateSoftDrop();
-
-    // Polling runs every frame, so only react to stick and pad changes;
-    // otherwise a centered stick would cancel keyboard movement.
-    if (!wasPlaying) this.padDirectionSpent = true;
-    else if (direction !== this.padDirection) this.padDirectionSpent = false;
-    if (direction === this.padDirection) return;
-    this.padDirection = direction;
-    if (direction && !this.padDirectionSpent) {
-      this.startMoving(direction);
-    } else {
-      this.resumeHeldMovement();
+    // Admit only fresh physical holds made during play. Remember spent
+    // holds in the pad snapshot, so resume or an unrelated release cannot
+    // make them fresh. A stick reversal is a new hold of that same token.
+    const active = wasPlaying && this.gameManager.state === GameState.playing && !this.padNeedsRest;
+    let movementChanged = false;
+    for (const [token, held] of previousDirections) {
+      if (directions.get(token) !== held) movementChanged = this.heldDirections.delete(token) || movementChanged;
     }
+    for (const [token, held] of directions) {
+      if (active && previousDirections.get(token) !== held) {
+        this.heldDirections.set(token, held);
+        movementChanged = true;
+      }
+    }
+    for (const token of previousDrops) {
+      if (!drops.has(token)) this.heldDrops.delete(token);
+    }
+    for (const token of drops) {
+      if (active && !previousDrops.has(token)) this.heldDrops.add(token);
+    }
+    this.padDirection = direction;
+    this.updateSoftDrop();
+    if (movementChanged) this.resumeHeldMovement();
   }
 
-  // After a direction is let go, keeps moving in a direction still held on
-  // the keyboard, the stick or the directional pad, or stops.
+  /**
+   * @param {Set<string>} pressed
+   * @param {number} xAxis
+   * @param {number} yAxis
+   * @returns {[Map<string, PlayerActionValue>, Set<string>]}
+   */
+  readPadControls(pressed, xAxis, yAxis) {
+    /** @type {Map<string, PlayerActionValue>} */
+    const directions = new Map();
+    if (xAxis < -0.5) directions.set('pad:stick', PlayerAction.moveLeft);
+    else if (xAxis > 0.5) directions.set('pad:stick', PlayerAction.moveRight);
+    if (pressed.has('left')) directions.set('pad:left', PlayerAction.moveLeft);
+    if (pressed.has('right')) directions.set('pad:right', PlayerAction.moveRight);
+    const drops = new Set();
+    if (yAxis < -0.5) drops.add('pad:stick');
+    if (pressed.has('down')) drops.add('pad:down');
+    return [directions, drops];
+  }
+
+  // Releasing one token leaves the newest remaining physical hold in charge.
   resumeHeldMovement() {
-    const held = this.heldKeys.has('KeyA') ? PlayerAction.moveLeft
-      : this.heldKeys.has('KeyD') ? PlayerAction.moveRight
-        : this.padDirectionSpent ? null : this.padDirection;
-    if (held) {
-      this.startMoving(held);
-    } else {
-      this.stopMoving();
-    }
+    const held = [...this.heldDirections.values()].at(-1);
+    if (held) this.startMoving(held);
+    else this.stopMoving();
   }
 
   /** @param {PlayerActionValue} action */
@@ -310,7 +332,7 @@ export class InputController {
   // Soft drops while the soft drop key, the stick or the directional pad is
   // held down, so a resting stick does not cancel the key.
   updateSoftDrop() {
-    if (this.heldKeys.has('KeyS') || this.padDown) {
+    if (this.heldDrops.size > 0) {
       this.startSoftDrop();
     } else {
       this.stopSoftDrop();
@@ -342,9 +364,8 @@ export class InputController {
   // (the poll acts only on changes), and a pad down held into the pause
   // stays spent until let go.
   releaseForPause() {
-    this.padDirectionSpent = true;
-    if (this.padDown) this.padDownSpent = true;
-    this.padDown = false;
+    this.heldDirections.clear();
+    this.heldDrops.clear();
     this.stopMoving();
     this.stopSoftDrop();
     this.heldKeys.clear();
@@ -366,10 +387,10 @@ export class InputController {
           .filter(([, index]) => gamepad.buttons[index]?.pressed)
           .map(([name]) => name)
       );
+      [this.padDirections, this.padDrops] = this.readPadControls(this.heldButtons, gamepad.axes[0] ?? 0, -(gamepad.axes[1] ?? 0));
       this.padDirection = gamepad.axes[0] < -0.5 || this.heldButtons.has('left') ? PlayerAction.moveLeft
         : gamepad.axes[0] > 0.5 || this.heldButtons.has('right') ? PlayerAction.moveRight
           : null;
-      this.padDownSpent = gamepad.axes[1] > 0.5 || this.heldButtons.has('down');
     } catch (error) {
       console.error('Tetris gamepad error:', error);
     }
@@ -380,10 +401,10 @@ export class InputController {
     this.stopSoftDrop();
     this.heldButtons = new Set();
     this.padDirection = null;
-    // Stryker disable next-line BooleanLiteral: No direction can move; a fresh push replaces this flag before use.
-    this.padDirectionSpent = false;
-    this.padDown = false;
-    this.padDownSpent = false;
+    this.heldDirections.clear();
+    this.heldDrops.clear();
+    this.padDirections.clear();
+    this.padDrops.clear();
     this.heldKeys.clear();
   }
 }

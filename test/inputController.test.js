@@ -1612,8 +1612,8 @@ test('disconnect with no remaining controller forgets old pad holds and allows f
       'no remaining pad means no remembered direction'
     );
     assert.equal(
-      controller.padDownSpent,
-      false,
+      controller.padDrops.size,
+      0,
       'no remaining pad means no spent down hold'
     );
     manager.actions = [];
@@ -1695,6 +1695,7 @@ test('a neutral disconnect snapshot leaves the first new pad push fresh [INP-4]'
   const { manager, controller, fire, pads, tick } = setup(t);
   const report = t.mock.method(console, 'error', () => {});
   for (const [axes, fresh, action] of [
+    [[], { x: 1 }, PlayerAction.moveRight],
     [[0, 0], { x: 1 }, PlayerAction.moveRight],
     [[-0.5, 0], { x: -1 }, PlayerAction.moveLeft],
     [[0.5, 0], { x: 1 }, PlayerAction.moveRight],
@@ -1904,4 +1905,223 @@ test('blur cannot soft drop the real falling piece before down returns to rest [
   controller.pollGamepads();
   tick(50);
   assert.equal(game.currentTetromino.position.row, row + 1);
+});
+
+// Physical held controls: aliases and input sources keep their own identity.
+test('keyboard aliases stay held independently in either release order [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  for (const [first, second, action] of [
+    ['KeyA', 'ArrowLeft', PlayerAction.moveLeft],
+    ['ArrowLeft', 'KeyA', PlayerAction.moveLeft],
+    ['KeyD', 'ArrowRight', PlayerAction.moveRight],
+    ['ArrowRight', 'KeyD', PlayerAction.moveRight]
+  ]) {
+    for (const release of [first, second]) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      key(first);
+      key(second);
+      const timer = controller.movementTimer;
+      key(release, false);
+      assert.equal(
+        controller.movementTimer,
+        timer,
+        'same direction keeps its repeat position'
+      );
+      tick(200);
+      assert.equal(
+        count(manager, action),
+        2,
+        `${first}/${second}: surviving alias repeats`
+      );
+      key(release === first ? second : first, false);
+      const stopped = manager.actions.length;
+      tick(200);
+      assert.equal(manager.actions.length, stopped, 'last release stops');
+    }
+  }
+});
+
+test('S and Down keep independent soft-drop holds in both release orders [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  for (const first of ['KeyS', 'ArrowDown']) {
+    for (const release of ['KeyS', 'ArrowDown']) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      const second = first === 'KeyS' ? 'ArrowDown' : 'KeyS';
+      key(first);
+      key(second);
+      assert.equal(count(manager, 'softDrop'), 2, 'each fresh key drops once');
+      const timer = controller.softDropTimer;
+      key(release, false);
+      assert.equal(controller.softDropTimer, timer);
+      tick(100);
+      assert.equal(
+        count(manager, 'softDrop'),
+        4,
+        'surviving key keeps steady drop'
+      );
+      key(release === first ? second : first, false);
+      tick(100);
+      assert.equal(count(manager, 'softDrop'), 4, 'final release stops');
+    }
+  }
+});
+
+test('B12 three-key example falls back to newest remaining key, not fixed alias order [B12] [INP-2]', (t) => {
+  const { controller, key, manager } = setup(t);
+  key('KeyA');
+  key('KeyD');
+  key('ArrowLeft');
+  key('ArrowLeft', false);
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight
+  ]);
+  key('KeyD', false);
+  assert.equal(controller.movement, PlayerAction.moveLeft);
+  key('KeyA', false);
+  assert.equal(controller.movement, null);
+});
+
+test('releasing pad input restores the newest of two held keys in either order [B12] [INP-2]', (t) => {
+  const { controller, key, manager } = setup(t);
+  for (const [first, second, expected, x, buttons] of [
+    ['KeyA', 'KeyD', PlayerAction.moveRight, -1, []],
+    ['KeyD', 'KeyA', PlayerAction.moveLeft, 1, []],
+    ['KeyA', 'KeyD', PlayerAction.moveRight, 0, ['left']],
+    ['KeyD', 'KeyA', PlayerAction.moveLeft, 0, ['right']]
+  ]) {
+    controller.releaseAllInput();
+    key(first);
+    key(second);
+    controller.processInput(new Set(buttons), x, 0);
+    manager.actions = [];
+    controller.processInput(new Set(), 0, 0);
+    assert.deepEqual(manager.actions, [expected]);
+  }
+});
+
+test('pad buttons obey newest press and restore surviving direction in either order [B12] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  for (const [first, second, firstAction, secondAction] of [
+    ['left', 'right', PlayerAction.moveLeft, PlayerAction.moveRight],
+    ['right', 'left', PlayerAction.moveRight, PlayerAction.moveLeft]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    controller.processInput(new Set([first]), 0, 0);
+    controller.processInput(new Set([first, second]), 0, 0);
+    controller.processInput(new Set([first]), 0, 0);
+    assert.deepEqual(manager.actions, [firstAction, secondAction, firstAction]);
+    controller.processInput(new Set(), 0, 0);
+    assert.equal(controller.movement, null);
+  }
+});
+
+test('stick and pad same-direction holds survive either release and do not restart DAS [B12] [INP-4]', (t) => {
+  const { controller, manager, tick } = setup(t);
+  for (const [x, button, action] of [
+    [-1, 'left', PlayerAction.moveLeft],
+    [1, 'right', PlayerAction.moveRight]
+  ]) {
+    for (const releaseStick of [false, true]) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      controller.processInput(new Set(), x, 0);
+      controller.processInput(new Set([button]), x, 0);
+      const timer = controller.movementTimer;
+      controller.processInput(
+        new Set(releaseStick ? [button] : []),
+        releaseStick ? 0 : x,
+        0
+      );
+      assert.equal(controller.movementTimer, timer);
+      tick(200);
+      assert.equal(count(manager, action), 2);
+      controller.processInput(new Set(), 0, 0);
+      tick(200);
+      assert.equal(count(manager, action), 2);
+    }
+  }
+});
+
+test('new stick direction wins against a held pad and releasing it restores the pad [B12] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  controller.processInput(new Set(['left']), 0, 0);
+  controller.processInput(new Set(['left']), 1, 0);
+  controller.processInput(new Set(['left']), -1, 0);
+  controller.processInput(new Set(['left']), 1, 0);
+  controller.processInput(new Set(['left']), 0, 0);
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft
+  ]);
+});
+
+test('all four soft-drop controls survive unrelated releases without timer restart [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  key('KeyS');
+  key('ArrowDown');
+  controller.processInput(new Set(['down']), 0, -1);
+  const timer = controller.softDropTimer;
+  key('KeyS', false);
+  key('ArrowDown', false);
+  controller.processInput(new Set(), 0, -1);
+  assert.equal(controller.softDropTimer, timer);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 4);
+  controller.processInput(new Set(), 0, 0);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 4);
+});
+
+test('confirmation preserves left-first navigation for mixed pad controls and spends their holds [STA-1] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  controller.processInput(new Set(['left', 'right', 'down']), 1, -1);
+  assert.deepEqual(manager.actions, ['move -1']);
+  manager.state = GameState.playing;
+  manager.isConfirmingNewGame = false;
+  manager.actions = [];
+  key('KeyD', false);
+  controller.processInput(new Set(['left', 'right', 'down']), 1, -1);
+  tick(400);
+  assert.deepEqual(manager.actions, [], 'dialog holds cannot revive gameplay');
+});
+
+test('disconnect preserves confirmation selection for unchanged mixed pad holds [STA-1] [INP-4]', (t) => {
+  const { controller, manager, fire, pads } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  for (const input of [
+    { pressed: ['left', 'right'] },
+    { x: -1, pressed: ['right'] },
+    { x: 1, pressed: ['left'] }
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = gamepad(input);
+    controller.pollGamepads();
+    manager.actions = [];
+    fire('gamepaddisconnected');
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'unchanged surviving holds do not select'
+    );
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad({ pressed: ['right'] });
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(manager.actions, ['move 1'], 'fresh push selects once');
+  }
 });
