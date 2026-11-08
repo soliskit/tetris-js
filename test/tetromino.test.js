@@ -181,9 +181,15 @@ test('the O piece never changes when rotated [PCE-4]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   o.position = position(8, 4);
+  const before = o.position;
   o.rotate(board);
   o.rotate(board, true);
   assert.equal(o.rotationState, 0);
+  assert.equal(
+    o.position,
+    before,
+    'the same position object stays, so the page sees no change'
+  );
   assert.deepEqual(o.position, position(8, 4));
 });
 
