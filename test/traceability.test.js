@@ -175,10 +175,12 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   );
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /npm run test:mutation/);
-  // Every pull request: the changed game logic alone, or every game file
-  // when the tests or the workflow change, each game file mutated in its
-  // own parallel run (decision-log row D83, log kept in git history), and one aggregate check that stands for the
-  // whole matrix so the merge rule can require it (D85).
+  // Every pull request: a plan job classifies each changed path; the
+  // matrix runs in parallel per game file, skipping only when every
+  // changed path is one of the enumerated documentation/metadata files
+  // while each stays a regular non-executable file, and one aggregate
+  // check stands for the whole matrix so the merge rule can require it
+  // (D85).
   const pullRequests = fs.readFileSync(
     path.join(root, '.github/workflows/mutation-pr.yml'),
     'utf8'
@@ -186,12 +188,12 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   assert.match(pullRequests, /pull_request:/);
   assert.match(
     pullRequests,
-    /on:\n {2}pull_request:\n\n/,
-    'every pull request runs the workflow, whatever it changes'
+    /on:\n {2}pull_request:\n {4}types: \[opened, synchronize, reopened, ready_for_review\]/,
+    'an opened, synchronized, reopened or ready-for-review pull request runs the workflow, whatever it changes'
   );
   assert.ok(
-    pullRequests.includes("'^(test/|\\.github/workflows/mutation-pr\\.yml$)'"),
-    'a test or workflow change is detected'
+    pullRequests.includes('.gitignore|LICENSE|README.md'),
+    'the skip enumeration names .gitignore, LICENSE and README.md'
   );
   assert.match(
     pullRequests,
@@ -205,13 +207,18 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   );
   assert.match(
     pullRequests,
-    /files=\$\(find public\/game -name '\*\.js' \| sort\)/,
-    'a test or workflow change mutates every game file'
+    /git diff --raw -z -M/,
+    'the changed paths are classified with rename detection, NUL-safe'
   );
   assert.match(
     pullRequests,
-    /if: needs\.plan\.outputs\.has_files == 'true'/,
-    'a plan with no game file passes'
+    /git ls-tree -r -z --name-only "\$head_sha" -- public\/game/,
+    'a full sweep lists the game files from the head tree, NUL-safe'
+  );
+  assert.match(
+    pullRequests,
+    /if: needs\.plan\.outputs\.verdict == 'full'/,
+    'the matrix runs only on a full verdict'
   );
   assert.match(
     pullRequests,
@@ -225,8 +232,8 @@ test('mutation testing must leave no mutant alive, and runs weekly and on pull r
   );
   assert.match(
     pullRequests,
-    /grep -E '\^public\/game\/\.\+\\\.js\$'/,
-    'changed game logic is mutated'
+    /docs\/ is\n# NOT in the zero set/,
+    'the workflow documents that docs/ changes are not in the zero set'
   );
   // Every unit test file that exercises the game logic takes part.
   for (const file of fs
