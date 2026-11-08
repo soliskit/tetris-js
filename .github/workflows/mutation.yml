@@ -1,8 +1,12 @@
 name: Mutation testing
 
-# A full run takes about 40 minutes. It runs weekly and on demand, and pull
-# requests that change the game logic or its tests run mutation-pr.yml. It
-# fails if any mutant survives.
+# Each game file is mutated in its own parallel run, so the full check
+# takes about as long as its largest file, and new game files are picked
+# up on their own. It runs weekly and on demand, and pull requests that
+# change the game logic or its tests run mutation-pr.yml. It fails if
+# any mutant survives. The threshold is stryker.config.json's (break at
+# 100); mutants that make the tests run too long count as caught, and
+# the exclusions marked in the code stay excluded.
 on:
   schedule:
     - cron: '0 7 * * 6' # Saturdays 7:00 AM Los Angeles time
@@ -13,7 +17,41 @@ permissions:
   contents: read
 
 jobs:
+  # List the game files at this ref; the mutation matrix below runs one
+  # job per file. Same naming rule as mutation-pr.yml: only simple,
+  # portable file names are supported, and anything else fails the plan
+  # rather than the matrix naming.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.list.outputs.files }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: list
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git ls-tree -r -z --name-only HEAD -- public/game > "$RUNNER_TEMP/games.list"; then
+            echo "Cannot list the game files; failing closed."
+            exit 1
+          fi
+          mapfile -d '' -t game_files < "$RUNNER_TEMP/games.list"
+          if [ "${#game_files[@]}" -eq 0 ]; then
+            echo "No game files exist at this ref; failing closed."
+            exit 1
+          fi
+          for f in "${game_files[@]}"; do
+            [[ "$f" =~ ^public/game/[A-Za-z0-9_-]+\.js$ ]] || { echo "Unsupported game file name: $f; failing closed."; exit 1; }
+          done
+          matrix=$(jq -n -c --args '{include: [$ARGS.positional[] | {file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js"))}]}' "${game_files[@]}")
+          echo "files=$matrix" >> "$GITHUB_OUTPUT"
+          echo "${#game_files[@]} game files."
   mutation:
+    name: mutation (${{ matrix.name }})
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.files) }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -24,9 +62,62 @@ jobs:
           cache: npm
       - run: npm install --global npm@12.2.0
       - run: npm ci
-      - run: npm run test:mutation
+      - name: Mutate ${{ matrix.file }}
+        run: npm run test:mutation -- --mutate "${{ matrix.file }}"
+      # Done-marker accounting, deliberately narrow, same scheme as
+      # mutation-pr.yml: a marker attests that a shard with this name
+      # finished successfully in some attempt of this workflow run.
+      # overwrite keeps a re-run attempt able to re-publish.
+      - name: Record this shard as done
+        if: success()
+        run: echo "${{ matrix.file }}" > "done-${{ matrix.name }}.txt"
+      - name: Publish the done marker
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-done-${{ matrix.name }}
+          path: done-${{ matrix.name }}.txt
+          retention-days: 1
+          overwrite: true
       - if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: mutation-report
+          name: mutation-report-${{ matrix.name }}
           path: reports/mutation/
+          overwrite: true
+  # One result that stands for the whole matrix, same contract as
+  # mutation-pr.yml's finalize: it passes only when the plan succeeded,
+  # the aggregate matrix result is success, and the plan's expected
+  # shard names exactly match the done-marker names collected in this
+  # workflow run. The markers are same-workflow-run filename accounting.
+  finalize:
+    name: mutation (all)
+    needs: [plan, mutation]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Plan and mutation results
+        run: |
+          if [ "${{ needs.plan.result }}" != "success" ]; then
+            echo "The plan job ended as: ${{ needs.plan.result }}"
+            exit 1
+          fi
+          if [ "${{ needs.mutation.result }}" != "success" ]; then
+            echo "The mutation runs ended as: ${{ needs.mutation.result }}"
+            exit 1
+          fi
+      - name: Collect the done markers
+        uses: actions/download-artifact@v7
+        with:
+          pattern: mutation-done-*
+          merge-multiple: true
+      - name: Every expected shard is accounted for
+        run: |
+          set -euo pipefail
+          jq -r '[.include[].name] | sort | .[]' <<< '${{ needs.plan.outputs.files }}' > expected.txt
+          ls done-*.txt | sed -e 's/^done-//' -e 's/\.txt$//' | sort -u > actual.txt
+          if ! diff -u expected.txt actual.txt; then
+            echo "The mutation matrix does not match the plan's expected shard set."
+            exit 1
+          fi
+          echo "All $(wc -l < expected.txt) expected shards are accounted for."
