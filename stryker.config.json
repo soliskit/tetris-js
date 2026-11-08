@@ -4,9 +4,7 @@
   "commandRunner": {
     "command": "exec node --test --test-isolation=none test/model.test.js test/tetromino.test.js test/factory.test.js test/game.test.js test/gameManager.test.js test/session.test.js test/savedRecord.test.js test/semanticSave.test.js test/safety.test.js test/inputController.test.js"
   },
-  "mutate": [
-    "public/game/**/*.js"
-  ],
+  "mutate": ["public/game/**/*.js"],
   "ignorePatterns": [
     "coverage",
     "test-results",
@@ -14,12 +12,7 @@
     "reports"
   ],
   "tsconfigFile": "no-tsconfig-rewrite.json",
-  "reporters": [
-    "clear-text",
-    "progress",
-    "html",
-    "json"
-  ],
+  "reporters": ["clear-text", "progress", "html", "json"],
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
   },

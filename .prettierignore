@@ -1,0 +1,5 @@
+LICENSE.md
+.github/
+package-lock.json
+public/
+docs/audit/

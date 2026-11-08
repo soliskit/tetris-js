@@ -202,7 +202,7 @@ export function parseUniqueJSON(text) {
   const value = JSON.parse(text);
   // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
   // names, including escaped spellings of the same name, at every object depth.
-  const tokens = /** @type {RegExpMatchArray} */ (text.match(/"(?:[^"\\]|\\.)*"|[{}\[\],:]|[^\s{}\[\],:]+/g));
+  const tokens = /** @type {RegExpMatchArray} */ (text.match(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g));
   let index = 0;
   function visit() {
     const token = tokens[index++];

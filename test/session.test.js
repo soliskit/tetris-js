@@ -1,19 +1,39 @@
-import { parseSavedRecord, serializeSavedRecord } from '../public/game/session.js';
+import { serializeSavedRecord } from '../public/game/session.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-import { GameManager, createMemoryStorage } from '../public/game/gameManager.js';
+import {
+  GameManager,
+  createMemoryStorage
+} from '../public/game/gameManager.js';
 import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { parseSession, serializeSession } from '../public/game/session.js';
-import { PieceColors, TetrominoFactory } from '../public/game/tetrominoFactory.js';
-import { createFakeScheduler, newGame, pieceByColor, seededRandom, sequenceFactory } from './helpers.js';
+import {
+  PieceColors,
+  TetrominoFactory
+} from '../public/game/tetrominoFactory.js';
+import {
+  createFakeScheduler,
+  newGame,
+  pieceByColor,
+  seededRandom,
+  sequenceFactory
+} from './helpers.js';
 
 const SIZE = { rows: 20, columns: 10 };
 
 // A realistic save: a few locked blocks, a held piece and a moved piece.
 function validSave() {
-  const { game } = newGame({ factory: sequenceFactory([PieceColors.purple, PieceColors.yellow, PieceColors.green, PieceColors.red, PieceColors.orange]) });
+  const { game } = newGame({
+    factory: sequenceFactory([
+      PieceColors.purple,
+      PieceColors.yellow,
+      PieceColors.green,
+      PieceColors.red,
+      PieceColors.orange
+    ])
+  });
   game.handleAction(PlayerAction.hold);
   game.handleAction(PlayerAction.moveLeft);
   game.gameBoard[19][0] = { isFilled: true, color: PieceColors.cyan };
@@ -28,7 +48,10 @@ test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   assert.deepEqual(session.gameBoard, game.gameBoard);
   assert.equal(session.score, 1300);
   assert.deepEqual(session.currentTetromino, game.currentTetromino);
-  assert.deepEqual(session.nextTetrominos.map(piece => piece.color), game.nextTetrominos.map(piece => piece.color));
+  assert.deepEqual(
+    session.nextTetrominos.map((piece) => piece.color),
+    game.nextTetrominos.map((piece) => piece.color)
+  );
   assert.deepEqual(session.heldTetromino, game.heldTetromino);
   assert.equal(session.canHoldTetromino, false);
 });
@@ -38,8 +61,14 @@ test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4
   const data = JSON.parse(serializeSession(game));
   // A new game deals the current piece and three upcoming ones from a full bag.
   assert.equal(data.bag.length, 3);
-  assert.deepEqual(data.bag, game.factory.bag.map(piece => piece.color));
-  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, game.factory.bag);
+  assert.deepEqual(
+    data.bag,
+    game.factory.bag.map((piece) => piece.color)
+  );
+  assert.deepEqual(
+    parseSession(JSON.stringify(data), SIZE).bag,
+    game.factory.bag
+  );
 });
 
 test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
@@ -71,12 +100,23 @@ test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2
 
 test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {
   const { data } = validSave();
-  data.currentTetromino.rotations = [[[true, true, true, true], [true, true, true, true]]];
+  data.currentTetromino.rotations = [
+    [
+      [true, true, true, true],
+      [true, true, true, true]
+    ]
+  ];
   data.currentTetromino.wallKickData = [];
   const session = parseSession(JSON.stringify(data), SIZE);
   assert.equal(session.currentTetromino.cells.length, 4);
-  assert.deepEqual(session.currentTetromino.rotations, pieceByColor(data.currentTetromino.color).rotations);
-  assert.deepEqual(session.currentTetromino.wallKickData, pieceByColor(data.currentTetromino.color).wallKickData);
+  assert.deepEqual(
+    session.currentTetromino.rotations,
+    pieceByColor(data.currentTetromino.color).rotations
+  );
+  assert.deepEqual(
+    session.currentTetromino.wallKickData,
+    pieceByColor(data.currentTetromino.color).wallKickData
+  );
 });
 
 test('waiting pieces come back ready to spawn [SAF-1]', () => {
@@ -95,49 +135,121 @@ const corruptions = {
   'JSON null': () => 'null',
   'a list instead of an object': () => '[]',
   'a number': () => '42',
-  'no board': data => { delete data.gameBoard; },
-  'a board with 19 rows': data => { data.gameBoard.pop(); },
-  'a board row with 11 cells': data => { data.gameBoard[3].push({ isFilled: false, color: null }); },
-  'a board row that is not a list': data => { data.gameBoard[3] = 'row'; },
-  'a cell that is not an object': data => { data.gameBoard[3][3] = 1; },
-  'a cell without isFilled': data => { data.gameBoard[3][3] = { color: null }; },
-  'a filled cell with an unknown color': data => { data.gameBoard[19][0].color = '#123456'; },
-  'a filled cell without a color': data => { data.gameBoard[19][0].color = null; },
-  'an empty cell with a color': data => { data.gameBoard[5][5] = { isFilled: false, color: PieceColors.red }; },
-  'a negative score': data => { data.score = -100; },
-  'a fractional score': data => { data.score = 150.5; },
-  'a score stored as text': data => { data.score = '1300'; },
-  'a score too large to be exact': data => { data.score = 2 ** 60; },
-  'no current piece': data => { delete data.currentTetromino; },
-  'a current piece of an unknown type': data => { data.currentTetromino.color = '#000000'; },
-  'a current piece without a position': data => { delete data.currentTetromino.position; },
-  'a current piece at a fractional column': data => { data.currentTetromino.position.column = 2.5; },
-  'a current piece with rotation 4': data => { data.currentTetromino.rotationState = 4; },
-  'a current piece with rotation -1': data => { data.currentTetromino.rotationState = -1; },
-  'a current piece with rotation 1.5': data => { data.currentTetromino.rotationState = 1.5; },
-  'a current piece with a rotation one past its last': data => {
-    data.currentTetromino.rotationState = pieceByColor(data.currentTetromino.color).rotations.length;
+  'no board': (data) => {
+    delete data.gameBoard;
   },
-  'a current piece outside the board': data => { data.currentTetromino.position = { row: 0, column: -3 }; },
-  'a current piece inside locked blocks': data => {
+  'a board with 19 rows': (data) => {
+    data.gameBoard.pop();
+  },
+  'a board row with 11 cells': (data) => {
+    data.gameBoard[3].push({ isFilled: false, color: null });
+  },
+  'a board row that is not a list': (data) => {
+    data.gameBoard[3] = 'row';
+  },
+  'a cell that is not an object': (data) => {
+    data.gameBoard[3][3] = 1;
+  },
+  'a cell without isFilled': (data) => {
+    data.gameBoard[3][3] = { color: null };
+  },
+  'a filled cell with an unknown color': (data) => {
+    data.gameBoard[19][0].color = '#123456';
+  },
+  'a filled cell without a color': (data) => {
+    data.gameBoard[19][0].color = null;
+  },
+  'an empty cell with a color': (data) => {
+    data.gameBoard[5][5] = { isFilled: false, color: PieceColors.red };
+  },
+  'a negative score': (data) => {
+    data.score = -100;
+  },
+  'a fractional score': (data) => {
+    data.score = 150.5;
+  },
+  'a score stored as text': (data) => {
+    data.score = '1300';
+  },
+  'a score too large to be exact': (data) => {
+    data.score = 2 ** 60;
+  },
+  'no current piece': (data) => {
+    delete data.currentTetromino;
+  },
+  'a current piece of an unknown type': (data) => {
+    data.currentTetromino.color = '#000000';
+  },
+  'a current piece without a position': (data) => {
+    delete data.currentTetromino.position;
+  },
+  'a current piece at a fractional column': (data) => {
+    data.currentTetromino.position.column = 2.5;
+  },
+  'a current piece with rotation 4': (data) => {
+    data.currentTetromino.rotationState = 4;
+  },
+  'a current piece with rotation -1': (data) => {
+    data.currentTetromino.rotationState = -1;
+  },
+  'a current piece with rotation 1.5': (data) => {
+    data.currentTetromino.rotationState = 1.5;
+  },
+  'a current piece with a rotation one past its last': (data) => {
+    data.currentTetromino.rotationState = pieceByColor(
+      data.currentTetromino.color
+    ).rotations.length;
+  },
+  'a current piece outside the board': (data) => {
+    data.currentTetromino.position = { row: 0, column: -3 };
+  },
+  'a current piece inside locked blocks': (data) => {
     const { row, column } = data.currentTetromino.position;
-    for (let r = row; r < row + 3; r++) for (let c = column; c < column + 3; c++) {
-      if (r !== 19 || c > 3) data.gameBoard[r][c] = { isFilled: true, color: PieceColors.blue };
-    }
+    for (let r = row; r < row + 3; r++)
+      for (let c = column; c < column + 3; c++) {
+        if (r !== 19 || c > 3)
+          data.gameBoard[r][c] = { isFilled: true, color: PieceColors.blue };
+      }
   },
-  'no upcoming pieces': data => { delete data.nextTetrominos; },
-  'two upcoming pieces': data => { data.nextTetrominos.pop(); },
-  'an upcoming piece of an unknown type': data => { data.nextTetrominos[1].color = 'red'; },
-  'an upcoming piece that is not an object': data => { data.nextTetrominos[1] = 7; },
-  'a held piece of an unknown type': data => { data.heldTetromino.color = '#ffffff'; },
-  'a held piece that is a string': data => { data.heldTetromino = 'T'; },
-  'a missing held piece field': data => { delete data.heldTetromino; },
-  'can hold stored as text': data => { data.canHoldTetromino = 'false'; },
-  'a bag that is text': data => { data.bag = 'IOT'; },
-  'a bag that is null': data => { data.bag = null; },
-  'a bag with an unknown piece': data => { data.bag = [PieceColors.cyan, '#123456']; },
-  'a bag with a piece stored as an object': data => { data.bag = [{ color: PieceColors.cyan }]; },
-  'a bag with the same piece twice': data => { data.bag = [PieceColors.red, PieceColors.cyan, PieceColors.red]; }
+  'no upcoming pieces': (data) => {
+    delete data.nextTetrominos;
+  },
+  'two upcoming pieces': (data) => {
+    data.nextTetrominos.pop();
+  },
+  'an upcoming piece of an unknown type': (data) => {
+    data.nextTetrominos[1].color = 'red';
+  },
+  'an upcoming piece that is not an object': (data) => {
+    data.nextTetrominos[1] = 7;
+  },
+  'a held piece of an unknown type': (data) => {
+    data.heldTetromino.color = '#ffffff';
+  },
+  'a held piece that is a string': (data) => {
+    data.heldTetromino = 'T';
+  },
+  'a missing held piece field': (data) => {
+    delete data.heldTetromino;
+  },
+  'can hold stored as text': (data) => {
+    data.canHoldTetromino = 'false';
+  },
+  'a bag that is text': (data) => {
+    data.bag = 'IOT';
+  },
+  'a bag that is null': (data) => {
+    data.bag = null;
+  },
+  'a bag with an unknown piece': (data) => {
+    data.bag = [PieceColors.cyan, '#123456'];
+  },
+  'a bag with a piece stored as an object': (data) => {
+    data.bag = [{ color: PieceColors.cyan }];
+  },
+  'a bag with the same piece twice': (data) => {
+    data.bag = [PieceColors.red, PieceColors.cyan, PieceColors.red];
+  }
 };
 
 for (const [name, corrupt] of Object.entries(corruptions)) {
@@ -152,12 +264,19 @@ for (const [name, corrupt] of Object.entries(corruptions)) {
 // The former raw-position fixture is refused through the player's storage route.
 // The older fixture remains unchanged as evidence that its layout is refused.
 const savedGameFormats = [
-  ['raw-position format', 'saved-game-current.json', saved => !('level' in saved)]
+  [
+    'raw-position format',
+    'saved-game-current.json',
+    (saved) => !('level' in saved)
+  ]
 ];
 
 for (const [format, file, isThatFormat] of savedGameFormats) {
   test(`the former ${format} is refused whole without migration [STA-6] [STA-4]`, () => {
-    const text = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
+    const text = fs.readFileSync(
+      new URL(`./fixtures/${file}`, import.meta.url),
+      'utf8'
+    );
     assert.ok(isThatFormat(JSON.parse(text)));
     const storage = createMemoryStorage();
     storage.setItem('tetris.savedGameSession', text);
@@ -168,10 +287,20 @@ for (const [format, file, isThatFormat] of savedGameFormats) {
   });
 }
 
-for (const format of ['a stored level', 'a missing bag', 'a malformed current save']) {
+for (const format of [
+  'a stored level',
+  'a missing bag',
+  'a malformed current save'
+]) {
   test(`Continue refuses ${format} without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]`, () => {
-    const file = format === 'a stored level' ? 'saved-game-with-level.json' : 'saved-game-current.json';
-    let text = fs.readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
+    const file =
+      format === 'a stored level'
+        ? 'saved-game-with-level.json'
+        : 'saved-game-current.json';
+    let text = fs.readFileSync(
+      new URL(`./fixtures/${file}`, import.meta.url),
+      'utf8'
+    );
     if (format === 'a missing bag') {
       const saved = JSON.parse(text);
       delete saved.bag;
@@ -184,7 +313,11 @@ for (const format of ['a stored level', 'a missing bag', 'a malformed current sa
     storage.setItem('tetris.isSessionSaved', 'true');
     storage.setItem('tetris.highScore', '5000');
     const game = new GameManager({ storage, scheduler: createFakeScheduler() });
-    const before = { board: game.gameBoard, piece: game.currentTetromino, bag: [...game.factory.bag] };
+    const before = {
+      board: game.gameBoard,
+      piece: game.currentTetromino,
+      bag: [...game.factory.bag]
+    };
     game.handleAction(PlayerAction.continueGame);
     assert.equal(game.state, GameState.gameOver);
     assert.equal(game.isSessionSaved, false);
@@ -203,15 +336,21 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
     const storage = createMemoryStorage();
     if (source === 'unavailable save') {
       const { data } = validSave();
-      storage.setItem('tetris.savedGameSession', serializeSavedRecord(JSON.stringify(data), false));
+      storage.setItem(
+        'tetris.savedGameSession',
+        serializeSavedRecord(JSON.stringify(data), false)
+      );
     } else storage.setItem('tetris.isSessionSaved', 'true');
     const read = storage.getItem;
-    storage.getItem = key => {
-      if (source === 'unreadable save' && key === 'tetris.savedGameSession') throw new Error('SecurityError');
+    storage.getItem = (key) => {
+      if (source === 'unreadable save' && key === 'tetris.savedGameSession')
+        throw new Error('SecurityError');
       return read(key);
     };
     const writes = [];
-    storage.setItem = (key, value) => { writes.push([key, value]); };
+    storage.setItem = (key, value) => {
+      writes.push([key, value]);
+    };
     const game = new GameManager({ storage, scheduler: createFakeScheduler() });
     game.handleAction(PlayerAction.continueGame);
     assert.equal(game.state, GameState.gameOver);
@@ -223,14 +362,19 @@ test('Continue ignores an unreadable former flag and loads a valid envelope with
   const storage = createMemoryStorage();
   storage.setItem('tetris.isSessionSaved', 'true');
   const { data } = validSave();
-  storage.setItem('tetris.savedGameSession', serializeSavedRecord(JSON.stringify(data), true));
+  storage.setItem(
+    'tetris.savedGameSession',
+    serializeSavedRecord(JSON.stringify(data), true)
+  );
   const read = storage.getItem;
-  storage.getItem = key => {
+  storage.getItem = (key) => {
     if (key === 'tetris.isSessionSaved') throw new Error('SecurityError');
     return read(key);
   };
   const writes = [];
-  storage.setItem = (key, value) => { writes.push([key, value]); };
+  storage.setItem = (key, value) => {
+    writes.push([key, value]);
+  };
   const game = new GameManager({ storage, scheduler: createFakeScheduler() });
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.paused);
@@ -239,16 +383,25 @@ test('Continue ignores an unreadable former flag and loads a valid envelope with
 
 test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
-  const {data}=validSave();
-  const text=serializeSavedRecord(JSON.stringify(data),false);
+  const { data } = validSave();
+  const text = serializeSavedRecord(JSON.stringify(data), false);
   storage.setItem('tetris.savedGameSession', text);
   const read = storage.getItem;
   const reads = [];
   const writes = [];
-  storage.getItem = key => { reads.push(key); return read(key); };
-  storage.setItem = (key, value) => { writes.push([key, value]); };
+  storage.getItem = (key) => {
+    reads.push(key);
+    return read(key);
+  };
+  storage.setItem = (key, value) => {
+    writes.push([key, value]);
+  };
   const game = new GameManager({ storage, scheduler: createFakeScheduler() });
-  const before = { board: game.gameBoard, piece: game.currentTetromino, bag: [...game.factory.bag] };
+  const before = {
+    board: game.gameBoard,
+    piece: game.currentTetromino,
+    bag: [...game.factory.bag]
+  };
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.gameOver);
   assert.equal(game.gameBoard, before.board);
@@ -261,7 +414,10 @@ test('Continue leaves a valid save alone when its availability flag is false [ST
 
 test('refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]', () => {
   const storage = createMemoryStorage();
-  const text = fs.readFileSync(new URL('./fixtures/saved-game-with-level.json', import.meta.url), 'utf8');
+  const text = fs.readFileSync(
+    new URL('./fixtures/saved-game-with-level.json', import.meta.url),
+    'utf8'
+  );
   storage.setItem('tetris.savedGameSession', text);
   storage.setItem('tetris.isSessionSaved', 'true');
   const writes = [];
@@ -279,7 +435,13 @@ test('refusing an old save attempts withdrawal even when the write fails [STA-6]
 
 test('a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]', () => {
   const storage = createMemoryStorage();
-  storage.setItem('savedGameSession', fs.readFileSync(new URL('./fixtures/saved-game-current.json', import.meta.url), 'utf8'));
+  storage.setItem(
+    'savedGameSession',
+    fs.readFileSync(
+      new URL('./fixtures/saved-game-current.json', import.meta.url),
+      'utf8'
+    )
+  );
   storage.setItem('isSessionSaved', 'true');
   const game = new GameManager({ storage, scheduler: createFakeScheduler() });
   assert.equal(game.isSessionSaved, false, 'Continue is not offered');
@@ -303,7 +465,7 @@ test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
 
 test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
-  const withCount = count => {
+  const withCount = (count) => {
     const d = JSON.parse(JSON.stringify(data));
     d.lockDelayResetCount = count;
     return parseSession(JSON.stringify(d), SIZE);
@@ -314,16 +476,24 @@ test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   assert.equal(withCount('3'), null);
   assert.notEqual(withCount(15), null);
   assert.notEqual(withCount(0), null);
-  const withRow = row => {
+  const withRow = (row) => {
     const d = JSON.parse(JSON.stringify(data));
     d.currentTetromino.position.row = 5;
     d.lowestRowReached = row;
     return parseSession(JSON.stringify(d), SIZE);
   };
-  assert.equal(withRow(4), null, 'a remembered low shallower than the piece is impossible');
+  assert.equal(
+    withRow(4),
+    null,
+    'a remembered low shallower than the piece is impossible'
+  );
   assert.equal(withRow(5), null);
   assert.notEqual(withRow(6), null);
-  assert.notEqual(withRow(19), null, 'earlier deeper occupied-block history remains valid');
+  assert.notEqual(
+    withRow(19),
+    null,
+    'earlier deeper occupied-block history remains valid'
+  );
   assert.equal(withRow(20), null);
   assert.equal(withRow(-1), null);
   assert.equal(withRow(2.5), null);
