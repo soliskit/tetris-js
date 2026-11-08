@@ -346,15 +346,42 @@ test.describe('playing with the keyboard', () => {
     // Listening after the game, on the hold box itself, sees what the game did with each key.
     await hold.evaluate((canvas) => {
       window.holdKeys = [];
-      canvas.addEventListener('keydown', (event) =>
-        window.holdKeys.push([event.key, event.defaultPrevented])
-      );
+      canvas.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ')
+          window.holdKeys.push([event.key, event.defaultPrevented]);
+      });
     });
-    await page.keyboard.press('Enter');
+    // A key with Cmd, Ctrl or Alt is the browser's shortcut: it never
+    // holds, the board's filled-cell count stays unchanged, and the
+    // event is not consumed by the game.
+    const held = () => canvasHasDrawing(page, 'heldPreview');
+    for (const modifier of ['Control', 'Alt', 'Meta']) {
+      for (const key of ['Enter', 'Space']) {
+        await page.keyboard.press(`${modifier}+${key}`);
+        await page.waitForTimeout(100);
+        expect(await held(), `${modifier}+${key} must not hold`).toBe(false);
+        expect(await filledCount(page), `${modifier}+${key} acts`).toBe(4);
+      }
+    }
+    // Allowed keys still hold: plain Space positively draws the held
+    // piece; the events of the Shift combinations and plain Enter
+    // remain consumed by the game.
     await page.keyboard.press('Space');
+    await expect.poll(held).toBe(true);
+    await page.keyboard.press('Shift+Enter');
+    await page.keyboard.press('Shift+Space');
+    await page.keyboard.press('Enter');
     expect(await page.evaluate(() => window.holdKeys)).toEqual([
+      ['Enter', false],
+      [' ', false],
+      ['Enter', false],
+      [' ', false],
+      ['Enter', false],
+      [' ', false],
+      [' ', true],
       ['Enter', true],
-      [' ', true]
+      [' ', true],
+      ['Enter', true]
     ]);
   });
 
