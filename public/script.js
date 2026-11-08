@@ -325,9 +325,13 @@ function boardChanged() {
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
+// Returns whether anything was drawn, so callers can tell a real drawing
+// frame from an idle pass that only checked the unchanged caches.
 function drawIfChanged() {
+  let drew = false;
   if (canvasSizes.has(boardCanvas) && boardChanged()) {
     drawBoard();
+    drew = true;
     const piece = gameManager.currentTetromino;
     drawnBoard = {
       piece,
@@ -345,6 +349,7 @@ function drawIfChanged() {
     if (!canvasSizes.has(canvas)) continue;
     if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino) continue;
     drawPreview(canvas, tetromino);
+    drew = true;
     drawnPreviews.set(canvas, tetromino);
   }
   const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
@@ -352,22 +357,25 @@ function drawIfChanged() {
     lastSnapshot = snapshot;
     syncControls();
   }
+  return drew;
 }
 
 function redrawAll() {
   drawnBoard = {};
   drawnPreviews.clear();
-  drawIfChanged();
+  return drawIfChanged();
 }
 
-// An error while drawing is reported once and everything is redrawn on the
-// next frame, so drawing always recovers.
+// A drawing error is reported once per unbroken failure streak, and the
+// drawing caches are cleared so the next frame retries the full draw. A frame
+// that actually drew without failing clears the report flag, so the first
+// error of the next streak is reported again.
 let renderErrorReported = false;
 
-/** @param {() => void} draw */
+/** @param {() => boolean} draw Returns whether it drew anything. */
 function drawSafely(draw) {
   try {
-    draw();
+    if (draw()) renderErrorReported = false;
   } catch (error) {
     drawnBoard = {};
     drawnPreviews.clear();
