@@ -56,6 +56,12 @@ const PAD_ACTIONS = [
   ['up', PlayerAction.drop]
 ];
 
+// Stable private identities, shared by physical snapshots and active holds.
+const PAD_STICK = Symbol();
+const PAD_LEFT = Symbol();
+const PAD_RIGHT = Symbol();
+const PAD_DOWN = Symbol();
+
 export class InputController {
   /**
    * @param {Controllable} gameManager
@@ -76,13 +82,13 @@ export class InputController {
     this.heldButtons = new Set();
     /** @type {PlayerActionValue | null} Held on the stick or directional pad. */
     this.padDirection = null;
-    /** @type {Map<string, PlayerActionValue>} Active physical controls, oldest first. */
+    /** @type {Map<string | symbol, PlayerActionValue>} Active physical controls, oldest first. */
     this.heldDirections = new Map();
-    /** @type {Set<string>} */
+    /** @type {Set<string | symbol>} */
     this.heldDrops = new Set();
-    /** @type {Map<string, PlayerActionValue>} Last physical pad snapshot, including spent holds. */
+    /** @type {Map<symbol, PlayerActionValue>} Last physical pad snapshot, including spent holds. */
     this.padDirections = new Map();
-    /** @type {Set<string>} */
+    /** @type {Set<symbol>} */
     this.padDrops = new Set();
     /** Blur blocks horizontal and down pad input until both return to rest. */
     this.padNeedsRest = false;
@@ -283,18 +289,18 @@ export class InputController {
    * @param {Set<string>} pressed
    * @param {number} xAxis
    * @param {number} yAxis
-   * @returns {[Map<string, PlayerActionValue>, Set<string>]}
+   * @returns {[Map<symbol, PlayerActionValue>, Set<symbol>]}
    */
   readPadControls(pressed, xAxis, yAxis) {
-    /** @type {Map<string, PlayerActionValue>} */
+    /** @type {Map<symbol, PlayerActionValue>} */
     const directions = new Map();
-    if (xAxis < -0.5) directions.set('pad:stick', PlayerAction.moveLeft);
-    else if (xAxis > 0.5) directions.set('pad:stick', PlayerAction.moveRight);
-    if (pressed.has('left')) directions.set('pad:left', PlayerAction.moveLeft);
-    if (pressed.has('right')) directions.set('pad:right', PlayerAction.moveRight);
+    if (xAxis < -0.5) directions.set(PAD_STICK, PlayerAction.moveLeft);
+    else if (xAxis > 0.5) directions.set(PAD_STICK, PlayerAction.moveRight);
+    if (pressed.has('left')) directions.set(PAD_LEFT, PlayerAction.moveLeft);
+    if (pressed.has('right')) directions.set(PAD_RIGHT, PlayerAction.moveRight);
     const drops = new Set();
-    if (yAxis < -0.5) drops.add('pad:stick');
-    if (pressed.has('down')) drops.add('pad:down');
+    if (yAxis < -0.5) drops.add(PAD_STICK);
+    if (pressed.has('down')) drops.add(PAD_DOWN);
     return [directions, drops];
   }
 

@@ -2101,6 +2101,13 @@ test('disconnect preserves confirmation selection for unchanged mixed pad holds 
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
   for (const input of [
+    {},
+    { x: -0.5 },
+    { x: 0.5 },
+    { x: -1 },
+    { x: 1 },
+    { pressed: ['left'] },
+    { pressed: ['right'] },
     { pressed: ['left', 'right'] },
     { x: -1, pressed: ['right'] },
     { x: 1, pressed: ['left'] }
@@ -2124,4 +2131,153 @@ test('disconnect preserves confirmation selection for unchanged mixed pad holds 
     controller.pollGamepads();
     assert.deepEqual(manager.actions, ['move 1'], 'fresh push selects once');
   }
+});
+
+test('duplicate physical key presses preserve priority and elapsed repeat timing [B12] [INP-2]', (t) => {
+  const { manager, key, tick } = setup(t);
+  key('KeyA');
+  key('KeyD');
+  tick(100);
+  key('KeyA');
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight
+  ]);
+  tick(70);
+  assert.deepEqual(
+    manager.actions,
+    [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.moveRight],
+    'the original DAS fires, not a restarted delay'
+  );
+  key('KeyD', false);
+  assert.equal(
+    manager.actions.at(-1),
+    PlayerAction.moveLeft,
+    'release restores older held key'
+  );
+  key('KeyA', false);
+  key('KeyA');
+  assert.equal(
+    count(manager, PlayerAction.moveLeft),
+    3,
+    'fresh press works after release'
+  );
+  key('KeyS');
+  tick(20);
+  key('KeyS');
+  assert.equal(
+    count(manager, 'softDrop'),
+    1,
+    'duplicate non-repeat down does not drop twice'
+  );
+  tick(30);
+  assert.equal(
+    count(manager, 'softDrop'),
+    2,
+    'original drop interval continues without restart'
+  );
+  key('KeyS', false);
+  key('KeyS');
+  assert.equal(count(manager, 'softDrop'), 3, 'fresh drop after release');
+});
+
+test('confirmation stick threshold stays neutral at both boundary values [STA-1] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  for (const [x, expected] of [
+    [-0.5, []],
+    [0.5, []],
+    [1, ['move 1']],
+    [-1, ['move -1']]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    controller.processInput(new Set(), x, 0);
+    controller.processInput(new Set(), x, 0);
+    assert.deepEqual(manager.actions, expected);
+  }
+});
+
+test('fresh controls in real pause-resume and game-over restart polls remain spent [STA-2] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  const original = manager.handleAction;
+  manager.handleAction = function (action) {
+    original.call(this, action);
+    if (action === PlayerAction.newGame && this.state === GameState.gameOver)
+      this.state = GameState.playing;
+  };
+  manager.togglePause = function () {
+    this.actions.push('togglePause');
+    this.state =
+      this.state === GameState.paused ? GameState.playing : GameState.paused;
+  };
+  for (const [mode, button, action] of [
+    [GameState.paused, 'menu', 'togglePause'],
+    [GameState.gameOver, 'view', PlayerAction.newGame]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    manager.state = mode;
+    controller.processInput(new Set([button, 'left', 'down']), -1, -1);
+    key('KeyD', false);
+    key('KeyS', false);
+    tick(200);
+    assert.deepEqual(manager.actions, [action]);
+    controller.processInput(new Set(), 0, 0);
+    controller.processInput(new Set(['left', 'down']), -1, -1);
+    tick(50);
+    assert.ok(count(manager, PlayerAction.moveLeft) > 0);
+    assert.ok(count(manager, 'softDrop') > 0);
+  }
+});
+
+test('Menu pause cannot admit simultaneous fresh move or down holds after resume [STA-2] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.togglePause = function () {
+    this.actions.push('togglePause');
+    this.state =
+      this.state === GameState.paused ? GameState.playing : GameState.paused;
+  };
+  controller.processInput(new Set(['menu', 'right', 'down']), 1, -1);
+  assert.equal(manager.state, GameState.paused);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  controller.processInput(new Set(['menu', 'right', 'down']), 1, -1);
+  assert.equal(manager.state, GameState.playing);
+  manager.actions = [];
+  key('KeyA', false);
+  key('KeyS', false);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  tick(50);
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+  assert.equal(count(manager, 'softDrop'), 1);
+});
+
+test('releasing all input allows the same physical stick to start fresh [INP-2] [INP-4]', (t) => {
+  const { controller, manager, fire, tick } = setup(t);
+  controller.processInput(new Set(), -1, 0);
+  controller.releaseAllInput();
+  manager.actions = [];
+  controller.processInput(new Set(), -1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft]);
+  fire('blur');
+  manager.actions = [];
+  controller.processInput(new Set(), -1, 0);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(), -1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft]);
+});
+
+test('a paused movement attempt cannot schedule or send an action [STA-2] [INP-2]', (t) => {
+  const { controller, manager, tick } = setup(t);
+  manager.state = GameState.paused;
+  controller.startMoving(PlayerAction.moveLeft);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
 });
