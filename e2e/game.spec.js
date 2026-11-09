@@ -554,10 +554,32 @@ test.describe('playing with the keyboard', () => {
       window.gameKeyReads = 0;
       window.readProbe = {
         phase: 'initialization',
+        baselineStarted: false,
         started: performance.now(),
         reads: [],
         overflow: 0,
         ownReads: 0
+      };
+      let activeFrameProvenance = 'outside-observed-raf';
+      const requestFrame = window.requestAnimationFrame;
+      window.requestAnimationFrame = function (callback) {
+        const args = Array.from(arguments);
+        if (typeof callback !== 'function') {
+          return Reflect.apply(requestFrame, this, args);
+        }
+        const provenance = window.readProbe.baselineStarted
+          ? 'after-baseline'
+          : 'before-baseline';
+        args[0] = function () {
+          const previous = activeFrameProvenance;
+          activeFrameProvenance = provenance;
+          try {
+            return Reflect.apply(callback, this, arguments);
+          } finally {
+            activeFrameProvenance = previous;
+          }
+        };
+        return Reflect.apply(requestFrame, this, args);
       };
       const getItem = Storage.prototype.getItem;
       Storage.prototype.getItem = function (key) {
@@ -584,6 +606,7 @@ test.describe('playing with the keyboard', () => {
                 ? String(key)
                 : 'other-tetris',
               phase: probe.phase,
+              frameProvenance: activeFrameProvenance,
               elapsedMs: Math.round(performance.now() - probe.started),
               callers: callers.length ? callers : ['unclassified']
             });
@@ -612,6 +635,7 @@ test.describe('playing with the keyboard', () => {
     const otherTab = await context.newPage();
     await otherTab.goto('/');
     const before = await page.evaluate(() => {
+      window.readProbe.baselineStarted = true;
       window.readProbe.phase = 'foreign-write-window';
       return window.gameKeyReads;
     });
