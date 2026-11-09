@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 3
+          fetch-depth: 4
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo 9aa48699b45cfb369ff03d6adcca128e909c29d0f9beff3cf0231d2a4a278124  .github/offline-qualification/verify-inputs.py | sha256sum -c -
+          echo addf0fb8ec8c82ccb9992d54cd2196b8be662b4fa6729e7930c688d86d464873  .github/offline-qualification/verify-inputs.py | sha256sum -c -
           echo 3ff2521253e354ff1c6a18a0b5b6ecc2c280b83e4d8ba691c0cd87e13ec1354c  .github/offline-qualification/inventory.json | sha256sum -c -
           python .github/offline-qualification/verify-inputs.py
       - name: Assemble temporary locked Playwright runtime
