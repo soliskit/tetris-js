@@ -8,6 +8,10 @@ import { InputController } from './game/inputController.js';
 /** @typedef {import('./game/position.js').Position} Position */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
+// Every id below exists in index.html; test/staticFiles.test.js checks that.
+/** @param {string} id */
+const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
+
 // DSP-6 reserves first contexts as the page starts, before asynchronous
 // admission. This allocates contexts, but does not draw or start a game.
 if (!prepareDisplay()) await new Promise(() => {});
@@ -20,9 +24,9 @@ function prepareDisplay() {
     return true;
   } catch {
     document.documentElement.dataset.tabAdmission = 'error';
-    const message = /** @type {HTMLElement} */ (document.getElementById('tabLockMessage'));
-    const detail = /** @type {HTMLElement} */ (document.getElementById('tabLockDetail'));
-    const retry = /** @type {HTMLButtonElement} */ (document.getElementById('tabLockRetry'));
+    const message = element('tabLockMessage');
+    const detail = element('tabLockDetail');
+    const retry = /** @type {HTMLButtonElement} */ (element('tabLockRetry'));
     message.textContent = 'The game could not prepare its display.';
     detail.textContent = 'Reload the page to try again.';
     retry.textContent = 'Reload';
@@ -43,9 +47,9 @@ function prepareDisplay() {
 await ownGamePage();
 
 async function ownGamePage() {
-  const message = /** @type {HTMLElement} */ (document.getElementById('tabLockMessage'));
-  const detail = /** @type {HTMLElement} */ (document.getElementById('tabLockDetail'));
-  const retry = /** @type {HTMLButtonElement} */ (document.getElementById('tabLockRetry'));
+  const message = element('tabLockMessage');
+  const detail = element('tabLockDetail');
+  const retry = /** @type {HTMLButtonElement} */ (element('tabLockRetry'));
   let pending = false;
   let admitted = false;
   const lifetime = new Promise(() => {});
@@ -129,9 +133,6 @@ function reportEngineFault(fault) {
   }
 }
 
-// Every id below exists in index.html; test/staticFiles.test.js checks that.
-/** @param {string} id */
-const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
 /** @param {string} id */
 const canvasElement = id => /** @type {HTMLCanvasElement} */ (document.getElementById(id));
 
