@@ -390,3 +390,50 @@ test('display preflight refusal is visible and never requests game ownership [AP
   await second.goto('/');
   await expect(second.locator('main.app')).toBeVisible();
 });
+
+test('a refused display-preflight report cannot request ownership or start a game [APP-7] [DSP-6] [QA-3]', async ({
+  page,
+  context
+}) => {
+  await page.addInitScript(() => {
+    window.preflightReportAttempts = 0;
+    window.preflightLockRequests = 0;
+    window.preflightStorageTouches = 0;
+    for (const name of ['getItem', 'setItem', 'removeItem']) {
+      const operation = Storage.prototype[name];
+      Storage.prototype[name] = function (key, ...args) {
+        if (String(key).startsWith('tetris.')) window.preflightStorageTouches++;
+        return operation.call(this, key, ...args);
+      };
+    }
+    const request = navigator.locks.request.bind(navigator.locks);
+    navigator.locks.request = (...args) => {
+      window.preflightLockRequests++;
+      return request(...args);
+    };
+    HTMLCanvasElement.prototype.getContext = () => {
+      throw new Error('Controlled display preflight refusal');
+    };
+    console.error = (message) => {
+      if (message === 'Tetris display setup failed.')
+        window.preflightReportAttempts++;
+      throw new Error('Controlled display report refusal');
+    };
+  });
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.locator('#tabLockMessage')).toHaveText(
+    'The game could not prepare its display.'
+  );
+  await expect(page.locator('#tabLockRetry')).toHaveText('Reload');
+  await expect(page.locator('#tabLockRetry')).toBeEnabled();
+  await expect(page.locator('main.app')).toBeHidden();
+  expect(await page.evaluate(() => window.preflightReportAttempts)).toBe(1);
+  expect(await page.evaluate(() => window.preflightLockRequests)).toBe(0);
+  expect(await page.evaluate(() => window.preflightStorageTouches)).toBe(0);
+  expect(errors).toEqual([]);
+  const second = await context.newPage();
+  await second.goto('/');
+  await expect(second.locator('main.app')).toBeVisible();
+});
