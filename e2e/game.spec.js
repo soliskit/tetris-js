@@ -552,9 +552,25 @@ test.describe('playing with the keyboard', () => {
   }) => {
     await page.addInitScript(() => {
       window.gameKeyReads = 0;
+      window.readProbe = { phase: 'initialization', started: performance.now(), reads: [], overflow: 0, ownReads: 0 };
       const getItem = Storage.prototype.getItem;
       Storage.prototype.getItem = function (key) {
-        if (String(key).startsWith('tetris.')) window.gameKeyReads++;
+        if (String(key).startsWith('tetris.')) {
+          window.gameKeyReads++;
+          const probe = window.readProbe;
+          if (probe.phase === 'diagnostic') probe.ownReads++;
+          if (probe.reads.length < 32) {
+            const stack = new Error().stack ?? '';
+            const callers = ['get highScore', 'get isSessionSaved', 'readSavedSession', 'storageChanged', 'drawIfChanged', 'redrawAll']
+              .filter(label => stack.includes(label));
+            probe.reads.push({
+              key: ['tetris.highScore', 'tetris.isSessionSaved', 'tetris.savedGameSession'].includes(String(key)) ? String(key) : 'other-tetris',
+              phase: probe.phase,
+              elapsedMs: Math.round(performance.now() - probe.started),
+              callers: callers.length ? callers : ['unclassified']
+            });
+          } else probe.overflow++;
+        }
         return getItem.apply(this, arguments);
       };
       window.seenStorageKeys = [];
@@ -577,7 +593,10 @@ test.describe('playing with the keyboard', () => {
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
     await otherTab.goto('/');
-    const before = await page.evaluate(() => window.gameKeyReads);
+    const before = await page.evaluate(() => {
+      window.readProbe.phase = 'foreign-write-window';
+      return window.gameKeyReads;
+    });
     await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
     // The negative check is conditioned on the probe recording the foreign
     // key's storage event within the poll window; it does not synchronize
@@ -624,7 +643,29 @@ test.describe('playing with the keyboard', () => {
       }
       throw error;
     }
-    expect(await page.evaluate(() => window.gameKeyReads)).toBe(before);
+    try {
+      const after = await page.evaluate(() => {
+        window.readProbe.phase = 'final-sample';
+        return window.gameKeyReads;
+      });
+      expect(after).toBe(before);
+    } catch (error) {
+      let evidence = null;
+      try {
+        evidence = await page.evaluate(() => {
+          window.readProbe.phase = 'diagnostic';
+          return {
+            reads: window.readProbe.reads,
+            overflow: window.readProbe.overflow,
+            diagnosticOwnReads: window.readProbe.ownReads,
+            gameKeyReads: window.gameKeyReads
+          };
+        });
+      } catch { /* Keep the original final-counter assertion. */ }
+      try { console.log('DSP-5 final-counter evidence:', JSON.stringify({ before, evidence })); }
+      catch { /* Diagnostic logging is best-effort. */ }
+      throw error;
+    }
   });
 
   // The game's own keys still count as changes made in another tab. Kept in
