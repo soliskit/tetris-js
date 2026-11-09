@@ -1,0 +1,76 @@
+name: Storage delivery contrast
+
+on:
+  push:
+    branches: [diagnostic/storage-delivery-contrast-once]
+
+permissions:
+  contents: read
+
+jobs:
+  contrast:
+    if: github.repository == 'soliskit/tetris-js' && github.event.created == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CI: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify the diagnostic boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = push
+          test "$GITHUB_REF" = refs/heads/diagnostic/storage-delivery-contrast-once
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git rev-list --parents -n 1 HEAD | wc -w)" -eq 2
+          test "$(git rev-parse HEAD^)" = 989b015f54fdeb85bf14ad5ea769e15921ca469d
+          printf '%s\n' .github/workflows/storage-contrast-once.yml e2e/storage-contrast.spec.js > expected-paths.txt
+          git diff --name-only HEAD^ HEAD | LC_ALL=C sort > changed-paths.txt
+          diff expected-paths.txt changed-paths.txt
+          git diff --exit-code HEAD^ HEAD -- public package.json package-lock.json playwright.config.js e2e/fixtures.js e2e/global-setup.js
+          git rev-parse HEAD HEAD^ > diagnostic-revisions.txt
+          sha256sum package.json package-lock.json playwright.config.js e2e/fixtures.js e2e/global-setup.js e2e/storage-contrast.spec.js > diagnostic-hashes.txt
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26.13.0
+          package-manager-cache: false
+      - run: npm install --global npm@12.2.0
+      - name: Verify the runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node --version)" = v26.13.0
+          test "$(npm --version)" = 12.2.0
+      - run: npm ci
+      - name: Verify Playwright versions
+        run: node -e "for (const name of ['playwright', '@playwright/test']) if (require(name + '/package.json').version !== '1.65.0') process.exit(1)"
+      - name: Install hosted browser dependencies
+        run: npx playwright install --with-deps chromium webkit
+      - name: Run the diagnostic once
+        shell: bash
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: storage-contrast-results.json
+        run: |
+          set -uo pipefail
+          printf '%s\n' 'COMMAND: npx playwright test e2e/storage-contrast.spec.js --project=iphone-14-pro-max-webkit --project=iphone-14-pro-max --workers=1 --retries=0 --max-failures=1 --reporter=list,json'
+          npx playwright test e2e/storage-contrast.spec.js --project=iphone-14-pro-max-webkit --project=iphone-14-pro-max --workers=1 --retries=0 --max-failures=1 --reporter=list,json 2>&1 | tee storage-contrast-output.txt
+          codes=("${PIPESTATUS[@]}")
+          printf 'NATIVE PLAYWRIGHT EXIT: %s\nLOG WRITER EXIT: %s\n' "${codes[0]}" "${codes[1]}"
+          test "${codes[1]}" -eq 0 || exit "${codes[1]}"
+          exit "${codes[0]}"
+      - name: Print existing evidence to the native log
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in diagnostic-revisions.txt diagnostic-hashes.txt changed-paths.txt storage-contrast-results.json; do
+            printf '\nEVIDENCE FILE: %s\n' "$file"
+            if test -f "$file"; then cat "$file"; else printf 'NOT PRODUCED\n'; fi
+          done
+          if test -d test-results; then
+            find test-results -name error-context.md -type f -print -exec cat {} \;
+          fi
