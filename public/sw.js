@@ -88,6 +88,24 @@ async function pin(clientId, version) {
  */
 const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/').pop() ?? '');
 
+// Pin notes are stored data: an unreadable one counts as none in cleanup
+// (SAF-2), so reading never throws and one bad note cannot interrupt version
+// cleanup. A note needs its version to name one; a note without a timestamp
+// cannot expire, as before.
+/**
+ * @param {Response | undefined} response
+ * @returns {Promise<{ version: string, at: number | null } | null>}
+ */
+async function readPin(response) {
+  try {
+    const note = await response?.json();
+    if (!note || typeof note.version !== 'string') return null;
+    return { version: note.version, at: Number.isFinite(note.at) ? note.at : null };
+  } catch {
+    return null;
+  }
+}
+
 // The version a page opened with, while it still exists, or else the newest.
 /**
  * @param {string} clientId
@@ -132,14 +150,24 @@ async function removeOldVersions() {
   // A page still loading is not yet controlled by this worker, so the list
   // asks for uncontrolled pages too.
   const live = new Set((await worker.clients.matchAll({ includeUncontrolled: true })).map(client => client.id));
+  let unreadableLive = false;
   for (const key of await pins.keys()) {
     const pinned = await pins.match(key);
     if (!pinned) continue;
-    const { version, at } = /** @type {{ version: string, at: number }} */ (await pinned.json());
-    if (live.has(pinClient(key))) kept.add(version);
-    else if (Date.now() - at > PIN_MS) await pins.delete(key);
-    else kept.add(version);
+    const note = await readPin(pinned);
+    // A record that cannot be read names no version. One whose page is gone
+    // is dropped; an open page's is left for it to rewrite on its next save,
+    // and no old version is deleted while its page's record cannot be read.
+    if (!note) {
+      if (live.has(pinClient(key))) unreadableLive = true;
+      else await pins.delete(key);
+      continue;
+    }
+    if (live.has(pinClient(key))) kept.add(note.version);
+    else if (note.at === null || Date.now() - note.at <= PIN_MS) kept.add(note.version);
+    else await pins.delete(key);
   }
+  if (unreadableLive) return;
   for (const name of await versionNames()) {
     if (versionNumber(name) < versionNumber(newest) && !kept.has(name) && !(await isPinned(pins, name))) {
       await caches.delete(name);
@@ -159,7 +187,7 @@ async function removeOldVersions() {
 async function isPinned(pins, version) {
   for (const key of await pins.keys()) {
     const pinned = await pins.match(key);
-    if (pinned && /** @type {{ version: string }} */ (await pinned.json()).version === version) return true;
+    if (pinned && (await readPin(pinned))?.version === version) return true;
   }
   return false;
 }
