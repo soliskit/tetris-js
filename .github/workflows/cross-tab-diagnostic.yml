@@ -1,0 +1,53 @@
+name: Inspect WebKit storage events
+
+on:
+  push:
+    branches: [fix/webkit-storage-event-evidence]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check the source parent
+        env:
+          EVENT_HEAD: ${{ github.sha }}
+          INITIAL_CREATE: ${{ github.event.created }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          test "$INITIAL_CREATE" = true
+          test "$RUN_ATTEMPT" = 1
+          test "$(git rev-parse HEAD)" = "$EVENT_HEAD"
+          test "$(git rev-list --parents -n 1 HEAD)" = "$EVENT_HEAD 84c5eea115bc66be7ae35d14ce35aa12e100f2cb"
+          git diff --name-only HEAD^ HEAD > /tmp/changed-files
+          printf '%s\n' .github/workflows/cross-tab-diagnostic.yml e2e/game.spec.js > /tmp/expected-files
+          diff /tmp/expected-files /tmp/changed-files
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+      - name: Install the required npm version
+        run: timeout --signal=TERM --kill-after=10s 120s npm install --global npm@12.2.0
+      - name: Install the locked dependencies
+        run: timeout --signal=TERM --kill-after=10s 240s npm ci
+      - name: Check the runtime versions
+        run: |
+          node -e "if (!/^26\./.test(process.versions.node)) process.exit(1)"
+          test "$(npm --version)" = 12.2.0
+          node -e "process.exit(require('playwright/package.json').version==='1.65.0'?0:1)"
+      - name: Install WebKit
+        run: timeout --signal=TERM --kill-after=10s 240s npx playwright install --with-deps webkit
+      - name: Run the existing WebKit storage-event assertion once
+        env:
+          CI: true
+        shell: bash
+        run: |
+          set -o pipefail
+          timeout --signal=TERM --kill-after=10s 120s npx playwright test e2e/game.spec.js --project=iphone-14-pro-max-webkit --grep 'a game key written in another tab still counts as a change \[DSP-5\]$' --retries=0 --workers=1 --reporter=list 2>&1 | tee /tmp/storage-event-output.txt

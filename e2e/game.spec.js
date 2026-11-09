@@ -702,12 +702,46 @@ test.describe('playing with the keyboard', () => {
   }) => {
     await page.addInitScript(() => {
       window.seenStorageKeys = [];
+      window.storageLifecycle = {
+        timeOrigin: performance.timeOrigin,
+        events: [],
+        overflow: 0
+      };
+      for (const kind of [
+        'DOMContentLoaded',
+        'pageshow',
+        'pagehide',
+        'visibilitychange',
+        'focus',
+        'blur'
+      ]) {
+        window.addEventListener(kind, (event) => {
+          const probe = window.storageLifecycle;
+          if (probe.events.length >= 16) {
+            probe.overflow += 1;
+            return;
+          }
+          probe.events.push({
+            kind,
+            at: performance.now(),
+            readyState: document.readyState,
+            visibility: document.visibilityState,
+            focused: document.hasFocus(),
+            persisted:
+              event instanceof PageTransitionEvent ? event.persisted : null
+          });
+        });
+      }
       window.addEventListener('storage', (event) => {
         window.seenStorageKeys.push(event.key);
       });
     });
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const receivingDocument = await page.evaluate(() => ({
+      timeOrigin: performance.timeOrigin,
+      readyState: document.readyState
+    }));
     const otherTab = await context.newPage();
     await otherTab.goto('/');
     await otherTab.evaluate(() =>
@@ -724,7 +758,19 @@ test.describe('playing with the keyboard', () => {
           return await target.evaluate((origin) => {
             const value = localStorage.getItem('tetris.highScore');
             const keys = window.seenStorageKeys;
+            const display = document.querySelector('#highScore')?.textContent;
             return {
+              timeOrigin: performance.timeOrigin,
+              readyState: document.readyState,
+              lifecycle: window.storageLifecycle ?? null,
+              displayedHighScore:
+                display === 'High Score: 4200'
+                  ? '4200'
+                  : display === 'High Score: 0'
+                    ? '0'
+                    : display == null
+                      ? 'missing'
+                      : 'other',
               visibility:
                 document.visibilityState === 'visible'
                   ? 'visible'
@@ -757,6 +803,7 @@ test.describe('playing with the keyboard', () => {
         console.log(
           'DSP-5 game-key evidence:',
           JSON.stringify({
+            receivingDocument,
             receivingPage: await inspectPage(page, expectedOrigin),
             writingPage: await inspectPage(otherTab, expectedOrigin)
           })
