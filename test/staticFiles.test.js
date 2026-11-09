@@ -266,10 +266,8 @@ const runEvent = async (handler, event = {}) => {
   await done;
 };
 
-const seedVersion = async (world, name) => {
-  await (
-    await world.caches.open(name)
-  ).put('index.html', new Response('cached'));
+const seedVersion = async (world, name, body = 'cached') => {
+  await (await world.caches.open(name)).put('index.html', new Response(body));
 };
 
 const seedPin = async (world, clientId, version, at) => {
@@ -279,6 +277,28 @@ const seedPin = async (world, clientId, version, at) => {
 };
 
 const PIN_MS_TEST = 10 * 60 * 1000;
+
+// Seeds a record whose body is not a valid pin note: unreadable JSON, or
+// JSON that is missing fields a note needs.
+const seedRawPin = async (world, clientId, body) => {
+  await (
+    await world.caches.open(PINS_CACHE)
+  ).put(`pins/${encodeURIComponent(clientId)}`, new Response(body));
+};
+
+// Runs the fetch handler for a subresource request and captures the answer.
+const runFetch = (handlers, request, clientId) => {
+  let answered;
+  handlers.fetch({
+    request,
+    clientId,
+    respondWith: (promise) => {
+      answered = promise;
+    },
+    waitUntil: () => {}
+  });
+  return answered;
+};
 
 test('activation deletes only the old caches this app made [APP-6]', async () => {
   const world = { liveClients: [], ...makeCaches() };
@@ -406,4 +426,87 @@ test('an empty old cache stays, its maker unknown [APP-6]', async () => {
   const handlers = loadWorker(world);
   await runEvent(handlers.activate);
   assert.ok(world.stores.has('tetris-2'), 'an empty cache is left alone');
+});
+
+test('a pin note missing its timestamp still names its version and does not expire [SAF-2] [APP-2]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa', 'one');
+  await seedVersion(world, 'tetris-version-2-bbb', 'two');
+  await seedRawPin(
+    world,
+    'page-gone',
+    JSON.stringify({ version: 'tetris-version-1-aaa' })
+  );
+  const handlers = loadWorker(world);
+  const response = await runFetch(
+    handlers,
+    new Request(new URL('index.html', SCOPE)),
+    'page-gone'
+  );
+  assert.equal(
+    await response.text(),
+    'one',
+    'the named version answers, as with a complete note'
+  );
+  await runEvent(handlers.install); // downloads version 3, then cleans up
+  assert.ok(
+    world.stores.has('tetris-version-1-aaa'),
+    'an ageless note keeps its version, as before'
+  );
+  const pin = await (
+    await world.caches.open(PINS_CACHE)
+  ).match(`pins/${encodeURIComponent('page-gone')}`);
+  assert.ok(pin, 'an ageless note does not expire by time');
+});
+
+test('an unreadable record whose page is gone is removed, and cleanup continues [SAF-2] [APP-2]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa');
+  await seedVersion(world, 'tetris-version-2-bbb');
+  await seedRawPin(world, 'page-gone', 'not json');
+  await seedPin(
+    world,
+    'page-old',
+    'tetris-version-1-aaa',
+    Date.now() - 2 * PIN_MS_TEST
+  );
+  const handlers = loadWorker(world);
+  await runEvent(handlers.install);
+  const pins = await world.caches.open(PINS_CACHE);
+  assert.ok(
+    !(await pins.match(`pins/${encodeURIComponent('page-gone')}`)),
+    'the unreadable record is removed'
+  );
+  assert.ok(
+    !(await pins.match(`pins/${encodeURIComponent('page-old')}`)),
+    'the expired record is still removed'
+  );
+  assert.ok(
+    !world.stores.has('tetris-version-1-aaa'),
+    'the old version is deleted'
+  );
+  assert.ok(
+    world.stores.has('tetris-version-2-bbb'),
+    'the previous version is kept'
+  );
+});
+
+test('an unreadable record whose page is still open keeps every old version [SAF-2] [APP-2]', async () => {
+  const world = { liveClients: [{ id: 'page-1' }], ...makeCaches() };
+  await seedVersion(world, 'tetris-version-1-aaa');
+  await seedVersion(world, 'tetris-version-2-bbb');
+  await seedRawPin(world, 'page-1', 'not json');
+  const handlers = loadWorker(world);
+  await runEvent(handlers.install);
+  const pin = await (
+    await world.caches.open(PINS_CACHE)
+  ).match(`pins/${encodeURIComponent('page-1')}`);
+  assert.ok(
+    pin,
+    "an open page's record is left for it to rewrite on its next save"
+  );
+  assert.ok(
+    world.stores.has('tetris-version-1-aaa'),
+    "no old version is deleted while its page's record cannot be read"
+  );
 });
