@@ -328,6 +328,11 @@ function boardChanged() {
 // Returns whether anything was drawn, so callers can tell a real drawing
 // frame from an idle pass that only checked the unchanged caches.
 function drawIfChanged() {
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
+  if (snapshot !== lastSnapshot) {
+    syncControls();
+    lastSnapshot = snapshot;
+  }
   let drew = false;
   if (canvasSizes.has(boardCanvas) && boardChanged()) {
     drawBoard();
@@ -351,11 +356,6 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drew = true;
     drawnPreviews.set(canvas, tetromino);
-  }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
-  if (snapshot !== lastSnapshot) {
-    lastSnapshot = snapshot;
-    syncControls();
   }
   return drew;
 }
