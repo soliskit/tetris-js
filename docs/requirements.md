@@ -292,6 +292,8 @@ Persisted state that was edited by hand is judged only by the untrusted-input ru
 
 **U6. Timer registration and cancellation.** A timer that was cancelled successfully is trusted not to run afterwards. Registering a timer and cancelling a timer are inside the SAF-3 behavior: if either throws, the engine stops in the SAF-3 safe state and the fault is reported under U5. No defense against a scheduler that runs a timer after a successful cancellation is required.
 
+**U7. Failed timer cancellation during a fault stop, later checks.** When a timer cancellation fails while the game is stopping safely after a fault, the allowance in U3 also applies at the game's later safety checks: while the game remains over after that fault, a leftover timer that is still scheduled is not reported as a broken timer invariant on the strength of its presence alone, so long as it does not change the stopped game. The leftover timer's firing remains governed by U3: it must not change the stopped game. This exemption ends when the player leaves the stopped state (New Game or Continue). It does not change what 'a timer is running' means anywhere else.
+
 Trust assumptions not yet decided: the service worker, hosting, repository settings and the random source.
 
 ### Queue piece check
