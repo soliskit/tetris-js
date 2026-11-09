@@ -127,6 +127,10 @@ export class Tetromino {
    * @param {boolean} [counterclockwise] Turn counterclockwise first.
    */
   rotate(gameBoard, counterclockwise = false) {
+    // A piece with one rotation state, the O piece, never turns (PCE-4).
+    // Leaving early also keeps its position object, so the page can tell
+    // nothing changed and skips the redraw (DSP-3).
+    if (this.rotations.length === 1) return;
     const count = this.rotations.length;
     const clockwise = (this.rotationState + 1) % count;
     const counterClockwise = (this.rotationState + count - 1) % count;

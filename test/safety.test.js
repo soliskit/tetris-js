@@ -423,6 +423,79 @@ test('a fault reporter that throws does not make things worse [SAF-3]', () => {
   assert.equal(scheduler.pending, 0);
 });
 
+test('a timer cancellation that throws during a fault stop still records and reports the fault [SAF-3]', () => {
+  const scheduler = createFakeScheduler();
+  const clear = scheduler.clearTimeout;
+  let armed = false;
+  scheduler.clearTimeout = (handle) => {
+    if (armed) throw new Error('cancel fault');
+    clear(handle);
+  };
+  const { game, storage, reported } = recordingGame({
+    scheduler,
+    factory: fixedFactory(PieceColors.yellow)
+  });
+  // Rest the piece so the lock-delay timer pends alongside gravity: both
+  // cancellations fail below, leaving both timers behind.
+  repeatUntil(
+    () => game.isOnSurface,
+    () => game.softDrop(),
+    'the piece landing'
+  );
+  game.handleAction(PlayerAction.moveLeft);
+  assert.equal(scheduler.pending, 2, 'gravity and lock delay both pending');
+  const keys = [
+    'tetris.savedGameSession',
+    'tetris.isSessionSaved',
+    'tetris.highScore'
+  ];
+  const boardBefore = JSON.stringify(game.gameBoard);
+  const scoreBefore = game.score;
+  const storedBefore = keys.map((key) => storage.getItem(key));
+  armed = true;
+  assert.doesNotThrow(() =>
+    game.guard(() => {
+      throw new Error('engine failure');
+    })
+  );
+  assert.equal(game.state, GameState.gameOver);
+  assert.deepEqual(
+    game.faults.map((fault) => fault.reason),
+    ['unexpected error']
+  );
+  assert.deepEqual(
+    reported.map((fault) => fault.reason),
+    ['unexpected error']
+  );
+  // The timers whose cancellation failed may still fire; neither may
+  // change the stopped game.
+  armed = false;
+  // U3 allows the leftover firings; U7 sets their mere presence aside at
+  // the later checks. An ignored action before they run records and
+  // reports nothing further.
+  game.handleAction(PlayerAction.moveLeft);
+  assert.equal(game.state, GameState.gameOver);
+  assert.deepEqual(
+    game.faults.map((fault) => fault.reason),
+    ['unexpected error']
+  );
+  assert.deepEqual(
+    reported.map((fault) => fault.reason),
+    ['unexpected error']
+  );
+  assert.doesNotThrow(() => scheduler.advance(100000));
+  assert.equal(game.state, GameState.gameOver);
+  assert.equal(scheduler.pending, 0);
+  assert.equal(game.faults.length, 1);
+  assert.equal(reported.length, 1);
+  assert.equal(JSON.stringify(game.gameBoard), boardBefore);
+  assert.equal(game.score, scoreBefore);
+  assert.deepEqual(
+    keys.map((key) => storage.getItem(key)),
+    storedBefore
+  );
+});
+
 test('an error while checking the invariants stops the game safely, even if reporting it fails [SAF-3] [SAF-4]', () => {
   const { game, scheduler } = newGame({
     onFault: () => {
