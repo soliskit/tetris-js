@@ -641,6 +641,9 @@ test.describe('playing with the keyboard', () => {
               nullKey: window.probeTallies.nullKey
             },
             gameKeyReads: window.gameKeyReads,
+            reads: window.readProbe.reads,
+            overflow: window.readProbe.overflow,
+            diagnosticOwnReads: window.readProbe.ownReads,
             foreignKeyWriteVisible:
               localStorage.getItem('other.app') === 'changed',
             visibility: bucket(document.visibilityState),
