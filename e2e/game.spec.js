@@ -13,6 +13,110 @@ import {
   savedGame
 } from './helpers.js';
 
+// Fixed metadata only. Page and host elapsed times have separate clocks.
+async function storageDeliveryProbe(page, expectedKey) {
+  const hostStarted = performance.now();
+  const host = { records: [], overflow: 0 };
+  const mark = (label) => {
+    if (host.records.length < 32)
+      host.records.push({
+        label,
+        elapsedMs: Math.round(performance.now() - hostStarted)
+      });
+    else host.overflow++;
+  };
+  const attach = async (target, role) => {
+    target.on('framenavigated', (frame) => {
+      if (frame === target.mainFrame()) mark(`${role}-navigation`);
+    });
+    target.on('close', () => mark(`${role}-close`));
+    target.on('crash', () => mark(`${role}-crash`));
+    await target.addInitScript((key) => {
+      const started = performance.now();
+      const probe = { records: [], overflow: 0 };
+      window.storageDeliveryProbe = probe;
+      const record = (label, fields = {}) => {
+        if (probe.records.length < 32)
+          probe.records.push({
+            label,
+            elapsedMs: Math.round(performance.now() - started),
+            ...fields
+          });
+        else probe.overflow++;
+      };
+      record('document-start');
+      document.addEventListener('DOMContentLoaded', () => record('dom-ready'));
+      window.addEventListener('pageshow', () => record('page-show'));
+      window.addEventListener('pagehide', () => record('page-hide'));
+      document.addEventListener('visibilitychange', () =>
+        record('visibility', {
+          visible: document.visibilityState === 'visible'
+        })
+      );
+      window.addEventListener('storage', (event) =>
+        record('storage', {
+          key:
+            event.key === key
+              ? 'expected'
+              : event.key === null
+                ? 'null'
+                : 'other',
+          trusted: event.isTrusted,
+          local: event.storageArea === localStorage
+        })
+      );
+    }, expectedKey);
+  };
+  await attach(page, 'receiver');
+  const snapshot = async (target) => {
+    try {
+      return await target.evaluate(() => ({
+        probe: window.storageDeliveryProbe ?? null,
+        ready: document.readyState,
+        visible: document.visibilityState === 'visible'
+      }));
+    } catch {
+      return null;
+    }
+  };
+  return {
+    attachWriter: (target) => attach(target, 'writer'),
+    async write(target, value) {
+      mark('write-start');
+      const alreadyEqual = await target.evaluate(
+        ({ key, value }) => {
+          const alreadyEqual = localStorage.getItem(key) === value;
+          localStorage.setItem(key, value);
+          return alreadyEqual;
+        },
+        { key: expectedKey, value }
+      );
+      mark('write-return');
+      return alreadyEqual;
+    },
+    async report(writer, alreadyEqual, outcome) {
+      // These reads inspect in-memory metadata only, never storage.
+      // No separate timeout: collection can still hit the whole-test limit.
+      try {
+        const receiver = await snapshot(page);
+        const writing = await snapshot(writer);
+        console.log(
+          'DSP-5 delivery evidence:',
+          JSON.stringify({
+            outcome,
+            alreadyEqual,
+            host,
+            receiver,
+            writing
+          })
+        );
+      } catch {
+        /* Evidence must not replace an assertion error when collection finishes. */
+      }
+    }
+  };
+}
+
 // Shape of a set of cells, independent of where it is on the board.
 function shapeOf(cells) {
   const minRow = Math.min(...cells.map(([r]) => r));
@@ -550,6 +654,7 @@ test.describe('playing with the keyboard', () => {
     page,
     context
   }) => {
+    const delivery = await storageDeliveryProbe(page, 'other.app');
     await page.addInitScript(() => {
       window.gameKeyReads = 0;
       window.readProbe = {
@@ -610,12 +715,13 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
+    await delivery.attachWriter(otherTab);
     await otherTab.goto('/');
     const before = await page.evaluate(() => {
       window.readProbe.phase = 'foreign-write-window';
       return window.gameKeyReads;
     });
-    await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
+    const alreadyEqual = await delivery.write(otherTab, 'changed');
     // The negative check is conditioned on the probe recording the foreign
     // key's storage event within the poll window; it does not synchronize
     // the app's deferred redraw.
@@ -624,6 +730,7 @@ test.describe('playing with the keyboard', () => {
         .poll(() => page.evaluate(() => window.seenStorageKeys))
         .toContain('other.app');
     } catch (error) {
+      await delivery.report(otherTab, alreadyEqual, 'event-poll-failure');
       // On a failed poll, log the bounded state the probe kept, then
       // rethrow the original error unchanged. The state read and the
       // logging are each guarded and best-effort: a failed read logs the
@@ -668,6 +775,7 @@ test.describe('playing with the keyboard', () => {
       });
       expect(after).toBe(before);
     } catch (error) {
+      await delivery.report(otherTab, alreadyEqual, 'final-counter-failure');
       let evidence = null;
       try {
         evidence = await page.evaluate(() => {
@@ -692,6 +800,7 @@ test.describe('playing with the keyboard', () => {
       }
       throw error;
     }
+    await delivery.report(otherTab, alreadyEqual, 'pass');
   });
 
   // The game's own keys still count as changes made in another tab. Kept in
@@ -700,6 +809,7 @@ test.describe('playing with the keyboard', () => {
     page,
     context
   }) => {
+    const delivery = await storageDeliveryProbe(page, 'tetris.highScore');
     await page.addInitScript(() => {
       window.seenStorageKeys = [];
       window.addEventListener('storage', (event) => {
@@ -709,16 +819,16 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
+    await delivery.attachWriter(otherTab);
     await otherTab.goto('/');
-    await otherTab.evaluate(() =>
-      localStorage.setItem('tetris.highScore', '4200')
-    );
+    const alreadyEqual = await delivery.write(otherTab, '4200');
     // The game key's event arrives first...
     try {
       await expect
         .poll(() => page.evaluate(() => window.seenStorageKeys))
         .toContain('tetris.highScore');
     } catch (error) {
+      await delivery.report(otherTab, alreadyEqual, 'event-poll-failure');
       const inspectPage = async (target, expectedOrigin) => {
         try {
           return await target.evaluate((origin) => {
@@ -771,6 +881,7 @@ test.describe('playing with the keyboard', () => {
     // Clearing all storage can remove the game's keys, so it still counts.
     await otherTab.evaluate(() => localStorage.clear());
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    await delivery.report(otherTab, alreadyEqual, 'pass');
   });
 
   test('a high score set in another tab shows here too [DSP-5] [SCO-3]', async ({
