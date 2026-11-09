@@ -647,9 +647,58 @@ test.describe('playing with the keyboard', () => {
       localStorage.setItem('tetris.highScore', '4200')
     );
     // The game key's event arrives first...
-    await expect
-      .poll(() => page.evaluate(() => window.seenStorageKeys))
-      .toContain('tetris.highScore');
+    try {
+      await expect
+        .poll(() => page.evaluate(() => window.seenStorageKeys))
+        .toContain('tetris.highScore');
+    } catch (error) {
+      const inspectPage = async (target, expectedOrigin) => {
+        try {
+          return await target.evaluate((origin) => {
+            const value = localStorage.getItem('tetris.highScore');
+            const keys = window.seenStorageKeys;
+            return {
+              visibility:
+                document.visibilityState === 'visible'
+                  ? 'visible'
+                  : 'not-visible',
+              focused: document.hasFocus(),
+              sameOrigin: location.origin === origin,
+              highScore:
+                value === '4200'
+                  ? 'expected'
+                  : value === null
+                    ? 'missing'
+                    : 'other',
+              observedEvents: Array.isArray(keys)
+                ? {
+                    expectedKey: keys.filter(
+                      (key) => key === 'tetris.highScore'
+                    ).length,
+                    otherKey: keys.filter((key) => key !== 'tetris.highScore')
+                      .length
+                  }
+                : null
+            };
+          }, expectedOrigin);
+        } catch {
+          return null;
+        }
+      };
+      try {
+        const expectedOrigin = new URL(page.url()).origin;
+        console.log(
+          'DSP-5 game-key evidence:',
+          JSON.stringify({
+            receivingPage: await inspectPage(page, expectedOrigin),
+            writingPage: await inspectPage(otherTab, expectedOrigin)
+          })
+        );
+      } catch {
+        // Failure-only evidence must not replace the original assertion error.
+      }
+      throw error;
+    }
     // ...and the app reacts to it.
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
     // Clearing all storage can remove the game's keys, so it still counts.
