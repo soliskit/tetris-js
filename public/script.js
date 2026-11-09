@@ -592,7 +592,11 @@ heldCanvas.addEventListener('keydown', event => {
   event.stopPropagation();
   gameManager.handleAction(PlayerAction.hold);
 });
-element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('newGameButton').addEventListener('click', () => {
+  // Only New Game in the question may confirm, even before it is drawn.
+  if (gameManager.isConfirmingNewGame) return;
+  gameManager.handleAction(PlayerAction.newGame);
+});
 // The New Game question. Every answer goes straight to the engine, and the
 // dialog closes once the engine stops asking, so the very next key already
 // finds the question answered; the dialog's close event comes too late for
