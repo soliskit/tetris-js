@@ -120,3 +120,28 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v5
 
+
+  publish-site:
+    needs: [test, suites-ran]
+    if: github.event_name == 'push' && github.repository == 'soliskit/tetris-js' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 5
+    steps:
+      - name: Request the website workflow
+        shell: bash
+        env:
+          SITE_PUBLISH_TOKEN: ${{ secrets.SITE_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "$SITE_PUBLISH_TOKEN" ]; then
+            echo "SITE_PUBLISH_TOKEN is not set." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $SITE_PUBLISH_TOKEN" \
+            --header "Content-Type: application/json" \
+            --header "X-GitHub-Api-Version: 2026-03-10" \
+            --data '{"ref":"main"}' \
+            https://api.github.com/repos/soliskit/soliskit.github.io/actions/workflows/pages.yml/dispatches
