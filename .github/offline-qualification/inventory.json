@@ -9,7 +9,7 @@
   "candidate/sw.js": "07cdece0b5114767cdfdfc4fec7fafdabf8c4abf7b41bad20eb2cda1881c8b19",
   "ci-runtime/package-lock.json": "3f1ad508d897df9aba225ce4c4f06ae22d1c48a06fdec4597b929e4da773e4eb",
   "ci-runtime/package.json": "9f7a16a9aa8c38dff5aaea88703d22b82dd3427219a834fdfd7f54ffcb468e5a",
-  "emit-evidence.py": "f64294047b5b64f3d7a94c473bbeed945e2f8f7262ae95c3894400ba5ab4cdd3",
+  "emit-evidence.py": "0c57340a84559dfd13df1f0811636c7fa5e8e10137dcb9aec15653fa6126232c",
   "legacy/game/gameManager.js": "9bae82056872b59cffac8625d6e6bbf92a8a3cd02b3dd206fa28f76360959855",
   "legacy/game/gameState.js": "e8b11ab58994388ef6ca6c7c1d7dce86ea1cd1b9b7f08a0fb01a71922a1be013",
   "legacy/game/inputController.js": "b7eae7b55b97de7a224d7d397b93d729185d5993dc7b3ca7b025aedcabbeeff4",

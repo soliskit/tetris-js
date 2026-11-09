@@ -1,4 +1,4 @@
-# Private authored proposal. Not run or syntax checked.
+# Private version-2 transport proposal. Not run or syntax checked.
 from pathlib import Path
 import base64,hashlib,json,os,sys
 root=Path(os.environ['OFFLINE_EVIDENCE'])
@@ -29,12 +29,16 @@ try:
  if 'planned.json' not in [name for name,*_ in files]:incomplete.append('missing planned slots')
  manifest=[{'name':name,'length':len(data),'sha256':hashlib.sha256(data).hexdigest(),'chunks':(len(data)+2249)//2250,'originalLength':original_length,'originalSha256':original_hash,'truncated':truncated} for name,data,original_length,original_hash,truncated in files]
  identity={k:os.environ[k] for k in ['OFFLINE_ENGINE','OFFLINE_HEAD','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
- print('OFFLINE_EVIDENCE_BEGIN '+json.dumps({'identity':identity,'files':manifest,'incomplete':incomplete},sort_keys=True),flush=True)
- for name,data,*_ in files:
-  for offset in range(0,len(data),2250):
-   print('OFFLINE_EVIDENCE_CHUNK '+json.dumps({'name':name,'index':offset//2250,'base64':base64.b64encode(data[offset:offset+2250]).decode()},sort_keys=True),flush=True)
- print('OFFLINE_EVIDENCE_END '+json.dumps(identity,sort_keys=True),flush=True)
+ print('OFFLINE_EVIDENCE_V2_BEGIN '+json.dumps({'version':2,'identity':identity,'files':manifest,'incomplete':incomplete},sort_keys=True),flush=True)
+ # Two separated streams carry identical original bytes. This is redundancy,
+ # not a guarantee GitHub will retain either copy of every chunk.
+ for copy in (0,1):
+  print('OFFLINE_EVIDENCE_V2_COPY '+str(copy),flush=True)
+  for name,data,*_ in files:
+   for offset in range(0,len(data),2250):
+    print('OFFLINE_EVIDENCE_V2_CHUNK '+json.dumps({'copy':copy,'name':name,'index':offset//2250,'base64':base64.b64encode(data[offset:offset+2250]).decode()},sort_keys=True),flush=True)
+ print('OFFLINE_EVIDENCE_V2_END '+json.dumps(identity,sort_keys=True),flush=True)
  if incomplete:sys.exit(1)
 except BaseException as error:
- print('OFFLINE_EVIDENCE_INCOMPLETE '+type(error).__name__+': '+str(error),file=sys.stderr)
+ print('OFFLINE_EVIDENCE_V2_INCOMPLETE '+type(error).__name__+': '+str(error),file=sys.stderr)
  sys.exit(1)

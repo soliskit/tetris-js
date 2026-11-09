@@ -1,37 +1,39 @@
 name: Offline v6 candidate qualification
 on:
-  pull_request:
-    types: [opened]
-    branches: [main]
-    paths: ['.github/offline-qualification/**', '.github/workflows/offline-qualification.yml']
+  workflow_dispatch:
+    inputs:
+      expected-head:
+        required: true
+        type: string
+      expected-source-head:
+        required: true
+        type: string
+      expected-frozen-base:
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: offline-v6-${{ github.event.pull_request.number }}
+  group: offline-chromium-evidence-v2
   cancel-in-progress: false
 jobs:
   qualify:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'offline-qualification-v6'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      max-parallel: 2
-      matrix:
-        engine: [chromium, webkit]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.sha }}
+          fetch-depth: 2
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 26.13.0
       - name: Initialize explicit planned evidence before verification or setup
         env:
-          OFFLINE_ENGINE: ${{ matrix.engine }}
-          OFFLINE_HEAD: ${{ github.event.pull_request.head.sha }}
-          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-${{ matrix.engine }}
+          OFFLINE_ENGINE: chromium
+          OFFLINE_HEAD: ${{ github.sha }}
+          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-chromium
         run: |
           python - <<'PYINIT'
           import os,json,pathlib
@@ -44,8 +46,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo 4bacf2c172360d96158027d9d515e47a84b5d46c04077b6b726971e29e6526ba  .github/offline-qualification/verify-inputs.py | sha256sum -c -
-          echo 1542e3dff588fa71b5101c9d842d1ba622970f818c05f7319623a3619d2da630  .github/offline-qualification/inventory.json | sha256sum -c -
+          echo e3248d26a38d4241a38838e2d235e23a173ac034e2cc8ee584c3833283e8e68e  .github/offline-qualification/verify-inputs.py | sha256sum -c -
+          echo 3ff2521253e354ff1c6a18a0b5b6ecc2c280b83e4d8ba691c0cd87e13ec1354c  .github/offline-qualification/inventory.json | sha256sum -c -
           python .github/offline-qualification/verify-inputs.py
       - name: Assemble temporary locked Playwright runtime
         shell: bash
@@ -55,15 +57,15 @@ jobs:
       - name: Install hosted browser only
         shell: bash
         env:
-          ENGINE: ${{ matrix.engine }}
+          ENGINE: chromium
         run: |
           set -euo pipefail
           timeout --signal=TERM --kill-after=10s 300s node .github/offline-qualification/ci-runtime/node_modules/playwright/cli.js install --with-deps "$ENGINE"
       - name: Run one bounded qualification, no retry
         env:
-          OFFLINE_ENGINE: ${{ matrix.engine }}
-          OFFLINE_HEAD: ${{ github.event.pull_request.head.sha }}
-          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-${{ matrix.engine }}
+          OFFLINE_ENGINE: chromium
+          OFFLINE_HEAD: ${{ github.sha }}
+          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-chromium
         shell: bash
         run: |
           set -euo pipefail
@@ -71,7 +73,7 @@ jobs:
       - name: Emit available evidence to nonartifact job logs
         if: always()
         env:
-          OFFLINE_ENGINE: ${{ matrix.engine }}
-          OFFLINE_HEAD: ${{ github.event.pull_request.head.sha }}
-          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-${{ matrix.engine }}
+          OFFLINE_ENGINE: chromium
+          OFFLINE_HEAD: ${{ github.sha }}
+          OFFLINE_EVIDENCE: ${{ runner.temp }}/offline-evidence-chromium
         run: python .github/offline-qualification/emit-evidence.py
