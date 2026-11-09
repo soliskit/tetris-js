@@ -552,7 +552,13 @@ test.describe('playing with the keyboard', () => {
   }) => {
     await page.addInitScript(() => {
       window.gameKeyReads = 0;
-      window.readProbe = { phase: 'initialization', started: performance.now(), reads: [], overflow: 0, ownReads: 0 };
+      window.readProbe = {
+        phase: 'initialization',
+        started: performance.now(),
+        reads: [],
+        overflow: 0,
+        ownReads: 0
+      };
       const getItem = Storage.prototype.getItem;
       Storage.prototype.getItem = function (key) {
         if (String(key).startsWith('tetris.')) {
@@ -561,10 +567,22 @@ test.describe('playing with the keyboard', () => {
           if (probe.phase === 'diagnostic') probe.ownReads++;
           if (probe.reads.length < 32) {
             const stack = new Error().stack ?? '';
-            const callers = ['get highScore', 'get isSessionSaved', 'readSavedSession', 'storageChanged', 'drawIfChanged', 'redrawAll']
-              .filter(label => stack.includes(label));
+            const callers = [
+              'get highScore',
+              'get isSessionSaved',
+              'readSavedSession',
+              'storageChanged',
+              'drawIfChanged',
+              'redrawAll'
+            ].filter((label) => stack.includes(label));
             probe.reads.push({
-              key: ['tetris.highScore', 'tetris.isSessionSaved', 'tetris.savedGameSession'].includes(String(key)) ? String(key) : 'other-tetris',
+              key: [
+                'tetris.highScore',
+                'tetris.isSessionSaved',
+                'tetris.savedGameSession'
+              ].includes(String(key))
+                ? String(key)
+                : 'other-tetris',
               phase: probe.phase,
               elapsedMs: Math.round(performance.now() - probe.started),
               callers: callers.length ? callers : ['unclassified']
@@ -661,9 +679,17 @@ test.describe('playing with the keyboard', () => {
             gameKeyReads: window.gameKeyReads
           };
         });
-      } catch { /* Keep the original final-counter assertion. */ }
-      try { console.log('DSP-5 final-counter evidence:', JSON.stringify({ before, evidence })); }
-      catch { /* Diagnostic logging is best-effort. */ }
+      } catch {
+        /* Keep the original final-counter assertion. */
+      }
+      try {
+        console.log(
+          'DSP-5 final-counter evidence:',
+          JSON.stringify({ before, evidence })
+        );
+      } catch {
+        /* Diagnostic logging is best-effort. */
+      }
       throw error;
     }
   });
