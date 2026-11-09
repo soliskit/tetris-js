@@ -558,8 +558,19 @@ test.describe('playing with the keyboard', () => {
         return getItem.apply(this, arguments);
       };
       window.seenStorageKeys = [];
+      window.probeTallies = {
+        events: 0,
+        tetrisPrefixKey: 0,
+        otherKey: 0,
+        nullKey: 0
+      };
       window.addEventListener('storage', (event) => {
         window.seenStorageKeys.push(event.key);
+        window.probeTallies.events++;
+        if (event.key === null) window.probeTallies.nullKey++;
+        else if (String(event.key).startsWith('tetris.'))
+          window.probeTallies.tetrisPrefixKey++;
+        else window.probeTallies.otherKey++;
       });
     });
     await page.goto('/');
@@ -571,9 +582,48 @@ test.describe('playing with the keyboard', () => {
     // The negative check is conditioned on the probe recording the foreign
     // key's storage event within the poll window; it does not synchronize
     // the app's deferred redraw.
-    await expect
-      .poll(() => page.evaluate(() => window.seenStorageKeys))
-      .toContain('other.app');
+    try {
+      await expect
+        .poll(() => page.evaluate(() => window.seenStorageKeys))
+        .toContain('other.app');
+    } catch (error) {
+      // On a failed poll, log the bounded state the probe kept, then
+      // rethrow the original error unchanged. The state read and the
+      // logging are each guarded and best-effort: a failed read logs the
+      // fixed label with no state, and no raw error text is recorded.
+      let evidence;
+      try {
+        evidence = await page.evaluate(() => {
+          const bucket = (state) =>
+            state === 'visible' ? 'visible' : 'not-visible';
+          return {
+            tallies: {
+              events: window.probeTallies.events,
+              tetrisPrefixKey: window.probeTallies.tetrisPrefixKey,
+              otherKey: window.probeTallies.otherKey,
+              nullKey: window.probeTallies.nullKey
+            },
+            gameKeyReads: window.gameKeyReads,
+            foreignKeyWriteVisible:
+              localStorage.getItem('other.app') === 'changed',
+            visibility: bucket(document.visibilityState),
+            focused: document.hasFocus()
+          };
+        });
+        evidence.readsBeforeWrite = before;
+        evidence.otherTabVisibility = await otherTab.evaluate(() =>
+          document.visibilityState === 'visible' ? 'visible' : 'not-visible'
+        );
+      } catch {
+        evidence = null;
+      }
+      try {
+        console.log('DSP-5 probe evidence:', JSON.stringify(evidence));
+      } catch {
+        // Logging itself is best-effort.
+      }
+      throw error;
+    }
     expect(await page.evaluate(() => window.gameKeyReads)).toBe(before);
   });
 
