@@ -591,7 +591,7 @@ test.describe('playing with the keyboard', () => {
       // rethrow the original error unchanged. The state read and the
       // logging are each guarded and best-effort: a failed read logs the
       // fixed label with no state, and no raw error text is recorded.
-      let evidence = null;
+      let evidence;
       try {
         evidence = await page.evaluate(() => {
           const bucket = (state) =>
