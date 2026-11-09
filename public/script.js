@@ -8,6 +8,97 @@ import { InputController } from './game/inputController.js';
 /** @typedef {import('./game/position.js').Position} Position */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
+// DSP-6 reserves first contexts as the page starts, before asynchronous
+// admission. This allocates contexts, but does not draw or start a game.
+if (!prepareDisplay()) await new Promise(() => {});
+
+function prepareDisplay() {
+  try {
+    for (const canvas of document.querySelectorAll('canvas')) {
+      canvas.getContext('2d', { colorSpace: 'display-p3' });
+    }
+    return true;
+  } catch {
+    document.documentElement.dataset.tabAdmission = 'error';
+    const message = /** @type {HTMLElement} */ (document.getElementById('tabLockMessage'));
+    const detail = /** @type {HTMLElement} */ (document.getElementById('tabLockDetail'));
+    const retry = /** @type {HTMLButtonElement} */ (document.getElementById('tabLockRetry'));
+    message.textContent = 'The game could not prepare its display.';
+    detail.textContent = 'Reload the page to try again.';
+    retry.textContent = 'Reload';
+    retry.hidden = false;
+    retry.disabled = false;
+    retry.addEventListener('click', () => location.reload());
+    try {
+      console.error('Tetris display setup failed.');
+    } catch {
+      // A refused report cannot start an unprepared game.
+    }
+    return false;
+  }
+}
+
+// Admission and lifetime are separate: initialization must not finish the
+// held callback and release ownership while page handlers still exist.
+await ownGamePage();
+
+async function ownGamePage() {
+  const message = /** @type {HTMLElement} */ (document.getElementById('tabLockMessage'));
+  const detail = /** @type {HTMLElement} */ (document.getElementById('tabLockDetail'));
+  const retry = /** @type {HTMLButtonElement} */ (document.getElementById('tabLockRetry'));
+  let pending = false;
+  let admitted = false;
+  const lifetime = new Promise(() => {});
+  await new Promise(resolve => {
+    const attempt = () => {
+      if (pending || admitted) return;
+      pending = true;
+      document.documentElement.dataset.tabAdmission = 'pending';
+      retry.disabled = true;
+      message.textContent = 'Checking for another game tab...';
+      detail.textContent = '';
+      const failed = () => {
+        if (admitted) return;
+        pending = false;
+        document.documentElement.dataset.tabAdmission = 'error';
+        retry.disabled = false;
+        retry.hidden = false;
+        message.textContent = 'The game could not get its tab lock. Try again.';
+        detail.textContent = '';
+        try {
+          console.error('Tetris tab lock request failed.');
+        } catch {
+          // A refused report cannot grant admission.
+        }
+      };
+      try {
+        void navigator.locks.request('tetris.game-page', { ifAvailable: true }, lock => {
+          if (!lock) {
+            pending = false;
+            document.documentElement.dataset.tabAdmission = 'blocked';
+            retry.disabled = false;
+            retry.hidden = false;
+            message.textContent = 'Game already open in another tab.';
+            detail.textContent = 'Close the other game tab, then try again.';
+            return;
+          }
+          admitted = true;
+          resolve(undefined);
+          // Never release on pause, hide, pagehide or initialization failure.
+          // Only browser context cleanup ends this lifetime hold.
+          return lifetime;
+        }).catch(failed);
+      } catch {
+        failed();
+      }
+    };
+    retry.addEventListener('click', attempt);
+    attempt();
+  });
+  // Initialization after this await cannot release the lifetime promise.
+  retry.disabled = true;
+}
+
 const internalErrorMessage = 'The game stopped because of an internal error.';
 let engineFaultNotice = false;
 const gameManager = new GameManager({ onChange: engineChanged, onFault: reportEngineFault });
@@ -692,3 +783,10 @@ boardCanvas.addEventListener('click', () => {});
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// Do not expose controls until admission and synchronous bootstrap finish.
+element('tabLockStatus').hidden = true;
+const admittedGame = /** @type {HTMLElement} */ (document.querySelector('main.app'));
+admittedGame.hidden = false;
+admittedGame.inert = false;
+document.documentElement.dataset.tabAdmission = 'ready';

@@ -411,58 +411,76 @@ test('a new version that cannot be downloaded in full leaves the cached game who
 // The page here asks for its scripts only when the test says so, so a newer
 // version can finish downloading while the page is still loading. The
 // version number is in the page title and in one of the game modules.
-test('a page loads every file from the version it opened with, even if a newer one finishes downloading meanwhile [APP-2]', async ({
-  page
-}) => {
-  const publicDir = fileURLToPath(new URL('../public', import.meta.url));
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
-  fs.cpSync(publicDir, dir, { recursive: true });
-  const loader = `<script>
+const deferredBootstrapTest = test.extend({ waitForGameBootstrap: false });
+
+deferredBootstrapTest(
+  'a page loads every file from the version it opened with, even if a newer one finishes downloading meanwhile [APP-2]',
+  async ({ page }) => {
+    const publicDir = fileURLToPath(new URL('../public', import.meta.url));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
+    fs.cpSync(publicDir, dir, { recursive: true });
+    const loader = `<script>
     window.loadScripts = () => new Promise((resolve, reject) => {
       const script = Object.assign(document.createElement('script'), { type: 'module', src: 'script.js', onload: resolve, onerror: reject });
       document.body.append(script);
     });
   </script>`;
-  const html = fs
-    .readFileSync(path.join(publicDir, 'index.html'), 'utf8')
-    .replace(/ *<link rel="modulepreload"[^>]*>\n/g, '')
-    .replace('<script type="module" src="script.js"></script>', loader);
-  const moduleSource = fs.readFileSync(
-    path.join(publicDir, 'game/position.js'),
-    'utf8'
-  );
-  const deploy = (version) => {
-    fs.writeFileSync(
-      path.join(dir, 'index.html'),
-      html.replace('<title>Tetris</title>', `<title>Tetris ${version}</title>`)
+    const html = fs
+      .readFileSync(path.join(publicDir, 'index.html'), 'utf8')
+      .replace(/ *<link rel="modulepreload"[^>]*>\n/g, '')
+      .replace('<script type="module" src="script.js"></script>', loader);
+    const moduleSource = fs.readFileSync(
+      path.join(publicDir, 'game/position.js'),
+      'utf8'
     );
-    fs.writeFileSync(
-      path.join(dir, 'game/position.js'),
-      `${moduleSource}\nglobalThis.moduleVersion = ${version};\n`
-    );
-  };
-  deploy(1);
-  const server = express().use(express.static(dir)).listen(0);
-  await new Promise((resolve) => server.once('listening', resolve));
-  try {
-    await page.goto(`http://localhost:${server.address().port}/`);
-    await page.evaluate(() => window.loadScripts());
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    deploy(2);
-    await page.reload();
-    await expect(page).toHaveTitle('Tetris 1');
-    await expect.poll(() => newestCachedPage(page)).toContain('Tetris 2');
-    await page.evaluate(() => window.loadScripts());
-    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(1);
-    await page.reload();
-    await expect(page).toHaveTitle('Tetris 2');
-    await page.evaluate(() => window.loadScripts());
-    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(2);
-  } finally {
-    server.close();
-    fs.rmSync(dir, { recursive: true, force: true });
+    const deploy = (version) => {
+      fs.writeFileSync(
+        path.join(dir, 'index.html'),
+        html.replace(
+          '<title>Tetris</title>',
+          `<title>Tetris ${version}</title>`
+        )
+      );
+      fs.writeFileSync(
+        path.join(dir, 'game/position.js'),
+        `${moduleSource}\nglobalThis.moduleVersion = ${version};\n`
+      );
+    };
+    deploy(1);
+    const server = express().use(express.static(dir)).listen(0);
+    await new Promise((resolve) => server.once('listening', resolve));
+    try {
+      await page.goto(`http://localhost:${server.address().port}/`);
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      await page.evaluate(() => navigator.serviceWorker.ready);
+      deploy(2);
+      await page.reload();
+      await expect(page).toHaveTitle('Tetris 1');
+      await expect.poll(() => newestCachedPage(page)).toContain('Tetris 2');
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(1);
+      await page.reload();
+      await expect(page).toHaveTitle('Tetris 2');
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(2);
+    } finally {
+      server.close();
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   }
-});
+);
 
 // The color space each canvas draws in, and whether this browser has Display P3 canvases at all.
 function colorSpaces(page) {

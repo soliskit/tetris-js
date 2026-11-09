@@ -144,6 +144,30 @@ The exception covers only those two skipped project runs. They are named in `.gi
 | APP-4 | The game supports iOS 27 (Safari 27) and later, on the iPhone 14 Pro Max and newer, in portrait.                                                                                                                                                                                                                                                                                        |
 | APP-5 | The page asks for all of its scripts at once rather than one import level at a time, so it starts faster.                                                                                                                                                                                                                                                                               |
 | APP-6 | GitHub Pages serves every project of an account from one origin, which they all share storage and caches with, so the game touches only its own: it stores the high score and saved game under names of its own, and deletes only caches it made.                                                                                                                                       |
+| APP-7 | One cooperating page at a time owns the game through its exclusive browser lock. A second page remains unavailable until an explicit retry obtains ownership; a lock request failure never starts an unlocked game.                                                                                                                                                                     |
+
+### Single game page
+
+**APP-7.** Before a page starts the game or reads or writes its game data, it
+holds the exclusive Tetris page lock. Only one cooperating page in the same
+browser lock context can own that lock. The owner retains it while open,
+including while paused, over or hidden. A second page shows that the game is
+already open and lets the player retry after closing the owner. A refused
+lock request leaves the game unavailable and reports the failure; it never
+starts an unlocked game. Previously opened copies without this rule are
+outside this guarantee. This is not cross-browser, cross-profile or
+cross-private-session exclusion.
+
+DSP-6 canvas-context reservation still happens as the page starts, before
+asynchronous lock admission, including in blocked pages. It does not draw,
+start an engine or touch game data. If that display preparation throws,
+the game stays unavailable with a visible display error and Reload action;
+no ownership request is made.
+
+This limits concurrent page ownership; SCO-3 is unchanged. A paused game can
+be continued in another cooperating page only after the owner closes and
+the other page acquires the lock. Native external storage changes remain
+subject to DSP-5; the lock does not exclude scripts that do not participate.
 
 ## Detailed rules
 
