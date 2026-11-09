@@ -43,7 +43,7 @@ test.afterEach(async ({ page }, testInfo) => {
   expect(errors).toEqual([]);
 });
 
-async function boardBitmapMatchesCss(page) {
+async function boardBitmapSnapshot(page) {
   return page.locator('#tetris').evaluate((c) => {
     const r = c.getBoundingClientRect();
     const style = getComputedStyle(c);
@@ -59,12 +59,20 @@ async function boardBitmapMatchesCss(page) {
       parseFloat(style.borderBottomWidth) -
       parseFloat(style.paddingTop) -
       parseFloat(style.paddingBottom);
-    return (
-      width > 0 &&
-      height > 0 &&
-      c.width === Math.round(width * devicePixelRatio) &&
-      c.height === Math.round(height * devicePixelRatio)
-    );
+    const expectedWidth = Math.round(width * devicePixelRatio);
+    const expectedHeight = Math.round(height * devicePixelRatio);
+    return {
+      rect: [r.x, r.y, r.width, r.height],
+      content: [width, height],
+      ratio: devicePixelRatio,
+      bitmap: [c.width, c.height],
+      expectedBitmap: [expectedWidth, expectedHeight],
+      sized:
+        width > 0 &&
+        height > 0 &&
+        c.width === expectedWidth &&
+        c.height === expectedHeight
+    };
   });
 }
 
@@ -104,13 +112,27 @@ async function pausedClockPiece(page) {
   ];
   let cells = [];
   let sized = false;
+  const sizingSamples = [];
   for (let frame = 0; frame < 20; frame++) {
     await page.clock.runFor(17);
-    sized = await boardBitmapMatchesCss(page);
+    const sample = await boardBitmapSnapshot(page);
+    sizingSamples.push({ frame, ...sample });
+    sized = sample.sized;
     if (!sized) continue;
     cells = await cellsOf(page, PieceColors.purple);
     if (JSON.stringify(cells) === JSON.stringify(expected)) break;
   }
+  if (!sized || JSON.stringify(cells) !== JSON.stringify(expected))
+    console.log(
+      'DRAG-RESIZE-SETUP-EVIDENCE ' +
+        JSON.stringify({
+          project: test.info().project.name,
+          titlePath: test.info().titlePath,
+          sizingSamples,
+          cells,
+          expected
+        })
+    );
   expect(sized).toBe(true);
   expect(cells).toEqual(expected);
   await expect(page.locator('#playPauseButton')).toHaveAttribute(
