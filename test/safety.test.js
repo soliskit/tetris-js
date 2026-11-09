@@ -470,6 +470,19 @@ test('a timer cancellation that throws during a fault stop still records and rep
   // The timers whose cancellation failed may still fire; neither may
   // change the stopped game.
   armed = false;
+  // U3 allows the leftover firings; U7 sets their mere presence aside at
+  // the later checks. An ignored action before they run records and
+  // reports nothing further.
+  game.handleAction(PlayerAction.moveLeft);
+  assert.equal(game.state, GameState.gameOver);
+  assert.deepEqual(
+    game.faults.map((fault) => fault.reason),
+    ['unexpected error']
+  );
+  assert.deepEqual(
+    reported.map((fault) => fault.reason),
+    ['unexpected error']
+  );
   assert.doesNotThrow(() => scheduler.advance(100000));
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
