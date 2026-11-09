@@ -34,6 +34,12 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 const HIGH_SCORE_KEY = 'tetris.highScore';
 const IS_SESSION_SAVED_KEY = 'tetris.isSessionSaved';
 const SAVED_SESSION_KEY = 'tetris.savedGameSession';
+// The only keys a storage event from another tab can matter to (DSP-5).
+export const GAME_STORAGE_KEYS = [
+  HIGH_SCORE_KEY,
+  IS_SESSION_SAVED_KEY,
+  SAVED_SESSION_KEY
+];
 /** @type {Record<number, number>} */
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
 const MAX_FAULTS_KEPT = 20;

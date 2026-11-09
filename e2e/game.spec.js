@@ -546,6 +546,67 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => boardCells(page)).toEqual(board);
   });
 
+  test('an unrelated storage key written in another tab is ignored [DSP-5]', async ({
+    page,
+    context
+  }) => {
+    await page.addInitScript(() => {
+      window.gameKeyReads = 0;
+      const getItem = Storage.prototype.getItem;
+      Storage.prototype.getItem = function (key) {
+        if (String(key).startsWith('tetris.')) window.gameKeyReads++;
+        return getItem.apply(this, arguments);
+      };
+      window.seenStorageKeys = [];
+      window.addEventListener('storage', (event) => {
+        window.seenStorageKeys.push(event.key);
+      });
+    });
+    await page.goto('/');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    const before = await page.evaluate(() => window.gameKeyReads);
+    await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
+    // The negative check is conditioned on the probe recording the foreign
+    // key's storage event within the poll window; it does not synchronize
+    // the app's deferred redraw.
+    await expect
+      .poll(() => page.evaluate(() => window.seenStorageKeys))
+      .toContain('other.app');
+    expect(await page.evaluate(() => window.gameKeyReads)).toBe(before);
+  });
+
+  // The game's own keys still count as changes made in another tab. Kept in
+  // a separate test so the control's reads cannot touch the counter above.
+  test('a game key written in another tab still counts as a change [DSP-5]', async ({
+    page,
+    context
+  }) => {
+    await page.addInitScript(() => {
+      window.seenStorageKeys = [];
+      window.addEventListener('storage', (event) => {
+        window.seenStorageKeys.push(event.key);
+      });
+    });
+    await page.goto('/');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    await otherTab.evaluate(() =>
+      localStorage.setItem('tetris.highScore', '4200')
+    );
+    // The game key's event arrives first...
+    await expect
+      .poll(() => page.evaluate(() => window.seenStorageKeys))
+      .toContain('tetris.highScore');
+    // ...and the app reacts to it.
+    await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
+    // Clearing all storage can remove the game's keys, so it still counts.
+    await otherTab.evaluate(() => localStorage.clear());
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+  });
+
   test('a high score set in another tab shows here too [DSP-5] [SCO-3]', async ({
     page,
     context
