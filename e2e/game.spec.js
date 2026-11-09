@@ -546,100 +546,10 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => boardCells(page)).toEqual(board);
   });
 
-  // TEMPORARY DIAGNOSTIC, pending a separately approved removal: on the CI
-  // WebKit project the two another-tab storage probes below have timed out
-  // with an empty event ledger while the same run's app-reaction controls
-  // passed, and the archived record holds only the timeout. The tested
-  // conditions are unchanged: the same write, the same poll, the same
-  // assertions. Only after a timeout-text poll failure does the record
-  // helper below run, and the original error is then rethrown
-  // unconditionally. The helper is observation only: a later sighting
-  // cannot be distinguished from natural late arrival, an errored or
-  // incomplete collection reads as unknown rather than absence, and it
-  // asserts nothing.
-  const settleProbePoll = async (page, key, timeout) => {
-    try {
-      await expect
-        .poll(() => page.evaluate(() => window.seenStorageKeys), { timeout })
-        .toContain(key);
-      return 'observed';
-    } catch (error) {
-      // Classified by message text only: a nested timeout can carry the
-      // same text, so "not-observed" means the poll ended with a
-      // timeout-text error, not proven poll exhaustion.
-      return /Timeout \d+ms exceeded/.test(String(error))
-        ? 'not-observed'
-        : `error: ${error}`;
-    }
-  };
-  const recordStorageTimeout = async (
-    page,
-    otherTab,
-    key,
-    probe,
-    errors,
-    tWriteDone,
-    tAckSettled
-  ) => {
-    const record = { key, tWriteDone, tAckSettled };
-    try {
-      // No storage access in this page by the diagnostic has happened yet
-      // (the app's own access is uncontrolled and not visible here).
-      record.latePoll = await settleProbePoll(page, key, 5000);
-      record.tLateSettled = Date.now();
-      const stateOf = () => ({
-        url: location.href,
-        visibilityState: document.visibilityState,
-        readyState: document.readyState,
-        hasFocus: document.hasFocus()
-      });
-      record.stateAfter = {
-        here: await page.evaluate(stateOf),
-        there: await otherTab.evaluate(stateOf)
-      };
-      record.probe = await probe();
-      record.writeReadbackThere = await otherTab.evaluate(
-        (k) => localStorage.getItem(k),
-        key
-      );
-      record.ledgerBeforeRead = await page.evaluate(
-        () => window.seenStorageKeys
-      );
-      record.tBeforeRead = Date.now();
-      // The diagnostic's first storage read in this page.
-      record.writeReadbackHere = await page.evaluate(
-        (k) => localStorage.getItem(k),
-        key
-      );
-      record.tAfterRead = Date.now();
-      record.afterReadPoll = await settleProbePoll(page, key, 2000);
-      record.tAfterReadSettled = Date.now();
-      record.ledger = await page.evaluate(() => window.seenStorageKeys);
-      record.errors = errors;
-      console.log(`DIAG-STORAGE-TIMEOUT ${JSON.stringify(record)}`);
-    } catch (collectionError) {
-      // Recording is best-effort: a collection failure is recorded, and the
-      // partial record is still logged; neither failure is thrown, so the
-      // original timeout error at the call site is the one that stands.
-      record.collectionError = String(collectionError);
-      try {
-        record.errors = errors;
-        console.log(`DIAG-STORAGE-TIMEOUT ${JSON.stringify(record)}`);
-      } catch {
-        // Nothing more can be recorded; the original error still stands.
-      }
-    }
-  };
-
   test('an unrelated storage key written in another tab is ignored [DSP-5]', async ({
     page,
     context
   }) => {
-    const errors = [];
-    page.on('pageerror', (error) => errors.push(`page pageerror: ${error}`));
-    page.on('console', (message) =>
-      errors.push(`page console: ${message.text()}`)
-    );
     await page.addInitScript(() => {
       window.gameKeyReads = 0;
       const getItem = Storage.prototype.getItem;
@@ -655,61 +565,15 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    otherTab.on('pageerror', (error) =>
-      errors.push(`otherTab pageerror: ${error}`)
-    );
-    otherTab.on('console', (message) =>
-      errors.push(`otherTab console: ${message.text()}`)
-    );
     await otherTab.goto('/');
     const before = await page.evaluate(() => window.gameKeyReads);
     await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
-    const tWriteDone = Date.now();
     // The negative check is conditioned on the probe recording the foreign
     // key's storage event within the poll window; it does not synchronize
     // the app's deferred redraw.
-    let ackError;
-    let tAckSettled;
-    try {
-      await expect
-        .poll(() => page.evaluate(() => window.seenStorageKeys))
-        .toContain('other.app');
-    } catch (error) {
-      ackError = error;
-      tAckSettled = Date.now();
-    }
-    if (ackError) {
-      try {
-        // Classified by message text: a nested timeout can carry the same
-        // text, so this is a timeout-text match, not proven exhaustion.
-        if (/Timeout \d+ms exceeded/.test(String(ackError))) {
-          await recordStorageTimeout(
-            page,
-            otherTab,
-            'other.app',
-            async () => ({
-              probeCounter: await page.evaluate(() => window.gameKeyReads),
-              before
-            }),
-            errors,
-            tWriteDone,
-            tAckSettled
-          );
-        } else {
-          // Not a timeout-text failure: recorded as an error, no collection.
-          console.log(
-            `DIAG-STORAGE-ACK-ERROR ${JSON.stringify({ key: 'other.app', error: String(ackError) })}`
-          );
-        }
-      } catch (diagError) {
-        try {
-          console.log(`DIAG-STORAGE-COLLECTOR-ERROR ${String(diagError)}`);
-        } catch {
-          // Logging is best-effort; the original error below still stands.
-        }
-      }
-      throw ackError;
-    }
+    await expect
+      .poll(() => page.evaluate(() => window.seenStorageKeys))
+      .toContain('other.app');
     expect(await page.evaluate(() => window.gameKeyReads)).toBe(before);
   });
 
@@ -719,11 +583,6 @@ test.describe('playing with the keyboard', () => {
     page,
     context
   }) => {
-    const errors = [];
-    page.on('pageerror', (error) => errors.push(`page pageerror: ${error}`));
-    page.on('console', (message) =>
-      errors.push(`page console: ${message.text()}`)
-    );
     await page.addInitScript(() => {
       window.seenStorageKeys = [];
       window.addEventListener('storage', (event) => {
@@ -733,58 +592,14 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    otherTab.on('pageerror', (error) =>
-      errors.push(`otherTab pageerror: ${error}`)
-    );
-    otherTab.on('console', (message) =>
-      errors.push(`otherTab console: ${message.text()}`)
-    );
     await otherTab.goto('/');
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );
-    const tWriteDone = Date.now();
     // The game key's event arrives first...
-    let ackError;
-    let tAckSettled;
-    try {
-      await expect
-        .poll(() => page.evaluate(() => window.seenStorageKeys))
-        .toContain('tetris.highScore');
-    } catch (error) {
-      ackError = error;
-      tAckSettled = Date.now();
-    }
-    if (ackError) {
-      try {
-        // Classified by message text: a nested timeout can carry the same
-        // text, so this is a timeout-text match, not proven exhaustion.
-        if (/Timeout \d+ms exceeded/.test(String(ackError))) {
-          await recordStorageTimeout(
-            page,
-            otherTab,
-            'tetris.highScore',
-            async () => ({
-              highScoreText: await page.locator('#highScore').textContent()
-            }),
-            errors,
-            tWriteDone,
-            tAckSettled
-          );
-        } else {
-          console.log(
-            `DIAG-STORAGE-ACK-ERROR ${JSON.stringify({ key: 'tetris.highScore', error: String(ackError) })}`
-          );
-        }
-      } catch (diagError) {
-        try {
-          console.log(`DIAG-STORAGE-COLLECTOR-ERROR ${String(diagError)}`);
-        } catch {
-          // Logging is best-effort; the original error below still stands.
-        }
-      }
-      throw ackError;
-    }
+    await expect
+      .poll(() => page.evaluate(() => window.seenStorageKeys))
+      .toContain('tetris.highScore');
     // ...and the app reacts to it.
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
     // Clearing all storage can remove the game's keys, so it still counts.
