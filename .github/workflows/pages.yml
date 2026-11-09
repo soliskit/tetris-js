@@ -101,26 +101,6 @@ jobs:
           check browser "$RESULT" "$E2E_PASSED" "$E2E_SKIPPED" 30
           exit "$fail"
 
-  deploy:
-    needs: test
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: public
-      - id: deployment
-        uses: actions/deploy-pages@v5
-
-
   publish-site:
     needs: [test, suites-ran]
     if: github.event_name == 'push' && github.repository == 'soliskit/tetris-js' && github.ref == 'refs/heads/main'
