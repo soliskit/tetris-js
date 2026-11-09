@@ -106,7 +106,7 @@ try {
  
  await save();
  await createServer();
- for(const [index,slot] of slots.entries()) {
+ for(const slot of slots) {
   let context=null,page=null;
   slot.state='running';active={prefix:slot.prefix,mode:'candidate',deny:false};
   const profile=path.join(OUT,'profile-'+slotIndex);

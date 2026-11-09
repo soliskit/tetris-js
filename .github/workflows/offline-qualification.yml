@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           echo 4bacf2c172360d96158027d9d515e47a84b5d46c04077b6b726971e29e6526ba  .github/offline-qualification/verify-inputs.py | sha256sum -c -
-          echo 0c628e9cf0a7be253b65b684b936d19bccaded9c0d267ad9f7b02b1fef5ede52  .github/offline-qualification/inventory.json | sha256sum -c -
+          echo 1542e3dff588fa71b5101c9d842d1ba622970f818c05f7319623a3619d2da630  .github/offline-qualification/inventory.json | sha256sum -c -
           python .github/offline-qualification/verify-inputs.py
       - name: Assemble temporary locked Playwright runtime
         shell: bash

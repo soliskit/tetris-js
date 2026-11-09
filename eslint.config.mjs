@@ -19,7 +19,14 @@ export default tseslint.config(
     }
   },
   {
-    files: ['public/**/*.js', 'e2e/**/*.js', 'playwright.config.js'],
+    files: [
+      'public/**/*.js',
+      'e2e/**/*.js',
+      'playwright.config.js',
+      '.github/offline-qualification/candidate/**/*.js',
+      '.github/offline-qualification/legacy/**/*.js',
+      '.github/offline-qualification/qualify.mjs'
+    ],
     languageOptions: {
       globals: { ...globals.browser }
     }
