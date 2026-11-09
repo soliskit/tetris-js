@@ -438,6 +438,13 @@ function requestDraw(allowRetry = true) {
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     const { inlineSize, blockSize } = entry.contentBoxSize[0];
+    if (entry.target === boardCanvas && drag.pointerId !== null) {
+      const previous = canvasSizes.get(boardCanvas);
+      if (previous && (previous.width !== inlineSize || previous.height !== blockSize)) {
+        drag.canceledForResize = true;
+        drag.moved = true;
+      }
+    }
     sizeCanvas(/** @type {HTMLCanvasElement} */ (entry.target), inlineSize, blockSize);
   }
   drawSafely(redrawAll);
@@ -472,6 +479,7 @@ const drag = {
   startX: 0,
   startY: 0,
   moved: false,
+  canceledForResize: false,
   cellOffset: 0,
   rowOffset: 0,
   blocked: 0
@@ -481,6 +489,7 @@ function resetDragState() {
   drag.pointerId = null;
   drag.piece = null;
   drag.moved = false;
+  drag.canceledForResize = false;
   drag.cellOffset = 0;
   drag.rowOffset = 0;
   drag.blocked = 0;
@@ -517,7 +526,7 @@ boardCanvas.addEventListener('pointerdown', event => {
 });
 
 boardCanvas.addEventListener('pointermove', event => {
-  if (event.pointerId !== drag.pointerId || !canvasSizes.has(boardCanvas)) return;
+  if (event.pointerId !== drag.pointerId || drag.canceledForResize || !canvasSizes.has(boardCanvas)) return;
   // The piece locked or was held mid gesture: ignore the rest of this drag
   // rather than moving or dropping the next piece.
   if (gameManager.currentTetromino !== drag.piece) return;
@@ -568,7 +577,7 @@ boardCanvas.addEventListener('pointermove', event => {
 /** @param {PointerEvent} event */
 function endDrag(event) {
   if (event.pointerId !== drag.pointerId) return;
-  const isTap = !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
+  const isTap = !drag.canceledForResize && !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
   if (isTap) gameManager.handleAction(PlayerAction.rotate);
   resetDragState();
 }
