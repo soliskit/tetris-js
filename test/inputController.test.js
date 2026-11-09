@@ -257,8 +257,8 @@ test('while the pause screen asks to confirm New Game, keys are left to its dial
   key('ArrowLeft', false);
   assert.deepEqual(manager.actions, ['cancelNewGame', 'move 1', 'move -1']);
   manager.actions = [];
-  // A key pressed while the dialog is open does not count as held once play
-  // resumes: pausing releases held keys, so resume needs a fresh press.
+  // A dialog key is physically remembered but is not an active gameplay
+  // hold: resume still needs a release and fresh press.
   key('KeyD');
   manager.isConfirmingNewGame = false;
   manager.state = GameState.playing;
@@ -359,6 +359,12 @@ test('losing window focus releases every held key [INP-2]', (t) => {
     count(manager, PlayerAction.moveLeft),
     1,
     'A is no longer treated as held'
+  );
+  key('KeyA');
+  assert.equal(
+    count(manager, PlayerAction.moveLeft),
+    2,
+    'blur makes the next down fresh'
   );
 });
 
@@ -949,6 +955,14 @@ test('hiding the page releases held input even when the window does not blur [ST
     [],
     'the key held across the hide does not soft drop again'
   );
+  key('KeyS', true, { repeat: true });
+  key('KeyS');
+  tick(200);
+  assert.deepEqual(
+    manager.actions,
+    [],
+    'duplicate down stays spent after hidden resume'
+  );
   key('KeyS', false);
   key('KeyS');
   assert.deepEqual(
@@ -1057,19 +1071,20 @@ test('a visibility change that does not hide the page keeps held input [STA-2] [
   );
 });
 
-test('losing window focus lets a spent pad down drop again after resume [STA-2] [INP-2] [INP-4]', (t) => {
+test('losing window focus keeps a spent pad down inactive after resume [STA-2] [INP-2] [INP-4]', (t) => {
   const { manager, controller, pads, fire, tick } = setup(t);
   manager.state = GameState.paused;
   pads[0] = gamepad({ pressed: ['down'] }); // pad down held while paused, so it is spent
   controller.pollGamepads();
-  fire('blur'); // focus is lost: everything held is released and forgotten
+  fire('blur'); // focus is lost: the next poll must not revive the hold
   manager.state = GameState.playing;
   manager.actions = [];
   controller.pollGamepads(); // the pad is still physically down
   tick(500);
-  assert.ok(
-    count(manager, 'softDrop') > 0,
-    'the blur forgot the spending, so the held pad soft drops'
+  assert.equal(
+    count(manager, 'softDrop'),
+    0,
+    'held pad down stays inactive after blur and resume'
   );
 });
 
@@ -1611,8 +1626,8 @@ test('disconnect with no remaining controller forgets old pad holds and allows f
       'no remaining pad means no remembered direction'
     );
     assert.equal(
-      controller.padDownSpent,
-      false,
+      controller.padDrops.size,
+      0,
       'no remaining pad means no spent down hold'
     );
     manager.actions = [];
@@ -1694,6 +1709,7 @@ test('a neutral disconnect snapshot leaves the first new pad push fresh [INP-4]'
   const { manager, controller, fire, pads, tick } = setup(t);
   const report = t.mock.method(console, 'error', () => {});
   for (const [axes, fresh, action] of [
+    [[], { x: 1 }, PlayerAction.moveRight],
     [[0, 0], { x: 1 }, PlayerAction.moveRight],
     [[-0.5, 0], { x: -1 }, PlayerAction.moveLeft],
     [[0.5, 0], { x: 1 }, PlayerAction.moveRight],
@@ -1741,4 +1757,732 @@ test('blur still clears a held pad down and stops its repeat timer [INP-2] [INP-
     [],
     'blur stops and forgets the held pad down'
   );
+});
+
+for (const [name, held, opposite] of [
+  ['stick left', { x: -1 }, { x: 1 }],
+  ['stick right', { x: 1 }, { x: -1 }],
+  ['pad left', { pressed: ['left'] }, { pressed: ['right'] }],
+  ['pad right', { pressed: ['right'] }, { pressed: ['left'] }]
+]) {
+  test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
+    const { manager, controller, pads, fire, tick, key } = setup(t);
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(200);
+    assert.ok(manager.actions.length > 1, 'movement repeats before blur');
+    fire('blur');
+    manager.actions = [];
+    controller.pollGamepads();
+    tick(400);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'a held direction cannot restart after blur'
+    );
+    fire('focus');
+    pads[0] = gamepad(opposite);
+    controller.pollGamepads();
+    tick(400);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'focus and an opposite push do not replace rest'
+    );
+    key('KeyD');
+    key('KeyD', false);
+    manager.actions = [];
+    tick(200);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'releasing a fresh key cannot resume the spent pad'
+    );
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(200);
+    assert.ok(
+      manager.actions.length > 1,
+      'a fresh push after rest moves and repeats'
+    );
+  });
+}
+
+test('blur cannot move the real falling piece again before stick rest [INP-2]', (t) => {
+  const { fire, pads, tick } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game, { move() {}, press() {} });
+  pads[0] = gamepad({ x: 1 });
+  controller.pollGamepads();
+  fire('blur');
+  const column = game.currentTetromino.position.column;
+  controller.pollGamepads();
+  tick(200);
+  assert.equal(game.currentTetromino.position.column, column);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ x: -1 });
+  controller.pollGamepads();
+  assert.equal(game.currentTetromino.position.column, column - 1);
+});
+
+test('blur leaves confirmation-button selection available [INP-4]', (t) => {
+  const { manager, controller, fire } = setup(t);
+  fire('blur');
+  manager.isConfirmingNewGame = true;
+  controller.processInput(new Set(['left']), 0, 0);
+  assert.deepEqual(manager.actions, ['move -1']);
+});
+
+for (const [name, held] of [
+  ['stick down', { y: 1 }],
+  ['pad down', { pressed: ['down'] }]
+]) {
+  test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
+    const { manager, controller, pads, fire, tick, key } = setup(t);
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.equal(count(manager, 'softDrop'), 2);
+    fire('blur');
+    manager.actions = [];
+    controller.pollGamepads();
+    fire('focus');
+    controller.pollGamepads();
+    tick(500);
+    assert.deepEqual(manager.actions, [], 'held down cannot restart');
+    key('KeyS');
+    assert.equal(count(manager, 'softDrop'), 1, 'a fresh keyboard press works');
+    key('KeyS', false);
+    manager.actions = [];
+    tick(100);
+    assert.deepEqual(manager.actions, [], 'key release cannot revive pad down');
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.equal(
+      count(manager, 'softDrop'),
+      2,
+      'rest and fresh push re-arm down'
+    );
+  });
+}
+
+test('blur requires both horizontal and down controls at rest before gameplay resumes [INP-2]', (t) => {
+  const { manager, controller, pads, fire, tick } = setup(t);
+  pads[0] = gamepad({ x: -1, pressed: ['down'] });
+  controller.pollGamepads();
+  fire('blur');
+  manager.actions = [];
+  for (const held of [
+    { pressed: ['down'] },
+    { x: 1 },
+    { pressed: ['left', 'down'] }
+  ]) {
+    pads[0] = gamepad(held);
+    controller.pollGamepads();
+    tick(100);
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'partial rest does not re-arm either input'
+    );
+  }
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ x: 1, pressed: ['down'] });
+  controller.pollGamepads();
+  tick(100);
+  assert.equal(count(manager, 'moveRight'), 1);
+  assert.equal(count(manager, 'softDrop'), 2);
+});
+
+test('blur cannot soft drop the real falling piece before down returns to rest [INP-2]', (t) => {
+  const { fire, pads, tick } = setup(t);
+  const { game } = newGame({ factory: fixedFactory(PieceColors.cyan) });
+  const controller = new InputController(game, { move() {}, press() {} });
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  fire('blur');
+  const row = game.currentTetromino.position.row;
+  controller.pollGamepads();
+  tick(200);
+  assert.equal(game.currentTetromino.position.row, row);
+  pads[0] = gamepad();
+  controller.pollGamepads();
+  pads[0] = gamepad({ y: 1 });
+  controller.pollGamepads();
+  tick(50);
+  assert.equal(game.currentTetromino.position.row, row + 1);
+});
+
+// Physical held controls: aliases and input sources keep their own identity.
+test('keyboard aliases stay held independently in either release order [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  for (const [first, second, action] of [
+    ['KeyA', 'ArrowLeft', PlayerAction.moveLeft],
+    ['ArrowLeft', 'KeyA', PlayerAction.moveLeft],
+    ['KeyD', 'ArrowRight', PlayerAction.moveRight],
+    ['ArrowRight', 'KeyD', PlayerAction.moveRight]
+  ]) {
+    for (const release of [first, second]) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      key(first);
+      key(second);
+      const timer = controller.movementTimer;
+      key(release, false);
+      assert.equal(
+        controller.movementTimer,
+        timer,
+        'same direction keeps its repeat position'
+      );
+      tick(200);
+      assert.equal(
+        count(manager, action),
+        2,
+        `${first}/${second}: surviving alias repeats`
+      );
+      key(release === first ? second : first, false);
+      const stopped = manager.actions.length;
+      tick(200);
+      assert.equal(manager.actions.length, stopped, 'last release stops');
+    }
+  }
+});
+
+test('S and Down keep independent soft-drop holds in both release orders [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  for (const first of ['KeyS', 'ArrowDown']) {
+    for (const release of ['KeyS', 'ArrowDown']) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      const second = first === 'KeyS' ? 'ArrowDown' : 'KeyS';
+      key(first);
+      key(second);
+      assert.equal(count(manager, 'softDrop'), 2, 'each fresh key drops once');
+      const timer = controller.softDropTimer;
+      key(release, false);
+      assert.equal(controller.softDropTimer, timer);
+      tick(100);
+      assert.equal(
+        count(manager, 'softDrop'),
+        4,
+        'surviving key keeps steady drop'
+      );
+      key(release === first ? second : first, false);
+      tick(100);
+      assert.equal(count(manager, 'softDrop'), 4, 'final release stops');
+    }
+  }
+});
+
+test('B12 three-key example falls back to newest remaining key, not fixed alias order [B12] [INP-2]', (t) => {
+  const { controller, key, manager } = setup(t);
+  key('KeyA');
+  key('KeyD');
+  key('ArrowLeft');
+  key('ArrowLeft', false);
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight
+  ]);
+  key('KeyD', false);
+  assert.equal(controller.movement, PlayerAction.moveLeft);
+  key('KeyA', false);
+  assert.equal(controller.movement, null);
+});
+
+test('releasing pad input restores the newest of two held keys in either order [B12] [INP-2]', (t) => {
+  const { controller, key, manager } = setup(t);
+  for (const [first, second, expected, x, buttons] of [
+    ['KeyA', 'KeyD', PlayerAction.moveRight, -1, []],
+    ['KeyD', 'KeyA', PlayerAction.moveLeft, 1, []],
+    ['KeyA', 'KeyD', PlayerAction.moveRight, 0, ['left']],
+    ['KeyD', 'KeyA', PlayerAction.moveLeft, 0, ['right']]
+  ]) {
+    controller.releaseAllInput();
+    key(first);
+    key(second);
+    controller.processInput(new Set(buttons), x, 0);
+    manager.actions = [];
+    controller.processInput(new Set(), 0, 0);
+    assert.deepEqual(manager.actions, [expected]);
+  }
+});
+
+test('pad buttons obey newest press and restore surviving direction in either order [B12] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  for (const [first, second, firstAction, secondAction] of [
+    ['left', 'right', PlayerAction.moveLeft, PlayerAction.moveRight],
+    ['right', 'left', PlayerAction.moveRight, PlayerAction.moveLeft]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    controller.processInput(new Set([first]), 0, 0);
+    controller.processInput(new Set([first, second]), 0, 0);
+    controller.processInput(new Set([first]), 0, 0);
+    assert.deepEqual(manager.actions, [firstAction, secondAction, firstAction]);
+    controller.processInput(new Set(), 0, 0);
+    assert.equal(controller.movement, null);
+  }
+});
+
+test('stick and pad same-direction holds survive either release and do not restart DAS [B12] [INP-4]', (t) => {
+  const { controller, manager, tick } = setup(t);
+  for (const [x, button, action] of [
+    [-1, 'left', PlayerAction.moveLeft],
+    [1, 'right', PlayerAction.moveRight]
+  ]) {
+    for (const releaseStick of [false, true]) {
+      controller.releaseAllInput();
+      manager.actions = [];
+      controller.processInput(new Set(), x, 0);
+      controller.processInput(new Set([button]), x, 0);
+      const timer = controller.movementTimer;
+      controller.processInput(
+        new Set(releaseStick ? [button] : []),
+        releaseStick ? 0 : x,
+        0
+      );
+      assert.equal(controller.movementTimer, timer);
+      tick(200);
+      assert.equal(count(manager, action), 2);
+      controller.processInput(new Set(), 0, 0);
+      tick(200);
+      assert.equal(count(manager, action), 2);
+    }
+  }
+});
+
+test('new stick direction wins against a held pad and releasing it restores the pad [B12] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  controller.processInput(new Set(['left']), 0, 0);
+  controller.processInput(new Set(['left']), 1, 0);
+  controller.processInput(new Set(['left']), -1, 0);
+  controller.processInput(new Set(['left']), 1, 0);
+  controller.processInput(new Set(['left']), 0, 0);
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight,
+    PlayerAction.moveLeft
+  ]);
+});
+
+test('all four soft-drop controls survive unrelated releases without timer restart [B12] [INP-2]', (t) => {
+  const { controller, key, manager, tick } = setup(t);
+  key('KeyS');
+  key('ArrowDown');
+  controller.processInput(new Set(['down']), 0, -1);
+  const timer = controller.softDropTimer;
+  key('KeyS', false);
+  key('ArrowDown', false);
+  controller.processInput(new Set(), 0, -1);
+  assert.equal(controller.softDropTimer, timer);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 4);
+  controller.processInput(new Set(), 0, 0);
+  tick(100);
+  assert.equal(count(manager, 'softDrop'), 4);
+});
+
+test('confirmation preserves left-first navigation for mixed pad controls and spends their holds [STA-1] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  controller.processInput(new Set(['left', 'right', 'down']), 1, -1);
+  assert.deepEqual(manager.actions, ['move -1']);
+  manager.state = GameState.playing;
+  manager.isConfirmingNewGame = false;
+  manager.actions = [];
+  key('KeyD', false);
+  controller.processInput(new Set(['left', 'right', 'down']), 1, -1);
+  tick(400);
+  assert.deepEqual(manager.actions, [], 'dialog holds cannot revive gameplay');
+});
+
+test('disconnect preserves confirmation selection for unchanged mixed pad holds [STA-1] [INP-4]', (t) => {
+  const { controller, manager, fire, pads } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  for (const input of [
+    {},
+    { x: -0.5 },
+    { x: 0.5 },
+    { x: -1 },
+    { x: 1 },
+    { pressed: ['left'] },
+    { pressed: ['right'] },
+    { pressed: ['left', 'right'] },
+    { x: -1, pressed: ['right'] },
+    { x: 1, pressed: ['left'] }
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = gamepad(input);
+    controller.pollGamepads();
+    manager.actions = [];
+    fire('gamepaddisconnected');
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(
+      manager.actions,
+      [],
+      'unchanged surviving holds do not select'
+    );
+    pads[0] = gamepad();
+    controller.pollGamepads();
+    pads[0] = gamepad({ pressed: ['right'] });
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(manager.actions, ['move 1'], 'fresh push selects once');
+  }
+  // Probe the snapshot before any unchanged or neutral poll overwrites it.
+  for (const [x, direction, expected] of [
+    [0, 'right', 'move 1'],
+    [-0.5, 'left', 'move -1'],
+    [0.5, 'right', 'move 1']
+  ]) {
+    controller.releaseAllInput();
+    pads[0] = gamepad({ x });
+    controller.pollGamepads();
+    manager.actions = [];
+    fire('gamepaddisconnected');
+    pads[0] = gamepad({ pressed: [direction] });
+    controller.pollGamepads();
+    controller.pollGamepads();
+    assert.deepEqual(
+      manager.actions,
+      [expected],
+      `snapshot ${x}: fresh push selects once`
+    );
+  }
+});
+
+test('duplicate physical key presses preserve priority and elapsed repeat timing [B12] [INP-2]', (t) => {
+  const { manager, key, tick } = setup(t);
+  key('KeyA');
+  key('KeyD');
+  tick(100);
+  key('KeyA', true, { repeat: true });
+  key('KeyA');
+  assert.deepEqual(manager.actions, [
+    PlayerAction.moveLeft,
+    PlayerAction.moveRight
+  ]);
+  tick(70);
+  assert.deepEqual(
+    manager.actions,
+    [PlayerAction.moveLeft, PlayerAction.moveRight, PlayerAction.moveRight],
+    'the original DAS fires, not a restarted delay'
+  );
+  key('KeyD', false);
+  assert.equal(
+    manager.actions.at(-1),
+    PlayerAction.moveLeft,
+    'release restores older held key'
+  );
+  key('KeyA', false);
+  key('KeyA');
+  assert.equal(
+    count(manager, PlayerAction.moveLeft),
+    3,
+    'fresh press works after release'
+  );
+  key('KeyS');
+  tick(20);
+  key('KeyS', true, { repeat: true });
+  key('KeyS');
+  assert.equal(
+    count(manager, 'softDrop'),
+    1,
+    'duplicate non-repeat down does not drop twice'
+  );
+  tick(30);
+  assert.equal(
+    count(manager, 'softDrop'),
+    2,
+    'original drop interval continues without restart'
+  );
+  key('KeyS', false);
+  key('KeyS');
+  assert.equal(count(manager, 'softDrop'), 3, 'fresh drop after release');
+});
+
+test('confirmation stick threshold stays neutral at both boundary values [STA-1] [INP-4]', (t) => {
+  const { controller, manager } = setup(t);
+  manager.state = GameState.paused;
+  manager.isConfirmingNewGame = true;
+  for (const [x, expected] of [
+    [-0.5, []],
+    [0.5, []],
+    [1, ['move 1']],
+    [-1, ['move -1']]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    controller.processInput(new Set(), x, 0);
+    controller.processInput(new Set(), x, 0);
+    assert.deepEqual(manager.actions, expected);
+  }
+});
+
+test('fresh controls in real pause-resume and game-over restart polls remain spent [STA-2] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  const original = manager.handleAction;
+  manager.handleAction = function (action) {
+    original.call(this, action);
+    if (action === PlayerAction.newGame && this.state === GameState.gameOver)
+      this.state = GameState.playing;
+  };
+  manager.togglePause = function () {
+    this.actions.push('togglePause');
+    this.state =
+      this.state === GameState.paused ? GameState.playing : GameState.paused;
+  };
+  for (const [mode, button, action] of [
+    [GameState.paused, 'menu', 'togglePause'],
+    [GameState.gameOver, 'view', PlayerAction.newGame]
+  ]) {
+    controller.releaseAllInput();
+    manager.actions = [];
+    manager.state = mode;
+    controller.processInput(new Set([button, 'left', 'down']), -1, -1);
+    key('KeyD', false);
+    key('KeyS', false);
+    tick(200);
+    assert.deepEqual(manager.actions, [action]);
+    controller.processInput(new Set(), 0, 0);
+    controller.processInput(new Set(['left', 'down']), -1, -1);
+    tick(50);
+    assert.ok(count(manager, PlayerAction.moveLeft) > 0);
+    assert.ok(count(manager, 'softDrop') > 0);
+  }
+});
+
+test('Menu pause cannot admit simultaneous fresh move or down holds after resume [STA-2] [INP-4]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.togglePause = function () {
+    this.actions.push('togglePause');
+    this.state =
+      this.state === GameState.paused ? GameState.playing : GameState.paused;
+  };
+  controller.processInput(new Set(['menu', 'right', 'down']), 1, -1);
+  assert.equal(manager.state, GameState.paused);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  controller.processInput(new Set(['menu', 'right', 'down']), 1, -1);
+  assert.equal(manager.state, GameState.playing);
+  manager.actions = [];
+  key('KeyA', false);
+  key('KeyS', false);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(['right', 'down']), 1, -1);
+  tick(50);
+  assert.equal(count(manager, PlayerAction.moveRight), 1);
+  assert.equal(count(manager, 'softDrop'), 1);
+});
+
+test('releasing all input allows the same physical stick to start fresh [INP-2] [INP-4]', (t) => {
+  const { controller, manager, fire, tick } = setup(t);
+  controller.processInput(new Set(), -1, 0);
+  controller.releaseAllInput();
+  manager.actions = [];
+  controller.processInput(new Set(), -1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft]);
+  fire('blur');
+  manager.actions = [];
+  controller.processInput(new Set(), -1, 0);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+  controller.processInput(new Set(), 0, 0);
+  controller.processInput(new Set(), -1, 0);
+  assert.deepEqual(manager.actions, [PlayerAction.moveLeft]);
+});
+
+test('a paused movement attempt cannot schedule or send an action [STA-2] [INP-2]', (t) => {
+  const { controller, manager, tick } = setup(t);
+  manager.state = GameState.paused;
+  controller.startMoving(PlayerAction.moveLeft);
+  tick(200);
+  assert.deepEqual(manager.actions, []);
+});
+
+// These controlled duplicate sequences are robustness inputs, not OS-frequency claims.
+test('held movement and soft-drop duplicates stay spent across Menu pause until release [STA-2] [INP-2]', (t) => {
+  const { controller, manager, key, tick } = setup(t);
+  manager.togglePause = function () {
+    this.state =
+      this.state === GameState.playing ? GameState.paused : GameState.playing;
+  };
+  for (const [code, action, interval] of [
+    ['KeyA', PlayerAction.moveLeft, 167],
+    ['ArrowLeft', PlayerAction.moveLeft, 167],
+    ['KeyD', PlayerAction.moveRight, 167],
+    ['ArrowRight', PlayerAction.moveRight, 167],
+    ['KeyS', 'softDrop', 50],
+    ['ArrowDown', 'softDrop', 50]
+  ]) {
+    for (const firstDownWhilePaused of [false, true]) {
+      controller.releaseAllInput();
+      manager.state = GameState.playing;
+      if (!firstDownWhilePaused) key(code);
+      controller.processInput(new Set(['menu']), 0, 0);
+      assert.equal(manager.state, GameState.paused);
+      controller.processInput(new Set(), 0, 0);
+      if (firstDownWhilePaused) key(code);
+      controller.processInput(new Set(['menu']), 0, 0);
+      assert.equal(manager.state, GameState.playing);
+      manager.actions = [];
+      // Unrelated keyup must not revive a paused active hold (mutant175).
+      key(action === PlayerAction.moveRight ? 'KeyA' : 'KeyD', false);
+      tick(200);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: paused hold remains inactive`
+      );
+      key(code);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: duplicate without repeat stays spent`
+      );
+      tick(200);
+      assert.deepEqual(
+        manager.actions,
+        [],
+        `${code}: duplicate without repeat cannot arm movement or drop`
+      );
+      key(code, true, { repeat: true });
+      key(code);
+      tick(200);
+      assert.deepEqual(manager.actions, [], `${code}: duplicate stays spent`);
+      key(code, false);
+      key(code);
+      assert.deepEqual(manager.actions, [action], `${code}: real fresh press`);
+      tick(interval);
+      assert.deepEqual(
+        manager.actions,
+        [action, action],
+        `${code}: fresh repeat timing`
+      );
+    }
+  }
+});
+
+test('Game Over callback spends held keyboard controls through real New Game restart [STA-2] [INP-2]', (t) => {
+  const { controller, key, tick } = setup(t);
+  let observedGame;
+  const { game } = newGame({
+    factory: fixedFactory(PieceColors.cyan),
+    onChange() {
+      // Same wiring as public/script.js engineChanged, not a state shortcut.
+      if (observedGame?.state === GameState.gameOver)
+        controller.releaseForPause();
+    }
+  });
+  observedGame = game;
+  controller.gameManager = game;
+  const actions = [];
+  const handleAction = game.handleAction.bind(game);
+  game.handleAction = (action) => {
+    actions.push(action);
+    handleAction(action);
+  };
+  const softDrop = game.softDrop.bind(game);
+  game.softDrop = () => {
+    actions.push('softDrop');
+    softDrop();
+  };
+  for (const [code, action, interval] of [
+    ['KeyA', PlayerAction.moveLeft, 167],
+    ['ArrowLeft', PlayerAction.moveLeft, 167],
+    ['KeyD', PlayerAction.moveRight, 167],
+    ['ArrowRight', PlayerAction.moveRight, 167],
+    ['KeyS', 'softDrop', 50],
+    ['ArrowDown', 'softDrop', 50]
+  ]) {
+    for (const firstDownWhileOver of [false, true]) {
+      controller.releaseAllInput();
+      if (!firstDownWhileOver) key(code);
+      // Repeated legal hard drops top out this deterministic narrow stack.
+      for (
+        let drops = 0;
+        drops < 100 && game.state === GameState.playing;
+        drops++
+      )
+        game.handleAction(PlayerAction.drop);
+      assert.equal(
+        game.state,
+        GameState.gameOver,
+        'legal drops reach Game Over'
+      );
+      if (firstDownWhileOver) key(code);
+      controller.processInput(new Set(['view']), 0, 0);
+      assert.equal(
+        game.state,
+        GameState.playing,
+        'New Game from Game Over starts play'
+      );
+      controller.processInput(new Set(), 0, 0);
+      actions.length = 0;
+      key(action === PlayerAction.moveRight ? 'KeyA' : 'KeyD', false);
+      key(code, true, { repeat: true });
+      key(code);
+      tick(200);
+      assert.deepEqual(
+        actions,
+        [],
+        `${code}: restart cannot revive a spent key`
+      );
+      key(code, false);
+      key(code);
+      assert.deepEqual(
+        actions,
+        [action],
+        `${code}: release and fresh press works`
+      );
+      tick(interval);
+      assert.deepEqual(
+        actions,
+        [action, action],
+        `${code}: original repeat cadence`
+      );
+    }
+  }
+});
+
+test('full input reset and controller disconnect keep keyboard downs fresh [INP-2] [INP-4]', (t) => {
+  const { controller, manager, key, fire, pads } = setup(t);
+  for (const reset of ['full', 'disconnect-survivor', 'disconnect-last']) {
+    controller.releaseAllInput();
+    key('KeyA');
+    key('KeyS');
+    if (reset === 'full') controller.releaseAllInput();
+    else {
+      pads[0] = reset === 'disconnect-survivor' ? gamepad() : null;
+      fire('gamepaddisconnected');
+    }
+    manager.actions = [];
+    key('KeyA');
+    key('KeyS');
+    assert.deepEqual(
+      manager.actions,
+      [PlayerAction.moveLeft, 'softDrop'],
+      `${reset}: next downs fresh without keyup`
+    );
+    key('KeyA', false);
+    key('KeyS', false);
+  }
 });

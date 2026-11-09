@@ -1,4 +1,5 @@
 [desktop] › e2e/f28-touch-lift.spec.js › a touch lift far from touch-down with no move event is not a tap [INP-5]
+[desktop] › e2e/touch.spec.js › a drag step that locks its piece ends the drag for the rest of that move [INP-5]
 [desktop] › e2e/touch.spec.js › a drag that outlives its piece leaves the next piece alone [INP-5]
 [desktop] › e2e/touch.spec.js › a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]
 [desktop] › e2e/touch.spec.js › a page that opens already zoomed in, as Safari keeps the zoom on reload, lets the player zoom back out [DSP-4]

@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  GAME_STORAGE_KEYS,
   GameManager,
   createMemoryStorage
 } from '../public/game/gameManager.js';
@@ -517,6 +518,19 @@ test('the game stores everything under names of its own [APP-6]', () => {
     'tetris.highScore',
     'tetris.savedGameSession'
   ]);
+});
+
+test('the cross-tab key list admits the persisted game keys and rejects others [DSP-5]', () => {
+  // Tabs of the page share its origin's localStorage, so the page reacts
+  // when another tab changes one of the game's own persisted keys, and
+  // ignores any other key.
+  for (const key of [
+    'tetris.highScore',
+    'tetris.isSessionSaved',
+    'tetris.savedGameSession'
+  ])
+    assert.ok(GAME_STORAGE_KEYS.includes(key), `${key} must matter`);
+  assert.ok(!GAME_STORAGE_KEYS.includes('other.app'));
 });
 
 test('the engine reports every action and timer, so the page draws only then [DSP-3]', () => {

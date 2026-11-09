@@ -34,6 +34,12 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 const HIGH_SCORE_KEY = 'tetris.highScore';
 const IS_SESSION_SAVED_KEY = 'tetris.isSessionSaved';
 const SAVED_SESSION_KEY = 'tetris.savedGameSession';
+// The only keys a storage event from another tab can matter to (DSP-5).
+export const GAME_STORAGE_KEYS = [
+  HIGH_SCORE_KEY,
+  IS_SESSION_SAVED_KEY,
+  SAVED_SESSION_KEY
+];
 /** @type {Record<number, number>} */
 const LINE_SCORES = { 1: 100, 2: 300, 3: 500, 4: 800 };
 const MAX_FAULTS_KEPT = 20;
@@ -308,8 +314,14 @@ export class GameManager {
 
   startLockDelay() {
     this.scheduler.clearTimeout(this.lockDelayTask);
-    // Only runs while playing: leaving play cancels it (checked by SAF-4).
+    // Leaving play cancels this timer (checked by SAF-4); a timer left
+    // behind by a failed cancellation can still fire after the stop, so
+    // the callback does game-changing work only while playing (SAF-3).
     this.lockDelayTask = this.schedule(() => {
+      this.lockDelayTask = null;
+      // A timer left behind by a failed cancellation must not change a
+      // stopped game when it fires.
+      if (this.state !== GameState.playing) return;
       this.lockAndSpawnNext();
       if (this.state === GameState.playing) this.startGameLoop();
     }, this.lockDelayInterval * 1000);
@@ -501,8 +513,19 @@ export class GameManager {
    */
   failSafe(reason, error) {
     this.state = GameState.gameOver;
-    this.stopGameLoop();
-    this.cancelLockDelay();
+    // A scheduler can refuse to cancel a timer; that must not skip the
+    // record or the report. A forgotten timer left behind fires into a
+    // game that is already over and changes nothing there.
+    try {
+      this.stopGameLoop();
+    } catch {
+      this.gameLoopTask = null;
+    }
+    try {
+      this.cancelLockDelay();
+    } catch {
+      this.lockDelayTask = null;
+    }
     const fault = { reason, error };
     // Keeping the record and reporting are tried apart, so neither can stop
     // the other, and the catches are empty, so nothing in them can throw.

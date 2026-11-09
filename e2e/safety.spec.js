@@ -95,6 +95,50 @@ test('an error while drawing does not stop the game from drawing [SAF-5]', async
   ).toHaveLength(1);
 });
 
+test('each unbroken streak of drawing errors is reported once [SAF-5]', async ({
+  page
+}) => {
+  const logged = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') logged.push(message.text());
+  });
+  await page.addInitScript(() => {
+    const fill = CanvasRenderingContext2D.prototype.fill;
+    window.drawingFails = false;
+    window.failedDraws = 0;
+    CanvasRenderingContext2D.prototype.fill = function (...args) {
+      if (window.drawingFails) {
+        window.failedDraws += 1;
+        throw new Error('injected drawing failure');
+      }
+      return fill.apply(this, args);
+    };
+  });
+  await page.goto('/');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => filledCount(page)).toBe(4);
+  const streak = async (cells) => {
+    await page.evaluate(() => {
+      window.failedDraws = 0;
+      window.drawingFails = true;
+    });
+    await page.keyboard.press('Space');
+    await expect
+      .poll(() => page.evaluate(() => window.failedDraws))
+      .toBeGreaterThan(3);
+    await page.evaluate(() => {
+      window.drawingFails = false;
+    });
+    await expect.poll(() => filledCount(page)).toBe(cells);
+  };
+  const reports = () =>
+    logged.filter((text) => text.includes('Tetris drawing error'));
+  await streak(8);
+  expect(reports()).toHaveLength(1);
+  await streak(12);
+  expect(reports()).toHaveLength(2);
+});
+
 test('the game plays normally when storage is blocked [SAF-2]', async ({
   page
 }) => {
@@ -122,7 +166,9 @@ test('the game plays normally when storage is blocked [SAF-2]', async ({
 test.describe('refused draw requests', () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.install();
-    await page.clock.pauseAt(new Date());
+    const now = await page.evaluate(() => Date.now());
+    await page.clock.setFixedTime(now);
+    await page.clock.pauseAt(now);
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'getGamepads', {
         value: () => [],

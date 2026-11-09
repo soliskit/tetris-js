@@ -1,6 +1,6 @@
 // Browser UI for the game. All game rules live in ./game.
 
-import { GameManager } from './game/gameManager.js';
+import { GameManager, GAME_STORAGE_KEYS } from './game/gameManager.js';
 import { GameState, PlayerAction } from './game/gameState.js';
 import { InputController } from './game/inputController.js';
 
@@ -325,9 +325,13 @@ function boardChanged() {
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
+// Returns whether anything was drawn, so callers can tell a real drawing
+// frame from an idle pass that only checked the unchanged caches.
 function drawIfChanged() {
+  let drew = false;
   if (canvasSizes.has(boardCanvas) && boardChanged()) {
     drawBoard();
+    drew = true;
     const piece = gameManager.currentTetromino;
     drawnBoard = {
       piece,
@@ -345,6 +349,7 @@ function drawIfChanged() {
     if (!canvasSizes.has(canvas)) continue;
     if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino) continue;
     drawPreview(canvas, tetromino);
+    drew = true;
     drawnPreviews.set(canvas, tetromino);
   }
   const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
@@ -352,22 +357,25 @@ function drawIfChanged() {
     lastSnapshot = snapshot;
     syncControls();
   }
+  return drew;
 }
 
 function redrawAll() {
   drawnBoard = {};
   drawnPreviews.clear();
-  drawIfChanged();
+  return drawIfChanged();
 }
 
-// An error while drawing is reported once and everything is redrawn on the
-// next frame, so drawing always recovers.
+// A drawing error is reported once per unbroken failure streak, and the
+// drawing caches are cleared so the next frame retries the full draw. A frame
+// that actually drew without failing clears the report flag, so the first
+// error of the next streak is reported again.
 let renderErrorReported = false;
 
-/** @param {() => void} draw */
+/** @param {() => boolean} draw Returns whether it drew anything. */
 function drawSafely(draw) {
   try {
-    draw();
+    if (draw()) renderErrorReported = false;
   } catch (error) {
     drawnBoard = {};
     drawnPreviews.clear();
@@ -533,9 +541,13 @@ boardCanvas.addEventListener('pointermove', event => {
     offset = drag.cellOffset;
   }
 
-  // One cell of movement per cell dragged, starting at half a cell.
+  // One cell of movement per cell dragged, starting at half a cell. A step
+  // can lock the piece: the rest of the drag no longer has a piece to move.
   const targetOffset = Math.round(offset);
-  while (drag.cellOffset !== targetOffset) {
+  while (
+    drag.cellOffset !== targetOffset &&
+    gameManager.currentTetromino === drag.piece
+  ) {
     const step = Math.sign(targetOffset - drag.cellOffset);
     if (!tryMove(piece, step)) {
       drag.blocked = step;
@@ -636,8 +648,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Another tab saving or ending a game changes whether this one can continue,
-// and a high score set there changes the one shown here.
-window.addEventListener('storage', () => {
+// and a high score set there changes the one shown here. Other projects share
+// this origin's storage, so only the game's own keys (and clear-all, whose
+// event has no key) count as changes (DSP-5).
+window.addEventListener('storage', (event) => {
+  if (event.key !== null && !GAME_STORAGE_KEYS.includes(event.key)) return;
   gameManager.storageChanged();
   lastSnapshot = '';
   requestDraw();

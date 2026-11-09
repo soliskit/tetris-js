@@ -546,6 +546,233 @@ test.describe('playing with the keyboard', () => {
     await expect.poll(() => boardCells(page)).toEqual(board);
   });
 
+  test('an unrelated storage key written in another tab is ignored [DSP-5]', async ({
+    page,
+    context
+  }) => {
+    await page.addInitScript(() => {
+      window.gameKeyReads = 0;
+      window.readProbe = {
+        phase: 'initialization',
+        started: performance.now(),
+        reads: [],
+        overflow: 0,
+        ownReads: 0
+      };
+      const getItem = Storage.prototype.getItem;
+      Storage.prototype.getItem = function (key) {
+        if (String(key).startsWith('tetris.')) {
+          window.gameKeyReads++;
+          const probe = window.readProbe;
+          if (probe.phase === 'diagnostic') probe.ownReads++;
+          if (probe.reads.length < 32) {
+            const stack = new Error().stack ?? '';
+            const callers = [
+              'get highScore',
+              'get isSessionSaved',
+              'readSavedSession',
+              'storageChanged',
+              'drawIfChanged',
+              'redrawAll'
+            ].filter((label) => stack.includes(label));
+            probe.reads.push({
+              key: [
+                'tetris.highScore',
+                'tetris.isSessionSaved',
+                'tetris.savedGameSession'
+              ].includes(String(key))
+                ? String(key)
+                : 'other-tetris',
+              phase: probe.phase,
+              elapsedMs: Math.round(performance.now() - probe.started),
+              callers: callers.length ? callers : ['unclassified']
+            });
+          } else probe.overflow++;
+        }
+        return getItem.apply(this, arguments);
+      };
+      window.seenStorageKeys = [];
+      window.probeTallies = {
+        events: 0,
+        tetrisPrefixKey: 0,
+        otherKey: 0,
+        nullKey: 0
+      };
+      window.addEventListener('storage', (event) => {
+        window.seenStorageKeys.push(event.key);
+        window.probeTallies.events++;
+        if (event.key === null) window.probeTallies.nullKey++;
+        else if (String(event.key).startsWith('tetris.'))
+          window.probeTallies.tetrisPrefixKey++;
+        else window.probeTallies.otherKey++;
+      });
+    });
+    await page.goto('/');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    const before = await page.evaluate(() => {
+      window.readProbe.phase = 'foreign-write-window';
+      return window.gameKeyReads;
+    });
+    await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
+    // The negative check is conditioned on the probe recording the foreign
+    // key's storage event within the poll window; it does not synchronize
+    // the app's deferred redraw.
+    try {
+      await expect
+        .poll(() => page.evaluate(() => window.seenStorageKeys))
+        .toContain('other.app');
+    } catch (error) {
+      // On a failed poll, log the bounded state the probe kept, then
+      // rethrow the original error unchanged. The state read and the
+      // logging are each guarded and best-effort: a failed read logs the
+      // fixed label with no state, and no raw error text is recorded.
+      let evidence;
+      try {
+        evidence = await page.evaluate(() => {
+          const bucket = (state) =>
+            state === 'visible' ? 'visible' : 'not-visible';
+          return {
+            tallies: {
+              events: window.probeTallies.events,
+              tetrisPrefixKey: window.probeTallies.tetrisPrefixKey,
+              otherKey: window.probeTallies.otherKey,
+              nullKey: window.probeTallies.nullKey
+            },
+            gameKeyReads: window.gameKeyReads,
+            foreignKeyWriteVisible:
+              localStorage.getItem('other.app') === 'changed',
+            visibility: bucket(document.visibilityState),
+            focused: document.hasFocus()
+          };
+        });
+        evidence.readsBeforeWrite = before;
+        evidence.otherTabVisibility = await otherTab.evaluate(() =>
+          document.visibilityState === 'visible' ? 'visible' : 'not-visible'
+        );
+      } catch {
+        evidence = null;
+      }
+      try {
+        console.log('DSP-5 probe evidence:', JSON.stringify(evidence));
+      } catch {
+        // Logging itself is best-effort.
+      }
+      throw error;
+    }
+    try {
+      const after = await page.evaluate(() => {
+        window.readProbe.phase = 'final-sample';
+        return window.gameKeyReads;
+      });
+      expect(after).toBe(before);
+    } catch (error) {
+      let evidence = null;
+      try {
+        evidence = await page.evaluate(() => {
+          window.readProbe.phase = 'diagnostic';
+          return {
+            reads: window.readProbe.reads,
+            overflow: window.readProbe.overflow,
+            diagnosticOwnReads: window.readProbe.ownReads,
+            gameKeyReads: window.gameKeyReads
+          };
+        });
+      } catch {
+        /* Keep the original final-counter assertion. */
+      }
+      try {
+        console.log(
+          'DSP-5 final-counter evidence:',
+          JSON.stringify({ before, evidence })
+        );
+      } catch {
+        /* Diagnostic logging is best-effort. */
+      }
+      throw error;
+    }
+  });
+
+  // The game's own keys still count as changes made in another tab. Kept in
+  // a separate test so the control's reads cannot touch the counter above.
+  test('a game key written in another tab still counts as a change [DSP-5]', async ({
+    page,
+    context
+  }) => {
+    await page.addInitScript(() => {
+      window.seenStorageKeys = [];
+      window.addEventListener('storage', (event) => {
+        window.seenStorageKeys.push(event.key);
+      });
+    });
+    await page.goto('/');
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+    const otherTab = await context.newPage();
+    await otherTab.goto('/');
+    await otherTab.evaluate(() =>
+      localStorage.setItem('tetris.highScore', '4200')
+    );
+    // The game key's event arrives first...
+    try {
+      await expect
+        .poll(() => page.evaluate(() => window.seenStorageKeys))
+        .toContain('tetris.highScore');
+    } catch (error) {
+      const inspectPage = async (target, expectedOrigin) => {
+        try {
+          return await target.evaluate((origin) => {
+            const value = localStorage.getItem('tetris.highScore');
+            const keys = window.seenStorageKeys;
+            return {
+              visibility:
+                document.visibilityState === 'visible'
+                  ? 'visible'
+                  : 'not-visible',
+              focused: document.hasFocus(),
+              sameOrigin: location.origin === origin,
+              highScore:
+                value === '4200'
+                  ? 'expected'
+                  : value === null
+                    ? 'missing'
+                    : 'other',
+              observedEvents: Array.isArray(keys)
+                ? {
+                    expectedKey: keys.filter(
+                      (key) => key === 'tetris.highScore'
+                    ).length,
+                    otherKey: keys.filter((key) => key !== 'tetris.highScore')
+                      .length
+                  }
+                : null
+            };
+          }, expectedOrigin);
+        } catch {
+          return null;
+        }
+      };
+      try {
+        const expectedOrigin = new URL(page.url()).origin;
+        console.log(
+          'DSP-5 game-key evidence:',
+          JSON.stringify({
+            receivingPage: await inspectPage(page, expectedOrigin),
+            writingPage: await inspectPage(otherTab, expectedOrigin)
+          })
+        );
+      } catch {
+        // Failure-only evidence must not replace the original assertion error.
+      }
+      throw error;
+    }
+    // ...and the app reacts to it.
+    await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
+    // Clearing all storage can remove the game's keys, so it still counts.
+    await otherTab.evaluate(() => localStorage.clear());
+    await expect(page.locator('#highScore')).toHaveText('High Score: 0');
+  });
+
   test('a high score set in another tab shows here too [DSP-5] [SCO-3]', async ({
     page,
     context
