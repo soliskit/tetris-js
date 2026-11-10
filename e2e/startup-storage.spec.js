@@ -5,7 +5,7 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
   context
 }) => {
   const writer = await context.newPage();
-  await writer.goto('/');
+  await writer.goto('/icons/icon.svg');
   await writer.evaluate(() => localStorage.setItem('tetris.highScore', '4200'));
   await page.addInitScript(() => {
     const nativeFrame = window.requestAnimationFrame.bind(window);

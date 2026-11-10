@@ -18,12 +18,31 @@ async function setup(page, frameDriven = false) {
         localStorage.setItem(key, value);
     }, saved);
     await page.goto('/');
+    await page.waitForFunction(() =>
+      ['ready', 'blocked', 'error'].includes(
+        document.documentElement.dataset.tabAdmission ?? ''
+      )
+    );
     await page.keyboard.press('KeyC');
     await page.clock.runFor(17);
-    await expect(page.locator('#playPauseButton')).toHaveAttribute(
-      'aria-label',
-      'Resume'
-    );
+    try {
+      await expect(page.locator('#playPauseButton')).toHaveAttribute(
+        'aria-label',
+        'Resume'
+      );
+    } catch (error) {
+      console.log(
+        'pause-touch setup state:',
+        await page.evaluate(() => ({
+          tabAdmission: document.documentElement.dataset.tabAdmission ?? '',
+          pauseLabel: document
+            .getElementById('playPauseButton')
+            ?.getAttribute('aria-label'),
+          savedKeys: Object.keys(localStorage)
+        }))
+      );
+      throw error;
+    }
   } else {
     await continueSavedGame(page, saved);
   }
