@@ -325,9 +325,18 @@ function boardChanged() {
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
+function syncChangedControls() {
+  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
+  if (snapshot !== lastSnapshot) {
+    syncControls();
+    lastSnapshot = snapshot;
+  }
+}
+
 // Returns whether anything was drawn, so callers can tell a real drawing
 // frame from an idle pass that only checked the unchanged caches.
 function drawIfChanged() {
+  syncChangedControls();
   let drew = false;
   if (canvasSizes.has(boardCanvas) && boardChanged()) {
     drawBoard();
@@ -351,11 +360,6 @@ function drawIfChanged() {
     drawPreview(canvas, tetromino);
     drew = true;
     drawnPreviews.set(canvas, tetromino);
-  }
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
-  if (snapshot !== lastSnapshot) {
-    lastSnapshot = snapshot;
-    syncControls();
   }
   return drew;
 }
@@ -662,6 +666,12 @@ window.addEventListener('storage', (event) => {
   requestDraw();
 });
 
+// Read current storage and show controls before waiting for a drawing frame.
+// The storage listener is already installed, so later changes request a draw.
+drawSafely(() => {
+  syncChangedControls();
+  return false;
+});
 requestDraw();
 
 // Safari ignores user-scalable=no in the browser, and zooms in on two quick
