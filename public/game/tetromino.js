@@ -163,7 +163,7 @@ export class Tetromino {
  * @returns {boolean[][][]}
  */
 function expectedRotations(spawn, turns) {
-  const rotations = [spawn.map(line => [...line].map(ch => ch === 'X'))];
+  const rotations = [spawn.map(line => Array.from(line).map(ch => ch === 'X'))];
   while (rotations.length < turns) {
     const last = rotations[rotations.length - 1];
     rotations.push(last.map((_, row) => last.map((__, column) => last[last.length - 1 - column][row])));
@@ -263,7 +263,10 @@ export function isValidFallingPiece(piece, board) {
   // A whole-number index only: expected has no entry for -1, 0.5 or 4.
   const shape = Number.isInteger(rotationState) ? expected[/** @type {number} */ (rotationState)] : undefined;
   if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
-  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[/** @type {number} */ (row) + r]?.[/** @type {number} */ (column) + c]?.isFilled === false));
+  const startRow = /** @type {number} */ (row);
+  const startColumn = /** @type {number} */ (column);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare -- a missing cell is not an empty one: undefined must fail, not pass.
+  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[startRow + r]?.[startColumn + c]?.isFilled === false));
 }
 
 
