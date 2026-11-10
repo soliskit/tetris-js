@@ -224,7 +224,10 @@ function loadWorker(world) {
         world.matchAllOptions = options;
         return world.liveClients;
       },
-      claim: async () => {}
+      claim: async () => {
+        world.claimCalls = (world.claimCalls ?? 0) + 1;
+        if (world.claimError) throw world.claimError;
+      }
     },
     addEventListener: (type, fn) => {
       handlers[type] = fn;
@@ -300,7 +303,7 @@ const runFetch = (handlers, request, clientId) => {
   return answered;
 };
 
-test('activation deletes only the old caches this app made [APP-6]', async () => {
+test('activation preserves obsolete fixed-name caches and claims clients [APP-6]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   // Another project's cache: same fixed name, its own addresses.
   await (
@@ -320,9 +323,42 @@ test('activation deletes only the old caches this app made [APP-6]', async () =>
     "another project's cache named 'tetris' is left alone"
   );
   assert.ok(
-    !world.stores.has('tetris-2'),
-    "this app's old cache 'tetris-2' is deleted"
+    world.stores.has('tetris-2'),
+    "this app's obsolete cache 'tetris-2' stays"
   );
+  assert.equal(world.claimCalls, 1);
+  assert.equal(await (await ours.match('index.html')).text(), 'ours');
+  assert.equal(await (await ours.match('style.css')).text(), 'ours');
+});
+
+test('activation neither inspects nor deletes caches before claiming clients [APP-6]', async () => {
+  const world = { liveClients: [], ...makeCaches() };
+  world.caches.keys = async () => {
+    throw new Error('unexpected cache inspection');
+  };
+  world.caches.has = async () => {
+    throw new Error('unexpected cache inspection');
+  };
+  world.caches.open = async () => {
+    throw new Error('unexpected cache inspection');
+  };
+  world.caches.delete = async () => {
+    throw new Error('unexpected cache deletion');
+  };
+  const handlers = loadWorker(world);
+  await runEvent(handlers.activate);
+  assert.equal(world.claimCalls, 1);
+});
+
+test('activation preserves a rejected clients.claim result [APP-6]', async () => {
+  const error = new Error('claim refused');
+  const world = { liveClients: [], claimError: error, ...makeCaches() };
+  const handlers = loadWorker(world);
+  await assert.rejects(
+    runEvent(handlers.activate),
+    (received) => received === error
+  );
+  assert.equal(world.claimCalls, 1);
 });
 
 test('a clock jump forward cannot cost a loading page its version [APP-2]', async () => {
