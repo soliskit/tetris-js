@@ -94,9 +94,11 @@ const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/')
  */
 async function readPin(response) {
   try {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; the original checks below decide what is accepted. */
     const note = await response?.json();
     if (!note || typeof note.version !== 'string') return null;
     return { version: note.version, at: Number.isFinite(note.at) ? note.at : null };
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
   } catch {
     return null;
   }
@@ -109,6 +111,7 @@ async function readPin(response) {
  */
 async function versionFor(clientId) {
   const pinned = clientId ? await caches.match(pinKey(clientId), { cacheName: PINS }) : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; a malformed (null) pin throws here, exactly as before this change.
   const version = pinned ? /** @type {{ version: string }} */ (await pinned.json()).version : null;
   return version && await caches.has(version) ? version : newestVersion();
 }
@@ -209,7 +212,7 @@ async function download() {
 
 worker.addEventListener('install', event => {
   event.waitUntil(download());
-  worker.skipWaiting();
+  void worker.skipWaiting();
 });
 
 worker.addEventListener('activate', event => {

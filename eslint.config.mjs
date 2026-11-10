@@ -11,6 +11,65 @@ export default tseslint.config(
   promise.configs['flat/recommended'],
   prettierRecommended,
   {
+    // tsconfig.json covers public/game/** and public/script.js with checkJs,
+    // so the project service can type them.
+    files: ['public/game/**/*.js', 'public/script.js'],
+    extends: [
+      tseslint.configs.recommendedTypeChecked,
+      tseslint.configs.strictTypeChecked
+    ],
+    languageOptions: {
+      globals: { ...globals.browser },
+      parserOptions: { projectService: true }
+    },
+    rules: {
+      // Scores and flags are interpolated deliberately; keep the rest of the
+      // rule's type checking.
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowNumber: true, allowBoolean: true }
+      ]
+    }
+  },
+  {
+    // public/sw.js is only in the non-standard tsconfig.sw.json, which the
+    // project service does not discover; it needs the same explicit project
+    // treatment as any non-standard tsconfig.
+    files: ['public/sw.js'],
+    extends: [
+      tseslint.configs.recommendedTypeChecked,
+      tseslint.configs.strictTypeChecked
+    ],
+    languageOptions: {
+      globals: { ...globals.browser },
+      parserOptions: {
+        project: ['./tsconfig.sw.json'],
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    rules: {
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        { allowNumber: true, allowBoolean: true }
+      ]
+    }
+  },
+  {
+    // JS files no tsconfig covers get untyped rules only. Scoped by directory
+    // on purpose: a broad '**/*.js' block here would override the typed
+    // blocks above, because in flat config later blocks win.
+    files: [
+      'index.js',
+      'e2e/**/*.js',
+      'scripts/**/*.js',
+      'test/**/*.js',
+      'playwright.config.js',
+      '*.mjs',
+      '**/*.cjs'
+    ],
+    extends: [tseslint.configs.disableTypeChecked]
+  },
+  {
     languageOptions: {
       globals: { ...globals.node }
     },

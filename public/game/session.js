@@ -199,7 +199,7 @@ export const SAVE_FORMAT = 'tetris-session-envelope';
 
 /** @param {string} text @returns {unknown} */
 export function parseUniqueJSON(text) {
-  const value = JSON.parse(text);
+  const value = /** @type {unknown} */ (JSON.parse(text));
   // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
   // names, including escaped spellings of the same name, at every object depth.
   const tokens = /** @type {RegExpMatchArray} */ (text.match(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g));
@@ -210,7 +210,8 @@ export function parseUniqueJSON(text) {
       const names = new Set();
       if (tokens[index] !== '}') {
         do {
-          const key = JSON.parse(tokens[index++]);
+          // The token walked is a quoted string, so its value is a string.
+          const key = String(/** @type {unknown} */ (JSON.parse(tokens[index++])));
           if (names.has(key)) throw new SyntaxError();
           names.add(key);
           index++; // colon
