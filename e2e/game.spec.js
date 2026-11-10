@@ -576,24 +576,40 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
-  test('a game paused in another tab can be continued here [STA-4] [DSP-5]', async ({
+  test('a paused game transfers after its owning tab closes [STA-4] [DSP-5] [APP-7]', async ({
     page,
     context
   }) => {
     await page.goto('/');
-    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    const board = await boardCells(page);
+    expect(board.some((row) => row.some((cell) => cell !== null))).toBe(true);
     const otherTab = await context.newPage();
     await otherTab.goto('/');
-    await otherTab.keyboard.press('Enter');
-    await otherTab.keyboard.press('Space');
-    await otherTab.keyboard.press('KeyP');
+    await expect(otherTab.locator('#tabLockMessage')).toHaveText(
+      'Game already open in another tab.'
+    );
+    await expect(otherTab.locator('main.app')).toBeHidden();
+    await page.close();
+    await expect
+      .poll(() =>
+        otherTab.evaluate(
+          async () =>
+            !(await navigator.locks.query()).held.some(
+              (lock) => lock.name === 'tetris.game-page'
+            )
+        )
+      )
+      .toBe(true);
+    await otherTab.locator('#tabLockRetry').click();
+    await expect(otherTab.locator('#continueGameButton')).toBeVisible();
+    await expect(otherTab.locator('#keyHint')).toContainText('C: Continue');
+    await otherTab.keyboard.press('KeyC');
     await expectLabel(otherTab, 'Resume');
-    const board = await boardCells(otherTab);
-    await expect(page.locator('#continueGameButton')).toBeVisible();
-    await expect(page.locator('#keyHint')).toContainText('C: Continue');
-    await page.locator('#continueGameButton').click();
-    await expectLabel(page, 'Resume');
-    await expect.poll(() => boardCells(page)).toEqual(board);
+    await expect.poll(() => boardCells(otherTab)).toEqual(board);
   });
 
   test('an unrelated storage key written in another tab is ignored [DSP-5]', async ({
@@ -660,7 +676,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     const before = await page.evaluate(() => {
       window.readProbe.phase = 'foreign-write-window';
       return window.gameKeyReads;
@@ -759,7 +775,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );
@@ -830,7 +846,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );

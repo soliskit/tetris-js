@@ -245,3 +245,16 @@ button.round {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Hidden admission screens and the game stay hidden despite author layout. */
+main.app[hidden],
+#tabLockStatus[hidden],
+#tabLockRetry[hidden] {
+  display: none;
+}
+
+.tab-lock {
+  width: min(calc(100% - 32px), 448px);
+  padding: 24px;
+  text-align: center;
+}
