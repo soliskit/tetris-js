@@ -93,6 +93,24 @@ async function advancePlayingFrame(page) {
   await page.clock.runFor(17);
 }
 
+test('the initial board bitmap reaches its native CSS size [DSP-2]', async ({
+  page
+}) => {
+  await continueSavedGame(
+    page,
+    savedGame({
+      piece: PieceColors.purple,
+      position: { row: 5, column: 3 }
+    })
+  );
+  await expect
+    .poll(async () => (await boardBitmapSnapshot(page)).sized, {
+      timeout: 5000,
+      intervals: [50, 100, 250]
+    })
+    .toBe(true);
+});
+
 async function pausedClockPiece(page) {
   await page.clock.install();
   await continueSavedGame(
@@ -102,6 +120,14 @@ async function pausedClockPiece(page) {
       position: { row: 5, column: 3 }
     })
   );
+  // The game is paused. Native resize delivery is a startup prerequisite,
+  // not something advancing mocked animation frames can certify.
+  await expect
+    .poll(async () => (await boardBitmapSnapshot(page)).sized, {
+      timeout: 5000,
+      intervals: [50, 100, 250]
+    })
+    .toBe(true);
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100));
   // Seeded T spawn at row5/column3, from tetrominoFactory's .X./XXX.
   const expected = [
