@@ -19,10 +19,6 @@ const PINS = 'tetris-pins';
 // Pages ask for all their files as they start, so this only needs to
 // outlast loading.
 const PIN_MS = 10 * 60 * 1000;
-// The caches earlier workers kept, cleared out when this one takes over,
-// but only the ones this app made: GitHub Pages serves every project of an
-// account from one origin, and they all share its caches.
-const OLD_CACHES = ['tetris', 'tetris-2'];
 const APP_SHELL = [
   './',
   'index.html',
@@ -98,9 +94,11 @@ const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/')
  */
 async function readPin(response) {
   try {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; the original checks below decide what is accepted. */
     const note = await response?.json();
     if (!note || typeof note.version !== 'string') return null;
     return { version: note.version, at: Number.isFinite(note.at) ? note.at : null };
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
   } catch {
     return null;
   }
@@ -113,6 +111,7 @@ async function readPin(response) {
  */
 async function versionFor(clientId) {
   const pinned = clientId ? await caches.match(pinKey(clientId), { cacheName: PINS }) : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; a malformed (null) pin throws here, exactly as before this change.
   const version = pinned ? /** @type {{ version: string }} */ (await pinned.json()).version : null;
   return version && await caches.has(version) ? version : newestVersion();
 }
@@ -213,27 +212,11 @@ async function download() {
 
 worker.addEventListener('install', event => {
   event.waitUntil(download());
-  worker.skipWaiting();
+  void worker.skipWaiting();
 });
 
-// Deletes one earlier cache, but only when everything in it belongs to this
-// app: every stored address under this worker's own scope. A cache holding
-// another project's addresses stays, and so does an empty one, whose maker
-// cannot be told from its contents. Keeping is the safe side: a stale cache
-// costs disk, a wrong delete costs another project its offline copy.
-/** @param {string} name */
-async function removeOldCacheIfOurs(name) {
-  if (!(await caches.has(name))) return;
-  const keys = await (await caches.open(name)).keys();
-  const scope = worker.registration.scope;
-  if (keys.length > 0 && keys.every(request => request.url.startsWith(scope))) {
-    await caches.delete(name);
-  }
-}
-
 worker.addEventListener('activate', event => {
-  event.waitUntil(Promise.all(OLD_CACHES.map(removeOldCacheIfOurs))
-    .then(() => worker.clients.claim()));
+  event.waitUntil(worker.clients.claim());
 });
 
 worker.addEventListener('fetch', event => {

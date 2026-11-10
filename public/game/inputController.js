@@ -93,14 +93,22 @@ export class InputController {
     /** Blur blocks horizontal and down pad input until both return to rest. */
     this.padNeedsRest = false;
 
-    window.addEventListener('keydown', event => this.handleKey(event, true));
-    window.addEventListener('keyup', event => this.handleKey(event, false));
+    window.addEventListener('keydown', event => {
+      this.handleKey(event, true);
+    });
+    window.addEventListener('keyup', event => {
+      this.handleKey(event, false);
+    });
     window.addEventListener('blur', () => {
       this.releaseAllInput();
       this.padNeedsRest = true;
     });
-    window.addEventListener('gamepaddisconnected', () => this.releaseForDisconnect());
-    window.addEventListener('gamepadconnected', () => this.startPolling());
+    window.addEventListener('gamepaddisconnected', () => {
+      this.releaseForDisconnect();
+    });
+    window.addEventListener('gamepadconnected', () => {
+      this.startPolling();
+    });
     // The page pauses when hidden, so release held input then too: hiding
     // does not blur the window on every platform.
     document.addEventListener('visibilitychange', () => {
@@ -195,6 +203,7 @@ export class InputController {
 
   /** @returns {boolean} Whether a gamepad is connected. */
   pollGamepads() {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- browsers without gamepad support exist, whatever the types say.
     if (!navigator.getGamepads) return false; // no gamepad support in this browser
     const gamepad = navigator.getGamepads().find(pad => pad?.connected);
     if (!gamepad) return false;
@@ -298,6 +307,7 @@ export class InputController {
     else if (xAxis > 0.5) directions.set(PAD_STICK, PlayerAction.moveRight);
     if (pressed.has('left')) directions.set(PAD_LEFT, PlayerAction.moveLeft);
     if (pressed.has('right')) directions.set(PAD_RIGHT, PlayerAction.moveRight);
+    /** @type {Set<symbol>} */
     const drops = new Set();
     if (yAxis < -0.5) drops.add(PAD_STICK);
     if (pressed.has('down')) drops.add(PAD_DOWN);
@@ -384,6 +394,7 @@ export class InputController {
     // Disconnect remains a keyboard reset, unlike an ordinary pause.
     this.heldKeys.clear();
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- browsers without gamepad support exist, whatever the types say.
       const gamepad = navigator.getGamepads?.().find(pad => pad?.connected);
       if (!gamepad) {
         this.releaseAllInput();

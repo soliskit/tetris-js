@@ -8,3 +8,6 @@ pre-commit:
     prettier:
       glob: '**/*.{cjs,css,html,js,json,md,mjs,webmanifest,yml}'
       run: ./node_modules/.bin/prettier --check -- {staged_files}
+    typecheck:
+      # Whole project, once per commit: the type checker has no staged-files glob.
+      run: npm run typecheck
