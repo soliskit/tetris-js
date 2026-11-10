@@ -1,5 +1,6 @@
 // Private fixture v3 proposal. Not formatted, applied or run.
 import { test, expect } from './fixtures.js';
+import { installResizeWitness } from './resize-setup-witness.js';
 import {
   PieceColors,
   cellsOf,
@@ -95,6 +96,11 @@ async function advancePlayingFrame(page) {
 
 async function pausedClockPiece(page) {
   await page.clock.install();
+  const diagnostic =
+    test.info().project.name === 'iphone-14-pro-max-webkit' &&
+    test.info().title ===
+      'board CSS grow cancels a drag until matching pointerup [INP-5]';
+  if (diagnostic) await page.addInitScript(installResizeWitness);
   await continueSavedGame(
     page,
     savedGame({
@@ -111,15 +117,24 @@ async function pausedClockPiece(page) {
     [6, 5]
   ];
   let cells = [];
+  let cellsSampled = false;
   let sized = false;
   const sizingSamples = [];
   for (let frame = 0; frame < 20; frame++) {
     await page.clock.runFor(17);
     const sample = await boardBitmapSnapshot(page);
-    sizingSamples.push({ frame, ...sample });
+    const observerWitness = diagnostic
+      ? await page.evaluate(() =>
+          typeof window.__resizeSetupWitness === 'function'
+            ? window.__resizeSetupWitness()
+            : null
+        )
+      : null;
+    sizingSamples.push({ frame, ...sample, observerWitness });
     sized = sample.sized;
     if (!sized) continue;
     cells = await cellsOf(page, PieceColors.purple);
+    cellsSampled = true;
     if (JSON.stringify(cells) === JSON.stringify(expected)) break;
   }
   if (!sized || JSON.stringify(cells) !== JSON.stringify(expected))
@@ -129,10 +144,27 @@ async function pausedClockPiece(page) {
           project: test.info().project.name,
           titlePath: test.info().titlePath,
           sizingSamples,
+          cellsSampled,
           cells,
           expected
         })
     );
+  if (diagnostic) {
+    const witness = await page.evaluate(() =>
+      typeof window.__resizeSetupWitness === 'function'
+        ? window.__resizeSetupWitness()
+        : null
+    );
+    console.log(
+      'DRAG-RESIZE-OBSERVER-WITNESS ' +
+        JSON.stringify({
+          project: test.info().project.name,
+          title: test.info().title,
+          cellsSampled,
+          witness
+        })
+    );
+  }
   expect(sized).toBe(true);
   expect(cells).toEqual(expected);
   await expect(page.locator('#playPauseButton')).toHaveAttribute(
