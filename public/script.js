@@ -32,7 +32,9 @@ function prepareDisplay() {
     retry.textContent = 'Reload';
     retry.hidden = false;
     retry.disabled = false;
-    retry.addEventListener('click', () => location.reload());
+    retry.addEventListener('click', () => {
+      location.reload();
+    });
     try {
       console.error('Tetris display setup failed.');
     } catch {
@@ -368,20 +370,20 @@ function setWakeLock(wanted) {
   if (wanted === wakeLockWanted || !('wakeLock' in navigator)) return;
   wakeLockWanted = wanted;
   if (wanted) {
-    requestWakeLock();
+    void requestWakeLock();
     return;
   }
   // Forgotten before it is let go, so its release does not ask again.
   const lock = wakeLock;
   wakeLock = null;
-  lock?.release();
+  void lock?.release();
 }
 
 function requestWakeLock() {
   return navigator.wakeLock.request('screen').then(sentinel => {
     // Play may have stopped, or a newer request won, while this one waited.
     if (!wakeLockWanted || wakeLock) {
-      sentinel.release();
+      void sentinel.release();
       return;
     }
     wakeLock = sentinel;
@@ -390,7 +392,7 @@ function requestWakeLock() {
     sentinel.addEventListener('release', () => {
       if (wakeLock !== sentinel) return;
       wakeLock = null;
-      requestWakeLock();
+      void requestWakeLock();
     });
     return null;
   }, () => {});
@@ -538,7 +540,9 @@ const resizeObserver = new ResizeObserver(entries => {
   }
   drawSafely(redrawAll);
 });
-canvases.forEach(canvas => resizeObserver.observe(canvas));
+canvases.forEach(canvas => {
+  resizeObserver.observe(canvas);
+});
 
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
@@ -672,13 +676,17 @@ function endDrag(event) {
 boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
-heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
+heldCanvas.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.hold);
+});
 // The hold box is a button to keyboards and screen readers too. A click
 // leaves focus where it was, so only the keyboard gives the hold box focus,
 // and only then do Enter and Space hold instead of their game actions.
 // (Checking :focus-visible would not do: any key press makes it match.)
 // Hold only works while playing, so otherwise they keep their game actions.
-heldCanvas.addEventListener('mousedown', event => event.preventDefault());
+heldCanvas.addEventListener('mousedown', event => {
+  event.preventDefault();
+});
 heldCanvas.addEventListener('keydown', event => {
   if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
   // A key pressed with Cmd, Ctrl or Alt is the browser's shortcut and
@@ -702,8 +710,12 @@ element('newGameButton').addEventListener('click', () => {
 // also keeps Safari from taking quick taps there as a double tap to zoom.
 const cancelNewGameButton = element('cancelNewGameButton');
 const confirmNewGameButton = element('confirmNewGameButton');
-confirmNewGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
-cancelNewGameButton.addEventListener('click', () => gameManager.cancelNewGame());
+confirmNewGameButton.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.newGame);
+});
+cancelNewGameButton.addEventListener('click', () => {
+  gameManager.cancelNewGame();
+});
 // In the order they appear.
 const questionButtons = [cancelNewGameButton, confirmNewGameButton];
 // The selected button is the focused one, so Tab and clicks stay in step with
@@ -730,7 +742,9 @@ newGameDialog.addEventListener('cancel', event => {
   event.preventDefault();
   gameManager.cancelNewGame();
 });
-continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
+continueButton.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.continueGame);
+});
 function togglePauseFromButton() {
   gameManager.togglePause();
   if (gameManager.state === GameState.paused) {
