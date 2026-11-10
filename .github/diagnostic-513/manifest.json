@@ -1,0 +1,16 @@
+{
+  "base": "4f081e149beb02ab67c14c88e80eb56a7005adb1",
+  "files": {
+    "e2e/drag-resize.spec.js": "76a5201d9a6176368a61d739e96bfe07c9af50870af7f8f3cb4bcf02eb516714",
+    "e2e/resize-setup-witness.js": "473d845da7a0afca0928b272c9c1020d604fea4967e34e3cfaf3968844838f95",
+    ".github/workflows/pages.yml": "a305ac798154620a1da20df5a754ebc7165b50f8a9a90f8579a40cc9a199b27f",
+    ".github/diagnostic-513/controller.py": "d43d24d1ab833e1eec37cbffbf7b55805c12d400faa9c66f848e08d330053915",
+    ".github/diagnostic-513/bootstrap-npm.py": "4e21c2c94db2d273da953ad21d1ed6d48db14fc8ed0aebe818197aec854fd573",
+    ".github/diagnostic-513/npm-typed-census.json": "67e3cb0548db042d3f7ec8341fa6493d4c281eb5d8cfacbccc6fd83f5c46fb3e",
+    "package.json": "42fd1bf43a93bbd3ba3bf3b387785b2182f2523d6d0349cabea442a00c63140e",
+    "package-lock.json": "0ea667de155f2321dd9b4e93e1490296049b5462de9460b65e2541d673c2fe54",
+    "playwright.config.js": "72db57c56694c2ea3e329d8f64a360cbf9cbd3b971073c2296dcd33612fdf033",
+    "e2e/fixtures.js": "eaad87ae2e802cf9c255812bcc9c34b8f8c96ed6b0409475c8af8238ca35a65f",
+    "e2e/global-setup.js": "80de2353c2e4d6354542214b25b2a58fbf7d87fb4a6e01c1461c32f621b281e9"
+  }
+}
