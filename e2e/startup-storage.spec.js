@@ -38,8 +38,13 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
   try {
     // Static HTML says zero. No drawing callback can supply this value.
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
-    await expect(page.locator('#continueGameButton')).toHaveAttribute('hidden', '');
-    await writer.evaluate(() => localStorage.setItem('tetris.highScore', '4300'));
+    await expect(page.locator('#continueGameButton')).toHaveAttribute(
+      'hidden',
+      ''
+    );
+    await writer.evaluate(() =>
+      localStorage.setItem('tetris.highScore', '4300')
+    );
   } catch (error) {
     failure = error;
     try {
