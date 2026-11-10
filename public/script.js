@@ -8,6 +8,103 @@ import { InputController } from './game/inputController.js';
 /** @typedef {import('./game/position.js').Position} Position */
 /** @typedef {{ context: CanvasRenderingContext2D, width: number, height: number }} CanvasSize */
 
+// Every id below exists in index.html; test/staticFiles.test.js checks that.
+/** @param {string} id */
+const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
+
+// DSP-6 reserves first contexts as the page starts, before asynchronous
+// admission. This allocates contexts, but does not draw or start a game.
+if (!prepareDisplay()) await new Promise(() => {});
+
+function prepareDisplay() {
+  try {
+    for (const canvas of document.querySelectorAll('canvas')) {
+      canvas.getContext('2d', { colorSpace: 'display-p3' });
+    }
+    return true;
+  } catch {
+    document.documentElement.dataset.tabAdmission = 'error';
+    const message = element('tabLockMessage');
+    const detail = element('tabLockDetail');
+    const retry = /** @type {HTMLButtonElement} */ (element('tabLockRetry'));
+    message.textContent = 'The game could not prepare its display.';
+    detail.textContent = 'Reload the page to try again.';
+    retry.textContent = 'Reload';
+    retry.hidden = false;
+    retry.disabled = false;
+    retry.addEventListener('click', () => {
+      location.reload();
+    });
+    try {
+      console.error('Tetris display setup failed.');
+    } catch {
+      // A refused report cannot start an unprepared game.
+    }
+    return false;
+  }
+}
+
+// Admission and lifetime are separate: initialization must not finish the
+// held callback and release ownership while page handlers still exist.
+await ownGamePage();
+
+async function ownGamePage() {
+  const message = element('tabLockMessage');
+  const detail = element('tabLockDetail');
+  const retry = /** @type {HTMLButtonElement} */ (element('tabLockRetry'));
+  let pending = false;
+  let admitted = false;
+  const lifetime = new Promise(() => {});
+  await new Promise(resolve => {
+    const attempt = () => {
+      if (pending || admitted) return;
+      pending = true;
+      document.documentElement.dataset.tabAdmission = 'pending';
+      retry.disabled = true;
+      message.textContent = 'Checking for another game tab...';
+      detail.textContent = '';
+      const failed = () => {
+        if (admitted) return;
+        pending = false;
+        document.documentElement.dataset.tabAdmission = 'error';
+        retry.disabled = false;
+        retry.hidden = false;
+        message.textContent = 'The game could not get its tab lock. Try again.';
+        detail.textContent = '';
+        try {
+          console.error('Tetris tab lock request failed.');
+        } catch {
+          // A refused report cannot grant admission.
+        }
+      };
+      try {
+        void navigator.locks.request('tetris.game-page', { ifAvailable: true }, lock => {
+          if (!lock) {
+            pending = false;
+            document.documentElement.dataset.tabAdmission = 'blocked';
+            retry.disabled = false;
+            retry.hidden = false;
+            message.textContent = 'Game already open in another tab.';
+            detail.textContent = 'Close the other game tab, then try again.';
+            return;
+          }
+          admitted = true;
+          resolve(undefined);
+          // Never release on pause, hide, pagehide or initialization failure.
+          // Only browser context cleanup ends this lifetime hold.
+          return lifetime;
+        }).catch(failed);
+      } catch {
+        failed();
+      }
+    };
+    retry.addEventListener('click', attempt);
+    attempt();
+  });
+  // Initialization after this await cannot release the lifetime promise.
+  retry.disabled = true;
+}
+
 const internalErrorMessage = 'The game stopped because of an internal error.';
 let engineFaultNotice = false;
 const gameManager = new GameManager({ onChange: engineChanged, onFault: reportEngineFault });
@@ -38,9 +135,6 @@ function reportEngineFault(fault) {
   }
 }
 
-// Every id below exists in index.html; test/staticFiles.test.js checks that.
-/** @param {string} id */
-const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
 /** @param {string} id */
 const canvasElement = id => /** @type {HTMLCanvasElement} */ (document.getElementById(id));
 
@@ -276,20 +370,20 @@ function setWakeLock(wanted) {
   if (wanted === wakeLockWanted || !('wakeLock' in navigator)) return;
   wakeLockWanted = wanted;
   if (wanted) {
-    requestWakeLock();
+    void requestWakeLock();
     return;
   }
   // Forgotten before it is let go, so its release does not ask again.
   const lock = wakeLock;
   wakeLock = null;
-  lock?.release();
+  void lock?.release();
 }
 
 function requestWakeLock() {
   return navigator.wakeLock.request('screen').then(sentinel => {
     // Play may have stopped, or a newer request won, while this one waited.
     if (!wakeLockWanted || wakeLock) {
-      sentinel.release();
+      void sentinel.release();
       return;
     }
     wakeLock = sentinel;
@@ -298,7 +392,7 @@ function requestWakeLock() {
     sentinel.addEventListener('release', () => {
       if (wakeLock !== sentinel) return;
       wakeLock = null;
-      requestWakeLock();
+      void requestWakeLock();
     });
     return null;
   }, () => {});
@@ -325,14 +419,18 @@ function boardChanged() {
     || showsPieces() !== drawnBoard.showsPieces;
 }
 
-// Returns whether anything was drawn, so callers can tell a real drawing
-// frame from an idle pass that only checked the unchanged caches.
-function drawIfChanged() {
+function syncChangedControls() {
   const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
   if (snapshot !== lastSnapshot) {
     syncControls();
     lastSnapshot = snapshot;
   }
+}
+
+// Returns whether anything was drawn, so callers can tell a real drawing
+// frame from an idle pass that only checked the unchanged caches.
+function drawIfChanged() {
+  syncChangedControls();
   let drew = false;
   if (canvasSizes.has(boardCanvas) && boardChanged()) {
     drawBoard();
@@ -442,7 +540,9 @@ const resizeObserver = new ResizeObserver(entries => {
   }
   drawSafely(redrawAll);
 });
-canvases.forEach(canvas => resizeObserver.observe(canvas));
+canvases.forEach(canvas => {
+  resizeObserver.observe(canvas);
+});
 
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
@@ -576,13 +676,17 @@ function endDrag(event) {
 boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
-heldCanvas.addEventListener('click', () => gameManager.handleAction(PlayerAction.hold));
+heldCanvas.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.hold);
+});
 // The hold box is a button to keyboards and screen readers too. A click
 // leaves focus where it was, so only the keyboard gives the hold box focus,
 // and only then do Enter and Space hold instead of their game actions.
 // (Checking :focus-visible would not do: any key press makes it match.)
 // Hold only works while playing, so otherwise they keep their game actions.
-heldCanvas.addEventListener('mousedown', event => event.preventDefault());
+heldCanvas.addEventListener('mousedown', event => {
+  event.preventDefault();
+});
 heldCanvas.addEventListener('keydown', event => {
   if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
   // A key pressed with Cmd, Ctrl or Alt is the browser's shortcut and
@@ -592,7 +696,11 @@ heldCanvas.addEventListener('keydown', event => {
   event.stopPropagation();
   gameManager.handleAction(PlayerAction.hold);
 });
-element('newGameButton').addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
+element('newGameButton').addEventListener('click', () => {
+  // Only New Game in the question may confirm, even before it is drawn.
+  if (gameManager.isConfirmingNewGame) return;
+  gameManager.handleAction(PlayerAction.newGame);
+});
 // The New Game question. Every answer goes straight to the engine, and the
 // dialog closes once the engine stops asking, so the very next key already
 // finds the question answered; the dialog's close event comes too late for
@@ -602,8 +710,12 @@ element('newGameButton').addEventListener('click', () => gameManager.handleActio
 // also keeps Safari from taking quick taps there as a double tap to zoom.
 const cancelNewGameButton = element('cancelNewGameButton');
 const confirmNewGameButton = element('confirmNewGameButton');
-confirmNewGameButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.newGame));
-cancelNewGameButton.addEventListener('click', () => gameManager.cancelNewGame());
+confirmNewGameButton.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.newGame);
+});
+cancelNewGameButton.addEventListener('click', () => {
+  gameManager.cancelNewGame();
+});
 // In the order they appear.
 const questionButtons = [cancelNewGameButton, confirmNewGameButton];
 // The selected button is the focused one, so Tab and clicks stay in step with
@@ -630,10 +742,55 @@ newGameDialog.addEventListener('cancel', event => {
   event.preventDefault();
   gameManager.cancelNewGame();
 });
-continueButton.addEventListener('click', () => gameManager.handleAction(PlayerAction.continueGame));
-playPauseButton.addEventListener('click', () => {
+continueButton.addEventListener('click', () => {
+  gameManager.handleAction(PlayerAction.continueGame);
+});
+function togglePauseFromButton() {
   gameManager.togglePause();
-  if (gameManager.state === GameState.paused) inputController.releaseForPause();
+  if (gameManager.state === GameState.paused) {
+    inputController.releaseForPause();
+    resetDragState();
+  }
+}
+
+// A non-primary touch need not generate a click. Track a completed touch
+// tap separately, then ignore only that touch's compatibility click.
+/** @type {{ pointerId: number, x: number, y: number, moved: boolean } | null} */
+let pauseTouch = null;
+/** @type {number | null} */
+let handledPauseTouch = null;
+playPauseButton.addEventListener('pointerdown', event => {
+  if (event.pointerType !== 'touch' || gameManager.state !== GameState.playing) return;
+  if (pauseTouch !== null) return;
+  handledPauseTouch = null;
+  pauseTouch = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+});
+window.addEventListener('pointermove', event => {
+  if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
+  if (Math.hypot(event.clientX - pauseTouch.x, event.clientY - pauseTouch.y) > TAP_SLOP_PX)
+    pauseTouch.moved = true;
+});
+window.addEventListener('pointercancel', event => {
+  if (event.pointerId === pauseTouch?.pointerId) pauseTouch = null;
+});
+window.addEventListener('pointerup', event => {
+  if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
+  const touch = pauseTouch;
+  pauseTouch = null;
+  const box = playPauseButton.getBoundingClientRect();
+  const inside = event.clientX >= box.left && event.clientX <= box.right
+    && event.clientY >= box.top && event.clientY <= box.bottom;
+  if (touch.moved || !inside || gameManager.state !== GameState.playing) return;
+  handledPauseTouch = event.pointerId;
+  togglePauseFromButton();
+});
+playPauseButton.addEventListener('click', event => {
+  if (event instanceof PointerEvent && event.pointerType === 'touch'
+    && event.pointerId === handledPauseTouch) {
+    handledPauseTouch = null;
+    return;
+  }
+  togglePauseFromButton();
 });
 
 // Matches the scenePhase handler: pause when the page is hidden.
@@ -658,6 +815,12 @@ window.addEventListener('storage', (event) => {
   requestDraw();
 });
 
+// Read current storage and show controls before waiting for a drawing frame.
+// The storage listener is already installed, so later changes request a draw.
+drawSafely(() => {
+  syncChangedControls();
+  return false;
+});
 requestDraw();
 
 // Safari ignores user-scalable=no in the browser, and zooms in on two quick
@@ -692,3 +855,10 @@ boardCanvas.addEventListener('click', () => {});
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
+
+// Do not expose controls until admission and synchronous bootstrap finish.
+element('tabLockStatus').hidden = true;
+const admittedGame = /** @type {HTMLElement} */ (document.querySelector('main.app'));
+admittedGame.hidden = false;
+admittedGame.inert = false;
+document.documentElement.dataset.tabAdmission = 'ready';

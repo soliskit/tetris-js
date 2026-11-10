@@ -124,6 +124,56 @@ test.describe('start and game over', () => {
     await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
   });
 
+  test('repeated New Game button activations before drawing still ask before giving up the game [STA-1]', async ({
+    page
+  }) => {
+    await continueSavedGame(
+      page,
+      savedGame({ piece: PieceColors.purple, score: 300 })
+    );
+    const kept = await boardCells(page);
+    const saved = await page.evaluate(() =>
+      localStorage.getItem('tetris.savedGameSession')
+    );
+    expect(saved).not.toBeNull();
+    expect(saved).not.toBe('');
+    const dialog = page.locator('#newGameDialog');
+    const cancel = page.locator('#cancelNewGameButton');
+
+    // Each group runs in one task. These are synthetic DOM activations,
+    // not a measurement of physical double-click or double-tap timing.
+    for (const activations of [2, 3]) {
+      const openBeforeDrawing = await page.evaluate((count) => {
+        const button = document.getElementById('newGameButton');
+        for (let i = 0; i < count; i++) button.click();
+        return document.getElementById('newGameDialog').open;
+      }, activations);
+      expect(openBeforeDrawing).toBe(false);
+      await expect(dialog).toBeVisible();
+      await expect(cancel).toBeFocused();
+      await expectLabel(page, 'Resume');
+      await expect(page.locator('#score')).toHaveText('Score: 300');
+      expect(await boardCells(page)).toEqual(kept);
+      expect(
+        await page.evaluate(() =>
+          localStorage.getItem('tetris.savedGameSession')
+        )
+      ).toBe(saved);
+      if (activations === 2) {
+        await cancel.click();
+        await expect(dialog).toBeHidden();
+        await expectLabel(page, 'Resume');
+        expect(await boardCells(page)).toEqual(kept);
+      }
+    }
+
+    // An explicit answer inside the question still gives up the game.
+    await page.locator('#confirmNewGameButton').click();
+    await expect(dialog).toBeHidden();
+    await expectLabel(page, 'Pause');
+    await expect(page.locator('#score')).toHaveText('Score: 0');
+  });
+
   test('New Game on the pause screen asks first, then gives up the game and starts another [STA-1] [DSP-5] [INP-1]', async ({
     page
   }) => {
@@ -526,24 +576,40 @@ test.describe('playing with the keyboard', () => {
     await expectLabel(page, 'Pause');
   });
 
-  test('a game paused in another tab can be continued here [STA-4] [DSP-5]', async ({
+  test('a paused game transfers after its owning tab closes [STA-4] [DSP-5] [APP-7]', async ({
     page,
     context
   }) => {
     await page.goto('/');
-    await expect(page.locator('#continueGameButton')).toBeHidden();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    await page.keyboard.press('KeyP');
+    await expectLabel(page, 'Resume');
+    const board = await boardCells(page);
+    expect(board.some((row) => row.some((cell) => cell !== null))).toBe(true);
     const otherTab = await context.newPage();
     await otherTab.goto('/');
-    await otherTab.keyboard.press('Enter');
-    await otherTab.keyboard.press('Space');
-    await otherTab.keyboard.press('KeyP');
+    await expect(otherTab.locator('#tabLockMessage')).toHaveText(
+      'Game already open in another tab.'
+    );
+    await expect(otherTab.locator('main.app')).toBeHidden();
+    await page.close();
+    await expect
+      .poll(() =>
+        otherTab.evaluate(
+          async () =>
+            !(await navigator.locks.query()).held.some(
+              (lock) => lock.name === 'tetris.game-page'
+            )
+        )
+      )
+      .toBe(true);
+    await otherTab.locator('#tabLockRetry').click();
+    await expect(otherTab.locator('#continueGameButton')).toBeVisible();
+    await expect(otherTab.locator('#keyHint')).toContainText('C: Continue');
+    await otherTab.keyboard.press('KeyC');
     await expectLabel(otherTab, 'Resume');
-    const board = await boardCells(otherTab);
-    await expect(page.locator('#continueGameButton')).toBeVisible();
-    await expect(page.locator('#keyHint')).toContainText('C: Continue');
-    await page.locator('#continueGameButton').click();
-    await expectLabel(page, 'Resume');
-    await expect.poll(() => boardCells(page)).toEqual(board);
+    await expect.poll(() => boardCells(otherTab)).toEqual(board);
   });
 
   test('an unrelated storage key written in another tab is ignored [DSP-5]', async ({
@@ -610,7 +676,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     const before = await page.evaluate(() => {
       window.readProbe.phase = 'foreign-write-window';
       return window.gameKeyReads;
@@ -709,7 +775,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );
@@ -780,7 +846,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
-    await otherTab.goto('/');
+    await otherTab.goto('/icons/icon.svg');
     await otherTab.evaluate(() =>
       localStorage.setItem('tetris.highScore', '4200')
     );

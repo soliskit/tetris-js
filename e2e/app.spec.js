@@ -277,53 +277,136 @@ test('after the first visit the game opens from the cache, and a new version arr
   }
 });
 
-// Earlier versions stored every address visited, query strings included,
-// and later ones kept a single cache that each download changed in place.
-test('caches left by earlier versions of the game are cleared out [APP-2]', async ({
-  page
+// The two obsolete fixed names are preserved, never used as game sources.
+test('obsolete fixed-name caches stay while the controlled page uses its complete snapshot [APP-6] [APP-2]', async ({
+  page,
+  context
 }) => {
-  // Set up from a page that does not start the service worker.
-  await page.goto('/icons/icon.svg');
-  await page.evaluate(async () => {
-    for (const name of ['tetris', 'tetris-2']) {
-      const old = await caches.open(name);
-      await old.put(
-        '/?from=link',
-        new Response('<title>Stale</title>', {
-          headers: { 'Content-Type': 'text/html' }
-        })
-      );
-    }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-legacy-'));
+  fs.cpSync(fileURLToPath(new URL('../public', import.meta.url)), dir, {
+    recursive: true
   });
-  // The seed is checked before the worker runs, so a lost fixture fails here
-  // instead of reading as a kept cache. This test registers the worker by
-  // hand instead of loading '/', where the app would register it: on WebKit's
-  // test browser the seeded entries appear unreadable once the page that
-  // wrote them has gone (see "caches of other projects"), so activation runs
-  // while this page is still here.
-  expect(
+  const marker = 'current-snapshot-not-legacy';
+  const index = path.join(dir, 'index.html');
+  const script = path.join(dir, 'script.js');
+  fs.writeFileSync(
+    index,
+    fs
+      .readFileSync(index, 'utf8')
+      .replace('<title>Tetris</title>', `<title>Tetris ${marker}</title>`)
+  );
+  fs.appendFileSync(
+    script,
+    `\nglobalThis.cacheSourceMarker = ${JSON.stringify(marker)};\n`
+  );
+  const expectedHtml = fs.readFileSync(index, 'utf8');
+  const expectedScript = fs.readFileSync(script, 'utf8');
+  const server = express().use(express.static(dir)).listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  const url = `http://localhost:${server.address().port}/`;
+  try {
+    // This setup document registers the actual worker but never opens a game
+    // navigation, so no setup-page version pin may exist before the check.
+    await page.goto(`${url}icons/icon.svg`);
     await page.evaluate(async () => {
       for (const name of ['tetris', 'tetris-2']) {
-        if ((await (await caches.open(name)).keys()).length !== 1) return false;
+        const cache = await caches.open(name);
+        await cache.put(
+          new URL('/', location.href),
+          new Response(`<title>Legacy ${name}</title>`, {
+            headers: { 'Content-Type': 'text/html' }
+          })
+        );
+        await cache.put(
+          new URL('/script.js', location.href),
+          new Response(`globalThis.cacheSourceMarker = 'legacy-${name}';`, {
+            headers: { 'Content-Type': 'text/javascript' }
+          })
+        );
       }
-      return true;
-    })
-  ).toBe(true);
-  await page.evaluate(() => navigator.serviceWorker.register('/sw.js'));
-  await page.evaluate(() => navigator.serviceWorker.ready);
-  // Besides the new version, only the record of which version each page opened with.
-  await expect
-    .poll(() =>
+    });
+    const legacyBodies = () =>
       page.evaluate(async () =>
-        (await caches.keys()).filter((name) => name !== 'tetris-pins')
-      )
-    )
-    .toEqual([expect.stringMatching(/^tetris-version-1-/)]);
-  await page.goto('/');
-  await expect
-    .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller))
-    .toBe(true);
-  await expect(page).toHaveTitle('Tetris');
+        Promise.all(
+          ['tetris', 'tetris-2'].map(async (name) => {
+            const cache = await caches.open(name);
+            return {
+              name,
+              entries: await Promise.all(
+                (await cache.keys()).map(async (request) => [
+                  request.url,
+                  await (await cache.match(request)).text()
+                ])
+              )
+            };
+          })
+        )
+      );
+    const seeded = await legacyBodies();
+    expect(seeded.map((cache) => cache.entries.length)).toEqual([2, 2]);
+    await page.evaluate(() => navigator.serviceWorker.register('/sw.js'));
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect
+      .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller))
+      .toBe(true);
+    expect(await legacyBodies()).toEqual(seeded);
+    const snapshot = await page.evaluate(async () => {
+      const names = (await caches.keys()).filter((name) =>
+        name.startsWith('tetris-version-')
+      );
+      if (names.length !== 1)
+        throw new Error('Expected exactly one installed snapshot');
+      const cache = await caches.open(names[0]);
+      const pins = await caches.open('tetris-pins');
+      if ((await pins.keys()).length !== 0)
+        throw new Error('Setup page must not have a game navigation pin');
+      return {
+        name: names[0],
+        html: await (await cache.match(new URL('/', location.href))).text(),
+        script: await (
+          await cache.match(new URL('/script.js', location.href))
+        ).text()
+      };
+    });
+    expect(snapshot.html).toBe(expectedHtml);
+    expect(snapshot.script).toBe(expectedScript);
+    // Offline is the normal fetch-failure path, not a stub of activation or
+    // worker fetch logic. It also prevents a background refresh replacing the
+    // installed snapshot while this one controlled navigation is observed.
+    await context.setOffline(true);
+    const gamePage = await context.newPage();
+    const htmlResponse = await gamePage.goto(url);
+    expect(await htmlResponse.text()).toBe(snapshot.html);
+    await expect
+      .poll(() => gamePage.evaluate(() => globalThis.cacheSourceMarker))
+      .toBe(marker);
+    await expect(gamePage).toHaveTitle(`Tetris ${marker}`);
+    const scriptBody = await gamePage.evaluate(async () =>
+      (await fetch('script.js')).text()
+    );
+    expect(scriptBody).toBe(snapshot.script);
+    const pins = await gamePage.evaluate(async () => {
+      const cache = await caches.open('tetris-pins');
+      return Promise.all(
+        (await cache.keys()).map(async (request) => ({
+          key: request.url,
+          note: await (await cache.match(request)).json()
+        }))
+      );
+    });
+    // Zero pins before this sole controlled game navigation, exactly one
+    // afterward: this is its pin, not a setup-page record chosen by value.
+    expect(pins).toHaveLength(1);
+    expect(pins[0].note.version).toBe(snapshot.name);
+    expect(await legacyBodies()).toEqual(seeded);
+    await gamePage.keyboard.press('Enter');
+    await expect.poll(() => filledCount(gamePage)).toBe(4);
+    await gamePage.close();
+  } finally {
+    await context.setOffline(false);
+    server.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // GitHub Pages serves every project of an account from one origin, so other
@@ -338,7 +421,7 @@ test('caches of other projects on the same origin are left alone [APP-6]', async
     await other.put('/other-project/', new Response('Other project'));
   });
   await page.goto('/');
-  // The worker takes control of the page only after clearing out old caches.
+  // Wait for the current worker to control the page.
   await expect
     .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller))
     .toBe(true);
@@ -411,58 +494,76 @@ test('a new version that cannot be downloaded in full leaves the cached game who
 // The page here asks for its scripts only when the test says so, so a newer
 // version can finish downloading while the page is still loading. The
 // version number is in the page title and in one of the game modules.
-test('a page loads every file from the version it opened with, even if a newer one finishes downloading meanwhile [APP-2]', async ({
-  page
-}) => {
-  const publicDir = fileURLToPath(new URL('../public', import.meta.url));
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
-  fs.cpSync(publicDir, dir, { recursive: true });
-  const loader = `<script>
+const deferredBootstrapTest = test.extend({ waitForGameBootstrap: false });
+
+deferredBootstrapTest(
+  'a page loads every file from the version it opened with, even if a newer one finishes downloading meanwhile [APP-2]',
+  async ({ page }) => {
+    const publicDir = fileURLToPath(new URL('../public', import.meta.url));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-'));
+    fs.cpSync(publicDir, dir, { recursive: true });
+    const loader = `<script>
     window.loadScripts = () => new Promise((resolve, reject) => {
       const script = Object.assign(document.createElement('script'), { type: 'module', src: 'script.js', onload: resolve, onerror: reject });
       document.body.append(script);
     });
   </script>`;
-  const html = fs
-    .readFileSync(path.join(publicDir, 'index.html'), 'utf8')
-    .replace(/ *<link rel="modulepreload"[^>]*>\n/g, '')
-    .replace('<script type="module" src="script.js"></script>', loader);
-  const moduleSource = fs.readFileSync(
-    path.join(publicDir, 'game/position.js'),
-    'utf8'
-  );
-  const deploy = (version) => {
-    fs.writeFileSync(
-      path.join(dir, 'index.html'),
-      html.replace('<title>Tetris</title>', `<title>Tetris ${version}</title>`)
+    const html = fs
+      .readFileSync(path.join(publicDir, 'index.html'), 'utf8')
+      .replace(/ *<link rel="modulepreload"[^>]*>\n/g, '')
+      .replace('<script type="module" src="script.js"></script>', loader);
+    const moduleSource = fs.readFileSync(
+      path.join(publicDir, 'game/position.js'),
+      'utf8'
     );
-    fs.writeFileSync(
-      path.join(dir, 'game/position.js'),
-      `${moduleSource}\nglobalThis.moduleVersion = ${version};\n`
-    );
-  };
-  deploy(1);
-  const server = express().use(express.static(dir)).listen(0);
-  await new Promise((resolve) => server.once('listening', resolve));
-  try {
-    await page.goto(`http://localhost:${server.address().port}/`);
-    await page.evaluate(() => window.loadScripts());
-    await page.evaluate(() => navigator.serviceWorker.ready);
-    deploy(2);
-    await page.reload();
-    await expect(page).toHaveTitle('Tetris 1');
-    await expect.poll(() => newestCachedPage(page)).toContain('Tetris 2');
-    await page.evaluate(() => window.loadScripts());
-    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(1);
-    await page.reload();
-    await expect(page).toHaveTitle('Tetris 2');
-    await page.evaluate(() => window.loadScripts());
-    expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(2);
-  } finally {
-    server.close();
-    fs.rmSync(dir, { recursive: true, force: true });
+    const deploy = (version) => {
+      fs.writeFileSync(
+        path.join(dir, 'index.html'),
+        html.replace(
+          '<title>Tetris</title>',
+          `<title>Tetris ${version}</title>`
+        )
+      );
+      fs.writeFileSync(
+        path.join(dir, 'game/position.js'),
+        `${moduleSource}\nglobalThis.moduleVersion = ${version};\n`
+      );
+    };
+    deploy(1);
+    const server = express().use(express.static(dir)).listen(0);
+    await new Promise((resolve) => server.once('listening', resolve));
+    try {
+      await page.goto(`http://localhost:${server.address().port}/`);
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      await page.evaluate(() => navigator.serviceWorker.ready);
+      deploy(2);
+      await page.reload();
+      await expect(page).toHaveTitle('Tetris 1');
+      await expect.poll(() => newestCachedPage(page)).toContain('Tetris 2');
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(1);
+      await page.reload();
+      await expect(page).toHaveTitle('Tetris 2');
+      await page.evaluate(() => window.loadScripts());
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-tab-admission',
+        'ready'
+      );
+      expect(await page.evaluate(() => globalThis.moduleVersion)).toBe(2);
+    } finally {
+      server.close();
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   }
-});
+);
 
 // The color space each canvas draws in, and whether this browser has Display P3 canvases at all.
 function colorSpaces(page) {

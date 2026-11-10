@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-tab-admission="pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -29,7 +29,12 @@
   <link rel="modulepreload" href="game/tetrominoFactory.js">
 </head>
 <body>
-  <main class="app">
+  <section id="tabLockStatus" class="tab-lock glass" aria-live="polite">
+    <p id="tabLockMessage" role="status">Checking for another game tab...</p>
+    <p id="tabLockDetail"></p>
+    <button id="tabLockRetry" class="glass" hidden disabled>Try again</button>
+  </section>
+  <main class="app" hidden inert>
     <div class="scores glass">
       <div id="score" class="score">Score: 0</div>
       <div id="highScore" class="high-score">High Score: 0</div>

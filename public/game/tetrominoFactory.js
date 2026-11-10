@@ -47,7 +47,7 @@ const oWallKicks = kicks([[[0, 0]]]);
  */
 function piece(spawn, color, wallKickData) {
   /** @type {Shape[]} */
-  const rotations = [spawn.map(line => [...line].map(ch => ch === 'X'))];
+  const rotations = [spawn.map(line => Array.from(line).map(ch => ch === 'X'))];
   while (rotations.length < wallKickData.length) {
     const last = rotations[rotations.length - 1];
     rotations.push(last.map((_, row) => last.map((__, column) => last[last.length - 1 - column][row])));
