@@ -1,10 +1,11 @@
+import { defineConfig } from 'eslint/config';
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import promise from 'eslint-plugin-promise';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ['node_modules/', 'reports/', 'docs/audit/evidence/'] },
   js.configs.recommended,
   tseslint.configs.recommended,
@@ -15,9 +16,12 @@ export default tseslint.config(
     // so the project service can type them.
     files: ['public/game/**/*.js', 'public/script.js'],
     extends: [
-      tseslint.configs.recommendedTypeChecked,
-      tseslint.configs.strictTypeChecked
-    ],
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({
+      ...config,
+      files: ['public/game/**/*.js', 'public/script.js']
+    })),
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: { projectService: true }
@@ -37,9 +41,9 @@ export default tseslint.config(
     // treatment as any non-standard tsconfig.
     files: ['public/sw.js'],
     extends: [
-      tseslint.configs.recommendedTypeChecked,
-      tseslint.configs.strictTypeChecked
-    ],
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({ ...config, files: ['public/sw.js'] })),
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: {
@@ -67,7 +71,18 @@ export default tseslint.config(
       '*.mjs',
       '**/*.cjs'
     ],
-    extends: [tseslint.configs.disableTypeChecked]
+    extends: [tseslint.configs.disableTypeChecked].map((config) => ({
+      ...config,
+      files: [
+        'index.js',
+        'e2e/**/*.js',
+        'scripts/**/*.js',
+        'test/**/*.js',
+        'playwright.config.js',
+        '*.mjs',
+        '**/*.cjs'
+      ]
+    }))
   },
   {
     languageOptions: {
