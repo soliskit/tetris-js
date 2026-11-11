@@ -24,7 +24,7 @@ const tests = ['test', 'e2e'].flatMap((folder) =>
       fs
         .readFileSync(path.join(root, folder, file), 'utf8')
         .split('\n')
-        .filter((line) => /^\s*test\(/.test(line))
+        .filter((line) => /^\s*(void\s+)?test\(/.test(line))
         .map((line) => ({
           where: `${folder}/${file}`,
           line: line.trim(),
@@ -35,12 +35,12 @@ const tests = ['test', 'e2e'].flatMap((folder) =>
     )
 );
 
-test('requirements have unique IDs [QA-1]', () => {
+void test('requirements have unique IDs [QA-1]', () => {
   assert.ok(requirementIds.length >= 40);
   assert.equal(new Set(requirementIds).size, requirementIds.length);
 });
 
-test('every test names at least one requirement [QA-1]', () => {
+void test('every test names at least one requirement [QA-1]', () => {
   assert.ok(tests.length > 100);
   const untagged = tests
     .filter((t) => t.tags.length === 0)
@@ -48,7 +48,7 @@ test('every test names at least one requirement [QA-1]', () => {
   assert.deepEqual(untagged, []);
 });
 
-test('every requirement a test names exists [QA-1]', () => {
+void test('every requirement a test names exists [QA-1]', () => {
   const unknown = tests.flatMap((t) =>
     t.tags
       .filter((tag) => !requirementIds.includes(tag))
@@ -57,7 +57,7 @@ test('every requirement a test names exists [QA-1]', () => {
   assert.deepEqual(unknown, []);
 });
 
-test('every requirement is verified by at least one test [QA-1]', () => {
+void test('every requirement is verified by at least one test [QA-1]', () => {
   const tagged = new Set(tests.flatMap((t) => t.tags));
   assert.deepEqual(
     requirementIds.filter((id) => !tagged.has(id)),
@@ -65,7 +65,7 @@ test('every requirement is verified by at least one test [QA-1]', () => {
   );
 });
 
-test('npm test enforces 100% line, branch and function coverage of the game logic [QA-2]', () => {
+void test('npm test enforces 100% line, branch and function coverage of the game logic [QA-2]', () => {
   const script = JSON.parse(
     fs.readFileSync(path.join(root, 'package.json'), 'utf8')
   ).scripts.test;
@@ -80,7 +80,7 @@ test('npm test enforces 100% line, branch and function coverage of the game logi
   }
 });
 
-test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]', () => {
+void test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]', () => {
   const pkg = JSON.parse(
     fs.readFileSync(path.join(root, 'package.json'), 'utf8')
   );
@@ -95,7 +95,7 @@ test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]'
   assert.match(script, /\['lines', 'branches', 'functions'\]/);
 });
 
-test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
+void test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   const config = fs.readFileSync(
     path.join(root, 'playwright.config.js'),
     'utf8'
@@ -123,7 +123,7 @@ test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
   assert.match(workflow, /npm run test:e2e/);
 });
 
-test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
+void test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
   const config = JSON.parse(
     fs.readFileSync(path.join(root, 'tsconfig.json'), 'utf8')
   );
@@ -155,7 +155,7 @@ test('the code the browser loads is type checked in strict mode, in CI [QA-5]', 
   );
 });
 
-test('mutation testing must leave no mutant alive, and runs weekly and on pull requests in CI [QA-6]', () => {
+void test('mutation testing must leave no mutant alive, and runs weekly and on pull requests in CI [QA-6]', () => {
   const config = JSON.parse(
     fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8')
   );

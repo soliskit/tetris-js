@@ -42,7 +42,7 @@ function validSave() {
   return { game, data: JSON.parse(serializeSession(game)) };
 }
 
-test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
+void test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   const { game, data } = validSave();
   const session = parseSession(JSON.stringify(data), SIZE);
   assert.deepEqual(session.gameBoard, game.gameBoard);
@@ -56,7 +56,7 @@ test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   assert.equal(session.canHoldTetromino, false);
 });
 
-test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]', () => {
+void test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]', () => {
   const { game } = newGame({ factory: new TetrominoFactory(seededRandom(3)) });
   const data = JSON.parse(serializeSession(game));
   // A new game deals the current piece and three upcoming ones from a full bag.
@@ -71,25 +71,25 @@ test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4
   );
 });
 
-test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
+void test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
   const { data } = validSave();
   assert.deepEqual(data.bag, []);
   assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
 });
 
-test('a save without the remaining bag is refused [SAF-1] [STA-6]', () => {
+void test('a save without the remaining bag is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
   delete data.bag;
   assert.equal(parseSession(JSON.stringify(data), SIZE), null);
 });
 
-test('a save without a held piece is valid [SAF-1]', () => {
+void test('a save without a held piece is valid [SAF-1]', () => {
   const { data } = validSave();
   data.heldTetromino = null;
   assert.equal(parseSession(JSON.stringify(data), SIZE).heldTetromino, null);
 });
 
-test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]', () => {
+void test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]', () => {
   const { data } = validSave();
   assert.equal('level' in data, false);
   for (const level of [1, 99, null, false]) {
@@ -98,7 +98,7 @@ test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2
   }
 });
 
-test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {
+void test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {
   const { data } = validSave();
   data.currentTetromino.rotations = [
     [
@@ -119,7 +119,7 @@ test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [
   );
 });
 
-test('waiting pieces come back ready to spawn [SAF-1]', () => {
+void test('waiting pieces come back ready to spawn [SAF-1]', () => {
   const { data } = validSave();
   data.nextTetrominos[0].position = { row: 15, column: 8 };
   data.nextTetrominos[0].rotationState = 2;
@@ -253,7 +253,7 @@ const corruptions = {
 };
 
 for (const [name, corrupt] of Object.entries(corruptions)) {
-  test(`a save with ${name} is rejected [SAF-1]`, () => {
+  void test(`a save with ${name} is rejected [SAF-1]`, () => {
     const { data } = validSave();
     const replacement = corrupt(data);
     const text = replacement === undefined ? JSON.stringify(data) : replacement;
@@ -272,7 +272,7 @@ const savedGameFormats = [
 ];
 
 for (const [format, file, isThatFormat] of savedGameFormats) {
-  test(`the former ${format} is refused whole without migration [STA-6] [STA-4]`, () => {
+  void test(`the former ${format} is refused whole without migration [STA-6] [STA-4]`, () => {
     const text = fs.readFileSync(
       new URL(`./fixtures/${file}`, import.meta.url),
       'utf8'
@@ -292,7 +292,7 @@ for (const format of [
   'a missing bag',
   'a malformed current save'
 ]) {
-  test(`Continue refuses ${format} without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]`, () => {
+  void test(`Continue refuses ${format} without deleting the save or changing the high score [STA-6] [SAF-1] [SCO-3]`, () => {
     const file =
       format === 'a stored level'
         ? 'saved-game-with-level.json'
@@ -332,7 +332,7 @@ for (const format of [
 }
 
 for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
-  test(`Continue with an ${source} does not write to storage [SAF-2] [STA-4]`, () => {
+  void test(`Continue with an ${source} does not write to storage [SAF-2] [STA-4]`, () => {
     const storage = createMemoryStorage();
     if (source === 'unavailable save') {
       const { data } = validSave();
@@ -358,7 +358,7 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
   });
 }
 
-test('Continue ignores an unreadable former flag and loads a valid envelope without writes [SAF-2] [STA-4]', () => {
+void test('Continue ignores an unreadable former flag and loads a valid envelope without writes [SAF-2] [STA-4]', () => {
   const storage = createMemoryStorage();
   storage.setItem('tetris.isSessionSaved', 'true');
   const { data } = validSave();
@@ -381,7 +381,7 @@ test('Continue ignores an unreadable former flag and loads a valid envelope with
   assert.deepEqual(writes, []);
 });
 
-test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
+void test('Continue leaves a valid save alone when its availability flag is false [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
   const { data } = validSave();
   const text = serializeSavedRecord(JSON.stringify(data), false);
@@ -412,7 +412,7 @@ test('Continue leaves a valid save alone when its availability flag is false [ST
   assert.equal(read('tetris.savedGameSession'), text);
 });
 
-test('refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]', () => {
+void test('refusing an old save attempts withdrawal even when the write fails [STA-6] [SAF-2]', () => {
   const storage = createMemoryStorage();
   const text = fs.readFileSync(
     new URL('./fixtures/saved-game-with-level.json', import.meta.url),
@@ -433,7 +433,7 @@ test('refusing an old save attempts withdrawal even when the write fails [STA-6]
   assert.equal(storage.getItem('tetris.isSessionSaved'), 'true');
 });
 
-test('a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]', () => {
+void test('a saved game stored under the names used before the game had names of its own is not read [STA-6] [APP-6]', () => {
   const storage = createMemoryStorage();
   storage.setItem(
     'savedGameSession',
@@ -449,7 +449,7 @@ test('a saved game stored under the names used before the game had names of its 
   assert.equal(game.state, GameState.gameOver);
 });
 
-test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
+void test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
   const { game } = validSave();
   game.softDrop();
   game.softDrop();
@@ -463,7 +463,7 @@ test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
   assert.equal(session.lowestRowReached, 4);
 });
 
-test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
+void test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
   const withCount = (count) => {
     const d = JSON.parse(JSON.stringify(data));
@@ -499,7 +499,7 @@ test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   assert.equal(withRow(2.5), null);
 });
 
-test('a pre-fix save without the lock-delay keys is refused [STA-6]', () => {
+void test('a pre-fix save without the lock-delay keys is refused [STA-6]', () => {
   const { data } = validSave();
   delete data.lockDelayResetCount;
   delete data.lowestRowReached;
@@ -507,7 +507,7 @@ test('a pre-fix save without the lock-delay keys is refused [STA-6]', () => {
   assert.equal(session, null);
 });
 
-test('a save without a caller reset cap still refuses count999 [STA-6]', () => {
+void test('a save without a caller reset cap still refuses count999 [STA-6]', () => {
   const { data } = validSave();
   data.lockDelayResetCount = 999; // caller configuration cannot widen B9's fixed domain
   const session = parseSession(JSON.stringify(data), { rows: 20, columns: 10 });

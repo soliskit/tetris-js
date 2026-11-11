@@ -26,7 +26,7 @@ const messages = {
 };
 
 for (const item of manifest.cases) {
-  test(`browser gate ${item.name} [QA-3]`, () => {
+  void test(`browser gate ${item.name} [QA-3]`, () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tetris-browser-gate-'));
     try {
       fs.mkdirSync(path.join(root, 'public'));

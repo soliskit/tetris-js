@@ -215,8 +215,12 @@ for (const resize of ['shrink', 'grow']) {
       expect(await cellsOf(page, PieceColors.purple)).toEqual(initial);
 
       await page.locator('#tetris').evaluate((canvas, width) => {
-        canvas.style.setProperty('width', `${width}px`, 'important');
-        canvas.style.setProperty('height', `${width * 2}px`, 'important');
+        canvas.style.setProperty('width', `${String(width)}px`, 'important');
+        canvas.style.setProperty(
+          'height',
+          `${String(width * 2)}px`,
+          'important'
+        );
       }, desiredWidth);
       // Advance rendering until the actual canvas bitmap reflects observed CSS
       // size. This witnesses delivery to the game's ResizeObserver, not a sleep.

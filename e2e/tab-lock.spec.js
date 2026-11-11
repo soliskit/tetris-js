@@ -88,7 +88,7 @@ test('pending admission and duplicate retry cannot access storage or initialize 
     };
     Storage.prototype.setItem = function (key, value) {
       if (String(key).startsWith('tetris.')) window.gameStorageTouches++;
-      return set.call(this, key, value);
+      set.call(this, key, value);
     };
     Object.defineProperty(navigator, 'locks', {
       value: {

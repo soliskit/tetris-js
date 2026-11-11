@@ -94,11 +94,10 @@ const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/')
  */
 async function readPin(response) {
   try {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; the original checks below decide what is accepted. */
+    /** @type {unknown} */
     const note = await response?.json();
-    if (!note || typeof note.version !== 'string') return null;
-    return { version: note.version, at: Number.isFinite(note.at) ? note.at : null };
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+    if (typeof note !== 'object' || note === null || !('version' in note) || typeof note.version !== 'string') return null;
+    return { version: note.version, at: 'at' in note && typeof note.at === 'number' && Number.isFinite(note.at) ? note.at : null };
   } catch {
     return null;
   }
@@ -199,7 +198,7 @@ async function download() {
   const names = await versionNames();
   const number = names.length > 0 ? versionNumber(names[names.length - 1]) + 1 : 1;
   // The random part keeps downloads that start at the same time apart.
-  const name = `${VERSION_PREFIX}${number}-${Math.random().toString(36).slice(2)}`;
+  const name = `${VERSION_PREFIX}${String(number)}-${Math.random().toString(36).slice(2)}`;
   try {
     await (await caches.open(name)).addAll(APP_SHELL.map(file => new Request(file, { cache: 'no-cache' })));
   } catch (error) {

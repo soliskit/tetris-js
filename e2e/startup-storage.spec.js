@@ -6,7 +6,9 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
 }) => {
   const writer = await context.newPage();
   await writer.goto('/icons/icon.svg');
-  await writer.evaluate(() => localStorage.setItem('tetris.highScore', '4200'));
+  await writer.evaluate(() => {
+    localStorage.setItem('tetris.highScore', '4200');
+  });
   await page.addInitScript(() => {
     const nativeFrame = window.requestAnimationFrame.bind(window);
     const nativeResize = window.ResizeObserver;
@@ -42,9 +44,9 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
       'hidden',
       ''
     );
-    await writer.evaluate(() =>
-      localStorage.setItem('tetris.highScore', '4300')
-    );
+    await writer.evaluate(() => {
+      localStorage.setItem('tetris.highScore', '4300');
+    });
   } catch (error) {
     failure = error;
     try {
@@ -70,6 +72,8 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
   }
   if (failure) throw failure;
   await expect(page.locator('#highScore')).toHaveText('High Score: 4300');
-  await writer.evaluate(() => localStorage.clear());
+  await writer.evaluate(() => {
+    localStorage.clear();
+  });
   await expect(page.locator('#highScore')).toHaveText('High Score: 0');
 });

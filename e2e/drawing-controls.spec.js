@@ -31,9 +31,8 @@ test('persistent canvas faults do not defer controls [DSP-5] [SAF-5]', async ({
         window.failedDraws += 1;
         throw new Error('injected persistent canvas failure');
       }
-      const result = fill.apply(this, args);
+      fill.apply(this, args);
       window.successfulFills += 1;
-      return result;
     };
   });
   try {

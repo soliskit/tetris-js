@@ -82,7 +82,7 @@ function runTrace(seed, lockTarget) {
 }
 
 for (const seed of [20261017, 2024]) {
-  test(`bounded random trace keeps the score invariant, seed ${seed}, 500 locks [D69]`, () => {
+  void test(`bounded random trace keeps the score invariant, seed ${String(seed)}, 500 locks [D69]`, () => {
     const result = runTrace(seed, 500);
     assert.equal(result.locks, 500, 'the bounded run reaches its lock cap');
     assert.equal(

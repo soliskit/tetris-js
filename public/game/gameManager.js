@@ -81,6 +81,12 @@ function reportToConsole(fault) {
   console.error('Tetris stopped safely:', fault.reason, fault.error ?? '');
 }
 
+// Read current state after a call that may synchronously end play.
+/** @param {GameManager} game */
+function isPlaying(game) {
+  return game.state === GameState.playing;
+}
+
 export class GameManager {
   /** @param {GameManagerOptions} [options] */
   constructor({
@@ -306,8 +312,7 @@ export class GameManager {
       this.noteLowestRow();
     }
     this.landIfResting();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- landing can stop the game, whatever the types say.
-    if (this.state === GameState.playing) {
+    if (isPlaying(this)) {
       this.startGameLoop();
     }
   }
@@ -327,8 +332,7 @@ export class GameManager {
       // stopped game when it fires.
       if (this.state !== GameState.playing) return;
       this.lockAndSpawnNext();
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- lockAndSpawnNext() above can end the game synchronously; the type model cannot see through the call.
-      if (this.state === GameState.playing) this.startGameLoop();
+      if (isPlaying(this)) this.startGameLoop();
     }, this.lockDelayInterval * 1000);
   }
 
@@ -383,8 +387,7 @@ export class GameManager {
     const clearedLines = this.clearFullRows();
     if (this.state !== GameState.playing) return;
     this.generateNextTetromino();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- generateNextTetromino() above can end the game when the new piece has no room; the type model cannot see through the call.
-    if (clearedLines && this.state === GameState.playing) {
+    if (clearedLines && isPlaying(this)) {
       this.saveGameSession();
     }
   }
@@ -602,8 +605,7 @@ export class GameManager {
         this.state = GameState.playing;
         if (this.isOnSurface && this.lockDelayResetCount === 16) this.lockAndSpawnNext();
         else if (this.isOnSurface) this.startLockDelay();
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the calls above can leave play, whatever the types say.
-        if (this.state === GameState.playing) this.startGameLoop();
+        if (isPlaying(this)) this.startGameLoop();
         break;
       case PlayerAction.moveLeft:
         this.moveTetromino(-1);
@@ -649,8 +651,7 @@ export class GameManager {
     // Locking brings in the next piece, which resets the lock delay.
     this.currentTetromino.position = this.ghostTetromino.position;
     this.lockAndSpawnNext();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- locking can end the game, whatever the types say.
-    if (this.state === GameState.playing) {
+    if (isPlaying(this)) {
       this.startGameLoop();
     }
   }
@@ -685,8 +686,7 @@ export class GameManager {
     }
     this.heldTetromino = pieceToHold;
     this.canHoldTetromino = false;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- holding can end the game, whatever the types say.
-    if (this.state === GameState.playing) this.startGameLoop();
+    if (isPlaying(this)) this.startGameLoop();
   }
 
   /** @param {boolean} [counterclockwise] */
