@@ -455,7 +455,7 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
     const addEventListener = EventTarget.prototype.addEventListener;
     EventTarget.prototype.addEventListener = function (type, ...rest) {
       window.listenedFor.push(`${this.id ?? ''} ${type}`);
-      return addEventListener.call(this, type, ...rest);
+      addEventListener.call(this, type, ...rest);
     };
   });
   await page.goto('/');

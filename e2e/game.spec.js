@@ -312,7 +312,9 @@ test.describe('start and game over', () => {
     // With none selected, A presses nothing, and a move selects Cancel.
     await push(VIEW);
     await expect(dialog).toBeVisible();
-    await cancel.evaluate((button) => button.blur());
+    await cancel.evaluate((button) => {
+      button.blur();
+    });
     await push(A);
     await expect(dialog).toBeVisible();
     await push(RIGHT);
@@ -681,7 +683,9 @@ test.describe('playing with the keyboard', () => {
       window.readProbe.phase = 'foreign-write-window';
       return window.gameKeyReads;
     });
-    await otherTab.evaluate(() => localStorage.setItem('other.app', 'changed'));
+    await otherTab.evaluate(() => {
+      localStorage.setItem('other.app', 'changed');
+    });
     // The negative check is conditioned on the probe recording the foreign
     // key's storage event within the poll window; it does not synchronize
     // the app's deferred redraw.
@@ -776,9 +780,9 @@ test.describe('playing with the keyboard', () => {
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
     await otherTab.goto('/icons/icon.svg');
-    await otherTab.evaluate(() =>
-      localStorage.setItem('tetris.highScore', '4200')
-    );
+    await otherTab.evaluate(() => {
+      localStorage.setItem('tetris.highScore', '4200');
+    });
     // The game key's event arrives first...
     try {
       await expect
@@ -835,7 +839,9 @@ test.describe('playing with the keyboard', () => {
     // ...and the app reacts to it.
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
     // Clearing all storage can remove the game's keys, so it still counts.
-    await otherTab.evaluate(() => localStorage.clear());
+    await otherTab.evaluate(() => {
+      localStorage.clear();
+    });
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
   });
 
@@ -847,9 +853,9 @@ test.describe('playing with the keyboard', () => {
     await expect(page.locator('#highScore')).toHaveText('High Score: 0');
     const otherTab = await context.newPage();
     await otherTab.goto('/icons/icon.svg');
-    await otherTab.evaluate(() =>
-      localStorage.setItem('tetris.highScore', '4200')
-    );
+    await otherTab.evaluate(() => {
+      localStorage.setItem('tetris.highScore', '4200');
+    });
     await expect(page.locator('#highScore')).toHaveText('High Score: 4200');
   });
 
@@ -1028,14 +1034,14 @@ for (const [kind, start, final] of [
 
 test.describe('controller disconnect release boundary', () => {
   for (const removedIndex of [0, 1]) {
-    test(`disconnecting pad ${removedIndex} spends the surviving held drop until a fresh press [INP-4]`, async ({
+    test(`disconnecting pad ${String(removedIndex)} spends the surviving held drop until a fresh press [INP-4]`, async ({
       page
     }) => {
       await page.clock.install();
       await page.clock.pauseAt(new Date());
       await page.addInitScript(() => {
         const pads = [0, 1].map((index) => ({
-          id: `test-pad-${index}`,
+          id: `test-pad-${String(index)}`,
           index,
           connected: true,
           buttons: Array.from({ length: 16 }, () => ({ pressed: false })),

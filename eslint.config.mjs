@@ -25,14 +25,6 @@ export default defineConfig(
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: { projectService: true }
-    },
-    rules: {
-      // Scores and flags are interpolated deliberately; keep the rest of the
-      // rule's type checking.
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowNumber: true, allowBoolean: true }
-      ]
     }
   },
   {
@@ -50,12 +42,6 @@ export default defineConfig(
         project: ['./tsconfig.sw.json'],
         tsconfigRootDir: import.meta.dirname
       }
-    },
-    rules: {
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowNumber: true, allowBoolean: true }
-      ]
     }
   },
   {
