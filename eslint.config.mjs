@@ -5,6 +5,8 @@ import tseslint from 'typescript-eslint';
 import promise from 'eslint-plugin-promise';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
+const TYPED_TEST_FILES = ['test/factory.test.js'];
+
 export default defineConfig(
   { ignores: ['node_modules/', 'reports/', 'docs/audit/evidence/'] },
   js.configs.recommended,
@@ -69,6 +71,22 @@ export default defineConfig(
         '**/*.cjs'
       ]
     }))
+  },
+  {
+    // Test files that pass the typed rules. They use tsconfig.tests.json,
+    // which loads Node's types without changing the app's tsconfig.json.
+    // Add a file here only when it passes; the rest stay in the block above.
+    files: TYPED_TEST_FILES,
+    extends: [
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({ ...config, files: TYPED_TEST_FILES })),
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.tests.json'],
+        tsconfigRootDir: import.meta.dirname
+      }
+    }
   },
   {
     languageOptions: {

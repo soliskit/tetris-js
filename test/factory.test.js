@@ -8,6 +8,10 @@ import {
 } from '../public/game/tetrominoFactory.js';
 import { seededRandom } from './helpers.js';
 
+/**
+ * @param {TetrominoFactory} factory
+ * @param {number} count
+ */
 const colorsOf = (factory, count) =>
   Array.from({ length: count }, () => factory.generate().color);
 

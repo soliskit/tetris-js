@@ -617,7 +617,9 @@ void test('a piece brought to rest by gravity locks 0.5s after touching down [PL
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   repeatUntil(
     () => game.isOnSurface,
-    () => scheduler.advance(700),
+    () => {
+      scheduler.advance(700);
+    },
     'the piece landing by gravity'
   );
   assert.notEqual(
@@ -1228,7 +1230,9 @@ void test('after a piece locks, the next piece waits a full gravity interval bef
   const { game, scheduler } = newGame({ factory: fixedFactory(yellow) });
   repeatUntil(
     () => game.isOnSurface,
-    () => scheduler.advance(700),
+    () => {
+      scheduler.advance(700);
+    },
     'the piece landing by gravity'
   );
   scheduler.advance(500); // locks; the next piece appears
@@ -1436,7 +1440,7 @@ for (const route of ['Pause', 'line clear']) {
         }
       }
       const writes = [];
-      const setItem = storage.setItem;
+      const setItem = storage.setItem.bind(storage);
       storage.setItem = (key, value) => {
         writes.push([key, value]);
         if (
@@ -1542,7 +1546,7 @@ void test('a session storage-write failure stays nonfatal and attempts withdrawa
     onFault: (fault) => reports.push(fault)
   });
   const before = rememberWrittenBytes(game, storage);
-  const setItem = storage.setItem;
+  const setItem = storage.setItem.bind(storage);
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -1603,7 +1607,7 @@ for (const failedWrite of ['atomic record']) {
       const { game, storage, scheduler, reports, a } = priorSave();
       storage.setItem(FLAG, 'true');
       const writes = [];
-      const setItem = storage.setItem;
+      const setItem = storage.setItem.bind(storage);
       storage.setItem = (key, value) => {
         writes.push([key, value]);
         if (
@@ -1661,7 +1665,7 @@ for (const failedWrite of ['atomic record']) {
 void test('a prior game-written save passes the independent oracle after a refused rewrite [STA-4] [SAF-2]', () => {
   const { game, storage, reports, a } = priorSave();
   oracle(a);
-  const setItem = storage.setItem;
+  const setItem = storage.setItem.bind(storage);
   storage.setItem = (key, value) => {
     if (key === DATA) throw new Error('refused');
     setItem(key, value);
@@ -1685,7 +1689,7 @@ for (const initiallyWithdrawn of [false, true]) {
     storage.setItem(FLAG, 'true');
     game.sessionSaveWithdrawn = initiallyWithdrawn;
     const observer = manager(storage);
-    const setItem = storage.setItem;
+    const setItem = storage.setItem.bind(storage);
     const points = [];
     storage.setItem = (key, value) => {
       setItem(key, value);
@@ -1776,7 +1780,7 @@ for (const key of [DATA]) {
     void test(`${key} ${kind} makes availability false without withdrawal or mutation [STA-4] [SAF-2]`, () => {
       const { storage } = priorSave();
       storage.setItem(FLAG, 'true');
-      const getItem = storage.getItem;
+      const getItem = storage.getItem.bind(storage);
       const writes = [];
       storage.getItem = (k) => {
         if (k === key) {
@@ -1811,7 +1815,7 @@ void test('one complete record read is cached until actual invalidation [DSP-3] 
   const { storage } = priorSave();
   storage.setItem(FLAG, 'true');
   const reads = { [FLAG]: 0, [DATA]: 0 };
-  const getItem = storage.getItem;
+  const getItem = storage.getItem.bind(storage);
   storage.getItem = (key) => {
     reads[key] += 1;
     return getItem(key);
@@ -1850,7 +1854,7 @@ for (const changed of [
     if (changed === 'invalid') storage.setItem(DATA, '{}');
     if (changed === 'absent') storage.removeItem(DATA);
     if (changed === 'unreadable') {
-      const getItem = storage.getItem;
+      const getItem = storage.getItem.bind(storage);
       storage.getItem = (key) => {
         if (key === DATA) throw new Error('refused');
         return getItem(key);
@@ -1928,7 +1932,7 @@ void test('payload write invalidates a reentrant eligibility check during public
   const { game, storage } = priorSave();
   storage.removeItem(DATA);
   game.sessionSaveWithdrawn = false;
-  const setItem = storage.setItem;
+  const setItem = storage.setItem.bind(storage);
   storage.setItem = (key, value) => {
     if (key === DATA)
       assert.equal(game.isSessionSaved, false, 'payload still absent');
