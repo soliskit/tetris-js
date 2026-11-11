@@ -10,7 +10,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [['list'], ['github']] : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}`
+    baseURL: `http://localhost:${String(PORT)}`
   },
   projects: [
     {
@@ -43,7 +43,7 @@ export default defineConfig({
   webServer: {
     command: 'node index.js',
     env: { PORT: String(PORT) },
-    url: `http://localhost:${PORT}`,
+    url: `http://localhost:${String(PORT)}`,
     reuseExistingServer: !process.env.CI
   }
 });

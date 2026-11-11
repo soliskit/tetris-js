@@ -28,7 +28,7 @@ import {
 
 const colors = (a) => a.map((p) => p.color).join(',');
 
-test('queue, bag and save restore after one to four line clears, seeds 1 to 200 [D69]', () => {
+void test('queue, bag and save restore after one to four line clears, seeds 1 to 200 [D69]', () => {
   const failures = [];
   const bad = (kind, msg) => failures.push(`${kind} ${msg}`);
   let trials = 0;
@@ -51,9 +51,10 @@ test('queue, bag and save restore after one to four line clears, seeds 1 to 200 
       const bagBefore = factory.bag.map((p) => p.color);
       const heldBefore = game.heldTetromino?.color ?? null;
       dropVerticalIIntoColumn9(game);
-      const tag = `seed ${seed} lines ${lines}`;
+      const tag = `seed ${String(seed)} lines ${String(lines)}`;
       const gains = [0, 100, 300, 500, 800][lines];
-      if (game.score !== gains) bad('score', `${tag} score ${game.score}`);
+      if (game.score !== gains)
+        bad('score', `${tag} score ${String(game.score)}`);
       if (game.state !== GameState.playing)
         bad('state', `${tag} state ${game.state}`);
       if (game.currentTetromino.color !== q[0])
@@ -68,7 +69,7 @@ test('queue, bag and save restore after one to four line clears, seeds 1 to 200 
       if (bagBefore.length > 0 && qa[2] !== bagBefore[0])
         bad('bagHead', `${tag} bag ${bagBefore} tail ${qa[2]}`);
       if (bagBefore.length === 0 && factory.bag.length !== 6)
-        bad('bagRefill', `${tag} bag after ${factory.bag.length}`);
+        bad('bagRefill', `${tag} bag after ${String(factory.bag.length)}`);
       if (
         game.heldTetromino?.color !== undefined &&
         game.heldTetromino.color !== heldBefore
@@ -76,7 +77,7 @@ test('queue, bag and save restore after one to four line clears, seeds 1 to 200 
         bad('held', tag);
       if (game.canHoldTetromino !== true) bad('canHold', tag);
       if (game.faults.length) bad('faults', tag);
-      if (game.level !== 1) bad('level', `${tag} level ${game.level}`);
+      if (game.level !== 1) bad('level', `${tag} level ${String(game.level)}`);
       if (!game.isSessionSaved) {
         bad('notSaved', tag);
         continue;
@@ -124,7 +125,7 @@ test('queue, bag and save restore after one to four line clears, seeds 1 to 200 
           game.nextTetrominos.at(-1).color !==
           restored.nextTetrominos.at(-1).color
         ) {
-          bad('playOn', `${tag} draw ${i}`);
+          bad('playOn', `${tag} draw ${String(i)}`);
           break;
         }
       }

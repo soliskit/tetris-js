@@ -27,7 +27,7 @@ test('nothing is redrawn while the game is paused [DSP-3]', async ({
     const fill = CanvasRenderingContext2D.prototype.fill;
     CanvasRenderingContext2D.prototype.fill = function (...args) {
       window.drawCalls++;
-      return fill.apply(this, args);
+      fill.apply(this, args);
     };
   });
   await page.goto('/');
@@ -47,7 +47,7 @@ test('turning the square piece does not redraw it [PCE-4] [DSP-3]', async ({
     const fill = CanvasRenderingContext2D.prototype.fill;
     CanvasRenderingContext2D.prototype.fill = function (...args) {
       window.drawCalls++;
-      return fill.apply(this, args);
+      fill.apply(this, args);
     };
   });
   await continueSavedGame(
@@ -209,7 +209,7 @@ test('the game works offline after the first visit [APP-2]', async ({
   );
   try {
     await new Promise((resolve) => server.stdout.once('data', resolve));
-    await page.goto(`http://localhost:${port}/`);
+    await page.goto(`http://localhost:${String(port)}/`);
     await page.evaluate(() => navigator.serviceWorker.ready);
     await page.reload();
     await expect

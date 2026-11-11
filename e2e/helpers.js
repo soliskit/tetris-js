@@ -221,7 +221,9 @@ export async function fakeWakeLock(page, mode) {
     window.wakeLocks = [];
     window.wakeLockRequests = 0;
     const pending = [];
-    window.grantWakeLocks = () => pending.splice(0).forEach((grant) => grant());
+    window.grantWakeLocks = () => {
+      pending.splice(0).forEach((grant) => grant());
+    };
     window.revokeWakeLocks = () =>
       window.wakeLocks.forEach((lock) => lock.release());
     const request = (type) =>

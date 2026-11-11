@@ -93,10 +93,10 @@ const failures = ['lines', 'branches', 'functions']
   .map((kind) => `${kind} ${summary[kind].pct}%`);
 if (failures.length > 0) {
   console.error(
-    `Browser coverage of public/script.js is below ${THRESHOLD}%: ${failures.join(', ')}`
+    `Browser coverage of public/script.js is below ${String(THRESHOLD)}%: ${failures.join(', ')}`
   );
   process.exit(1);
 }
 console.log(
-  `Browser coverage of public/script.js: ${THRESHOLD}% of lines, branches and functions.`
+  `Browser coverage of public/script.js: ${String(THRESHOLD)}% of lines, branches and functions.`
 );

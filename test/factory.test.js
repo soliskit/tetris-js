@@ -11,7 +11,7 @@ import { seededRandom } from './helpers.js';
 const colorsOf = (factory, count) =>
   Array.from({ length: count }, () => factory.generate().color);
 
-test('there are seven pieces, one per color [PCE-2]', () => {
+void test('there are seven pieces, one per color [PCE-2]', () => {
   const pieces = allPieces();
   assert.equal(pieces.length, 7);
   assert.deepEqual(
@@ -20,14 +20,14 @@ test('there are seven pieces, one per color [PCE-2]', () => {
   );
 });
 
-test('7-bag hands out every piece exactly once in each of many bags [PCE-5]', () => {
+void test('7-bag hands out every piece exactly once in each of many bags [PCE-5]', () => {
   const factory = new TetrominoFactory(seededRandom(42));
   for (let bag = 0; bag < 50; bag++) {
-    assert.equal(new Set(colorsOf(factory, 7)).size, 7, `bag ${bag}`);
+    assert.equal(new Set(colorsOf(factory, 7)).size, 7, `bag ${String(bag)}`);
   }
 });
 
-test('the same random source gives the same piece order [PCE-5]', () => {
+void test('the same random source gives the same piece order [PCE-5]', () => {
   assert.deepEqual(
     colorsOf(new TetrominoFactory(seededRandom(7)), 21),
     colorsOf(new TetrominoFactory(seededRandom(7)), 21)
@@ -38,7 +38,7 @@ test('the same random source gives the same piece order [PCE-5]', () => {
   );
 });
 
-test('the shuffle uses the injected random source [PCE-5]', () => {
+void test('the shuffle uses the injected random source [PCE-5]', () => {
   // With random always 0, each Fisher Yates step swaps with index 0.
   const factory = new TetrominoFactory(() => 0);
   const order = allPieces().map((piece) => piece.color);
@@ -48,7 +48,7 @@ test('the shuffle uses the injected random source [PCE-5]', () => {
   assert.deepEqual(colorsOf(factory, 7), expected);
 });
 
-test('every generated piece is a fresh object [PCE-5]', () => {
+void test('every generated piece is a fresh object [PCE-5]', () => {
   const factory = new TetrominoFactory(seededRandom(1));
   const pieces = Array.from({ length: 14 }, () => factory.generate());
   assert.equal(new Set(pieces).size, 14);
@@ -56,7 +56,7 @@ test('every generated piece is a fresh object [PCE-5]', () => {
   assert.ok(pieces.slice(1).every((piece) => piece.position.row === 0));
 });
 
-test('the default factory uses Math.random [PCE-5]', () => {
+void test('the default factory uses Math.random [PCE-5]', () => {
   const factory = new TetrominoFactory();
   assert.equal(factory.random, Math.random);
   assert.equal(new Set(colorsOf(factory, 7)).size, 7);
@@ -64,11 +64,11 @@ test('the default factory uses Math.random [PCE-5]', () => {
     const refillColors = new Set(
       Array.from({ length: 7 }, () => factory.generate().color)
     );
-    assert.equal(refillColors.size, 7, `unseeded refill ${bag}`);
+    assert.equal(refillColors.size, 7, `unseeded refill ${String(bag)}`);
   }
 });
 
-test('resetting the bag starts a full one, or carries on with the pieces given [PCE-5]', () => {
+void test('resetting the bag starts a full one, or carries on with the pieces given [PCE-5]', () => {
   const factory = new TetrominoFactory(seededRandom(4));
   colorsOf(factory, 3);
   factory.resetBag();
@@ -79,7 +79,7 @@ test('resetting the bag starts a full one, or carries on with the pieces given [
   assert.equal(new Set(colorsOf(factory, 7)).size, 7, 'then a full bag again');
 });
 
-test('the shuffle can leave every piece where it is [PCE-5]', () => {
+void test('the shuffle can leave every piece where it is [PCE-5]', () => {
   // With random just below 1, each step picks its own position.
   const factory = new TetrominoFactory(() => 0.999);
   assert.deepEqual(

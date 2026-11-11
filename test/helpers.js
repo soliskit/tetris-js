@@ -53,7 +53,7 @@ export function repeatUntil(done, step, what, limit = 100) {
     if (done()) return;
     step();
   }
-  assert.fail(`${what} did not happen within ${limit} steps`);
+  assert.fail(`${what} did not happen within ${String(limit)} steps`);
 }
 
 export function pieceByColor(color) {

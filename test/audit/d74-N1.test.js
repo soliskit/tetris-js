@@ -19,7 +19,7 @@ import {
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler } from '../helpers.js';
 
-test('a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]', () => {
+void test('a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]', () => {
   const storage = createMemoryStorage();
   const real = createFakeScheduler();
   let boom = false;
@@ -28,8 +28,12 @@ test('a fault after a confirmed New Game stops safely and keeps the old position
       if (boom) throw new Error('scheduler fault');
       return real.setTimeout(cb, ms);
     },
-    clearTimeout: (h) => real.clearTimeout(h),
-    advance: (ms) => real.advance(ms),
+    clearTimeout: (h) => {
+      real.clearTimeout(h);
+    },
+    advance: (ms) => {
+      real.advance(ms);
+    },
     get pending() {
       return real.pending;
     }
