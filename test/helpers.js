@@ -57,7 +57,11 @@ export function repeatUntil(done, step, what, limit = 100) {
 }
 
 export function pieceByColor(color) {
-  return allPieces().find((piece) => piece.color === color);
+  const found = allPieces().find((piece) => piece.color === color);
+  if (found === undefined) {
+    throw new Error(`no piece with color ${String(color)}`);
+  }
+  return found;
 }
 
 // Factory that always hands out the same piece type.
