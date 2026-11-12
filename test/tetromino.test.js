@@ -7,6 +7,7 @@ import { PieceColors } from '../public/game/tetrominoFactory.js';
 import { filled, pieceByColor, shapeStrings } from './helpers.js';
 
 // Standard Super Rotation System states: spawn, clockwise, 180, counterclockwise.
+/** @type {Record<string, string[][]>} */
 const SRS_SHAPES = {
   cyan: [
     ['....', 'XXXX', '....', '....'],
@@ -48,7 +49,7 @@ const SRS_SHAPES = {
 };
 
 for (const [name, expected] of Object.entries(SRS_SHAPES)) {
-  test(`${name} piece has the standard rotation states [PCE-2]`, () => {
+  void test(`${name} piece has the standard rotation states [PCE-2]`, () => {
     const piece = pieceByColor(PieceColors[name]);
     assert.deepEqual(piece.rotations.map(shapeStrings), expected);
     for (const rotation of piece.rotations) {
@@ -61,7 +62,7 @@ for (const [name, expected] of Object.entries(SRS_SHAPES)) {
   });
 }
 
-test('every piece spawns in its first rotation, centered in the top rows [PCE-3]', () => {
+void test('every piece spawns in its first rotation, centered in the top rows [PCE-3]', () => {
   const expectedColumns = {
     cyan: 3,
     yellow: 4,
@@ -85,7 +86,7 @@ test('every piece spawns in its first rotation, centered in the top rows [PCE-3]
   }
 });
 
-test('copy is an independent piece that shares the rotation data [PCE-2]', () => {
+void test('copy is an independent piece that shares the rotation data [PCE-2]', () => {
   const original = pieceByColor(PieceColors.purple);
   original.position = position(4, 4);
   const copy = original.copy();
@@ -98,7 +99,7 @@ test('copy is an independent piece that shares the rotation data [PCE-2]', () =>
   assert.equal(copy.wallKickData, original.wallKickData);
 });
 
-test('cells are the board positions of the current rotation [PCE-2]', () => {
+void test('cells are the board positions of the current rotation [PCE-2]', () => {
   const t = pieceByColor(PieceColors.purple);
   t.position = position(5, 2);
   assert.deepEqual(t.cells, [
@@ -116,7 +117,7 @@ test('cells are the board positions of the current rotation [PCE-2]', () => {
   ]);
 });
 
-test('fits checks walls, floor, the space above the board and locked blocks [PCE-6] [PCE-1]', () => {
+void test('fits checks walls, floor, the space above the board and locked blocks [PCE-6] [PCE-1]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   assert.ok(o.fits(board, position(0, 0)));
@@ -130,7 +131,7 @@ test('fits checks walls, floor, the space above the board and locked blocks [PCE
   assert.ok(o.fits(board, position(8, 4)), 'rests on top of it');
 });
 
-test('fits uses the current position by default [PCE-6]', () => {
+void test('fits uses the current position by default [PCE-6]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   o.position = position(18, 0);
@@ -139,7 +140,7 @@ test('fits uses the current position by default [PCE-6]', () => {
   assert.ok(!o.fits(board));
 });
 
-test('drop distance is how many rows the piece falls before it lands [PLY-5]', () => {
+void test('drop distance is how many rows the piece falls before it lands [PLY-5]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   o.position = position(0, 4);
@@ -155,7 +156,7 @@ test('drop distance is how many rows the piece falls before it lands [PLY-5]', (
   );
 });
 
-test('rotating in open space turns clockwise through all four states and back [PCE-4]', () => {
+void test('rotating in open space turns clockwise through all four states and back [PCE-4]', () => {
   const board = createBoard(20, 10);
   const t = pieceByColor(PieceColors.purple);
   t.position = position(8, 4);
@@ -166,7 +167,7 @@ test('rotating in open space turns clockwise through all four states and back [P
   }
 });
 
-test('rotating counterclockwise in open space turns through all four states the other way [PCE-4]', () => {
+void test('rotating counterclockwise in open space turns through all four states the other way [PCE-4]', () => {
   const board = createBoard(20, 10);
   const t = pieceByColor(PieceColors.purple);
   t.position = position(8, 4);
@@ -177,7 +178,7 @@ test('rotating counterclockwise in open space turns through all four states the 
   }
 });
 
-test('the O piece never changes when rotated [PCE-4]', () => {
+void test('the O piece never changes when rotated [PCE-4]', () => {
   const board = createBoard(20, 10);
   const o = pieceByColor(PieceColors.yellow);
   o.position = position(8, 4);
@@ -193,7 +194,7 @@ test('the O piece never changes when rotated [PCE-4]', () => {
   assert.deepEqual(o.position, position(8, 4));
 });
 
-test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]', () => {
+void test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (const [row, column] of [
     [9, 4],
@@ -209,7 +210,7 @@ test('when clockwise is blocked, rotation falls back to counterclockwise [PCE-4]
   assert.ok(t.fits(board));
 });
 
-test('when counterclockwise is blocked, rotation falls back to clockwise [PCE-4]', () => {
+void test('when counterclockwise is blocked, rotation falls back to clockwise [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (const [row, column] of [
     [9, 6],
@@ -225,7 +226,7 @@ test('when counterclockwise is blocked, rotation falls back to clockwise [PCE-4]
   assert.ok(t.fits(board));
 });
 
-test('a piece that cannot rotate anywhere stays exactly as it was [PCE-4]', () => {
+void test('a piece that cannot rotate anywhere stays exactly as it was [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (let row = 0; row < 20; row++) {
     for (let column = 0; column < 10; column++) {
@@ -305,10 +306,11 @@ const SRS_KICKS_I = [
   ]
 ];
 // The game uses rows that count down the screen, so y flips sign.
+/** @param {number[][][]} table */
 const asPositions = (table) =>
   table.map((kicks) => kicks.map(([x, y]) => position(0 - y, x)));
 
-test('wall kicks match the standard SRS tables for every piece [PCE-4]', () => {
+void test('wall kicks match the standard SRS tables for every piece [PCE-4]', () => {
   for (const name of ['purple', 'green', 'red', 'blue', 'orange']) {
     assert.deepEqual(
       pieceByColor(PieceColors[name]).wallKickData,
@@ -325,7 +327,7 @@ test('wall kicks match the standard SRS tables for every piece [PCE-4]', () => {
   ]);
 });
 
-test('each piece has its fixed color [PCE-2]', () => {
+void test('each piece has its fixed color [PCE-2]', () => {
   assert.deepEqual(
     { ...PieceColors },
     {
@@ -356,7 +358,7 @@ test('each piece has its fixed color [PCE-2]', () => {
   }
 });
 
-test('the counterclockwise fallback uses the inverted kicks, including their rows [PCE-4]', () => {
+void test('the counterclockwise fallback uses the inverted kicks, including their rows [PCE-4]', () => {
   const board = createBoard(20, 10);
   for (const [row, column] of [
     [12, 5],
@@ -376,7 +378,7 @@ test('the counterclockwise fallback uses the inverted kicks, including their row
   );
 });
 
-test('a J piece kicks left off the right wall [PCE-4]', () => {
+void test('a J piece kicks left off the right wall [PCE-4]', () => {
   const board = createBoard(20, 10);
   const j = pieceByColor(PieceColors.blue);
   j.rotationState = 3;
@@ -388,7 +390,7 @@ test('a J piece kicks left off the right wall [PCE-4]', () => {
   assert.ok(j.fits(board));
 });
 
-test('wall kick lets an I piece rotate against the right wall [PCE-4]', () => {
+void test('wall kick lets an I piece rotate against the right wall [PCE-4]', () => {
   const board = createBoard(20, 10);
   const i = pieceByColor(PieceColors.cyan);
   i.rotationState = 1;
@@ -399,7 +401,7 @@ test('wall kick lets an I piece rotate against the right wall [PCE-4]', () => {
   assert.ok(i.cells.every((cell) => cell.column <= 9));
 });
 
-test('turning counterclockwise, a J piece kicks right off the left wall [PCE-4]', () => {
+void test('turning counterclockwise, a J piece kicks right off the left wall [PCE-4]', () => {
   const board = createBoard(20, 10);
   const j = pieceByColor(PieceColors.blue);
   j.rotationState = 1;

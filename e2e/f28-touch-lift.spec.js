@@ -27,9 +27,12 @@ test.skip(
   'simulated touch runs on the Chromium phone project only'
 );
 
+/** @param {number[][]} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, c]) => c));
+/** @param {number[][]} cells */
 const minRow = (cells) => Math.min(...cells.map(([r]) => r));
 // Normalized shape: translation by gravity does not change it, rotation does.
+/** @param {number[][]} cells */
 const shapeOf = (cells) => {
   const r0 = minRow(cells);
   const c0 = minColumn(cells);
@@ -51,6 +54,7 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
 
   const first = shapeOf(await cellsOf(page, PieceColors.purple));
   const box = await page.locator('#tetris').boundingBox();
+  if (!box) throw new Error('f28: #tetris has no bounding box');
   const cx = box.x + box.width / 2,
     cy = box.y + box.height / 2;
 
@@ -58,15 +62,15 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
   // synthetic pointerup 60 px away: the TE2 sequence from the finding.
   const cdp = await page.context().newCDPSession(page);
   // Trial-D variant: reuse the pointer id the browser assigns to the real touch-down.
-  await page.evaluate(() =>
+  await page.evaluate(() => {
     document.getElementById('tetris').addEventListener(
       'pointerdown',
       (e) => {
         window.__downId = e.pointerId;
       },
       { once: true }
-    )
-  );
+    );
+  });
   await cdp.send('Input.dispatchTouchEvent', {
     type: 'touchStart',
     touchPoints: [{ x: cx, y: cy, id: 1 }]

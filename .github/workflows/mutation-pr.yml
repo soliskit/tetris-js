@@ -131,9 +131,34 @@ jobs:
             for f in "${game_files[@]}"; do
               [[ "$f" =~ ^public/game/[A-Za-z0-9_-]+\.js$ ]] || { echo "Unsupported game file name: $f; failing closed."; exit 1; }
             done
-            matrix=$(jq -n -c --args '{include: [$ARGS.positional[] | {file: ., name: (. | sub("^public/game/"; "") | rtrimstr(".js"))}]}' "${game_files[@]}")
+            # Large game files split into line-range shards at gaps between
+            # class members, so the wall time follows a smaller shard instead
+            # of the largest file. Every shard range set is contiguous from
+            # line 1, ends with the 99999 sentinel to cover later file growth,
+            # and the mutation job re-verifies coverage against the parsed AST
+            # before running: a mutated node type spanning a boundary fails
+            # the job instead of being silently skipped. Whole-file entries carry the
+            # bare path in file; ranged entries append :start-end.
+            entries=()
+            for f in "${game_files[@]}"; do
+              base=$(basename "$f" .js)
+              case "$f" in
+                public/game/inputController.js) ranges=("1-141" "142-294" "295-99999") ;;
+                public/game/tetromino.js) ranges=("1-155" "156-99999") ;;
+                *) ranges=() ;;
+              esac
+              if [ "${#ranges[@]}" -eq 0 ]; then
+                entries+=("$(jq -n -c --arg f "$f" --arg n "$base" '{file: $f, name: $n}')")
+              else
+                total="${#ranges[@]}"
+                for idx in "${!ranges[@]}"; do
+                  entries+=("$(jq -n -c --arg f "$f:${ranges[$idx]}" --arg n "${base}-$((idx + 1))of${total}" --arg s "${ranges[*]}" '{file: $f, name: $n, shards: $s}')")
+                done
+              fi
+            done
+            matrix=$(jq -n -c --args '{include: [$ARGS.positional[] | fromjson]}' "${entries[@]}")
             echo "files=$matrix" >> "$GITHUB_OUTPUT"
-            echo "Full sweep: ${#game_files[@]} game files."
+            echo "Full sweep: ${#game_files[@]} game files in ${#entries[@]} shards."
           else
             echo "files={\"include\":[]}" >> "$GITHUB_OUTPUT"
             echo "Zero mutation targets: every changed path is an enumerated regular non-executable file."
@@ -155,8 +180,116 @@ jobs:
           cache: npm
       - run: npm install --global npm@12.2.0
       - run: npm ci
+      - name: Verify line-range shards split the file exactly (AST check)
+        if: contains(matrix.file, ':')
+        shell: bash
+        run: |
+          set -euo pipefail
+          mutate="${{ matrix.file }}"
+          file="${mutate%%:*}"
+          node --input-type=module - "$file" ${{ matrix.shards }} <<'GUARD'
+          // Fail-closed shard-boundary check for line-range mutation shards.
+          // Ranges must be contiguous from line 1 and cover the whole file (last
+          // range ends at EOF or the 99999 sentinel). No mutated-node type may span
+          // a range boundary (a spanning node is silently skipped by every shard);
+          // container types that no mutator targets may span because their children
+          // are still checked. Every range must contain at least one candidate
+          // mutable node (candidate presence is a static source check only - it is
+          // NOT proof of actual mutant generation; that is verified separately by
+          // comparing full mutant-report identities against an unsharded run).
+          import { readFileSync } from 'node:fs';
+          import { createRequire } from 'node:module';
+          const require = createRequire(process.cwd() + '/package.json');
+          const espree = require('espree');
+          const [file, ...ranges] = process.argv.slice(2);
+          const fail = (msg) => {
+            console.error(msg);
+            process.exit(1);
+          };
+          const MAY_SPAN = new Set([
+            'Program',
+            'ImportDeclaration',
+            'ExportNamedDeclaration',
+            'ExportDefaultDeclaration',
+            'ExportAllDeclaration',
+            'ClassDeclaration',
+            'ClassBody',
+            'MethodDefinition',
+            'PropertyDefinition',
+            'StaticBlock',
+            'FunctionDeclaration',
+            'VariableDeclaration',
+            'VariableDeclarator',
+          ]);
+          const source = readFileSync(file, 'utf8');
+          const lineCount = source.split('\n').length - (source.endsWith('\n') ? 1 : 0);
+          const boundaries = [];
+          const rangeList = [];
+          let expectStart = 1;
+          for (const r of ranges) {
+            const m = /^(\d+)-(\d+)$/.exec(r);
+            if (!m) fail(`Bad range "${r}"`);
+            const start = Number(m[1]);
+            const end = Number(m[2]);
+            if (start !== expectStart) fail(`Range gap or overlap at ${start} (expected ${expectStart})`);
+            if (start > lineCount) fail(`Range ${r} starts past end of file (${lineCount} lines)`);
+            if (end !== 99999 && end > lineCount) fail(`Range ${r} ends past end of file`);
+            if (end !== 99999) boundaries.push(end);
+            rangeList.push([start, Math.min(end, lineCount)]);
+            expectStart = end + 1;
+          }
+          // Tail coverage: the last range must reach EOF (fixed end == lineCount, or
+          // the 99999 sentinel which expectStart has already passed lineCount).
+          if (lineCount >= expectStart) {
+            fail(`Tail uncovered: file has ${lineCount} lines but ranges stop at ${expectStart - 1}`);
+          }
+          const ast = espree.parse(source, { ecmaVersion: 'latest', sourceType: 'module', loc: true });
+          const bad = [];
+          const candidates = rangeList.map(() => 0);
+          (function walk(node) {
+            if (!node || typeof node.type !== 'string') return;
+            if (!MAY_SPAN.has(node.type) && node.loc) {
+              for (const b of boundaries) {
+                if (node.loc.start.line <= b && node.loc.end.line >= b + 1) {
+                  bad.push(`${node.type} lines ${node.loc.start.line}-${node.loc.end.line} spans boundary ${b}`);
+                }
+              }
+              const s = node.loc.start.line;
+              const e = node.loc.end.line;
+              for (let i = 0; i < rangeList.length; i++) {
+                if (s >= rangeList[i][0] && e <= rangeList[i][1]) candidates[i]++;
+              }
+            }
+            for (const key of Object.keys(node)) {
+              const v = node[key];
+              if (Array.isArray(v)) v.forEach(walk);
+              else if (v && typeof v === 'object' && key !== 'loc') walk(v);
+            }
+          })(ast);
+          if (bad.length) fail(bad.join('\n'));
+          for (let i = 0; i < rangeList.length; i++) {
+            if (candidates[i] === 0) {
+              fail(`Range ${rangeList[i][0]}-${rangeList[i][1]} contains no candidate mutable nodes (candidate-count check; actual mutant identity is verified separately against an unsharded report)`);
+            }
+          }
+          console.log(`OK ${file}: ${boundaries.length} boundaries, ranges contiguous, tail covered, every range has candidate nodes, no mutable node spans`);
+          GUARD
       - name: Mutate ${{ matrix.file }}
         run: npx stryker run --mutate "${{ matrix.file }}"
+      # A zero-mutant shard reports NaN score and passes green even under
+      # thresholds.break (NaN < break is false), so a drift-emptied range
+      # would otherwise pass silently. Fail closed on an empty report.
+      - name: Verify this ranged shard produced mutants
+        if: contains(matrix.file, ':')
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("reports/mutation/mutation.json", "utf8"));
+            const total = Object.values(r.files ?? {}).reduce((n, f) => n + (f.mutants?.length ?? 0), 0);
+            if (total === 0) { console.error("Vacuous shard: mutation report lists 0 mutants"); process.exit(1); }
+            console.log(`Report lists ${total} mutants.`);
+          '
       # Done-marker accounting, deliberately narrow: a marker attests that
       # a shard with this name finished successfully in some attempt of
       # this workflow run. overwrite keeps a re-run attempt able to
@@ -224,3 +357,4 @@ jobs:
             exit 1
           fi
           echo "All $(wc -l < expected.txt) expected shards are accounted for."
+

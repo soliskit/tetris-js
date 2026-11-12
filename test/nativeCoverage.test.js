@@ -153,7 +153,7 @@ function run(folder, tail, extra = [], allowRecursiveWarning = false) {
   );
   return result;
 }
-test('native evidence code-unit hashing is invariant at surrogate boundaries [QA-2]', () => {
+void test('native evidence code-unit hashing is invariant at surrogate boundaries [QA-2]', () => {
   const whole = 'a\ud83d\ude00\ud800z';
   assert.deepEqual(
     C.textHash([whole]),
@@ -164,7 +164,7 @@ test('native evidence code-unit hashing is invariant at surrogate boundaries [QA
     createHash('sha256').update(Buffer.from(whole, 'utf16le')).digest('hex')
   );
 });
-test('native source decoder keeps raw bytes distinct and matches whole-file UTF8 text [QA-2]', () =>
+void test('native source decoder keeps raw bytes distinct and matches whole-file UTF8 text [QA-2]', () =>
   temporary((folder) => {
     const filename = path.join(folder, 'invalid.js');
     const bytes = Buffer.concat([
@@ -182,7 +182,7 @@ test('native source decoder keeps raw bytes distinct and matches whole-file UTF8
       C.textHash([fs.readFileSync(filename, 'utf8')]).digest.toString('hex')
     );
   }));
-test('framing preserves long segmented text and rejects orphan data [QA-2]', () =>
+void test('framing preserves long segmented text and rejects orphan data [QA-2]', () =>
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -195,12 +195,11 @@ test('framing preserves long segmented text and rejects orphan data [QA-2]', () 
     );
     assert.equal(seen[0][1][1], text);
     fs.writeFileSync(path.join(folder, 'orphan.stage'), 'x');
-    assert.throws(
-      () => C.readEvidence(folder, launch, 123, () => {}),
-      /orphan|unknown/
-    );
+    assert.throws(() => {
+      C.readEvidence(folder, launch, 123, () => {});
+    }, /orphan|unknown/);
   }));
-test('issue-329 equivalent empty-directory witness fails specifically for required membership [QA-2]', () =>
+void test('issue-329 equivalent empty-directory witness fails specifically for required membership [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.mkdirSync(path.join(folder, 'empty-tests'));
@@ -213,7 +212,7 @@ test('issue-329 equivalent empty-directory witness fails specifically for requir
       /QA-2 observer incomplete: required source membership missing/
     );
   }));
-test('an owning successful finite run can cover the complete discovered source set [QA-2]', () =>
+void test('an owning successful finite run can cover the complete discovered source set [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -228,7 +227,7 @@ test('an owning successful finite run can cover the complete discovered source s
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /owning finite coverage/);
   }));
-test('lowered native thresholds cannot excuse missing required game sources [QA-2]', () =>
+void test('lowered native thresholds cannot excuse missing required game sources [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -251,7 +250,7 @@ test('lowered native thresholds cannot excuse missing required game sources [QA-
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
   }));
-test('an omitted zero-byte source receives no invented native measurement [QA-2]', () =>
+void test('an omitted zero-byte source receives no invented native measurement [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/empty.js'), '');
@@ -263,7 +262,7 @@ test('an omitted zero-byte source receives no invented native measurement [QA-2]
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
   }));
-test('native failure cannot become success from a complete coverage stream [QA-2]', () =>
+void test('native failure cannot become success from a complete coverage stream [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -275,11 +274,13 @@ test('native failure cannot become success from a complete coverage stream [QA-2
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
   }));
-test('private evidence validation rejects absent completion even for an otherwise empty directory [QA-2]', () =>
+void test('private evidence validation rejects absent completion even for an otherwise empty directory [QA-2]', () =>
   temporary((folder) => {
-    assert.throws(() => validate(folder, randomBytes(16), 123, []));
+    assert.throws(() => {
+      validate(folder, randomBytes(16), 123, []);
+    });
   }));
-test('typed decoder rejects malformed lengths and incomplete fields [QA-2]', () => {
+void test('typed decoder rejects malformed lengths and incomplete fields [QA-2]', () => {
   const odd = Buffer.alloc(8);
   odd.writeBigUInt64BE(3n);
   const decoder = new C.Decoder(1);
@@ -289,31 +290,31 @@ test('typed decoder rejects malformed lengths and incomplete fields [QA-2]', () 
       Buffer.from([0, 0, 0, 0, 0, 0, 0, 1])
     ])
   );
-  assert.throws(() => decoder.push(odd), /length/);
+  assert.throws(() => {
+    decoder.push(odd);
+  }, /length/);
   const incomplete = new C.Decoder(6);
   incomplete.push(Buffer.from([0, 0]));
   assert.throws(() => incomplete.end(), /incomplete/);
 });
-test('frame binding rejects a different launch and altered payload [QA-2]', () =>
+void test('frame binding rejects a different launch and altered payload [QA-2]', () =>
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
     writer.record(1, [1, 'v26', 'linux', 'x64', 123, true, false]);
     writer.record(6, [C.ZERO, writer.sequence]);
-    assert.throws(
-      () => C.readEvidence(folder, randomBytes(16), 123, () => {}),
-      /binding/
-    );
+    assert.throws(() => {
+      C.readEvidence(folder, randomBytes(16), 123, () => {});
+    }, /binding/);
     const file = path.join(folder, '0000000000000000.frame'),
       bytes = fs.readFileSync(file);
     bytes[bytes.length - 1] ^= 1;
     fs.writeFileSync(file, bytes);
-    assert.throws(
-      () => C.readEvidence(folder, launch, 123, () => {}),
-      /binding|chain/
-    );
+    assert.throws(() => {
+      C.readEvidence(folder, launch, 123, () => {});
+    }, /binding|chain/);
   }));
-test('evidence data after a terminal seal is not silently ignored [QA-2]', () =>
+void test('evidence data after a terminal seal is not silently ignored [QA-2]', () =>
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -322,12 +323,11 @@ test('evidence data after a terminal seal is not silently ignored [QA-2]', () =>
       path.join(folder, '0000000000000001.frame'),
       fs.readFileSync(path.join(folder, '0000000000000000.frame'))
     );
-    assert.throws(
-      () => C.readEvidence(folder, launch, 123, () => {}),
-      /later|orphan|unknown/
-    );
+    assert.throws(() => {
+      C.readEvidence(folder, launch, 123, () => {});
+    }, /later|orphan|unknown/);
   }));
-test('source inventory discovers nested files and does not invent empty-file counts [QA-2]', () =>
+void test('source inventory discovers nested files and does not invent empty-file counts [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.mkdirSync(path.join(folder, 'public/game/nested'));
@@ -340,7 +340,7 @@ test('source inventory discovers nested files and does not invent empty-file cou
     assert.equal(empty[5].toString('hex'), createHash('sha256').digest('hex'));
     assert.ok(rows.some((r) => r[3] === 2));
   }));
-test('unknown source forms are explicit domain conflicts rather than ignored entries [QA-2]', () =>
+void test('unknown source forms are explicit domain conflicts rather than ignored entries [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -349,7 +349,7 @@ test('unknown source forms are explicit domain conflicts rather than ignored ent
     );
     assert.throws(() => C.inventory(folder), /unknown source-domain/);
   }));
-test('native isolation none retains required finite acceptance [QA-2]', () =>
+void test('native isolation none retains required finite acceptance [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -364,7 +364,7 @@ test('native isolation none retains required finite acceptance [QA-2]', () =>
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
   }));
-test('native force-exit still requires synchronously complete finite evidence [QA-2]', () =>
+void test('native force-exit still requires synchronously complete finite evidence [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -375,7 +375,7 @@ test('native force-exit still requires synchronously complete finite evidence [Q
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
   }));
-test('a failing custom reporter cannot acquire a coverage success [QA-2]', () =>
+void test('a failing custom reporter cannot acquire a coverage success [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -395,7 +395,7 @@ test('a failing custom reporter cannot acquire a coverage success [QA-2]', () =>
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
   }));
-test('private evidence does not replace the user native coverage destination [QA-2]', () =>
+void test('private evidence does not replace the user native coverage destination [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -420,7 +420,7 @@ test('private evidence does not replace the user native coverage destination [QA
       fs.readdirSync(destination).some((name) => name.startsWith('coverage-'))
     );
   }));
-test('watch keeps its lifetime and never publishes a finite certificate before interruption [QA-2]', async () => {
+void test('watch keeps its lifetime and never publishes a finite certificate before interruption [QA-2]', async () => {
   const { spawn } = await import('node:child_process');
   const { once } = await import('node:events');
   const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'qa2-watch-'));
@@ -515,10 +515,9 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
       result = await Promise.race([
         closed,
         new Promise((_resolve, reject) => {
-          deadline = setTimeout(
-            () => reject(new Error('watch close deadline')),
-            12000
-          );
+          deadline = setTimeout(() => {
+            reject(new Error('watch close deadline'));
+          }, 12000);
         })
       ]);
     } finally {
@@ -573,16 +572,14 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
         await Promise.race([
           reaped,
           new Promise((_resolve, reject) => {
-            cleanupDeadline = setTimeout(
-              () =>
-                reject(
-                  new Error(
-                    'fixture cleanup incomplete: direct-child close missing; directory retained at ' +
-                      folder
-                  )
-                ),
-              5000
-            );
+            cleanupDeadline = setTimeout(() => {
+              reject(
+                new Error(
+                  'fixture cleanup incomplete: direct-child close missing; directory retained at ' +
+                    folder
+                )
+              );
+            }, 5000);
           })
         ]);
       } finally {
@@ -598,7 +595,7 @@ test('watch keeps its lifetime and never publishes a finite certificate before i
     });
   }
 });
-test('raw-byte identity distinguishes sources with equal replacement-decoded text [QA-2]', () =>
+void test('raw-byte identity distinguishes sources with equal replacement-decoded text [QA-2]', () =>
   temporary((folder) => {
     const a = path.join(folder, 'a.js'),
       b = path.join(folder, 'b.js');
@@ -609,7 +606,7 @@ test('raw-byte identity distinguishes sources with equal replacement-decoded tex
     assert.ok(x.text.equals(y.text));
     assert.ok(!x.raw.equals(y.raw));
   }));
-test('stream decoder agrees with whole-file native text across UTF8 boundaries and EOF [QA-2]', () =>
+void test('stream decoder agrees with whole-file native text across UTF8 boundaries and EOF [QA-2]', () =>
   temporary((folder) => {
     const filename = path.join(folder, 'boundary.js');
     const patterns = [
@@ -634,33 +631,32 @@ test('stream decoder agrees with whole-file native text across UTF8 boundaries a
         assert.ok(actual.text.equals(expected.digest));
       }
   }));
-test('frame-size bounds and truncated frame cannot be accepted [QA-2]', () =>
+void test('frame-size bounds and truncated frame cannot be accepted [QA-2]', () =>
   temporary((folder) => {
     const launch = randomBytes(16),
       filename = path.join(folder, '0000000000000000.frame');
     for (const length of [127, 65537]) {
       fs.writeFileSync(filename, Buffer.alloc(length));
-      assert.throws(
-        () => C.readEvidence(folder, launch, 123, () => {}),
-        /size/
-      );
+      assert.throws(() => {
+        C.readEvidence(folder, launch, 123, () => {});
+      }, /size/);
     }
   }));
 // prettier-ignore
-test('source links are surfaced as an unresolved domain form [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
+void test('source links are surfaced as an unresolved domain form [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
   gameFixture(folder);
   fs.symlinkSync('logic.js',path.join(folder,'public/game/alias.js'));
   assert.throws(()=>C.inventory(folder),/source-domain link/);
 }));
 // prettier-ignore
-test('evidence symlinks cannot supply a terminal frame [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
+void test('evidence symlinks cannot supply a terminal frame [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
   const outside=path.join(folder,'outside');
   fs.writeFileSync(outside,Buffer.alloc(128));
   fs.mkdirSync(path.join(folder,'evidence'));
   fs.symlinkSync(outside,path.join(folder,'evidence/0000000000000000.frame'));
-  assert.throws(()=>C.readEvidence(path.join(folder,'evidence'),randomBytes(16),123,()=>{}));
+  assert.throws(()=>{ C.readEvidence(path.join(folder,'evidence'),randomBytes(16),123,()=>{}); });
 }));
-test('excludes cannot omit a required source even with zero native floors [QA-2]', () =>
+void test('excludes cannot omit a required source even with zero native floors [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -680,7 +676,7 @@ test('excludes cannot omit a required source even with zero native floors [QA-2]
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
   }));
-test('partial native line coverage fails independently of caller floors [QA-2]', () =>
+void test('partial native line coverage fails independently of caller floors [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -703,7 +699,7 @@ test('partial native line coverage fails independently of caller floors [QA-2]',
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
   }));
-test('unknown source-domain diagnostics enumerate every encountered unknown entry [QA-2]', () =>
+void test('unknown source-domain diagnostics enumerate every encountered unknown entry [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/a.ts'), '');
@@ -714,7 +710,7 @@ test('unknown source-domain diagnostics enumerate every encountered unknown entr
         error.message.includes('a.ts') && error.message.includes('b.txt')
     );
   }));
-test('source change while native runs cannot preserve the prelaunch inventory [QA-2]', () =>
+void test('source change while native runs cannot preserve the prelaunch inventory [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -728,7 +724,7 @@ test('source change while native runs cannot preserve the prelaunch inventory [Q
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
   }));
-test('a late nonzero process status cannot be repaired by sealed evidence [QA-2]', () =>
+void test('a late nonzero process status cannot be repaired by sealed evidence [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -740,7 +736,7 @@ test('a late nonzero process status cannot be repaired by sealed evidence [QA-2]
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
   }));
-test('native row expansion retains a legitimate fully covered non-game source [QA-2]', () =>
+void test('native row expansion retains a legitimate fully covered non-game source [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'extra.js'), 'export const extra=1;\n');
@@ -836,12 +832,12 @@ function protocolFixture(folder, alter = () => {}) {
     writer.record(6, [C.recordHash(5, manifest), writer.sequence]);
   return { baseline, launch, pid, directory: inventory };
 }
-test('independent supervisor validates an internally consistent complete protocol control [QA-2]', () =>
+void test('independent supervisor validates an internally consistent complete protocol control [QA-2]', () =>
   temporary((folder) => {
     const p = protocolFixture(folder);
-    assert.doesNotThrow(() =>
-      validate(p.directory, p.launch, p.pid, p.baseline)
-    );
+    assert.doesNotThrow(() => {
+      validate(p.directory, p.launch, p.pid, p.baseline);
+    });
   }));
 for (const [name, alter] of [
   [
@@ -917,29 +913,36 @@ for (const [name, alter] of [
     }
   ]
 ])
-  test(`independent supervisor rejects ${name} [QA-2]`, () =>
+  void test(`independent supervisor rejects ${name} [QA-2]`, () =>
     temporary((folder) => {
       const p = protocolFixture(folder, alter);
-      assert.throws(() => validate(p.directory, p.launch, p.pid, p.baseline));
+      assert.throws(() => {
+        validate(p.directory, p.launch, p.pid, p.baseline);
+      });
     }));
 for (const [name, change] of [
   ['wrong PID', (p) => p.pid++],
   ['wrong launch', (p) => (p.launch = randomBytes(16))],
   [
     'missing first sequence',
-    (p) => fs.unlinkSync(path.join(p.directory, '0000000000000000.frame'))
+    (p) => {
+      fs.unlinkSync(path.join(p.directory, '0000000000000000.frame'));
+    }
   ],
   [
     'unknown entry',
-    (p) => fs.writeFileSync(path.join(p.directory, 'unknown'), 'x')
+    (p) => {
+      fs.writeFileSync(path.join(p.directory, 'unknown'), 'x');
+    }
   ],
   [
     'orphan stage',
-    (p) =>
+    (p) => {
       fs.writeFileSync(
         path.join(p.directory, '000000000000ffff.frame.stage'),
         'x'
-      )
+      );
+    }
   ],
   [
     'truncated payload',
@@ -949,14 +952,16 @@ for (const [name, change] of [
     }
   ]
 ])
-  test(`transport rejects ${name} [QA-2]`, () =>
+  void test(`transport rejects ${name} [QA-2]`, () =>
     temporary((folder) => {
       const p = protocolFixture(folder);
       change(p);
-      assert.throws(() => validate(p.directory, p.launch, p.pid, p.baseline));
+      assert.throws(() => {
+        validate(p.directory, p.launch, p.pid, p.baseline);
+      });
     }));
 for (const method of ['openSync', 'writeSync', 'closeSync', 'renameSync'])
-  test(`publication ${method} failure never completes a healthy record [QA-2]`, () =>
+  void test(`publication ${method} failure never completes a healthy record [QA-2]`, () =>
     temporary((folder) => {
       const original = fs[method],
         opened = [],
@@ -979,7 +984,9 @@ for (const method of ['openSync', 'writeSync', 'closeSync', 'renameSync'])
         return Reflect.apply(original, this, args);
       };
       try {
-        assert.throws(() => writer.record(6, [C.ZERO, 0]), /injected/);
+        assert.throws(() => {
+          writer.record(6, [C.ZERO, 0]);
+        }, /injected/);
         assert.equal(writer.sealed, false);
       } finally {
         fs[method] = original;
@@ -1001,21 +1008,23 @@ for (const [name, offset] of [
   ['previous digest', 48],
   ['payload digest', 80]
 ])
-  test(`frame rejects changed ${name} [QA-2]`, () =>
+  void test(`frame rejects changed ${name} [QA-2]`, () =>
     temporary((folder) => {
       const p = protocolFixture(folder),
         filename = path.join(p.directory, '0000000000000001.frame'),
         bytes = fs.readFileSync(filename);
       bytes[offset] ^= 0x40;
       fs.writeFileSync(filename, bytes);
-      assert.throws(() => validate(p.directory, p.launch, p.pid, p.baseline));
+      assert.throws(() => {
+        validate(p.directory, p.launch, p.pid, p.baseline);
+      });
     }));
-test('unsafe count values and arithmetic are rejected rather than rounded [QA-2]', () => {
+void test('unsafe count values and arithmetic are rejected rather than rounded [QA-2]', () => {
   for (const n of [-1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])
     assert.throws(() => C.integer(n));
   assert.throws(() => C.add(Number.MAX_SAFE_INTEGER, 1));
 });
-test('source paths retain URL escapes and native Unicode identity [QA-2]', () =>
+void test('source paths retain URL escapes and native Unicode identity [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     const filename = path.join(folder, 'public/game/space #% é.js');
@@ -1024,7 +1033,7 @@ test('source paths retain URL escapes and native Unicode identity [QA-2]', () =>
     assert.ok(rows.some((row) => row[2] === C.canonical(filename)));
     assert.equal(fileURLToPath(pathToFileURL(filename)), filename);
   }));
-test('recursive programmatic native runner cannot lend another root its membership [QA-2]', () =>
+void test('recursive programmatic native runner cannot lend another root its membership [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1192,16 +1201,17 @@ function observerModel(folder, mode = {}) {
     nativeError,
     fakeProcess,
     counts: () => ({ postCalls, summaryCalls, linesCalls }),
-    validate: () =>
+    validate: () => {
       validate(
         directory,
         Buffer.from('ab'.repeat(16), 'hex'),
         123,
         C.inventory(folder)
-      )
+      );
+    }
   };
 }
-test('observer model binds exact owning normal return without using unrelated collector evidence [QA-2]', () =>
+void test('observer model binds exact owning normal return without using unrelated collector evidence [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder, { unrelated: true });
     assert.equal(model.root.postRun(), 'native-post-return');
@@ -1218,7 +1228,7 @@ for (const mode of [
   'summaryThrow',
   'postThrow'
 ])
-  test(`observer preserves ${mode} original exception identity [QA-2]`, () =>
+  void test(`observer preserves ${mode} original exception identity [QA-2]`, () =>
     temporary((folder) => {
       const model = observerModel(folder, { [mode]: true });
       const original = model.harness.coverage;
@@ -1235,20 +1245,20 @@ for (const mode of [
   'mutateAfterSummary',
   'repeatedCollector'
 ])
-  test(`observer rejects ${mode} without replacing native return [QA-2]`, () =>
+  void test(`observer rejects ${mode} without replacing native return [QA-2]`, () =>
     temporary((folder) => {
       const model = observerModel(folder, { [mode]: true });
       assert.equal(model.root.postRun(), 'native-post-return');
       assert.throws(model.validate);
     }));
-test('parsed watch classification stays nonfinite after native watch flags reset [QA-2]', () =>
+void test('parsed watch classification stays nonfinite after native watch flags reset [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder, { watch: true, resetWatch: true });
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
     assert.equal(fs.readdirSync(model.directory).length, 0);
   }));
-test('a second qualifying root cannot reuse an existing terminal seal [QA-2]', () =>
+void test('a second qualifying root cannot reuse an existing terminal seal [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder);
     model.root.postRun();
@@ -1259,7 +1269,7 @@ test('a second qualifying root cannot reuse an existing terminal seal [QA-2]', (
     second.postRun();
     assert.throws(model.validate);
   }));
-test('reported undefined is eligible but reported true never opens another transaction [QA-2]', () =>
+void test('reported undefined is eligible but reported true never opens another transaction [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder);
     assert.equal(model.root.reported, undefined);
@@ -1385,7 +1395,7 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
     }
   };
 }
-test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model boundaries [QA-2]', () =>
+void test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model boundaries [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1401,7 +1411,7 @@ test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model bounda
       [[1, 10000]]
     );
   }));
-test('exit before close forbids later direct-child signals but retains absolute close deadline [QA-2]', () =>
+void test('exit before close forbids later direct-child signals but retains absolute close deadline [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'darwin');
     m.interrupt('SIGTERM');
@@ -1411,7 +1421,7 @@ test('exit before close forbids later direct-child signals but retains absolute 
     assert.equal(m.signals.length, 0);
     assert.equal(m.exits[0].at, 10000);
   }));
-test('repeated interruption escalates without extending first close deadline [QA-2]', () =>
+void test('repeated interruption escalates without extending first close deadline [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1425,7 +1435,7 @@ test('repeated interruption escalates without extending first close deadline [QA
     assert.equal(m.exits[0].at, 10000);
     assert.equal(m.signals.length, 1);
   }));
-test('Windows supervisor-only cancellation is forced with five-second model close deadline [QA-2]', () =>
+void test('Windows supervisor-only cancellation is forced with five-second model close deadline [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'win32');
     m.interrupt('SIGINT');
@@ -1433,7 +1443,7 @@ test('Windows supervisor-only cancellation is forced with five-second model clos
     m.advance(5000);
     assert.equal(m.exits[0].at, 5000);
   }));
-test('normal close clears cancellation escalation and never accepts interrupted evidence [QA-2]', () =>
+void test('normal close clears cancellation escalation and never accepts interrupted evidence [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1444,7 +1454,7 @@ test('normal close clears cancellation escalation and never accepts interrupted 
     assert.equal(m.exits.length, 0);
     assert.ok(!m.messages.some((x) => x.includes('QA-2: owning finite')));
   }));
-test('failed termination stays non-PASS and still reaches the final close deadline [QA-2]', () =>
+void test('failed termination stays non-PASS and still reaches the final close deadline [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux', { kill: true });
     m.interrupt('SIGINT');
@@ -1452,7 +1462,7 @@ test('failed termination stays non-PASS and still reaches the final close deadli
     assert.equal(m.exits[0].code, 1);
     assert.ok(m.messages.some((x) => x.includes('incomplete cleanup')));
   }));
-test('signal disposition fallback does not call unrelated supervisor handlers directly [QA-2]', () =>
+void test('signal disposition fallback does not call unrelated supervisor handlers directly [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     let foreign = 0;
@@ -1464,14 +1474,14 @@ test('signal disposition fallback does not call unrelated supervisor handlers di
     assert.ok(m.signals.some((s) => s.pid === 99 && s.name === 'SIGTERM'));
     assert.equal(m.exits[0].code, 1);
   }));
-test('cleanup refusal prevents acceptance and preserves explicit failure diagnostic [QA-2]', () =>
+void test('cleanup refusal prevents acceptance and preserves explicit failure diagnostic [QA-2]', () =>
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux', { cleanup: true });
     m.close(0);
     assert.equal(m.proc.exitCode, 1);
     assert.ok(m.messages.some((x) => x.includes('cleanup failed')));
   }));
-test('evidence enumeration failure cannot produce supervisor acceptance [QA-2]', () =>
+void test('evidence enumeration failure cannot produce supervisor acceptance [QA-2]', () =>
   temporary((folder) => {
     const p = protocolFixture(folder),
       original = fs.opendirSync;
@@ -1479,15 +1489,14 @@ test('evidence enumeration failure cannot produce supervisor acceptance [QA-2]',
       throw new Error('injected enumeration failure');
     };
     try {
-      assert.throws(
-        () => validate(p.directory, p.launch, p.pid, p.baseline),
-        /enumeration/
-      );
+      assert.throws(() => {
+        validate(p.directory, p.launch, p.pid, p.baseline);
+      }, /enumeration/);
     } finally {
       fs.opendirSync = original;
     }
   }));
-test('source descriptor read failure remains an explicit identity failure [QA-2]', () =>
+void test('source descriptor read failure remains an explicit identity failure [QA-2]', () =>
   temporary((folder) => {
     const filename = path.join(folder, 'source.js');
     fs.writeFileSync(filename, 'x');
@@ -1501,7 +1510,7 @@ test('source descriptor read failure remains an explicit identity failure [QA-2]
       fs.readSync = original;
     }
   }));
-test('inherited worker or mismatched parent never patches native entry points [QA-2]', () =>
+void test('inherited worker or mismatched parent never patches native entry points [QA-2]', () =>
   temporary(() => {
     const { runInNewContext } = require('node:vm');
     let internalReads = 0;
@@ -1521,7 +1530,7 @@ test('inherited worker or mismatched parent never patches native entry points [Q
     }
     assert.equal(internalReads, 0);
   }));
-test('native preload output survives the supervisor launch [QA-2]', () =>
+void test('native preload output survives the supervisor launch [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1541,7 +1550,7 @@ test('native preload output survives the supervisor launch [QA-2]', () =>
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /user-preload-marker/);
   }));
-test('native import-hook option remains a native import rather than an observer replacement [QA-2]', () =>
+void test('native import-hook option remains a native import rather than an observer replacement [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1557,7 +1566,7 @@ test('native import-hook option remains a native import rather than an observer 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /user-import-marker/);
   }));
-test('custom native reporter output destination is not used as evidence transport [QA-2]', () =>
+void test('custom native reporter output destination is not used as evidence transport [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1578,7 +1587,7 @@ test('custom native reporter output destination is not used as evidence transpor
     );
     assert.match(result.stdout, /QA-2: owning finite/);
   }));
-test('native zero-byte source import does not authorize an invented row if Node omits it [QA-2]', () =>
+void test('native zero-byte source import does not authorize an invented row if Node omits it [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/empty.js'), '');
@@ -1615,7 +1624,7 @@ test('native zero-byte source import does not authorize an invented row if Node 
     assert.ifError(result.error);
     assert.equal(result.status === 0, hasEmpty, result.stderr);
   }));
-test('test-pattern and declaration-pattern entries are not silently dropped from the game domain [QA-2]', () =>
+void test('test-pattern and declaration-pattern entries are not silently dropped from the game domain [QA-2]', () =>
   temporary((folder) => {
     gameFixture(folder);
     for (const name of ['a.test.js', 'b.spec.js', 'types.d.ts'])
@@ -1628,12 +1637,13 @@ test('test-pattern and declaration-pattern entries are not silently dropped from
         )
     );
   }));
+const pinnedNode = require('../package.json').engines.node;
 // Current-base zero-byte stand-in only. Historical issue329 reported no report
 // at b6a5000; exact historical filename/bytes were not supplied. That mismatch
 // stays open. This observed baseline is not product coverage acceptance.
 // prettier-ignore
-test('current-base native zero-byte stand-in observation remains separate from corrected membership rejection [QA-2]',
-  {skip:process.version!=='v26.13.0'?'stand-in observation is specifically Node v26.13.0':false},
+void test('current-base native zero-byte stand-in observation remains separate from corrected membership rejection [QA-2]',
+  {skip:process.version!=='v'+pinnedNode?`stand-in observation is specifically Node v${pinnedNode}`:false},
   ()=>temporary(folder=>{
     gameFixture(folder);
     fs.mkdirSync(path.join(folder,'empty-tests'));
@@ -1661,20 +1671,20 @@ test('current-base native zero-byte stand-in observation remains separate from c
     assert.notEqual(corrected.status,0);
     assert.match(corrected.stderr,/QA-2 observer incomplete: required source membership missing/);
   }));
-test('an observable source-map text conflict cannot lend required disk-source membership [QA-2]', () =>
+void test('an observable source-map text conflict cannot lend required disk-source membership [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder, { mappedText: true });
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
   }));
-test('a missing postspawn PID binding cannot acquire a healthy observer transaction [QA-2]', () =>
+void test('a missing postspawn PID binding cannot acquire a healthy observer transaction [QA-2]', () =>
   temporary((folder) => {
     const model = observerModel(folder);
     fs.unlinkSync(path.join(folder, 'model-pid'));
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
   }));
-test('frame publication stays within the legal boundary for long code-unit fields [QA-2]', () =>
+void test('frame publication stays within the legal boundary for long code-unit fields [QA-2]', () =>
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -1687,7 +1697,7 @@ test('frame publication stays within the legal boundary for long code-unit field
     C.readEvidence(folder, launch, 123, (kind, row) => records.push(row));
     assert.equal(records[0][1], text);
   }));
-test('standalone fixture environment removes only native child context without mutating caller [QA-2]', () => {
+void test('standalone fixture environment removes only native child context without mutating caller [QA-2]', () => {
   const inherited = {
     NODE_TEST_CONTEXT: 'child-v8',
     NODE_OPTIONS: '--example',

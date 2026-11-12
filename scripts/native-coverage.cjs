@@ -250,8 +250,12 @@ function main() {
       timer(finishMissing, 10000);
     }
   }
-  const onInt = () => interrupt('SIGINT'),
-    onTerm = () => interrupt('SIGTERM');
+  const onInt = () => {
+      interrupt('SIGINT');
+    },
+    onTerm = () => {
+      interrupt('SIGTERM');
+    };
   process.on('SIGINT', onInt);
   process.on('SIGTERM', onTerm);
   child.on('error', (error) => {

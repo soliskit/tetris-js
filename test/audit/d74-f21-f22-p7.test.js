@@ -27,7 +27,7 @@ import { createFakeScheduler, newGame } from '../helpers.js';
 // CI green while the defect waits for its approved fix; the fix's pull request
 // removes the mark. The callback runs in full on every push, so the CI log
 // shows the defect record on each run.
-test('F21: the invariant check flags a board with a missing row or cell [D74]', () => {
+void test('F21: the invariant check flags a board with a missing row or cell [D74]', () => {
   for (const [label, mutate] of [
     [
       'delete a whole row',
@@ -57,7 +57,7 @@ test('F21: the invariant check flags a board with a missing row or cell [D74]', 
 // F22 closed as Not Reproduced (D74, D75): the requested gravity delay matched
 // the formula within the kept S10 tolerance (a billionth of a millisecond) at
 // levels 1 to 2,000.
-test('F22: the requested gravity delay matches the formula at levels 1 to 2000 [D74, D75]', () => {
+void test('F22: the requested gravity delay matches the formula at levels 1 to 2000 [D74, D75]', () => {
   const { game } = newGame();
   for (let level = 1; level <= 2000; level++) {
     game.score = (level - 1) * 1000;
@@ -65,7 +65,7 @@ test('F22: the requested gravity delay matches the formula at levels 1 to 2000 [
     const want = Math.max(250, 700 - 20 * (level - 1));
     assert.ok(
       Math.abs(got - want) <= 1e-9,
-      `level ${level}: got ${got}, want ${want}`
+      `level ${String(level)}: got ${String(got)}, want ${String(want)}`
     );
   }
 });
@@ -73,7 +73,7 @@ test('F22: the requested gravity delay matches the formula at levels 1 to 2000 [
 // P7 closed as Rejected (D74, D75): the kept setting S11 judges a hand-edited
 // save only as valid or invalid. The recorded outcome stands as the settled
 // reading: the edited save loads, and the granted hold is accepted.
-test('P7: a hand-edited save granting one more hold is accepted after loading [D74, D75]', () => {
+void test('P7: a hand-edited save granting one more hold is accepted after loading [D74, D75]', () => {
   const storage = createMemoryStorage();
   const scheduler = createFakeScheduler();
   const { game } = newGame({ scheduler, storage });

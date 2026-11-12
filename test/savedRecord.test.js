@@ -28,7 +28,7 @@ function setup() {
   return { storage, game };
 }
 
-test('record grammar rejects duplicate escaped members and malformed metadata [STA-6] [SAF-1]', () => {
+void test('record grammar rejects duplicate escaped members and malformed metadata [STA-6] [SAF-1]', () => {
   const position = '{ "retained" : [1,true,null] }';
   assert.equal(
     parseSavedRecord(serializeSavedRecord(position, true)).position,
@@ -54,7 +54,7 @@ test('record grammar rejects duplicate escaped members and malformed metadata [S
   assert.equal(hasFields(null, []), false);
 });
 
-test('withdrawn record stays unavailable after refused new save and withdrawal [STA-4] [SAF-2]', () => {
+void test('withdrawn record stays unavailable after refused new save and withdrawal [STA-4] [SAF-2]', () => {
   const { storage, game } = setup();
   game.isSessionSaved = false;
   const withdrawn = storage.getItem(KEY);
@@ -71,7 +71,7 @@ test('withdrawn record stays unavailable after refused new save and withdrawal [
   assert.equal(parseSavedRecord(withdrawn).position, position);
 });
 
-test('complete save publishes valid position atomically and later fault retains it [STA-4] [SAF-3]', () => {
+void test('complete save publishes valid position atomically and later fault retains it [STA-4] [SAF-3]', () => {
   const { storage, game } = setup();
   game.score = 151;
   game.saveGameSession();
@@ -85,7 +85,7 @@ test('complete save publishes valid position atomically and later fault retains 
   assert.equal(parseSavedRecord(completed).available, true);
 });
 
-test('raw old or invalid records are retained whole and unreadable records are not written [STA-6] [SAF-2]', () => {
+void test('raw old or invalid records are retained whole and unreadable records are not written [STA-6] [SAF-2]', () => {
   for (const text of [
     '{bad',
     '{"old":"layout"}',
@@ -114,7 +114,7 @@ test('raw old or invalid records are retained whole and unreadable records are n
   assert.equal(writes, 0);
 });
 
-test('persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]', () => {
+void test('persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]', () => {
   const { game } = setup();
   const data = JSON.parse(serializeSession(game));
   data.gameBoard[19] = data.gameBoard[19].map(() => ({
@@ -135,12 +135,14 @@ test('persisted full rows and nonmultiple scores obey the written snapshot rules
   );
 });
 
-test('count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]', () => {
+void test('count16 is only accepted resting and required history never defaults [STA-4] [PLY-6]', () => {
   const { game } = setup();
   game.handleAction(PlayerAction.resume);
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'resting piece'
   );
   game.lockDelayResetCount = 15;
@@ -166,7 +168,7 @@ test('count16 is only accepted resting and required history never defaults [STA-
   }
 });
 
-test('lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]', () => {
+void test('lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]', () => {
   const { game } = setup();
   const data = JSON.parse(serializeSession(game));
   const maximum = Math.max(
@@ -188,7 +190,7 @@ test('lowest-row history tracks occupied current-piece blocks and allows older d
   );
 });
 
-test('in-session scores use the safe ceiling without divisibility [SAF-4] [SCO-2]', () => {
+void test('in-session scores use the safe ceiling without divisibility [SAF-4] [SCO-2]', () => {
   const { game } = setup();
   for (const score of [151, Number.MAX_SAFE_INTEGER]) {
     game.score = score;
@@ -198,7 +200,7 @@ test('in-session scores use the safe ceiling without divisibility [SAF-4] [SCO-2
   assert.equal(game.findInvariantViolation(), 'score is invalid');
 });
 
-test('record name checking visits every array element and escaped object name [STA-6] [SAF-1]', () => {
+void test('record name checking visits every array element and escaped object name [STA-6] [SAF-1]', () => {
   for (const text of [
     '[{"x":1,"x":2}]',
     '[{}, {"x":1,"x":2}]',
@@ -219,7 +221,7 @@ test('record name checking visits every array element and escaped object name [S
   }
 });
 
-test('field whitelist requires all own names and non-array records [STA-6] [SAF-1]', () => {
+void test('field whitelist requires all own names and non-array records [STA-6] [SAF-1]', () => {
   for (const value of [false, true, 0, '', 'x', null, [], undefined])
     assert.equal(hasFields(value, []), false);
   assert.equal(hasFields({ a: 1 }, ['a', 'b']), false);
@@ -232,7 +234,7 @@ test('field whitelist requires all own names and non-array records [STA-6] [SAF-
   assert.equal(hasFields({ a: 1 }, ['a']), true);
 });
 
-test('cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]', () => {
+void test('cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]', () => {
   const { game } = setup();
   for (const change of [
     (data) => {

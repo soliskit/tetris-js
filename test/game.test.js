@@ -20,9 +20,10 @@ import {
   repeatUntil
 } from './helpers.js';
 
-test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', () => {
+void test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', () => {
   const t = pieceByColor(PieceColors.purple);
   assert.equal(t.rotations.length, 4);
+  /** @param {boolean[][]} shape */
   const toStrings = (shape) =>
     shape.map((row) => row.map((b) => (b ? 'X' : '.')).join(''));
   assert.deepEqual(toStrings(t.rotations[1]), ['.X.', '.XX', '.X.']);
@@ -30,7 +31,7 @@ test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', (
   assert.equal(pieceByColor(PieceColors.yellow).rotations.length, 1);
 });
 
-test('pieces spawn centered [PCE-3]', () => {
+void test('pieces spawn centered [PCE-3]', () => {
   assert.deepEqual(
     pieceByColor(PieceColors.cyan).spawned(10).position,
     position(0, 3)
@@ -45,7 +46,7 @@ test('pieces spawn centered [PCE-3]', () => {
   );
 });
 
-test('new game starts playing with three upcoming pieces [STA-1] [PLY-8]', () => {
+void test('new game starts playing with three upcoming pieces [STA-1] [PLY-8]', () => {
   const { game } = newGame();
   assert.equal(game.state, GameState.playing);
   assert.equal(game.nextTetrominos.length, 3);
@@ -53,14 +54,14 @@ test('new game starts playing with three upcoming pieces [STA-1] [PLY-8]', () =>
   assert.equal(game.level, 1);
 });
 
-test('gravity moves the piece down once per drop interval [PLY-2]', () => {
+void test('gravity moves the piece down once per drop interval [PLY-2]', () => {
   const { game, scheduler } = newGame();
   const startRow = game.currentTetromino.position.row;
   scheduler.advance(700);
   assert.equal(game.currentTetromino.position.row, startRow + 1);
 });
 
-test('hard drop locks the piece at the ghost position [PLY-4] [PLY-5]', () => {
+void test('hard drop locks the piece at the ghost position [PLY-4] [PLY-5]', () => {
   const { game } = newGame({ factory: fixedFactory(PieceColors.yellow) });
   game.handleAction(PlayerAction.drop);
   assert.ok(game.gameBoard[19][4].isFilled);
@@ -68,7 +69,7 @@ test('hard drop locks the piece at the ghost position [PLY-4] [PLY-5]', () => {
   assert.equal(game.currentTetromino.position.row, 0);
 });
 
-test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-4]', () => {
+void test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-4]', () => {
   const { game, storage } = newGame({
     factory: fixedFactory(PieceColors.cyan)
   });
@@ -87,13 +88,15 @@ test('clearing four lines scores 800 and saves the session [SCO-1] [SCO-3] [STA-
   assert.ok(storage.getItem('tetris.savedGameSession'));
 });
 
-test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
+void test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
   const { game, scheduler } = newGame({
     factory: fixedFactory(PieceColors.yellow)
   });
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece landing'
   );
   assert.ok(
@@ -106,13 +109,15 @@ test('lock delay waits 0.5s after landing before locking [PLY-6]', () => {
   assert.ok(game.gameBoard[19][4].isFilled);
 });
 
-test('moving on the surface resets the lock delay, up to 15 times [PLY-6]', () => {
+void test('moving on the surface resets the lock delay, up to 15 times [PLY-6]', () => {
   const { game, scheduler } = newGame({
     factory: fixedFactory(PieceColors.yellow)
   });
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece landing'
   );
   game.softDrop();
@@ -128,7 +133,7 @@ test('moving on the surface resets the lock delay, up to 15 times [PLY-6]', () =
   assert.ok(game.gameBoard[19].some((cell) => cell.isFilled));
 });
 
-test('hold swaps once per piece [PLY-7]', () => {
+void test('hold swaps once per piece [PLY-7]', () => {
   const { game } = newGame();
   const first = game.currentTetromino;
   const upcoming = game.nextTetrominos[0];
@@ -140,7 +145,7 @@ test('hold swaps once per piece [PLY-7]', () => {
   assert.equal(game.heldTetromino.color, first.color);
 });
 
-test('pause saves and continue restores the session [STA-4]', () => {
+void test('pause saves and continue restores the session [STA-4]', () => {
   const scheduler = createFakeScheduler();
   const storage = createMemoryStorage();
   const game = new GameManager({ scheduler, storage });
@@ -163,7 +168,7 @@ test('pause saves and continue restores the session [STA-4]', () => {
   restored.handleAction(PlayerAction.rotate);
 });
 
-test('topping out ends the game and clears the saved session [STA-3]', () => {
+void test('topping out ends the game and clears the saved session [STA-3]', () => {
   const { game } = newGame({ factory: fixedFactory(PieceColors.yellow) });
   for (let i = 0; i < 20 && game.state === GameState.playing; i++) {
     game.handleAction(PlayerAction.drop);
@@ -172,7 +177,7 @@ test('topping out ends the game and clears the saved session [STA-3]', () => {
   assert.equal(game.isSessionSaved, false);
 });
 
-test('drop interval speeds up with level and bottoms out at 0.25s [PLY-2] [SCO-2]', () => {
+void test('drop interval speeds up with level and bottoms out at 0.25s [PLY-2] [SCO-2]', () => {
   const game = new GameManager({
     scheduler: createFakeScheduler(),
     storage: createMemoryStorage()
@@ -184,7 +189,7 @@ test('drop interval speeds up with level and bottoms out at 0.25s [PLY-2] [SCO-2
   assert.equal(game.standardDropInterval, 0.25);
 });
 
-test('wall kick lets an I piece rotate against the left wall [PCE-4]', () => {
+void test('wall kick lets an I piece rotate against the left wall [PCE-4]', () => {
   const board = createBoard(20, 10);
   const i = pieceByColor(PieceColors.cyan).spawned(10);
   i.rotate(board); // vertical, in column 2 of its box

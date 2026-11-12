@@ -203,8 +203,6 @@ export class InputController {
 
   /** @returns {boolean} Whether a gamepad is connected. */
   pollGamepads() {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- browsers without gamepad support exist, whatever the types say.
-    if (!navigator.getGamepads) return false; // no gamepad support in this browser
     const gamepad = navigator.getGamepads().find(pad => pad?.connected);
     if (!gamepad) return false;
     const pressed = new Set(
@@ -394,8 +392,7 @@ export class InputController {
     // Disconnect remains a keyboard reset, unlike an ordinary pause.
     this.heldKeys.clear();
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- browsers without gamepad support exist, whatever the types say.
-      const gamepad = navigator.getGamepads?.().find(pad => pad?.connected);
+      const gamepad = navigator.getGamepads().find(pad => pad?.connected);
       if (!gamepad) {
         this.releaseAllInput();
         return;

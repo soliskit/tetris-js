@@ -7,7 +7,7 @@ uses plain JavaScript. A small Express server serves its static files.
 
 ## Run Locally
 
-Requires Node.js 26 and npm 12.2 or newer. Node 26 comes with npm 11, so the first command updates npm.
+Requires Node.js 26.13.0 and npm 12.2 or newer. Node 26 comes with npm 11, so the first command updates npm.
 
 ```sh
 npm install --global npm@12.2.0

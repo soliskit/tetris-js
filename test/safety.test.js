@@ -54,16 +54,18 @@ function assertSafeStop(game, scheduler, reported, reason) {
   assert.deepEqual(game.faults, reported);
 }
 
-test('an error during a player action stops the game safely and is reported [SAF-3]', () => {
+void test('an error during a player action stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
   factory.broken = true;
-  assert.doesNotThrow(() => game.handleAction(PlayerAction.drop));
+  assert.doesNotThrow(() => {
+    game.handleAction(PlayerAction.drop);
+  });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
   assert.equal(reported[0].error.message, 'factory failure');
 });
 
-test('the page is told about a fault too, so it shows the stopped game [SAF-3] [DSP-5]', () => {
+void test('the page is told about a fault too, so it shows the stopped game [SAF-3] [DSP-5]', () => {
   const factory = breakableFactory();
   let changes = 0;
   const { game } = recordingGame({
@@ -79,12 +81,14 @@ test('the page is told about a fault too, so it shows the stopped game [SAF-3] [
   assert.equal(changes, 1);
 });
 
-test('an error inside the gravity timer stops the game safely and is reported [SAF-3]', () => {
+void test('an error inside the gravity timer stops the game safely and is reported [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
   repeatUntil(
     () => game.currentTetromino.dropDistance(game.gameBoard) === 1,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece one row above landing'
   );
   game.lockDelayResetCount = 15; // the landing locks at once
@@ -93,12 +97,14 @@ test('an error inside the gravity timer stops the game safely and is reported [S
   assert.equal(game.lockDelayTask, null);
   assert.equal(scheduler.pending, 1, 'only gravity is waiting');
   factory.broken = true;
-  assert.doesNotThrow(() => scheduler.advance(700));
+  assert.doesNotThrow(() => {
+    scheduler.advance(700);
+  });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
   assert.equal(reported[0].error.message, 'factory failure');
 });
 
-test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
+void test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
   const storage = createMemoryStorage();
   const factory = breakableFactory();
   const { game, reported } = recordingGame({ factory, storage });
@@ -126,7 +132,7 @@ test('after a fault the last good save is kept exactly and can still be continue
   assert.equal(game.currentTetromino.position.column, 3);
 });
 
-test('after a fault New Game starts a clean game [SAF-3]', () => {
+void test('after a fault New Game starts a clean game [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler } = recordingGame({ factory });
   game.gameBoard[19][0] = filled();
@@ -140,7 +146,7 @@ test('after a fault New Game starts a clean game [SAF-3]', () => {
   assert.equal(game.currentTetromino.position.row, 1);
 });
 
-test('after a fault no action or timer restarts play or changes the game [SAF-3]', () => {
+void test('after a fault no action or timer restarts play or changes the game [SAF-3]', () => {
   const { game, scheduler, reported } = recordingGame();
   game.guard(() => {
     throw new Error('engine failure');
@@ -168,10 +174,30 @@ test('after a fault no action or timer restarts play or changes the game [SAF-3]
       PlayerAction.rotateCounterclockwise,
       PlayerAction.hold,
       PlayerAction.drop
-    ].map((action) => [action, () => game.handleAction(action)]),
-    ['soft drop', () => game.softDrop()],
-    ['toggle pause', () => game.togglePause()],
-    ['time passing', () => scheduler.advance(5000)]
+    ].map((action) => [
+      action,
+      () => {
+        game.handleAction(action);
+      }
+    ]),
+    [
+      'soft drop',
+      () => {
+        game.softDrop();
+      }
+    ],
+    [
+      'toggle pause',
+      () => {
+        game.togglePause();
+      }
+    ],
+    [
+      'time passing',
+      () => {
+        scheduler.advance(5000);
+      }
+    ]
   ];
   for (const [name, attempt] of attempts) {
     attempt();
@@ -362,7 +388,7 @@ const violations = [
 ];
 
 for (const [name, corrupt, reason] of violations) {
-  test(`the invariant monitor catches ${name} [SAF-4]`, () => {
+  void test(`the invariant monitor catches ${name} [SAF-4]`, () => {
     const { game, scheduler, reported } = recordingGame({
       factory: fixedFactory(PieceColors.yellow)
     });
@@ -372,7 +398,7 @@ for (const [name, corrupt, reason] of violations) {
   });
 }
 
-test('the invariant monitor catches a lock delay running while paused [SAF-4]', () => {
+void test('the invariant monitor catches a lock delay running while paused [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame();
   game.togglePause();
   game.startLockDelay();
@@ -380,7 +406,7 @@ test('the invariant monitor catches a lock delay running while paused [SAF-4]', 
   assertSafeStop(game, scheduler, reported, 'timers running while not playing');
 });
 
-test('the invariant monitor catches timers running while paused [SAF-4]', () => {
+void test('the invariant monitor catches timers running while paused [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame();
   game.togglePause();
   game.startGameLoop();
@@ -388,7 +414,7 @@ test('the invariant monitor catches timers running while paused [SAF-4]', () => 
   assertSafeStop(game, scheduler, reported, 'timers running while not playing');
 });
 
-test('normal play never trips the invariant monitor [SAF-4] [SAF-6]', () => {
+void test('normal play never trips the invariant monitor [SAF-4] [SAF-6]', () => {
   const { game, scheduler, reported } = recordingGame({
     factory: fixedFactory(PieceColors.cyan)
   });
@@ -400,7 +426,9 @@ test('normal play never trips the invariant monitor [SAF-4] [SAF-6]', () => {
   scheduler.advance(20000);
   repeatUntil(
     () => game.state !== GameState.playing,
-    () => game.handleAction(PlayerAction.drop),
+    () => {
+      game.handleAction(PlayerAction.drop);
+    },
     'the game ending'
   );
   game.handleAction(PlayerAction.newGame);
@@ -409,7 +437,7 @@ test('normal play never trips the invariant monitor [SAF-4] [SAF-6]', () => {
   assert.deepEqual(reported, []);
 });
 
-test('a fault reporter that throws does not make things worse [SAF-3]', () => {
+void test('a fault reporter that throws does not make things worse [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler } = newGame({
     factory,
@@ -418,12 +446,14 @@ test('a fault reporter that throws does not make things worse [SAF-3]', () => {
     }
   });
   factory.broken = true;
-  assert.doesNotThrow(() => game.handleAction(PlayerAction.drop));
+  assert.doesNotThrow(() => {
+    game.handleAction(PlayerAction.drop);
+  });
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
 });
 
-test('a timer cancellation that throws during a fault stop still records and reports the fault [SAF-3]', () => {
+void test('a timer cancellation that throws during a fault stop still records and reports the fault [SAF-3]', () => {
   const scheduler = createFakeScheduler();
   const clear = scheduler.clearTimeout;
   let armed = false;
@@ -439,7 +469,9 @@ test('a timer cancellation that throws during a fault stop still records and rep
   // cancellations fail below, leaving both timers behind.
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece landing'
   );
   game.handleAction(PlayerAction.moveLeft);
@@ -453,11 +485,11 @@ test('a timer cancellation that throws during a fault stop still records and rep
   const scoreBefore = game.score;
   const storedBefore = keys.map((key) => storage.getItem(key));
   armed = true;
-  assert.doesNotThrow(() =>
+  assert.doesNotThrow(() => {
     game.guard(() => {
       throw new Error('engine failure');
-    })
-  );
+    });
+  });
   assert.equal(game.state, GameState.gameOver);
   assert.deepEqual(
     game.faults.map((fault) => fault.reason),
@@ -483,7 +515,9 @@ test('a timer cancellation that throws during a fault stop still records and rep
     reported.map((fault) => fault.reason),
     ['unexpected error']
   );
-  assert.doesNotThrow(() => scheduler.advance(100000));
+  assert.doesNotThrow(() => {
+    scheduler.advance(100000);
+  });
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
   assert.equal(game.faults.length, 1);
@@ -496,14 +530,16 @@ test('a timer cancellation that throws during a fault stop still records and rep
   );
 });
 
-test('an error while checking the invariants stops the game safely, even if reporting it fails [SAF-3] [SAF-4]', () => {
+void test('an error while checking the invariants stops the game safely, even if reporting it fails [SAF-3] [SAF-4]', () => {
   const { game, scheduler } = newGame({
     onFault: () => {
       throw new Error('reporter broke');
     }
   });
   game.nextTetrominos = null; // breaks the check itself, not one of its invariants
-  assert.doesNotThrow(() => scheduler.advance(700));
+  assert.doesNotThrow(() => {
+    scheduler.advance(700);
+  });
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
   assert.equal(game.faults.length, 1);
@@ -511,7 +547,7 @@ test('an error while checking the invariants stops the game safely, even if repo
   assert.ok(game.faults[0].error instanceof TypeError);
 });
 
-test('a fault record that fails does not stop the report, the redraw or the safe stop [SAF-3]', () => {
+void test('a fault record that fails does not stop the report, the redraw or the safe stop [SAF-3]', () => {
   for (const reporterWorks of [true, false]) {
     const reported = [];
     let changes = 0;
@@ -529,7 +565,9 @@ test('a fault record that fails does not stop the report, the redraw or the safe
     game.faults = null; // the record itself breaks
     game.gameBoard.pop(); // and an invariant breaks, so the game must stop
     changes = 0;
-    assert.doesNotThrow(() => game.handleAction(PlayerAction.moveLeft));
+    assert.doesNotThrow(() => {
+      game.handleAction(PlayerAction.moveLeft);
+    });
     assert.equal(game.state, GameState.gameOver);
     assert.equal(scheduler.pending, 0);
     assert.equal(changes, 1, 'the page is told');
@@ -540,15 +578,15 @@ test('a fault record that fails does not stop the report, the redraw or the safe
   }
 });
 
-test('only the 20 most recent faults are kept [SAF-3]', () => {
+void test('only the 20 most recent faults are kept [SAF-3]', () => {
   const { game } = recordingGame();
-  for (let i = 0; i < 25; i++) game.failSafe(`fault ${i}`);
+  for (let i = 0; i < 25; i++) game.failSafe(`fault ${String(i)}`);
   assert.equal(game.faults.length, 20);
   assert.equal(game.faults[0].reason, 'fault 5');
   assert.equal(game.faults.at(-1).reason, 'fault 24');
 });
 
-test('by default faults are reported to the console [SAF-3]', (t) => {
+void test('by default faults are reported to the console [SAF-3]', (t) => {
   const logged = t.mock.method(console, 'error', () => {});
   const factory = breakableFactory();
   const { game } = newGame({ factory });
@@ -561,7 +599,7 @@ test('by default faults are reported to the console [SAF-3]', (t) => {
 
 // State machine guards
 
-test('pause is ignored unless playing, and resume unless paused [STA-2]', () => {
+void test('pause is ignored unless playing, and resume unless paused [STA-2]', () => {
   const game = new GameManager({
     scheduler: createFakeScheduler(),
     storage: createMemoryStorage()
@@ -578,7 +616,7 @@ test('pause is ignored unless playing, and resume unless paused [STA-2]', () => 
   assert.equal(game.state, GameState.paused);
 });
 
-test('an unknown action does nothing [STA-2]', () => {
+void test('an unknown action does nothing [STA-2]', () => {
   const { game, reported } = recordingGame();
   const before = JSON.stringify(game.currentTetromino);
   game.handleAction('fly');
@@ -596,7 +634,7 @@ function throwingReads() {
   return storage;
 }
 
-test('storage whose reads throw still gives a playable game [SAF-2]', () => {
+void test('storage whose reads throw still gives a playable game [SAF-2]', () => {
   const { game, reported } = recordingGame({
     storage: throwingReads(),
     factory: fixedFactory(PieceColors.cyan)
@@ -614,7 +652,7 @@ test('storage whose reads throw still gives a playable game [SAF-2]', () => {
   assert.deepEqual(reported, []);
 });
 
-test('a stored high score that is negative, fractional or above the safe limit reads as 0 [SAF-2]', () => {
+void test('a stored high score that is negative, fractional or above the safe limit reads as 0 [SAF-2]', () => {
   for (const value of [
     '-50',
     '12.5',
@@ -632,7 +670,7 @@ test('a stored high score that is negative, fractional or above the safe limit r
   }
 });
 
-test('localStorage is used when the browser provides it [SAF-2]', (t) => {
+void test('localStorage is used when the browser provides it [SAF-2]', (t) => {
   const storage = createMemoryStorage();
   Object.defineProperty(globalThis, 'localStorage', {
     value: storage,
@@ -644,7 +682,7 @@ test('localStorage is used when the browser provides it [SAF-2]', (t) => {
   assert.equal(storage.getItem('tetris.highScore'), '700');
 });
 
-test('if touching localStorage throws, memory storage is used instead [SAF-2]', (t) => {
+void test('if touching localStorage throws, memory storage is used instead [SAF-2]', (t) => {
   Object.defineProperty(globalThis, 'localStorage', {
     get: () => {
       throw new Error('SecurityError');
@@ -657,7 +695,7 @@ test('if touching localStorage throws, memory storage is used instead [SAF-2]', 
   assert.equal(game.highScore, 400);
 });
 
-test('by default a broken invariant is reported to the console without an error object [SAF-4]', (t) => {
+void test('by default a broken invariant is reported to the console without an error object [SAF-4]', (t) => {
   const logged = t.mock.method(console, 'error', () => {});
   const { game } = newGame();
   game.nextTetrominos.pop();
@@ -826,7 +864,7 @@ const malformedUpcoming = [
 ];
 
 for (const [name, corrupt] of malformedUpcoming) {
-  test(`the invariant monitor catches upcoming pieces with ${name} [SAF-4]`, () => {
+  void test(`the invariant monitor catches upcoming pieces with ${name} [SAF-4]`, () => {
     const { game, scheduler, reported } = recordingGame({
       factory: fixedFactory(PieceColors.cyan)
     });
@@ -970,7 +1008,7 @@ const malformedCurrent = [
 
 for (const paused of [false, true]) {
   for (const [name, corrupt] of malformedCurrent) {
-    test(`the invariant monitor catches a ${paused ? 'paused' : 'falling'} piece with ${name} [SAF-4]`, () => {
+    void test(`the invariant monitor catches a ${paused ? 'paused' : 'falling'} piece with ${name} [SAF-4]`, () => {
       const { game, scheduler, reported } = recordingGame({
         factory: fixedFactory(PieceColors.yellow)
       });
@@ -982,7 +1020,7 @@ for (const paused of [false, true]) {
   }
 }
 
-test('a piece with no blocks is caught even when it only waits to be dealt [SAF-4]', () => {
+void test('a piece with no blocks is caught even when it only waits to be dealt [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame({
     factory: fixedFactory(PieceColors.yellow)
   });
@@ -994,7 +1032,7 @@ test('a piece with no blocks is caught even when it only waits to be dealt [SAF-
   assertSafeStop(game, scheduler, reported, BAD_PIECE_REASON);
 });
 
-test('the falling piece is not checked once the game is over [SAF-4]', () => {
+void test('the falling piece is not checked once the game is over [SAF-4]', () => {
   const { game, reported } = recordingGame({
     factory: fixedFactory(PieceColors.yellow)
   });
@@ -1005,7 +1043,7 @@ test('the falling piece is not checked once the game is over [SAF-4]', () => {
   assert.equal(reported.length, 0);
 });
 
-test('every piece in every rotation passes the check, playing and paused [SAF-4]', () => {
+void test('every piece in every rotation passes the check, playing and paused [SAF-4]', () => {
   for (const color of Object.values(PieceColors)) {
     for (const paused of [false, true]) {
       const { game, reported } = recordingGame({
@@ -1027,7 +1065,7 @@ test('every piece in every rotation passes the check, playing and paused [SAF-4]
   }
 });
 
-test('the I piece lying on the top row of its box can sit on the first board row [SAF-4]', () => {
+void test('the I piece lying on the top row of its box can sit on the first board row [SAF-4]', () => {
   const { game, reported } = recordingGame({
     factory: fixedFactory(PieceColors.cyan)
   });
@@ -1037,7 +1075,7 @@ test('the I piece lying on the top row of its box can sit on the first board row
   assert.deepEqual(reported, []);
 });
 
-test('waiting pieces are valid wherever their stored position and rotation say [SAF-4]', () => {
+void test('waiting pieces are valid wherever their stored position and rotation say [SAF-4]', () => {
   const { game, reported } = recordingGame({
     factory: fixedFactory(PieceColors.purple)
   });
@@ -1047,7 +1085,7 @@ test('waiting pieces are valid wherever their stored position and rotation say [
   assert.deepEqual(reported, []);
 });
 
-test('a valid check leaves the pieces, queue order and board untouched [SAF-4]', () => {
+void test('a valid check leaves the pieces, queue order and board untouched [SAF-4]', () => {
   const { game } = recordingGame();
   const current = game.currentTetromino;
   const queue = [...game.nextTetrominos];
@@ -1055,13 +1093,13 @@ test('a valid check leaves the pieces, queue order and board untouched [SAF-4]',
   game.guard(() => {});
   assert.equal(game.currentTetromino, current);
   assert.deepEqual(game.nextTetrominos, queue);
-  game.nextTetrominos.forEach((piece, index) =>
-    assert.equal(piece, queue[index])
-  );
+  game.nextTetrominos.forEach((piece, index) => {
+    assert.equal(piece, queue[index]);
+  });
   assert.equal(JSON.stringify(current.rotations), rotations);
 });
 
-test('damaging a piece after it is made cannot change what the check expects [SAF-4]', () => {
+void test('damaging a piece after it is made cannot change what the check expects [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame({
     factory: fixedFactory(PieceColors.cyan)
   });
@@ -1074,7 +1112,7 @@ test('damaging a piece after it is made cannot change what the check expects [SA
   assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
 });
 
-test('a hole in a rotation the piece is not using is still caught, playing and paused [SAF-4]', () => {
+void test('a hole in a rotation the piece is not using is still caught, playing and paused [SAF-4]', () => {
   for (const paused of [false, true]) {
     const { game, scheduler, reported } = recordingGame({
       factory: fixedFactory(PieceColors.cyan)
@@ -1087,7 +1125,7 @@ test('a hole in a rotation the piece is not using is still caught, playing and p
   }
 });
 
-test('a rotation index one past the last rotation is caught [SAF-4]', () => {
+void test('a rotation index one past the last rotation is caught [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame({
     factory: fixedFactory(PieceColors.yellow)
   });
@@ -1096,12 +1134,14 @@ test('a rotation index one past the last rotation is caught [SAF-4]', () => {
   assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
 });
 
-test('an error during a soft drop is contained [SAF-3]', () => {
+void test('an error during a soft drop is contained [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler, reported } = recordingGame({ factory });
   repeatUntil(
     () => game.currentTetromino.dropDistance(game.gameBoard) === 1,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece one row above landing'
   );
   game.lockDelayResetCount = 15; // the landing locks at once
@@ -1109,6 +1149,8 @@ test('an error during a soft drop is contained [SAF-3]', () => {
   game.lowestRowReached =
     Math.max(...game.currentTetromino.cells.map((cell) => cell.row)) + 1;
   factory.broken = true;
-  assert.doesNotThrow(() => game.softDrop());
+  assert.doesNotThrow(() => {
+    game.softDrop();
+  });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
 });

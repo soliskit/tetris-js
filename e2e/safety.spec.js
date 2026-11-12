@@ -79,7 +79,7 @@ test('an error while drawing does not stop the game from drawing [SAF-5]', async
         window.failNextDraw = false;
         throw new Error('injected drawing failure');
       }
-      return fill.apply(this, args);
+      fill.apply(this, args);
     };
   });
   await page.goto('/');
@@ -111,7 +111,7 @@ test('each unbroken streak of drawing errors is reported once [SAF-5]', async ({
         window.failedDraws += 1;
         throw new Error('injected drawing failure');
       }
-      return fill.apply(this, args);
+      fill.apply(this, args);
     };
   });
   await page.goto('/');
@@ -206,7 +206,7 @@ test.describe('refused draw requests', () => {
       console.error = (...args) => {
         if (window.refuseDrawReport && String(args[0]).includes('draw request'))
           throw new Error('injected report refusal');
-        return report(...args);
+        report(...args);
       };
     });
     await page.goto('/');
@@ -216,7 +216,7 @@ test.describe('refused draw requests', () => {
   });
 
   for (const refusals of [1, 2]) {
-    test(`a draw request gets one 100 ms retry after ${refusals} frame refusals [SAF-5]`, async ({
+    test(`a draw request gets one 100 ms retry after ${String(refusals)} frame refusals [SAF-5]`, async ({
       page
     }) => {
       const errors = [];
