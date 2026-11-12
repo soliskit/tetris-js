@@ -26,10 +26,16 @@ import {
   pieceByColor
 } from '../helpers.js';
 
+/** @param {{ color: string }[]} a */
 const colors = (a) => a.map((p) => p.color).join(',');
 
 void test('queue, bag and save restore after one to four line clears, seeds 1 to 200 [D69]', () => {
+  /** @type {string[]} */
   const failures = [];
+  /**
+   * @param {string} kind
+   * @param {string} msg
+   */
   const bad = (kind, msg) => failures.push(`${kind} ${msg}`);
   let trials = 0;
   for (let seed = 1; seed <= 200; seed++)
@@ -64,10 +70,10 @@ void test('queue, bag and save restore after one to four line clears, seeds 1 to
         );
       const qa = game.nextTetrominos.map((p) => p.color);
       if (qa.length !== 3 || qa[0] !== q[1] || qa[1] !== q[2])
-        bad('queueShift', `${tag} before ${q} after ${qa}`);
+        bad('queueShift', `${tag} before ${q.join(',')} after ${qa.join(',')}`);
       // the new tail piece is the head of the bag before the clear, or a fresh bag's piece when the bag was empty
       if (bagBefore.length > 0 && qa[2] !== bagBefore[0])
-        bad('bagHead', `${tag} bag ${bagBefore} tail ${qa[2]}`);
+        bad('bagHead', `${tag} bag ${bagBefore.join(',')} tail ${qa[2]}`);
       if (bagBefore.length === 0 && factory.bag.length !== 6)
         bad('bagRefill', `${tag} bag after ${String(factory.bag.length)}`);
       if (
@@ -75,7 +81,7 @@ void test('queue, bag and save restore after one to four line clears, seeds 1 to
         game.heldTetromino.color !== heldBefore
       )
         bad('held', tag);
-      if (game.canHoldTetromino !== true) bad('canHold', tag);
+      if (!Object.is(game.canHoldTetromino, true)) bad('canHold', tag);
       if (game.faults.length) bad('faults', tag);
       if (game.level !== 1) bad('level', `${tag} level ${String(game.level)}`);
       if (!game.isSessionSaved) {
@@ -106,8 +112,13 @@ void test('queue, bag and save restore after one to four line clears, seeds 1 to
         bad('restoreHeld', tag);
       if (restored.canHoldTetromino !== game.canHoldTetromino)
         bad('restoreCanHold', tag);
+      const restoredBag = restored.factory.bag;
+      if (restoredBag === undefined) {
+        bad('restoreBag', `${tag} restored bag is missing`);
+        continue;
+      }
       const bagO = colors(factory.bag),
-        bagR = colors(restored.factory.bag);
+        bagR = colors(restoredBag);
       if (bagO !== bagR)
         bad('restoreBag', `${tag} original ${bagO} restored ${bagR}`);
       // play on: the next draws (up to the saved bag length) match between the original and the restored game
@@ -121,10 +132,13 @@ void test('queue, bag and save restore after one to four line clears, seeds 1 to
           restored.state !== GameState.playing
         )
           break;
-        if (
-          game.nextTetrominos.at(-1).color !==
-          restored.nextTetrominos.at(-1).color
-        ) {
+        const newest = game.nextTetrominos.at(-1);
+        const newestRestored = restored.nextTetrominos.at(-1);
+        if (newest === undefined || newestRestored === undefined) {
+          bad('playOn', `${tag} draw ${String(i)} queue is empty`);
+          break;
+        }
+        if (newest.color !== newestRestored.color) {
           bad('playOn', `${tag} draw ${String(i)}`);
           break;
         }

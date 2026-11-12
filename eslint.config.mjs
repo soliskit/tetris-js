@@ -15,7 +15,8 @@ const TYPED_TEST_FILES = [
   'e2e/global-setup.js',
   'playwright.config.js',
   'test/helpers.js',
-  'e2e/dialog-selection.spec.js'
+  'e2e/dialog-selection.spec.js',
+  'test/audit/l1-clear-after.test.js'
 ];
 
 export default defineConfig(
