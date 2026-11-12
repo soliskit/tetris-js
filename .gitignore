@@ -6,3 +6,5 @@ playwright-report/
 coverage/
 reports/
 .stryker-tmp/
+__pycache__/
+*.pyc
