@@ -90,7 +90,10 @@ export async function expectLabel(page, label) {
 export function boardCells(page) {
   return page.evaluate(() => {
     const canvas = document.getElementById('tetris');
+    if (!(canvas instanceof HTMLCanvasElement))
+      throw new Error('boardCells: #tetris is not a canvas');
     const context = canvas.getContext('2d');
+    if (!context) throw new Error('boardCells: no 2d context');
     const size = canvas.width / 10;
     const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
     const rows = [];
@@ -136,16 +139,21 @@ export async function filledCount(page) {
 export function canvasHasDrawing(page, id) {
   return page.evaluate((id) => {
     const canvas = document.getElementById(id);
-    const data = canvas
-      .getContext('2d')
-      .getImageData(0, 0, canvas.width, canvas.height).data;
+    if (!(canvas instanceof HTMLCanvasElement))
+      throw new Error(`canvasHasDrawing: #${String(id)} is not a canvas`);
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('canvasHasDrawing: no 2d context');
+    const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
     for (let i = 3; i < data.length; i += 4) if (data[i] > 200) return true;
     return false;
   }, id);
 }
 
-export const isChromium = (page) =>
-  page.context().browser().browserType().name() === 'chromium';
+export const isChromium = (page) => {
+  const browser = page.context().browser();
+  if (!browser) throw new Error('isChromium: page has no browser');
+  return browser.browserType().name() === 'chromium';
+};
 
 // Finger input on the board, in board cell units. Chromium gets real touch
 // events through the DevTools Protocol. Playwright cannot drag a finger in
@@ -153,6 +161,7 @@ export const isChromium = (page) =>
 // through the same pointer events.
 export async function boardTouch(page) {
   const box = await page.locator('#tetris').boundingBox();
+  if (!box) throw new Error('boardTouch: #tetris has no bounding box');
   const cell = box.width / 10;
   let last = null;
   const point = (column, row) => ({

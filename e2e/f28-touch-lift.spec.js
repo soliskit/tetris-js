@@ -51,6 +51,7 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
 
   const first = shapeOf(await cellsOf(page, PieceColors.purple));
   const box = await page.locator('#tetris').boundingBox();
+  if (!box) throw new Error('f28: #tetris has no bounding box');
   const cx = box.x + box.width / 2,
     cy = box.y + box.height / 2;
 
