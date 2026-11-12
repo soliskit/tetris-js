@@ -1637,12 +1637,13 @@ void test('test-pattern and declaration-pattern entries are not silently dropped
         )
     );
   }));
+const pinnedNode = require('../package.json').engines.node;
 // Current-base zero-byte stand-in only. Historical issue329 reported no report
 // at b6a5000; exact historical filename/bytes were not supplied. That mismatch
 // stays open. This observed baseline is not product coverage acceptance.
 // prettier-ignore
 void test('current-base native zero-byte stand-in observation remains separate from corrected membership rejection [QA-2]',
-  {skip:process.version!=='v26.13.0'?'stand-in observation is specifically Node v26.13.0':false},
+  {skip:process.version!=='v'+pinnedNode?`stand-in observation is specifically Node v${pinnedNode}`:false},
   ()=>temporary(folder=>{
     gameFixture(folder);
     fs.mkdirSync(path.join(folder,'empty-tests'));
