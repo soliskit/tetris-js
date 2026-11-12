@@ -34,6 +34,7 @@ function runTrace(seed, lockTarget) {
     games = 0,
     violations = 0,
     faults = 0;
+  /** @type {Record<number, number>} */
   const gainCounts = {};
   for (let round = 0; round < maxGames && locks < lockTarget; round++) {
     const { game, scheduler } = newGame({

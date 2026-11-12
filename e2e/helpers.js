@@ -88,7 +88,7 @@ export async function continueSavedGame(page, saved) {
     if (sessionStorage.getItem('seeded')) return;
     sessionStorage.setItem('seeded', '1');
     for (const [key, value] of Object.entries(values))
-      localStorage.setItem(key, value);
+      localStorage.setItem(key, String(value));
   }, saved);
   await page.goto('/');
   await page.keyboard.press('KeyC');
