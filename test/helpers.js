@@ -121,7 +121,7 @@ export function seededRandom(seed) {
 
 /**
  * @param {GameManagerOptions & { factory?: PieceSource & { restart?(): void }, scheduler?: ReturnType<typeof createFakeScheduler> }} [options]
- * @returns {{ game: GameManager, scheduler: ReturnType<typeof createFakeScheduler>, storage: KeyValueStorage }}
+ * @returns {{ game: GameManager, scheduler: ReturnType<typeof createFakeScheduler>, storage: KeyValueStorage & { removeItem?(key: string): void } }}
  */
 export function newGame(options = {}) {
   const scheduler = options.scheduler ?? createFakeScheduler();
