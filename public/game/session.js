@@ -144,8 +144,8 @@ export function parseSession(text, { rows, columns }) {
   /** @type {unknown} */
   let data = null;
   try {
-    // A missing save (null) parses as null and is rejected below.
-    data = parseUniqueJSON(/** @type {string} */ (text));
+    // A missing save (null) reads as null and is rejected below.
+    data = parseUniqueJSON(text);
   } catch {
     // Not JSON: data stays null and is rejected below.
   }
@@ -197,8 +197,9 @@ export function parseSession(text, { rows, columns }) {
 // One atomic record owns publication. Position text is retained verbatim on withdrawal.
 export const SAVE_FORMAT = 'tetris-session-envelope';
 
-/** @param {string} text @returns {unknown} */
+/** @param {string | null} text @returns {unknown} The parsed value; a missing save (null) reads as null. */
 export function parseUniqueJSON(text) {
+  if (text === null) return null;
   const value = /** @type {unknown} */ (JSON.parse(text));
   // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
   // names, including escaped spellings of the same name, at every object depth.
