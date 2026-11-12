@@ -1,10 +1,25 @@
+import { defineConfig } from 'eslint/config';
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import promise from 'eslint-plugin-promise';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
-export default tseslint.config(
+const TYPED_TEST_FILES = [
+  'test/factory.test.js',
+  'test/game.test.js',
+  'test/model.test.js',
+  'test/audit/l1-trace.test.js',
+  'test/saveOracle.js',
+  'test/semanticSave.test.js',
+  'e2e/global-setup.js',
+  'playwright.config.js',
+  'test/helpers.js',
+  'e2e/dialog-selection.spec.js',
+  'test/audit/l1-clear-after.test.js'
+];
+
+export default defineConfig(
   { ignores: ['node_modules/', 'reports/', 'docs/audit/evidence/'] },
   js.configs.recommended,
   tseslint.configs.recommended,
@@ -15,20 +30,15 @@ export default tseslint.config(
     // so the project service can type them.
     files: ['public/game/**/*.js', 'public/script.js'],
     extends: [
-      tseslint.configs.recommendedTypeChecked,
-      tseslint.configs.strictTypeChecked
-    ],
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({
+      ...config,
+      files: ['public/game/**/*.js', 'public/script.js']
+    })),
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: { projectService: true }
-    },
-    rules: {
-      // Scores and flags are interpolated deliberately; keep the rest of the
-      // rule's type checking.
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowNumber: true, allowBoolean: true }
-      ]
     }
   },
   {
@@ -37,21 +47,15 @@ export default tseslint.config(
     // treatment as any non-standard tsconfig.
     files: ['public/sw.js'],
     extends: [
-      tseslint.configs.recommendedTypeChecked,
-      tseslint.configs.strictTypeChecked
-    ],
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({ ...config, files: ['public/sw.js'] })),
     languageOptions: {
       globals: { ...globals.browser },
       parserOptions: {
         project: ['./tsconfig.sw.json'],
         tsconfigRootDir: import.meta.dirname
       }
-    },
-    rules: {
-      '@typescript-eslint/restrict-template-expressions': [
-        'error',
-        { allowNumber: true, allowBoolean: true }
-      ]
     }
   },
   {
@@ -67,7 +71,34 @@ export default tseslint.config(
       '*.mjs',
       '**/*.cjs'
     ],
-    extends: [tseslint.configs.disableTypeChecked]
+    extends: [tseslint.configs.disableTypeChecked].map((config) => ({
+      ...config,
+      files: [
+        'index.js',
+        'e2e/**/*.js',
+        'scripts/**/*.js',
+        'test/**/*.js',
+        'playwright.config.js',
+        '*.mjs',
+        '**/*.cjs'
+      ]
+    }))
+  },
+  {
+    // Test files that pass the typed rules. They use tsconfig.tests.json,
+    // which loads Node's types without changing the app's tsconfig.json.
+    // Add a file here only when it passes; the rest stay in the block above.
+    files: TYPED_TEST_FILES,
+    extends: [
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked
+    ].map((config) => ({ ...config, files: TYPED_TEST_FILES })),
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.tests.json'],
+        tsconfigRootDir: import.meta.dirname
+      }
+    }
   },
   {
     languageOptions: {

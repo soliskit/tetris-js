@@ -154,7 +154,7 @@ for (const recovery of ['New Game', 'Continue']) {
         const game = window.testGame;
         if (recovery === 'Continue') {
           for (const [key, value] of Object.entries(saved))
-            localStorage.setItem(key, value);
+            localStorage.setItem(key, String(value));
           game.storageChanged();
         }
         game.handleAction(recovery === 'Continue' ? 'continueGame' : 'newGame');

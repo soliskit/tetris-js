@@ -18,6 +18,7 @@ import { newGame, seededRandom } from '../helpers.js';
 
 const validGains = new Set([0, 100, 300, 500, 800]);
 
+/** @param {number} seed */
 function runTrace(seed, lockTarget) {
   const maxGames = 5000,
     maxSteps = 2000;
@@ -33,6 +34,7 @@ function runTrace(seed, lockTarget) {
     games = 0,
     violations = 0,
     faults = 0;
+  /** @type {Record<number, number>} */
   const gainCounts = {};
   for (let round = 0; round < maxGames && locks < lockTarget; round++) {
     const { game, scheduler } = newGame({
@@ -82,7 +84,7 @@ function runTrace(seed, lockTarget) {
 }
 
 for (const seed of [20261017, 2024]) {
-  test(`bounded random trace keeps the score invariant, seed ${seed}, 500 locks [D69]`, () => {
+  void test(`bounded random trace keeps the score invariant, seed ${String(seed)}, 500 locks [D69]`, () => {
     const result = runTrace(seed, 500);
     assert.equal(result.locks, 500, 'the bounded run reaches its lock cap');
     assert.equal(

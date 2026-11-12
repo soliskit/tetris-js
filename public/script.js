@@ -206,7 +206,7 @@ function vivid(context, hex) {
   let color = vividColors.get(hex);
   if (!color) {
     const [red, green, blue] = [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16) / 255);
-    color = `color(display-p3 ${red} ${green} ${blue})`;
+    color = `color(display-p3 ${String(red)} ${String(green)} ${String(blue)})`;
     vividColors.set(hex, color);
   }
   return color;
@@ -331,8 +331,8 @@ function syncControls() {
   const paused = state === GameState.paused;
   if (state !== lastState) gameEnded = isGameOver;
   lastState = state;
-  scoreLabel.textContent = `Score: ${gameManager.score}`;
-  highScoreLabel.textContent = `High Score: ${highScore}`;
+  scoreLabel.textContent = `Score: ${String(gameManager.score)}`;
+  highScoreLabel.textContent = `High Score: ${String(highScore)}`;
   const message = engineFaultNotice ? internalErrorMessage : gameEnded ? 'Game Over' : '';
   gameOverMessage.hidden = !message;
   gameOverMessage.textContent = message;
@@ -420,7 +420,7 @@ function boardChanged() {
 }
 
 function syncChangedControls() {
-  const snapshot = `${gameManager.state}|${gameManager.score}|${gameManager.isSessionSaved}|${gameManager.isConfirmingNewGame}|${engineFaultNotice}`;
+  const snapshot = `${gameManager.state}|${String(gameManager.score)}|${String(gameManager.isSessionSaved)}|${String(gameManager.isConfirmingNewGame)}|${String(engineFaultNotice)}`;
   if (snapshot !== lastSnapshot) {
     syncControls();
     lastSnapshot = snapshot;
@@ -554,7 +554,7 @@ canvases.forEach(canvas => {
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
 function watchPixelRatio() {
-  matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener('change', () => {
+  matchMedia(`(resolution: ${String(window.devicePixelRatio)}dppx)`).addEventListener('change', () => {
     for (const [canvas, { width, height }] of canvasSizes) sizeCanvas(canvas, width, height);
     drawSafely(redrawAll);
     watchPixelRatio();

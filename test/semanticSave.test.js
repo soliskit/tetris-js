@@ -15,7 +15,7 @@ import {
 import { TetrominoFactory } from '../public/game/tetrominoFactory.js';
 import { oracle } from './saveOracle.js';
 
-test('normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]', () => {
+void test('normal-action saves satisfy a rule-derived geometry and validity oracle [STA-4] [SAF-1] [PLY-6]', () => {
   let checked = 0;
   for (let seed = 1; seed <= 30; seed++) {
     const { game, storage, scheduler } = newGame({
@@ -55,7 +55,7 @@ test('normal-action saves satisfy a rule-derived geometry and validity oracle [S
   assert.ok(checked >= 300);
 });
 
-test('independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]', () => {
+void test('independent oracle covers paused resting16 and completed-save fault retention [STA-4] [SAF-3] [PLY-6]', () => {
   const storage = createMemoryStorage();
   const game = new GameManager({
     storage,
@@ -65,7 +65,9 @@ test('independent oracle covers paused resting16 and completed-save fault retent
   game.handleAction(PlayerAction.newGame);
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'resting piece'
   );
   for (let i = 0; i < 15; i++)
@@ -81,7 +83,7 @@ test('independent oracle covers paused resting16 and completed-save fault retent
   oracle(raw);
 });
 
-test('rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]', () => {
+void test('rotation advances occupied-block history without moving the anchor [STA-4] [PLY-6]', () => {
   const { game, storage } = newGame();
   // Pin the I kind from the published table. Its horizontal state occupies row1;
   // clockwise rotation occupies rows0..3 without changing the anchor.
@@ -100,7 +102,7 @@ test('rotation advances occupied-block history without moving the anchor [STA-4]
   );
 });
 
-test('independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]', () => {
+void test('independent oracle checks saves after each line-clear size and Hold [STA-4] [SAF-1] [PLY-7]', () => {
   for (let lines = 1; lines <= 4; lines++) {
     const { game, storage } = newGame({
       factory: new TetrominoFactory(seededRandom(lines))
@@ -126,7 +128,7 @@ test('independent oracle checks saves after each line-clear size and Hold [STA-4
   }
 });
 
-test('independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]', () => {
+void test('independent oracle permits full rows, nonmultiple score and earlier deeper history [STA-4] [SAF-1]', () => {
   const { game, storage } = newGame();
   game.gameBoard[19] = Array.from({ length: 10 }, () => ({
     isFilled: true,

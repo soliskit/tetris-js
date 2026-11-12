@@ -19,17 +19,27 @@ import {
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler } from '../helpers.js';
 
-test('a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]', () => {
+void test('a fault after a confirmed New Game stops safely and keeps the old position string [D74, D75]', () => {
   const storage = createMemoryStorage();
   const real = createFakeScheduler();
   let boom = false;
   const scheduler = {
+    /**
+     * @param {() => void} cb
+     * @param {number} ms
+     */
     setTimeout: (cb, ms) => {
       if (boom) throw new Error('scheduler fault');
       return real.setTimeout(cb, ms);
     },
-    clearTimeout: (h) => real.clearTimeout(h),
-    advance: (ms) => real.advance(ms),
+    /** @param {number} h */
+    clearTimeout: (h) => {
+      real.clearTimeout(h);
+    },
+    /** @param {number} ms */
+    advance: (ms) => {
+      real.advance(ms);
+    },
     get pending() {
       return real.pending;
     }
@@ -40,7 +50,7 @@ test('a fault after a confirmed New Game stops safely and keeps the old position
   assert.equal(game.state, GameState.paused);
   assert.equal(game.isSessionSaved, true);
   const textBefore = storage.getItem('tetris.savedGameSession');
-  assert.ok(textBefore.length > 0);
+  assert.ok(textBefore !== null && textBefore.length > 0);
 
   let reports = 0;
   game.onFault = () => {
@@ -63,9 +73,17 @@ test('a fault after a confirmed New Game stops safely and keeps the old position
     'true',
     'the stored save flag stays withdrawn'
   );
+  const textAfter = storage.getItem('tetris.savedGameSession');
+  assert.ok(textAfter !== null, 'the saved session is still stored');
+  const recordAfter = parseSavedRecord(textAfter);
+  const recordBefore = parseSavedRecord(textBefore);
+  assert.ok(
+    recordAfter !== null && recordBefore !== null,
+    'the stored save records parse'
+  );
   assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position,
-    parseSavedRecord(textBefore).position,
+    recordAfter.position,
+    recordBefore.position,
     'the exact stored position string is kept unchanged'
   );
   assert.equal(scheduler.pending, 0, 'no timer is left dangling');

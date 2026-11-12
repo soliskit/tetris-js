@@ -265,8 +265,7 @@ export function isValidFallingPiece(piece, board) {
   if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
   const startRow = /** @type {number} */ (row);
   const startColumn = /** @type {number} */ (column);
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare -- a missing cell is not an empty one: undefined must fail, not pass.
-  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || board[startRow + r]?.[startColumn + c]?.isFilled === false));
+  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || cellAt(board, startRow + r, startColumn + c)?.isFilled === false));
 }
 
 

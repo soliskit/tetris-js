@@ -16,14 +16,21 @@ test.skip(
   'touch gestures run on the phone sized project'
 );
 
+/** @param {number[][]} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, c]) => c));
+/** @param {number[][]} cells */
 const minRow = (cells) => Math.min(...cells.map(([r]) => r));
+/** @param {number[][]} cells */
 const shapeOf = (cells) => {
   const r0 = minRow(cells);
   const c0 = minColumn(cells);
   return JSON.stringify(cells.map(([r, c]) => [r - r0, c - c0]).sort());
 };
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {Parameters<typeof savedGame>[0]} options
+ */
 async function playSaved(page, options) {
   await continueSavedGame(page, savedGame(options));
   await page.keyboard.press('KeyP');
@@ -62,7 +69,13 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   await page.keyboard.press('KeyP');
   await page.clock.runFor(17);
   const box = await page.locator('#tetris').boundingBox();
+  if (!box) throw new Error('touch: #tetris has no bounding box');
   const cell = box.width / 10;
+  /**
+   * @param {number} id
+   * @param {number} column
+   * @param {number} row
+   */
   const finger = (id, column, row) => ({
     id,
     x: box.x + cell * column,
@@ -70,6 +83,10 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   });
   const cdp = await page.context().newCDPSession(page);
   // Lists every finger still down; the one added or left out is the one that changed.
+  /**
+   * @param {'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel'} type
+   * @param {Array<{ id: number, x: number, y: number }>} fingers
+   */
   const send = (type, fingers) =>
     cdp.send('Input.dispatchTouchEvent', { type, touchPoints: fingers });
   const piece = async () => {
@@ -144,6 +161,7 @@ for (const { name, distances, rotates, cancel = false } of [
     });
     const first = shapeOf(await cellsOf(page, PieceColors.purple));
     const box = await page.locator('#tetris').boundingBox();
+    if (!box) throw new Error('touch: #tetris has no bounding box');
     const start = {
       x: Math.round(box.x + box.width / 2),
       y: Math.round(box.y + box.height / 2)
@@ -151,6 +169,7 @@ for (const { name, distances, rotates, cancel = false } of [
     await page.evaluate(() => {
       window.boundaryEvents = [];
       const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
       for (const type of ['pointerdown', 'pointermove']) {
         board.addEventListener(type, (event) => {
           window.boundaryEvents.push({
@@ -254,7 +273,7 @@ test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async 
   await page.addInitScript(
     (values) => {
       for (const [key, value] of Object.entries(values))
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, String(value));
     },
     savedGame({
       piece: PieceColors.yellow,
@@ -315,10 +334,17 @@ test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async 
   await touch.moveBy(1.4, 0, 7);
   const rightEdge = await page.evaluate(() => {
     const canvas = document.getElementById('tetris');
+    if (!(canvas instanceof HTMLCanvasElement))
+      throw new Error('touch: #tetris is not a canvas');
     const size = canvas.width / 10;
-    const pixels = canvas
-      .getContext('2d')
-      .getImageData(0, Math.floor(size * 7.5), canvas.width, 1).data;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('touch: #tetris has no 2d context');
+    const pixels = context.getImageData(
+      0,
+      Math.floor(size * 7.5),
+      canvas.width,
+      1
+    ).data;
     let last = -1;
     for (let x = 0; x < canvas.width; x++) {
       const [r, g, b] = pixels.slice(x * 4, x * 4 + 3);
@@ -439,8 +465,13 @@ test('a piece pushed against a ledge slides in once it drops below it [INP-5]', 
   await touch.up();
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} selector
+ */
 async function centerOf(page, selector) {
   const box = await page.locator(selector).boundingBox();
+  if (!box) throw new Error(`touch: ${selector} has no bounding box`);
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
@@ -455,7 +486,7 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
     const addEventListener = EventTarget.prototype.addEventListener;
     EventTarget.prototype.addEventListener = function (type, ...rest) {
       window.listenedFor.push(`${this.id ?? ''} ${type}`);
-      return addEventListener.call(this, type, ...rest);
+      addEventListener.call(this, type, ...rest);
     };
   });
   await page.goto('/');
@@ -464,11 +495,11 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
   );
   // Clickable, it would otherwise flash on every tap.
   expect(
-    await page.evaluate(
-      () =>
-        getComputedStyle(document.getElementById('tetris'))
-          .webkitTapHighlightColor
-    )
+    await page.evaluate(() => {
+      const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
+      return getComputedStyle(board).webkitTapHighlightColor;
+    })
   ).toBe('rgba(0, 0, 0, 0)');
 });
 
@@ -531,10 +562,14 @@ test('if Safari zooms in anyway, its gestures are let through so the player can 
     page.evaluate(() => {
       const gesture = new Event('gesturestart', { cancelable: true });
       document.dispatchEvent(gesture);
+      const htmlTouchAction = getComputedStyle(
+        document.documentElement
+      ).touchAction;
+      const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
       return {
-        htmlTouchAction: getComputedStyle(document.documentElement).touchAction,
-        boardTouchAction: getComputedStyle(document.getElementById('tetris'))
-          .touchAction,
+        htmlTouchAction,
+        boardTouchAction: getComputedStyle(board).touchAction,
         pinchCancelled: gesture.defaultPrevented
       };
     });

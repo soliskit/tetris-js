@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
+/** @type {Record<string, string>} */
 const colors = {
   '#00C0E8': 'I',
   '#FFCC00': 'O',
@@ -12,7 +13,9 @@ const colors = {
   '#007AFF': 'J',
   '#FF9500': 'L'
 };
+/** @type {Map<string, [number, number][]>} */
 const geometry = new Map();
+/** @type {string | undefined} */
 let kind;
 for (const line of fs
   .readFileSync(
@@ -24,61 +27,169 @@ for (const line of fs
   const state = line.match(/state (\d): (.*)/);
   if (state)
     geometry.set(
-      kind + state[1],
+      `${String(kind)}${state[1]}`,
       [...state[2].matchAll(/\((\d),(\d)\)/g)].map((m) => [+m[1], +m[2]])
     );
 }
+/**
+ * The saved position, rebuilt from the fields this oracle checked.
+ * @typedef {{ isFilled: boolean, color: string | null }} OracleCell
+ * @typedef {{
+ *   gameBoard: OracleCell[][],
+ *   score: number,
+ *   currentTetromino: {
+ *     color: string,
+ *     rotationState: number,
+ *     position: { row: number, column: number }
+ *   },
+ *   nextTetrominos: { color: string }[],
+ *   heldTetromino: { color: string } | null,
+ *   canHoldTetromino: boolean,
+ *   bag: string[],
+ *   lockDelayResetCount: number,
+ *   lowestRowReached: number
+ * }} OracleSave
+ */
+
+/**
+ * @param {unknown} value
+ * @param {string} key
+ * @returns {unknown}
+ */
+function get(value, key) {
+  if (value === null || value === undefined)
+    throw new TypeError(
+      `Cannot read properties of ${String(value)} (reading '${key}')`
+    );
+  return Reflect.get(Object(value), key);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {unknown[]}
+ */
+function list(value) {
+  assert.ok(Array.isArray(value));
+  return value;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
+function integer(value) {
+  assert.ok(typeof value === 'number' && Number.isInteger(value));
+  return value;
+}
+
+/**
+ * @param {unknown} color
+ * @returns {string}
+ */
+function knownColor(color) {
+  assert.ok(colors[String(color)]);
+  return String(color);
+}
+
+/**
+ * @param {string | null} raw
+ * @returns {OracleSave}
+ */
 export function oracle(raw) {
-  const envelope = JSON.parse(raw);
-  assert.equal(envelope.format, 'tetris-session-envelope');
-  assert.equal(envelope.available, true);
-  const data = JSON.parse(envelope.position);
-  assert.equal(data.gameBoard.length, 20);
-  for (const row of data.gameBoard) {
-    assert.equal(row.length, 10);
-    for (const cell of row) {
-      assert.equal(typeof cell.isFilled, 'boolean');
-      assert.ok(cell.isFilled ? colors[cell.color] : cell.color === null);
+  /** @type {unknown} */
+  const envelope = JSON.parse(String(raw));
+  assert.equal(get(envelope, 'format'), 'tetris-session-envelope');
+  assert.equal(get(envelope, 'available'), true);
+  const position = get(envelope, 'position');
+  /** @type {unknown} */
+  const data = JSON.parse(String(position));
+  const rows = list(get(data, 'gameBoard'));
+  assert.equal(rows.length, 20);
+  /** @type {OracleCell[][]} */
+  const gameBoard = [];
+  for (const row of rows) {
+    const cellsInRow = list(row);
+    assert.equal(cellsInRow.length, 10);
+    /** @type {OracleCell[]} */
+    const checkedRow = [];
+    for (const cell of cellsInRow) {
+      const isFilled = get(cell, 'isFilled');
+      assert.equal(typeof isFilled, 'boolean');
+      const color = get(cell, 'color');
+      assert.ok(isFilled ? colors[String(color)] : color === null);
+      checkedRow.push({
+        isFilled: isFilled === true,
+        color: color === null ? null : knownColor(color)
+      });
     }
+    gameBoard.push(checkedRow);
   }
-  const piece = data.currentTetromino;
-  const name = colors[piece.color];
+  const piece = get(data, 'currentTetromino');
+  const pieceColor = get(piece, 'color');
+  const name = colors[String(pieceColor)];
   assert.ok(name);
-  assert.ok(Number.isInteger(piece.rotationState));
-  // B2/PCE-4 permits only O's first state even though the table repeats it.
+  const rotationState = get(piece, 'rotationState');
   assert.ok(
-    piece.rotationState >= 0 && piece.rotationState < (name === 'O' ? 1 : 4)
+    typeof rotationState === 'number' && Number.isInteger(rotationState)
   );
-  assert.ok(Number.isInteger(piece.position.row));
-  assert.ok(Number.isInteger(piece.position.column));
-  const cells = geometry
-    .get(name + piece.rotationState)
-    .map(([r, c]) => [r + piece.position.row, c + piece.position.column]);
+  // B2/PCE-4 permits only O's first state even though the table repeats it.
+  assert.ok(rotationState >= 0 && rotationState < (name === 'O' ? 1 : 4));
+  const pieceRow = integer(get(get(piece, 'position'), 'row'));
+  const pieceColumn = integer(get(get(piece, 'position'), 'column'));
+  const shape = geometry.get(`${name}${String(rotationState)}`);
+  assert.ok(shape);
+  const cells = shape.map(([r, c]) => [r + pieceRow, c + pieceColumn]);
   for (const [r, c] of cells) {
     assert.ok(r >= 0 && r < 20 && c >= 0 && c < 10);
-    assert.equal(data.gameBoard[r][c].isFilled, false);
+    assert.equal(gameBoard[r][c].isFilled, false);
   }
-  assert.ok(Number.isSafeInteger(data.score) && data.score >= 0);
-  assert.equal(data.nextTetrominos.length, 3);
-  for (const q of data.nextTetrominos) assert.ok(colors[q.color]);
-  assert.ok(data.heldTetromino === null || colors[data.heldTetromino.color]);
-  assert.equal(typeof data.canHoldTetromino, 'boolean');
-  assert.ok(Array.isArray(data.bag));
-  assert.equal(new Set(data.bag).size, data.bag.length);
-  for (const color of data.bag) assert.ok(colors[color]);
+  const score = get(data, 'score');
   assert.ok(
-    Number.isInteger(data.lockDelayResetCount) &&
-      data.lockDelayResetCount >= 0 &&
-      data.lockDelayResetCount <= 16
+    typeof score === 'number' && Number.isSafeInteger(score) && score >= 0
+  );
+  const queue = list(get(data, 'nextTetrominos'));
+  assert.equal(queue.length, 3);
+  const nextTetrominos = queue.map((q) => ({
+    color: knownColor(get(q, 'color'))
+  }));
+  const held = get(data, 'heldTetromino');
+  assert.ok(held === null || colors[String(get(held, 'color'))]);
+  const canHoldTetromino = get(data, 'canHoldTetromino');
+  assert.equal(typeof canHoldTetromino, 'boolean');
+  const bag = list(get(data, 'bag'));
+  assert.equal(new Set(bag).size, bag.length);
+  const bagColors = bag.map((color) => knownColor(color));
+  const lockDelayResetCount = get(data, 'lockDelayResetCount');
+  assert.ok(
+    typeof lockDelayResetCount === 'number' &&
+      Number.isInteger(lockDelayResetCount) &&
+      lockDelayResetCount >= 0 &&
+      lockDelayResetCount <= 16
   );
   const resting = cells.some(
-    ([r, c]) => r === 19 || data.gameBoard[r + 1][c].isFilled
+    ([r, c]) => r === 19 || gameBoard[r + 1][c].isFilled
   );
-  if (data.lockDelayResetCount === 16) assert.ok(resting);
+  if (lockDelayResetCount === 16) assert.ok(resting);
+  const lowestRowReached = get(data, 'lowestRowReached');
   assert.ok(
-    Number.isInteger(data.lowestRowReached) &&
-      data.lowestRowReached >= Math.max(...cells.map(([r]) => r)) &&
-      data.lowestRowReached <= 19
+    typeof lowestRowReached === 'number' &&
+      Number.isInteger(lowestRowReached) &&
+      lowestRowReached >= Math.max(...cells.map(([r]) => r)) &&
+      lowestRowReached <= 19
   );
-  return data;
+  return {
+    gameBoard,
+    score,
+    currentTetromino: {
+      color: String(pieceColor),
+      rotationState,
+      position: { row: pieceRow, column: pieceColumn }
+    },
+    nextTetrominos,
+    heldTetromino: held === null ? null : { color: String(get(held, 'color')) },
+    canHoldTetromino: canHoldTetromino === true,
+    bag: bagColors,
+    lockDelayResetCount,
+    lowestRowReached
+  };
 }

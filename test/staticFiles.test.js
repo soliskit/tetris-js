@@ -22,10 +22,10 @@ const appShell = JSON.parse(
 function pngSize(file) {
   const data = fs.readFileSync(path.join(publicDir, file));
   assert.equal(data.toString('ascii', 1, 4), 'PNG', `${file} is a PNG`);
-  return `${data.readUInt32BE(16)}x${data.readUInt32BE(20)}`;
+  return `${String(data.readUInt32BE(16))}x${String(data.readUInt32BE(20))}`;
 }
 
-test('every file the page references exists and uses a relative path [APP-3]', () => {
+void test('every file the page references exists and uses a relative path [APP-3]', () => {
   const references = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(
     (match) => match[1]
   );
@@ -39,7 +39,7 @@ test('every file the page references exists and uses a relative path [APP-3]', (
   }
 });
 
-test('the page preloads exactly the modules script.js imports, directly or not [APP-5]', () => {
+void test('the page preloads exactly the modules script.js imports, directly or not [APP-5]', () => {
   const imported = new Set();
   const visit = (file) => {
     for (const [, specifier] of read(file).matchAll(
@@ -53,14 +53,14 @@ test('the page preloads exactly the modules script.js imports, directly or not [
     }
   };
   visit('script.js');
-  assert.ok(imported.size >= 7, `${imported.size} modules`);
+  assert.ok(imported.size >= 7, `${String(imported.size)} modules`);
   const preloaded = [
     ...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)
   ].map((match) => match[1]);
   assert.deepEqual([...preloaded].sort(), [...imported].sort());
 });
 
-test('the page ids used by script.js all exist, canvases are canvases, and the dialog is a dialog [APP-3]', () => {
+void test('the page ids used by script.js all exist, canvases are canvases, and the dialog is a dialog [APP-3]', () => {
   const script = read('script.js');
   const ids = [...script.matchAll(/\belement\('([^']+)'\)/g)].map(
     (match) => match[1]
@@ -75,7 +75,7 @@ test('the page ids used by script.js all exist, canvases are canvases, and the d
   );
   assert.ok(
     ids.length >= 7 && canvasIds.length === 5,
-    `${ids.length} elements, ${canvasIds.length} canvases`
+    `${String(ids.length)} elements, ${String(canvasIds.length)} canvases`
   );
   for (const id of ids) assert.match(html, new RegExp(`id="${id}"`), id);
   for (const id of canvasIds)
@@ -88,7 +88,7 @@ test('the page ids used by script.js all exist, canvases are canvases, and the d
   );
 });
 
-test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
+void test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
   const viewport = html.match(/<meta name="viewport" content="([^"]+)"/)[1];
   for (const part of [
     'width=device-width',
@@ -101,7 +101,7 @@ test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
   }
 });
 
-test('the page has the tags iPhone needs to install the game [APP-1] [APP-4]', () => {
+void test('the page has the tags iPhone needs to install the game [APP-1] [APP-4]', () => {
   for (const tag of [
     '<link rel="manifest" href="manifest.webmanifest">',
     '<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">',
@@ -112,7 +112,7 @@ test('the page has the tags iPhone needs to install the game [APP-1] [APP-4]', (
   }
 });
 
-test('the manifest describes a portrait, full screen app that starts in its own folder [APP-1]', () => {
+void test('the manifest describes a portrait, full screen app that starts in its own folder [APP-1]', () => {
   assert.equal(manifest.name, 'Tetris');
   assert.equal(manifest.short_name, 'Tetris');
   assert.equal(manifest.display, 'fullscreen');
@@ -123,7 +123,7 @@ test('the manifest describes a portrait, full screen app that starts in its own 
   assert.match(manifest.background_color, /^#[0-9a-f]{6}$/i);
 });
 
-test('manifest icons exist, match their declared sizes and include a maskable one [APP-1]', () => {
+void test('manifest icons exist, match their declared sizes and include a maskable one [APP-1]', () => {
   for (const icon of manifest.icons) {
     assert.ok(!icon.src.startsWith('/'), `${icon.src} must be relative`);
     assert.equal(pngSize(icon.src), icon.sizes, icon.src);
@@ -135,14 +135,14 @@ test('manifest icons exist, match their declared sizes and include a maskable on
   assert.equal(pngSize('icons/apple-touch-icon.png'), '180x180');
 });
 
-test('the offline cache lists only files that exist, with relative paths [APP-2] [APP-3]', () => {
+void test('the offline cache lists only files that exist, with relative paths [APP-2] [APP-3]', () => {
   for (const file of appShell) {
     assert.ok(!file.startsWith('/'), `${file} must be relative`);
     if (file !== './') assert.ok(exists(file), `${file} exists`);
   }
 });
 
-test('the offline cache includes every file the game needs to start [APP-2]', () => {
+void test('the offline cache includes every file the game needs to start [APP-2]', () => {
   const gameModules = fs
     .readdirSync(path.join(publicDir, 'game'))
     .map((file) => `game/${file}`);
@@ -160,7 +160,7 @@ test('the offline cache includes every file the game needs to start [APP-2]', ()
     assert.ok(appShell.includes(icon.src), `${icon.src} is cached`);
 });
 
-test('the service worker is registered with a relative path [APP-2] [APP-3]', () => {
+void test('the service worker is registered with a relative path [APP-2] [APP-3]', () => {
   assert.match(read('script.js'), /serviceWorker\.register\('sw\.js'\)/);
 });
 
@@ -303,7 +303,7 @@ const runFetch = (handlers, request, clientId) => {
   return answered;
 };
 
-test('activation preserves obsolete fixed-name caches and claims clients [APP-6]', async () => {
+void test('activation preserves obsolete fixed-name caches and claims clients [APP-6]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   // Another project's cache: same fixed name, its own addresses.
   await (
@@ -331,7 +331,7 @@ test('activation preserves obsolete fixed-name caches and claims clients [APP-6]
   assert.equal(await (await ours.match('style.css')).text(), 'ours');
 });
 
-test('activation neither inspects nor deletes caches before claiming clients [APP-6]', async () => {
+void test('activation neither inspects nor deletes caches before claiming clients [APP-6]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   world.caches.keys = async () => {
     throw new Error('unexpected cache inspection');
@@ -350,7 +350,7 @@ test('activation neither inspects nor deletes caches before claiming clients [AP
   assert.equal(world.claimCalls, 1);
 });
 
-test('activation preserves a rejected clients.claim result [APP-6]', async () => {
+void test('activation preserves a rejected clients.claim result [APP-6]', async () => {
   const error = new Error('claim refused');
   const world = { liveClients: [], claimError: error, ...makeCaches() };
   const handlers = loadWorker(world);
@@ -361,7 +361,7 @@ test('activation preserves a rejected clients.claim result [APP-6]', async () =>
   assert.equal(world.claimCalls, 1);
 });
 
-test('a clock jump forward cannot cost a loading page its version [APP-2]', async () => {
+void test('a clock jump forward cannot cost a loading page its version [APP-2]', async () => {
   const world = { liveClients: [{ id: 'page-1' }], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa');
   await seedVersion(world, 'tetris-version-2-bbb');
@@ -390,7 +390,7 @@ test('a clock jump forward cannot cost a loading page its version [APP-2]', asyn
   assert.ok(pin, "the open page's record survives");
 });
 
-test('a record whose page is gone expires by age, and its version is deleted [APP-2]', async () => {
+void test('a record whose page is gone expires by age, and its version is deleted [APP-2]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa');
   await seedVersion(world, 'tetris-version-2-bbb');
@@ -412,7 +412,7 @@ test('a record whose page is gone expires by age, and its version is deleted [AP
   assert.ok(!pin, 'the expired record is removed');
 });
 
-test('a page record saved while cleanup runs keeps its version [APP-2]', async () => {
+void test('a page record saved while cleanup runs keeps its version [APP-2]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa');
   await seedVersion(world, 'tetris-version-2-bbb');
@@ -440,7 +440,7 @@ test('a page record saved while cleanup runs keeps its version [APP-2]', async (
   );
 });
 
-test("an old cache mixing this app's and another project's addresses stays [APP-6]", async () => {
+void test("an old cache mixing this app's and another project's addresses stays [APP-6]", async () => {
   const world = { liveClients: [], ...makeCaches() };
   const mixed = await world.caches.open('tetris');
   await mixed.put('index.html', new Response('ours'));
@@ -456,7 +456,7 @@ test("an old cache mixing this app's and another project's addresses stays [APP-
   );
 });
 
-test('an empty old cache stays, its maker unknown [APP-6]', async () => {
+void test('an empty old cache stays, its maker unknown [APP-6]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   await world.caches.open('tetris-2'); // created but never filled
   const handlers = loadWorker(world);
@@ -464,7 +464,7 @@ test('an empty old cache stays, its maker unknown [APP-6]', async () => {
   assert.ok(world.stores.has('tetris-2'), 'an empty cache is left alone');
 });
 
-test('a pin note missing its timestamp still names its version and does not expire [SAF-2] [APP-2]', async () => {
+void test('a pin note missing its timestamp still names its version and does not expire [SAF-2] [APP-2]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa', 'one');
   await seedVersion(world, 'tetris-version-2-bbb', 'two');
@@ -495,7 +495,7 @@ test('a pin note missing its timestamp still names its version and does not expi
   assert.ok(pin, 'an ageless note does not expire by time');
 });
 
-test('an unreadable record whose page is gone is removed, and cleanup continues [SAF-2] [APP-2]', async () => {
+void test('an unreadable record whose page is gone is removed, and cleanup continues [SAF-2] [APP-2]', async () => {
   const world = { liveClients: [], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa');
   await seedVersion(world, 'tetris-version-2-bbb');
@@ -527,7 +527,7 @@ test('an unreadable record whose page is gone is removed, and cleanup continues 
   );
 });
 
-test('an unreadable record whose page is still open keeps every old version [SAF-2] [APP-2]', async () => {
+void test('an unreadable record whose page is still open keeps every old version [SAF-2] [APP-2]', async () => {
   const world = { liveClients: [{ id: 'page-1' }], ...makeCaches() };
   await seedVersion(world, 'tetris-version-1-aaa');
   await seedVersion(world, 'tetris-version-2-bbb');
