@@ -11,6 +11,9 @@ pre-commit:
     typecheck:
       # Whole project, once per commit: the type checker has no staged-files glob.
       run: npm run typecheck
+    typecheck:tests:
+      # Tests, scripts and configs: the app typecheck above does not cover them.
+      run: npm run typecheck:tests
     python-lint:
       glob: '**/*.py'
       run: ruff check -- {staged_files}
