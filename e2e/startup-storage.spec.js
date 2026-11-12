@@ -12,7 +12,9 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
   await page.addInitScript(() => {
     const nativeFrame = window.requestAnimationFrame.bind(window);
     const nativeResize = window.ResizeObserver;
+    /** @type {FrameRequestCallback[]} */
     const frames = [];
+    /** @type {Array<() => void>} */
     const resizes = [];
     let released = false;
     window.requestAnimationFrame = (callback) => {
@@ -20,10 +22,13 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
       return frames.length;
     };
     window.ResizeObserver = class extends nativeResize {
-      constructor(callback) {
+      constructor(/** @type {ResizeObserverCallback} */ callback) {
         super((entries, observer) => {
           if (released) callback(entries, observer);
-          else resizes.push(() => callback(entries, observer));
+          else
+            resizes.push(() => {
+              callback(entries, observer);
+            });
         });
       }
     };
@@ -36,6 +41,7 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
     };
   });
   await page.goto('/');
+  /** @type {unknown} */
   let failure;
   try {
     // Static HTML says zero. No drawing callback can supply this value.
@@ -65,12 +71,19 @@ test('startup controls read another tab before the first draw [DSP-5]', async ({
     }
   } finally {
     try {
-      await page.evaluate(() => window.releaseStartupDrawing());
+      await page.evaluate(() => {
+        const release = window.releaseStartupDrawing;
+        if (!release) throw new Error('startup drawing hold was not installed');
+        release();
+      });
     } catch (error) {
       if (!failure) failure = error;
     }
   }
-  if (failure) throw failure;
+  if (failure)
+    throw failure instanceof Error
+      ? failure
+      : new Error('non-Error failure', { cause: failure });
   await expect(page.locator('#highScore')).toHaveText('High Score: 4300');
   await writer.evaluate(() => {
     localStorage.clear();

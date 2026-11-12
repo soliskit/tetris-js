@@ -10,14 +10,87 @@ import { fileURLToPath } from 'node:url';
 const script = fileURLToPath(
   new URL('../scripts/browser-coverage.js', import.meta.url)
 );
-const manifest = JSON.parse(
-  fs.readFileSync(
-    new URL('./fixtures/browser-coverage/cases.json', import.meta.url),
-    'utf8'
+/**
+ * @typedef {object} CoverageCase
+ * @property {string} name
+ * @property {Record<string, unknown>} files
+ * @property {string} expected
+ * @property {Record<string, { covered: number, total: number }> | null} metric_hypothesis
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+function isRecord(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {value is unknown[]}
+ */
+function isList(value) {
+  return Array.isArray(value);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
+function text(value) {
+  assert.equal(typeof value, 'string');
+  return String(value);
+}
+
+/**
+ * Reads the fixture manifest and checks it has the shape this file uses.
+ * @param {string} file
+ * @returns {{ source: string, cases: CoverageCase[] }}
+ */
+function readManifest(file) {
+  /** @type {unknown} */
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  assert.ok(isRecord(data));
+  assert.ok(isList(data.cases));
+  const cases = data.cases.map((item) => {
+    assert.ok(isRecord(item));
+    assert.ok(isRecord(item.files));
+    const hypothesis = item.metric_hypothesis;
+    /** @type {CoverageCase['metric_hypothesis']} */
+    let metrics = null;
+    if (hypothesis !== null) {
+      assert.ok(isRecord(hypothesis));
+      metrics = Object.fromEntries(
+        Object.entries(hypothesis).map(([kind, counts]) => {
+          assert.ok(isRecord(counts));
+          assert.equal(typeof counts.covered, 'number');
+          assert.equal(typeof counts.total, 'number');
+          return [
+            kind,
+            { covered: Number(counts.covered), total: Number(counts.total) }
+          ];
+        })
+      );
+    }
+    return {
+      name: text(item.name),
+      files: item.files,
+      expected: text(item.expected),
+      metric_hypothesis: metrics
+    };
+  });
+  return { source: text(data.source), cases };
+}
+
+const manifest = readManifest(
+  fileURLToPath(
+    new URL('./fixtures/browser-coverage/cases.json', import.meta.url)
   )
 );
 const success =
   'Browser coverage of public/script.js: 100% of lines, branches and functions.';
+/** @type {Partial<Record<string, string>>} */
 const messages = {
   missing: 'No browser coverage found.',
   'no-measurement': 'No browser coverage of public/script.js was measured.',
@@ -37,8 +110,8 @@ for (const item of manifest.cases) {
         assert.match(name, /^[A-Za-z0-9-]+\.json$/);
         fs.writeFileSync(
           path.join(input, name),
-          value && !Array.isArray(value) && Object.hasOwn(value, 'RAW')
-            ? value.RAW
+          isRecord(value) && Object.hasOwn(value, 'RAW')
+            ? text(value.RAW)
             : JSON.stringify(value)
         );
       }
@@ -61,8 +134,11 @@ for (const item of manifest.cases) {
       } else {
         assert.notEqual(result.status, 0, output);
         assert.ok(!output.includes(success), output);
-        if (messages[item.expected])
-          assert.ok(output.includes(messages[item.expected]), output);
+        {
+          const message = messages[item.expected];
+          if (message !== undefined)
+            assert.ok(output.includes(message), output);
+        }
       }
       if (item.metric_hypothesis) {
         const html = fs.readFileSync(

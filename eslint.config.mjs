@@ -2,28 +2,39 @@ import { defineConfig } from 'eslint/config';
 import js from '@eslint/js';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-import promise from 'eslint-plugin-promise';
+import { createRequire } from 'node:module';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
+// eslint-plugin-promise ships no type declarations, so it is loaded as an
+// unknown value and checked at runtime instead of being declared or cast.
+/** @type {unknown} */
+const promisePlugin = createRequire(import.meta.url)('eslint-plugin-promise');
+/** @type {unknown} */
+const promiseConfigs =
+  typeof promisePlugin === 'object' && promisePlugin !== null
+    ? Reflect.get(promisePlugin, 'configs')
+    : undefined;
+/** @type {unknown} */
+const promiseRecommended =
+  typeof promiseConfigs === 'object' && promiseConfigs !== null
+    ? Reflect.get(promiseConfigs, 'flat/recommended')
+    : undefined;
+if (typeof promiseRecommended !== 'object' || promiseRecommended === null)
+  throw new Error('eslint-plugin-promise flat/recommended config is missing');
+
 const TYPED_TEST_FILES = [
-  'test/factory.test.js',
-  'test/game.test.js',
-  'test/model.test.js',
-  'test/audit/l1-trace.test.js',
-  'test/saveOracle.js',
-  'test/semanticSave.test.js',
-  'e2e/global-setup.js',
+  'test/**/*.js',
+  'e2e/**/*.js',
+  'scripts/**/*.{js,cjs}',
   'playwright.config.js',
-  'test/helpers.js',
-  'e2e/dialog-selection.spec.js',
-  'test/audit/l1-clear-after.test.js'
+  'eslint.config.mjs'
 ];
 
 export default defineConfig(
-  { ignores: ['node_modules/', 'reports/', 'docs/audit/evidence/'] },
+  { ignores: ['node_modules/', 'reports/'] },
   js.configs.recommended,
   tseslint.configs.recommended,
-  promise.configs['flat/recommended'],
+  promiseRecommended,
   prettierRecommended,
   {
     // tsconfig.json covers public/game/** and public/script.js with checkJs,

@@ -4,66 +4,121 @@ import assert from 'node:assert/strict';
 import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { InputController } from '../public/game/inputController.js';
 import { fixedFactory, newGame } from './helpers.js';
+import { present, remove } from './json.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 
-// Minimal stand ins for the browser globals InputController uses.
-function setup(t) {
-  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
-  const listeners = {};
-  const frames = [];
-  const pads = [];
-  globalThis.window = {
-    addEventListener: (type, listener) =>
-      (listeners[type] ??= []).push(listener)
-  };
-  const documentListeners = {};
-  globalThis.document = {
-    hidden: false,
-    addEventListener: (type, listener) =>
-      (documentListeners[type] ??= []).push(listener)
-  };
-  globalThis.requestAnimationFrame = (callback) => frames.push(callback);
-  Object.defineProperty(globalThis, 'navigator', {
-    value: { getGamepads: () => pads },
+/**
+ * @typedef {{ code: string, repeat: boolean, metaKey: boolean, ctrlKey: boolean, altKey: boolean, prevented: boolean, preventDefault: () => void }} FakeKeyEvent
+ * @typedef {Partial<FakeKeyEvent> & { gamepad?: FakePad | null }} FakeEvent
+ * @typedef {(event: FakeEvent) => void} Listener
+ * @typedef {{ state: import('../public/game/gameState.js').GameStateValue, isConfirmingNewGame: boolean, actions: string[], handleAction: (action: string) => void, togglePause: () => void, softDrop: () => void, cancelNewGame: () => void }} FakeManager
+ * @typedef {'a'|'b'|'x'|'y'|'lb'|'rb'|'view'|'menu'|'up'|'down'|'left'|'right'} PadButton
+ * @typedef {{ pressed?: PadButton[], x?: number, y?: number }} PadOptions
+ * @typedef {{ connected: boolean, buttons: Array<{ pressed: boolean }>, axes: number[] }} FakePad
+ */
+
+// Installs a fake browser global the way a page would own it.
+/**
+ * @param {string} name
+ * @param {unknown} value
+ */
+const defineGlobal = (name, value) =>
+  Object.defineProperty(globalThis, name, {
+    value,
     configurable: true,
     writable: true
   });
+
+// Minimal stand ins for the browser globals InputController uses.
+/** @param {import('node:test').TestContext} t */
+function setup(t) {
+  t.mock.timers.enable({ apis: ['setTimeout', 'setInterval'] });
+  /** @type {Record<string, Listener[] | undefined>} */
+  const listeners = {};
+  /** @type {Array<() => void>} */
+  const frames = [];
+  /** @type {Array<FakePad | null>} */
+  const pads = [];
+  defineGlobal('window', {
+    /**
+     * @param {string} type
+     * @param {Listener} listener
+     */
+    addEventListener: (type, listener) =>
+      (listeners[type] ??= []).push(listener)
+  });
+  /** @type {Record<string, Array<() => void> | undefined>} */
+  const documentListeners = {};
+  const fakeDocument = {
+    hidden: false,
+    /**
+     * @param {string} type
+     * @param {() => void} listener
+     */
+    addEventListener: (type, listener) =>
+      (documentListeners[type] ??= []).push(listener)
+  };
+  defineGlobal('document', fakeDocument);
+  defineGlobal(
+    'requestAnimationFrame',
+    /** @param {() => void} callback */
+    (callback) => frames.push(callback)
+  );
+  defineGlobal('navigator', { getGamepads: () => pads });
   t.after(() => {
-    delete globalThis.window;
-    delete globalThis.document;
-    delete globalThis.requestAnimationFrame;
+    remove(globalThis, 'window');
+    remove(globalThis, 'document');
+    remove(globalThis, 'requestAnimationFrame');
   });
 
+  /** @type {string[]} */
+  const actions = [];
+  /** @type {FakeManager} */
   const manager = {
     state: GameState.playing,
     isConfirmingNewGame: false,
-    actions: [],
+    actions,
+    /** @param {string} action */
     handleAction(action) {
-      this.actions.push(action);
+      manager.actions.push(action);
     },
     togglePause() {
-      this.actions.push('togglePause');
+      manager.actions.push('togglePause');
     },
     softDrop() {
-      this.actions.push('softDrop');
+      manager.actions.push('softDrop');
     },
     cancelNewGame() {
-      this.actions.push('cancelNewGame');
+      manager.actions.push('cancelNewGame');
     }
   };
   // The New Game question's buttons, recording what the controller asks of them.
   const questionButtons = {
+    /** @param {number} step */
     move(step) {
-      manager.actions.push(`move ${step}`);
+      manager.actions.push(`move ${String(step)}`);
     },
     press() {
       manager.actions.push('press');
     }
   };
   const controller = new InputController(manager, questionButtons);
-  const fire = (type, event = {}) =>
-    (listeners[type] ?? []).forEach((listener) => listener(event));
+  /**
+   * @param {string} type
+   * @param {FakeEvent} [event]
+   */
+  const fire = (type, event = {}) => {
+    (listeners[type] ?? []).forEach((listener) => {
+      listener(event);
+    });
+  };
+  /**
+   * @param {string} code
+   * @param {boolean} [pressed]
+   * @param {Partial<FakeKeyEvent>} [extra]
+   */
   const key = (code, pressed = true, extra = {}) => {
+    /** @type {FakeKeyEvent} */
     const event = {
       code,
       repeat: false,
@@ -71,35 +126,37 @@ function setup(t) {
       ctrlKey: false,
       altKey: false,
       prevented: false,
+      preventDefault: () => {
+        event.prevented = true;
+      },
       ...extra
-    };
-    event.preventDefault = () => {
-      event.prevented = true;
     };
     fire(pressed ? 'keydown' : 'keyup', event);
     return event;
   };
+  /** @param {string} code */
   const tap = (code) => {
     key(code);
     key(code, false);
   };
   // Node's mock clock only runs timers that were scheduled before a tick, so
   // advance in small steps to let repeating timers chain like they do live.
+  /** @param {number} ms */
   const tick = (ms) => {
     for (let left = ms; left > 0; left -= 10)
       t.mock.timers.tick(Math.min(10, left));
   };
   const hidePage = () => {
-    globalThis.document.hidden = true;
-    (documentListeners.visibilitychange ?? []).forEach((listener) =>
-      listener()
-    );
+    fakeDocument.hidden = true;
+    (documentListeners.visibilitychange ?? []).forEach((listener) => {
+      listener();
+    });
   };
   const showPage = () => {
-    globalThis.document.hidden = false;
-    (documentListeners.visibilitychange ?? []).forEach((listener) =>
-      listener()
-    );
+    fakeDocument.hidden = false;
+    (documentListeners.visibilitychange ?? []).forEach((listener) => {
+      listener();
+    });
   };
   return {
     manager,
@@ -115,6 +172,10 @@ function setup(t) {
   };
 }
 
+/**
+ * @param {PadOptions} [options]
+ * @returns {FakePad}
+ */
 function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
   const index = {
     a: 0,
@@ -131,10 +192,14 @@ function gamepad({ pressed = [], x = 0, y = 0 } = {}) {
     right: 15
   };
   const buttons = Array.from({ length: 16 }, () => ({ pressed: false }));
-  for (const name of pressed) buttons[index[name]].pressed = true;
+  for (const name of pressed) present(buttons[index[name]]).pressed = true;
   return { connected: true, buttons, axes: [x, y] };
 }
 
+/**
+ * @param {{ actions: string[] }} manager
+ * @param {string} action
+ */
 const count = (manager, action) =>
   manager.actions.filter((a) => a === action).length;
 
@@ -372,6 +437,7 @@ void test('losing window focus releases every held key [INP-2]', (t) => {
 
 void test('gamepad buttons trigger their action on press, not while held [INP-4]', (t) => {
   const { manager, controller, pads } = setup(t);
+  /** @type {Array<[PadButton, import('../public/game/gameState.js').PlayerActionValue]>} */
   const buttons = [
     ['a', PlayerAction.drop],
     ['up', PlayerAction.drop],
@@ -415,6 +481,10 @@ void test('two buttons for the same action pressed together act once [INP-4]', (
 
 void test('Menu and View act alone: other buttons pressed at the same moment do nothing, and Menu wins over View [INP-4]', (t) => {
   const { manager, controller, pads } = setup(t);
+  /**
+   * @param {import('../public/game/gameState.js').GameStateValue} state
+   * @param {PadButton[]} buttons
+   */
   const press = (state, buttons) => {
     manager.state = state;
     manager.actions = [];
@@ -425,6 +495,7 @@ void test('Menu and View act alone: other buttons pressed at the same moment do 
     controller.stopMoving();
     return manager.actions;
   };
+  /** @type {PadButton[]} */
   const others = ['a', 'b', 'x', 'y', 'lb', 'rb', 'up'];
   assert.deepEqual(
     press(GameState.gameOver, ['menu', ...others]),
@@ -479,11 +550,14 @@ void test('while the pause screen asks to confirm New Game, left and right move 
   const { manager, controller, pads, tick } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
-  const poll = (state) => {
+  /** @param {PadOptions} state */
+  const poll = (state = {}) => {
     pads[0] = gamepad(state);
     controller.pollGamepads();
   };
-  for (const button of ['x', 'y', 'view', 'menu', 'lb', 'rb', 'up', 'down']) {
+  /** @type {PadButton[]} */
+  const pollButtons = ['x', 'y', 'view', 'menu', 'lb', 'rb', 'up', 'down'];
+  for (const button of pollButtons) {
     poll({ pressed: [button] });
     poll();
   }
@@ -655,24 +729,24 @@ void test('gamepads are polled on every animation frame [INP-4]', (t) => {
   const { manager, frames, pads } = setup(t);
   assert.equal(frames.length, 1, 'polling starts right away');
   pads[0] = gamepad({ pressed: ['b'] });
-  frames.shift()();
+  present(frames.shift())();
   assert.deepEqual(manager.actions, [PlayerAction.rotate]);
   assert.equal(frames.length, 1, 'and schedules the next poll');
 });
 
 void test('polling stops while no gamepad is connected and starts again when one connects [INP-4] [DSP-3]', (t) => {
   const { manager, fire, frames, pads } = setup(t);
-  frames.shift()();
+  present(frames.shift())();
   assert.equal(frames.length, 0, 'no gamepad: no more polls');
   fire('gamepadconnected');
   fire('gamepadconnected');
   assert.equal(frames.length, 1, 'one polling loop however many connect');
   pads[0] = gamepad({ pressed: ['b'] });
-  frames.shift()();
+  present(frames.shift())();
   assert.deepEqual(manager.actions, [PlayerAction.rotate]);
   assert.equal(frames.length, 1, 'keeps polling while connected');
   pads[0] = { ...gamepad(), connected: false };
-  frames.shift()();
+  present(frames.shift())();
   assert.equal(frames.length, 0, 'stops after the last one disconnects');
   fire('gamepadconnected');
   assert.equal(frames.length, 1, 'and can start again');
@@ -690,10 +764,16 @@ void test('an error while reading the gamepad never stops polling [SAF-5]', (t) 
     configurable: true,
     writable: true
   });
-  frames.shift()();
+  present(frames.shift())();
   assert.equal(logged.mock.callCount(), 1);
-  assert.equal(logged.mock.calls[0].arguments[0], 'Tetris gamepad error:');
-  assert.equal(logged.mock.calls[0].arguments[1].message, 'gamepad failure');
+  const loggedArgs = present(logged.mock.calls[0]).arguments;
+  assert.equal(loggedArgs[0], 'Tetris gamepad error:');
+  /** @type {unknown} */
+  const loggedError = loggedArgs[1];
+  // Nullish and primitive values are rejected here; the old .message read
+  // threw a TypeError on nullish and read undefined from primitives.
+  assert.ok(typeof loggedError === 'object' && loggedError !== null);
+  assert.equal(Reflect.get(loggedError, 'message'), 'gamepad failure');
   assert.equal(frames.length, 1, 'the next poll is still scheduled');
   Object.defineProperty(globalThis, 'navigator', {
     value: { getGamepads: () => pads },
@@ -701,7 +781,7 @@ void test('an error while reading the gamepad never stops polling [SAF-5]', (t) 
     writable: true
   });
   pads[0] = gamepad({ pressed: ['a'] });
-  frames.shift()();
+  present(frames.shift())();
   assert.deepEqual(manager.actions, [PlayerAction.drop]);
 });
 
@@ -762,11 +842,13 @@ void test('a gamepad with fewer buttons than the standard layout still works [IN
 
 void test('the stick does nothing until pushed past halfway [INP-4]', (t) => {
   const { manager, controller, pads, tick } = setup(t);
-  for (const [x, y] of [
+  /** @type {Array<[number, number]>} */
+  const rows830 = [
     [-0.5, 0],
     [0.5, 0],
     [0, 0.5]
-  ]) {
+  ];
+  for (const [x, y] of rows830) {
     pads[0] = gamepad({ x, y });
     controller.pollGamepads();
   }
@@ -1302,11 +1384,13 @@ void test('the Menu press that pauses does not resume the game while still held 
 
 void test('New Game ignores old keyboard direction and soft-drop holds until release and press [INP-2]', (t) => {
   const { manager, controller, key, tick } = setup(t);
-  for (const [code, action] of [
+  /** @type {Array<[string, import('../public/game/gameState.js').PlayerActionValue | 'softDrop']>} */
+  const rows1370 = [
     ['KeyA', PlayerAction.moveLeft],
     ['KeyD', PlayerAction.moveRight],
     ['KeyS', 'softDrop']
-  ]) {
+  ];
+  for (const [code, action] of rows1370) {
     controller.releaseAllInput();
     manager.actions = [];
     manager.state = GameState.gameOver;
@@ -1325,12 +1409,14 @@ void test('New Game ignores old keyboard direction and soft-drop holds until rel
 
 void test('New Game spends held pad directions and soft drop until release and push [INP-4]', (t) => {
   const { manager, controller, tick } = setup(t);
-  for (const [x, y, buttons, action] of [
+  /** @type {Array<[number, number, PadButton[], import('../public/game/gameState.js').PlayerActionValue | 'softDrop']>} */
+  const rows1393 = [
     [-1, 0, [], PlayerAction.moveLeft],
     [1, 0, [], PlayerAction.moveRight],
     [0, -1, [], 'softDrop'],
     [0, 0, ['down'], 'softDrop']
-  ]) {
+  ];
+  for (const [x, y, buttons, action] of rows1393) {
     for (const startWithPad of [false, true]) {
       controller.releaseAllInput();
       manager.actions = [];
@@ -1339,10 +1425,11 @@ void test('New Game spends held pad directions and soft drop until release and p
       tick(20);
       if (startWithPad) {
         const handle = manager.handleAction;
-        manager.handleAction = function (action) {
-          handle.call(this, action);
-          if (action === PlayerAction.newGame) this.state = GameState.playing;
-        };
+        manager.handleAction =
+          /** @this {FakeManager} @param {string} action */ function (action) {
+            handle.call(this, action);
+            if (action === PlayerAction.newGame) this.state = GameState.playing;
+          };
         controller.processInput(new Set([...buttons, 'menu']), x, y);
         manager.handleAction = handle;
       } else manager.state = GameState.playing;
@@ -1504,23 +1591,15 @@ void test('a direction used in the New Game question cannot move the new piece t
 void test('any controller disconnect spends surviving held buttons until release and press [INP-4]', (t) => {
   const { manager, controller, fire, pads } = setup(t);
   for (const switchSelected of [false, true]) {
-    for (const button of [
-      'a',
-      'b',
-      'x',
-      'y',
-      'lb',
-      'rb',
-      'up',
-      'menu',
-      'view'
-    ]) {
+    /** @type {PadButton[]} */
+    const rows1572 = ['a', 'b', 'x', 'y', 'lb', 'rb', 'up', 'menu', 'view'];
+    for (const button of rows1572) {
       controller.releaseAllInput();
       pads[0] = gamepad({ pressed: switchSelected ? [] : [button] });
       pads[1] = gamepad({ pressed: switchSelected ? [button] : [] });
       controller.pollGamepads();
       const removed = switchSelected ? 0 : 1;
-      pads[removed].connected = false;
+      present(pads[removed]).connected = false;
       const survivor = switchSelected ? 1 : 0;
       fire('gamepaddisconnected', { gamepad: pads[removed] });
       manager.actions = [];
@@ -1529,7 +1608,7 @@ void test('any controller disconnect spends surviving held buttons until release
       assert.deepEqual(
         manager.actions,
         [],
-        `${button}: old hold is inactive, selected pad changed: ${switchSelected}`
+        `${button}: old hold is inactive, selected pad changed: ${String(switchSelected)}`
       );
       pads[survivor] = gamepad();
       controller.pollGamepads();
@@ -1543,14 +1622,16 @@ void test('any controller disconnect spends surviving held buttons until release
 void test('any controller disconnect stops keyboard and surviving pad repeats until fresh input [INP-4]', (t) => {
   const { manager, controller, fire, pads, key, tick } = setup(t);
   for (const switchSelected of [false, true]) {
-    for (const input of [
+    /** @type {PadOptions[]} */
+    const rows1611 = [
       { x: -1 },
       { x: 1 },
       { y: 1 },
       { pressed: ['left'] },
       { pressed: ['right'] },
       { pressed: ['down'] }
-    ]) {
+    ];
+    for (const input of rows1611) {
       controller.releaseAllInput();
       pads[0] = gamepad(switchSelected ? {} : input);
       pads[1] = gamepad(switchSelected ? input : {});
@@ -1559,7 +1640,7 @@ void test('any controller disconnect stops keyboard and surviving pad repeats un
       controller.pollGamepads();
       const removed = switchSelected ? 0 : 1;
       const survivor = switchSelected ? 1 : 0;
-      pads[removed].connected = false;
+      present(pads[removed]).connected = false;
       fire('gamepaddisconnected', { gamepad: pads[removed] });
       manager.actions = [];
       controller.pollGamepads();
@@ -1568,7 +1649,7 @@ void test('any controller disconnect stops keyboard and surviving pad repeats un
       assert.deepEqual(
         manager.actions,
         [],
-        `old holds inactive: ${JSON.stringify(input)}, selected pad changed: ${switchSelected}`
+        `old holds inactive: ${JSON.stringify(input)}, selected pad changed: ${String(switchSelected)}`
       );
       key('KeyA', false);
       key('KeyS', false);
@@ -1639,20 +1720,22 @@ void test('a failed disconnect read reports the refusal and keeps known holds in
   const { manager, controller, fire, pads, tick } = setup(t);
   pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
   controller.pollGamepads();
-  const read = navigator.getGamepads;
+  const read = Reflect.get(navigator, 'getGamepads');
   const refused = new Error('gamepad read refused');
   const report = t.mock.method(console, 'error', () => {});
   navigator.getGamepads = () => {
     throw refused;
   };
-  assert.doesNotThrow(() => fire('gamepaddisconnected'));
+  assert.doesNotThrow(() => {
+    fire('gamepaddisconnected');
+  });
   assert.deepEqual(report.mock.calls[0].arguments, [
     'Tetris gamepad error:',
     refused
   ]);
   manager.actions = [];
   tick(500);
-  navigator.getGamepads = read;
+  Reflect.set(navigator, 'getGamepads', read);
   controller.pollGamepads();
   tick(500);
   assert.deepEqual(
@@ -1678,7 +1761,7 @@ void test('disconnect stops simultaneous holds in either pad order [INP-4]', (t)
     pads[0] = gamepad({ pressed: ['a', 'down'], x: -1 });
     pads[1] = gamepad({ pressed: ['b', 'down'], x: 1 });
     controller.pollGamepads();
-    pads[removed].connected = false;
+    present(pads[removed]).connected = false;
     fire('gamepaddisconnected', { gamepad: pads[removed] });
     manager.actions = [];
     for (let poll = 0; poll < 5; poll++) {
@@ -1697,13 +1780,15 @@ void test('disconnect stops simultaneous holds in either pad order [INP-4]', (t)
 void test('a neutral disconnect snapshot leaves the first new pad push fresh [INP-4]', (t) => {
   const { manager, controller, fire, pads, tick } = setup(t);
   const report = t.mock.method(console, 'error', () => {});
-  for (const [axes, fresh, action] of [
+  /** @type {Array<[number[], PadOptions, import('../public/game/gameState.js').PlayerActionValue | 'softDrop']>} */
+  const rows1765 = [
     [[], { x: 1 }, PlayerAction.moveRight],
     [[0, 0], { x: 1 }, PlayerAction.moveRight],
     [[-0.5, 0], { x: -1 }, PlayerAction.moveLeft],
     [[0.5, 0], { x: 1 }, PlayerAction.moveRight],
     [[0, 0.5], { y: 1 }, 'softDrop']
-  ]) {
+  ];
+  for (const [axes, fresh, action] of rows1765) {
     controller.releaseAllInput();
     pads[0] = null; // Sparse slots are ordinary, not read errors.
     pads[1] = { ...gamepad(), axes, buttons: [{ pressed: false }] };
@@ -1748,12 +1833,14 @@ void test('blur still clears a held pad down and stops its repeat timer [INP-2] 
   );
 });
 
-for (const [name, held, opposite] of [
+/** @type {Array<[string, PadOptions, PadOptions]>} */
+const rows1816 = [
   ['stick left', { x: -1 }, { x: 1 }],
   ['stick right', { x: 1 }, { x: -1 }],
   ['pad left', { pressed: ['left'] }, { pressed: ['right'] }],
   ['pad right', { pressed: ['right'] }, { pressed: ['left'] }]
-]) {
+];
+for (const [name, held, opposite] of rows1816) {
   void test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
     const { manager, controller, pads, fire, tick, key } = setup(t);
     pads[0] = gamepad(held);
@@ -1825,10 +1912,12 @@ void test('blur leaves confirmation-button selection available [INP-4]', (t) => 
   assert.deepEqual(manager.actions, ['move -1']);
 });
 
-for (const [name, held] of [
+/** @type {Array<[string, PadOptions]>} */
+const rows1893 = [
   ['stick down', { y: 1 }],
   ['pad down', { pressed: ['down'] }]
-]) {
+];
+for (const [name, held] of rows1893) {
   void test(`blur keeps ${name} inactive until rest and a fresh push [INP-2]`, (t) => {
     const { manager, controller, pads, fire, tick, key } = setup(t);
     pads[0] = gamepad(held);
@@ -1867,11 +1956,13 @@ void test('blur requires both horizontal and down controls at rest before gamepl
   controller.pollGamepads();
   fire('blur');
   manager.actions = [];
-  for (const held of [
+  /** @type {PadOptions[]} */
+  const rows1935 = [
     { pressed: ['down'] },
     { x: 1 },
     { pressed: ['left', 'down'] }
-  ]) {
+  ];
+  for (const held of rows1935) {
     pads[0] = gamepad(held);
     controller.pollGamepads();
     tick(100);
@@ -1913,12 +2004,14 @@ void test('blur cannot soft drop the real falling piece before down returns to r
 // Physical held controls: aliases and input sources keep their own identity.
 void test('keyboard aliases stay held independently in either release order [B12] [INP-2]', (t) => {
   const { controller, key, manager, tick } = setup(t);
-  for (const [first, second, action] of [
+  /** @type {Array<[string, string, import('../public/game/gameState.js').PlayerActionValue]>} */
+  const rows1981 = [
     ['KeyA', 'ArrowLeft', PlayerAction.moveLeft],
     ['ArrowLeft', 'KeyA', PlayerAction.moveLeft],
     ['KeyD', 'ArrowRight', PlayerAction.moveRight],
     ['ArrowRight', 'KeyD', PlayerAction.moveRight]
-  ]) {
+  ];
+  for (const [first, second, action] of rows1981) {
     for (const release of [first, second]) {
       controller.releaseAllInput();
       manager.actions = [];
@@ -1991,12 +2084,14 @@ void test('B12 three-key example falls back to newest remaining key, not fixed a
 
 void test('releasing pad input restores the newest of two held keys in either order [B12] [INP-2]', (t) => {
   const { controller, key, manager } = setup(t);
-  for (const [first, second, expected, x, buttons] of [
+  /** @type {Array<[string, string, import('../public/game/gameState.js').PlayerActionValue, number, PadButton[]]>} */
+  const rows2059 = [
     ['KeyA', 'KeyD', PlayerAction.moveRight, -1, []],
     ['KeyD', 'KeyA', PlayerAction.moveLeft, 1, []],
     ['KeyA', 'KeyD', PlayerAction.moveRight, 0, ['left']],
     ['KeyD', 'KeyA', PlayerAction.moveLeft, 0, ['right']]
-  ]) {
+  ];
+  for (const [first, second, expected, x, buttons] of rows2059) {
     controller.releaseAllInput();
     key(first);
     key(second);
@@ -2009,10 +2104,12 @@ void test('releasing pad input restores the newest of two held keys in either or
 
 void test('pad buttons obey newest press and restore surviving direction in either order [B12] [INP-4]', (t) => {
   const { controller, manager } = setup(t);
-  for (const [first, second, firstAction, secondAction] of [
+  /** @type {Array<[PadButton, PadButton, import('../public/game/gameState.js').PlayerActionValue, import('../public/game/gameState.js').PlayerActionValue]>} */
+  const rows2077 = [
     ['left', 'right', PlayerAction.moveLeft, PlayerAction.moveRight],
     ['right', 'left', PlayerAction.moveRight, PlayerAction.moveLeft]
-  ]) {
+  ];
+  for (const [first, second, firstAction, secondAction] of rows2077) {
     controller.releaseAllInput();
     manager.actions = [];
     controller.processInput(new Set([first]), 0, 0);
@@ -2026,10 +2123,12 @@ void test('pad buttons obey newest press and restore surviving direction in eith
 
 void test('stick and pad same-direction holds survive either release and do not restart DAS [B12] [INP-4]', (t) => {
   const { controller, manager, tick } = setup(t);
-  for (const [x, button, action] of [
+  /** @type {Array<[number, PadButton, import('../public/game/gameState.js').PlayerActionValue]>} */
+  const rows2094 = [
     [-1, 'left', PlayerAction.moveLeft],
     [1, 'right', PlayerAction.moveRight]
-  ]) {
+  ];
+  for (const [x, button, action] of rows2094) {
     for (const releaseStick of [false, true]) {
       controller.releaseAllInput();
       manager.actions = [];
@@ -2103,7 +2202,8 @@ void test('disconnect preserves confirmation selection for unchanged mixed pad h
   const { controller, manager, fire, pads } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
-  for (const input of [
+  /** @type {PadOptions[]} */
+  const rows2171 = [
     {},
     { x: -0.5 },
     { x: 0.5 },
@@ -2114,7 +2214,8 @@ void test('disconnect preserves confirmation selection for unchanged mixed pad h
     { pressed: ['left', 'right'] },
     { x: -1, pressed: ['right'] },
     { x: 1, pressed: ['left'] }
-  ]) {
+  ];
+  for (const input of rows2171) {
     controller.releaseAllInput();
     pads[0] = gamepad(input);
     controller.pollGamepads();
@@ -2135,11 +2236,13 @@ void test('disconnect preserves confirmation selection for unchanged mixed pad h
     assert.deepEqual(manager.actions, ['move 1'], 'fresh push selects once');
   }
   // Probe the snapshot before any unchanged or neutral poll overwrites it.
-  for (const [x, direction, expected] of [
+  /** @type {Array<[number, PadButton, string]>} */
+  const rows2203 = [
     [0, 'right', 'move 1'],
     [-0.5, 'left', 'move -1'],
     [0.5, 'right', 'move 1']
-  ]) {
+  ];
+  for (const [x, direction, expected] of rows2203) {
     controller.releaseAllInput();
     pads[0] = gamepad({ x });
     controller.pollGamepads();
@@ -2151,7 +2254,7 @@ void test('disconnect preserves confirmation selection for unchanged mixed pad h
     assert.deepEqual(
       manager.actions,
       [expected],
-      `snapshot ${x}: fresh push selects once`
+      `snapshot ${String(x)}: fresh push selects once`
     );
   }
 });
@@ -2210,12 +2313,14 @@ void test('confirmation stick threshold stays neutral at both boundary values [S
   const { controller, manager } = setup(t);
   manager.state = GameState.paused;
   manager.isConfirmingNewGame = true;
-  for (const [x, expected] of [
+  /** @type {Array<[number, string[]]>} */
+  const rows2278 = [
     [-0.5, []],
     [0.5, []],
     [1, ['move 1']],
     [-1, ['move -1']]
-  ]) {
+  ];
+  for (const [x, expected] of rows2278) {
     controller.releaseAllInput();
     manager.actions = [];
     controller.processInput(new Set(), x, 0);
@@ -2227,20 +2332,23 @@ void test('confirmation stick threshold stays neutral at both boundary values [S
 void test('fresh controls in real pause-resume and game-over restart polls remain spent [STA-2] [INP-4]', (t) => {
   const { controller, manager, key, tick } = setup(t);
   const original = manager.handleAction;
-  manager.handleAction = function (action) {
-    original.call(this, action);
-    if (action === PlayerAction.newGame && this.state === GameState.gameOver)
-      this.state = GameState.playing;
-  };
-  manager.togglePause = function () {
+  manager.handleAction =
+    /** @this {FakeManager} @param {string} action */ function (action) {
+      original.call(this, action);
+      if (action === PlayerAction.newGame && this.state === GameState.gameOver)
+        this.state = GameState.playing;
+    };
+  manager.togglePause = /** @this {FakeManager} */ function () {
     this.actions.push('togglePause');
     this.state =
       this.state === GameState.paused ? GameState.playing : GameState.paused;
   };
-  for (const [mode, button, action] of [
+  /** @type {Array<[import('../public/game/gameState.js').GameStateValue, PadButton, import('../public/game/gameState.js').PlayerActionValue | 'togglePause']>} */
+  const rows2305 = [
     [GameState.paused, 'menu', 'togglePause'],
     [GameState.gameOver, 'view', PlayerAction.newGame]
-  ]) {
+  ];
+  for (const [mode, button, action] of rows2305) {
     controller.releaseAllInput();
     manager.actions = [];
     manager.state = mode;
@@ -2259,7 +2367,7 @@ void test('fresh controls in real pause-resume and game-over restart polls remai
 
 void test('Menu pause cannot admit simultaneous fresh move or down holds after resume [STA-2] [INP-4]', (t) => {
   const { controller, manager, key, tick } = setup(t);
-  manager.togglePause = function () {
+  manager.togglePause = /** @this {FakeManager} */ function () {
     this.actions.push('togglePause');
     this.state =
       this.state === GameState.paused ? GameState.playing : GameState.paused;
@@ -2310,18 +2418,20 @@ void test('a paused movement attempt cannot schedule or send an action [STA-2] [
 // These controlled duplicate sequences are robustness inputs, not OS-frequency claims.
 void test('held movement and soft-drop duplicates stay spent across Menu pause until release [STA-2] [INP-2]', (t) => {
   const { controller, manager, key, tick } = setup(t);
-  manager.togglePause = function () {
+  manager.togglePause = /** @this {FakeManager} */ function () {
     this.state =
       this.state === GameState.playing ? GameState.paused : GameState.playing;
   };
-  for (const [code, action, interval] of [
+  /** @type {Array<[string, import('../public/game/gameState.js').PlayerActionValue | 'softDrop', number]>} */
+  const rows2382 = [
     ['KeyA', PlayerAction.moveLeft, 167],
     ['ArrowLeft', PlayerAction.moveLeft, 167],
     ['KeyD', PlayerAction.moveRight, 167],
     ['ArrowRight', PlayerAction.moveRight, 167],
     ['KeyS', 'softDrop', 50],
     ['ArrowDown', 'softDrop', 50]
-  ]) {
+  ];
+  for (const [code, action, interval] of rows2382) {
     for (const firstDownWhilePaused of [false, true]) {
       controller.releaseAllInput();
       manager.state = GameState.playing;
@@ -2372,17 +2482,19 @@ void test('held movement and soft-drop duplicates stay spent across Menu pause u
 
 void test('Game Over callback spends held keyboard controls through real New Game restart [STA-2] [INP-2]', (t) => {
   const { controller, key, tick } = setup(t);
-  let observedGame;
+  /** @type {{ game?: import('../public/game/gameManager.js').GameManager }} */
+  const observed = {};
   const { game } = newGame({
     factory: fixedFactory(PieceColors.cyan),
     onChange() {
       // Same wiring as public/script.js engineChanged, not a state shortcut.
-      if (observedGame?.state === GameState.gameOver)
+      if (observed.game?.state === GameState.gameOver)
         controller.releaseForPause();
     }
   });
-  observedGame = game;
+  observed.game = game;
   controller.gameManager = game;
+  /** @type {string[]} */
   const actions = [];
   const handleAction = game.handleAction.bind(game);
   game.handleAction = (action) => {
@@ -2394,14 +2506,16 @@ void test('Game Over callback spends held keyboard controls through real New Gam
     actions.push('softDrop');
     softDrop();
   };
-  for (const [code, action, interval] of [
+  /** @type {Array<[string, import('../public/game/gameState.js').PlayerActionValue | 'softDrop', number]>} */
+  const rows2462 = [
     ['KeyA', PlayerAction.moveLeft, 167],
     ['ArrowLeft', PlayerAction.moveLeft, 167],
     ['KeyD', PlayerAction.moveRight, 167],
     ['ArrowRight', PlayerAction.moveRight, 167],
     ['KeyS', 'softDrop', 50],
     ['ArrowDown', 'softDrop', 50]
-  ]) {
+  ];
+  for (const [code, action, interval] of rows2462) {
     for (const firstDownWhileOver of [false, true]) {
       controller.releaseAllInput();
       if (!firstDownWhileOver) key(code);

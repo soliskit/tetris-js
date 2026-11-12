@@ -18,7 +18,10 @@ import { newGame, seededRandom } from '../helpers.js';
 
 const validGains = new Set([0, 100, 300, 500, 800]);
 
-/** @param {number} seed */
+/**
+ * @param {number} seed
+ * @param {number} lockTarget
+ */
 function runTrace(seed, lockTarget) {
   const maxGames = 5000,
     maxSteps = 2000;

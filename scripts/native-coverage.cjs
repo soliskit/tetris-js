@@ -7,16 +7,48 @@ const { randomBytes, createHash } = require('node:crypto');
 const { pathToFileURL } = require('node:url');
 const C = require('./native-coverage-common.cjs');
 
+/** @typedef {import('./native-coverage-common.cjs').Field} Field */
+/** @typedef {import('./native-coverage-common.cjs').InventoryRow} InventoryRow */
+
+// The decoder fixes each evidence field's type by its schema, so these checks
+// only narrow; a field of another type is rejected as invalid evidence.
+/** @param {unknown} value */
+function buffer(value) {
+  if (!Buffer.isBuffer(value)) throw new Error('invalid evidence field');
+  return value;
+}
+/** @param {unknown} value */
+function text(value) {
+  if (typeof value !== 'string') throw new Error('invalid evidence field');
+  return value;
+}
+/** @param {unknown} error */
+function asError(error) {
+  return error instanceof Error ? error : new Error(String(error));
+}
+/** @param {unknown} error */
+function errorMessage(error) {
+  return asError(error).message;
+}
+
 // Independently reconstruct membership, counts and digests. Producer assertions
 // are evidence to check, not the supervisor's acceptance decision.
+/**
+ * @param {string} directory
+ * @param {Buffer} launch
+ * @param {unknown} pid
+ * @param {InventoryRow[]} baseline
+ */
 function validate(directory, launch, pid, baseline) {
   const expectedInventory = C.inventoryDigest(baseline);
   const required = new Map(
     baseline.filter((r) => r[3] === 1).map((r) => [r[2], r])
   );
-  const witnesses = new Map(),
-    seen = new Set(),
-    totals = [0, 0, 0, 0, 0, 0];
+  /** @type {Map<string, Field[]>} */
+  const witnesses = new Map();
+  /** @type {Set<string>} */
+  const seen = new Set();
+  const totals = [0, 0, 0, 0, 0, 0];
   const ih = createHash('sha256'),
     wh = createHash('sha256'),
     rh = createHash('sha256');
@@ -24,8 +56,9 @@ function validate(directory, launch, pid, baseline) {
     inventoryCount = 0,
     witnessCount = 0,
     rowCount = 0;
-  let manifest = null,
-    phase = 0;
+  /** @type {Field[] | null} */
+  let manifest = null;
+  let phase = 0;
   C.readEvidence(directory, launch, pid, (kind, row, sequence) => {
     if (kind === 1) {
       if (
@@ -56,14 +89,16 @@ function validate(directory, launch, pid, baseline) {
       if (phase > 2 || row[0] !== witnessCount)
         throw new Error('witness order');
       phase = 2;
-      const old = witnesses.get(row[1]);
+      const old = witnesses.get(text(row[1]));
       if (
         old &&
-        (old[2] !== row[2] || old[3] !== row[3] || !old[4].equals(row[4]))
+        (old[2] !== row[2] ||
+          old[3] !== row[3] ||
+          !buffer(old[4]).equals(buffer(row[4])))
       ) {
         throw new Error('contradictory witness');
       }
-      witnesses.set(row[1], row);
+      witnesses.set(text(row[1]), row);
       C.updateCategory(wh, 3, row);
       witnessCount = C.add(witnessCount, 1);
       return;
@@ -71,15 +106,15 @@ function validate(directory, launch, pid, baseline) {
     if (kind === 4) {
       if (phase > 3 || row[0] !== rowCount) throw new Error('row order');
       phase = 3;
-      const witness = witnesses.get(pathToFileURL(row[1]).href);
+      const witness = witnesses.get(pathToFileURL(text(row[1])).href);
       if (!witness || witness[2] !== row[2])
         throw new Error('unwitnessed native row');
-      const source = required.get(row[2]);
+      const source = required.get(text(row[2]));
       if (source) {
-        if (source[6] !== witness[3] || !source[7].equals(witness[4])) {
+        if (source[6] !== witness[3] || !source[7].equals(buffer(witness[4]))) {
           throw new Error('source text mismatch');
         }
-        seen.add(row[2]);
+        seen.add(text(row[2]));
       }
       for (let i = 0; i < 6; i += 2) {
         if (row[i + 3] !== row[i + 4])
@@ -118,9 +153,9 @@ function validate(directory, launch, pid, baseline) {
       ];
       if (
         !expected.every((v, i) =>
-          Buffer.isBuffer(v) ? v.equals(row[i]) : v === row[i]
+          Buffer.isBuffer(v) ? v.equals(buffer(row[i])) : v === row[i]
         ) ||
-        !row[10].equals(expectedInventory)
+        !buffer(row[10]).equals(expectedInventory)
       )
         throw new Error('manifest mismatch');
       manifest = row;
@@ -130,7 +165,7 @@ function validate(directory, launch, pid, baseline) {
       if (
         phase !== 4 ||
         !manifest ||
-        !row[0].equals(C.recordHash(5, manifest)) ||
+        !buffer(row[0]).equals(C.recordHash(5, manifest)) ||
         row[1] !== sequence
       ) {
         throw new Error('invalid terminal seal');
@@ -146,13 +181,18 @@ function validate(directory, launch, pid, baseline) {
 function main() {
   const cwd = process.cwd(),
     launch = randomBytes(16);
-  let baseline, directory, container;
+  /** @type {InventoryRow[]} */
+  let baseline;
+  /** @type {string} */
+  let directory;
+  /** @type {string | undefined} */
+  let container;
   function cleanup() {
     try {
       if (container) fs.rmSync(container, { recursive: true, force: true });
       return true;
     } catch (error) {
-      console.error('QA-2 evidence cleanup failed:', error.message);
+      console.error('QA-2 evidence cleanup failed:', errorMessage(error));
       return false;
     }
   }
@@ -163,7 +203,7 @@ function main() {
     directory = path.join(container, 'evidence');
     fs.mkdirSync(directory, { mode: 0o700 });
   } catch (error) {
-    console.error('QA-2 verification unavailable:', error.message);
+    console.error('QA-2 verification unavailable:', errorMessage(error));
     cleanup();
     process.exitCode = 1;
     return;
@@ -176,6 +216,7 @@ function main() {
     TETRIS_QA2_PARENT: String(process.pid),
     TETRIS_QA2_BINDING: path.join(container, 'owner-pid')
   };
+  /** @type {import('node:child_process').ChildProcess} */
   let child;
   try {
     child = spawn(
@@ -184,11 +225,12 @@ function main() {
       { cwd, env, shell: false, detached: false, stdio: 'inherit' }
     );
   } catch (error) {
-    console.error('QA-2 child launch unavailable:', error.message);
+    console.error('QA-2 child launch unavailable:', errorMessage(error));
     cleanup();
     process.exitCode = 1;
     return;
   }
+  /** @type {Error | null} */
   let bindingError = null;
   try {
     if (!Number.isSafeInteger(child.pid)) throw new Error('missing child PID');
@@ -197,27 +239,34 @@ function main() {
       mode: 0o600
     });
   } catch (error) {
-    bindingError = error;
-    console.error('QA-2 PID binding unavailable:', error.message);
+    bindingError = asError(error);
+    console.error('QA-2 PID binding unavailable:', errorMessage(error));
   }
   let interrupted = false,
     exited = false,
     closed = false,
-    spawnError = null,
     forced = false;
+  /** @type {Error | null} */
+  let spawnError = null;
+  /** @type {Array<ReturnType<typeof setTimeout>>} */
   const timers = [];
   const running = () =>
     !exited && !closed && child.exitCode === null && child.signalCode === null;
+  /**
+   * @param {() => void} fn
+   * @param {number} ms
+   */
   const timer = (fn, ms) => {
     timers.push(setTimeout(fn, ms));
   };
+  /** @param {NodeJS.Signals} name */
   function signal(name) {
     if (!running()) return;
     try {
       if (!child.kill(name))
         spawnError ||= new Error('child signal delivery refused');
     } catch (error) {
-      spawnError ||= error;
+      spawnError ||= asError(error);
     }
   }
   function force() {
@@ -233,6 +282,7 @@ function main() {
     cleanup();
     process.exit(1);
   }
+  /** @param {NodeJS.Signals} name */
   function interrupt(name) {
     if (interrupted) {
       force();
@@ -259,7 +309,7 @@ function main() {
   process.on('SIGINT', onInt);
   process.on('SIGTERM', onTerm);
   child.on('error', (error) => {
-    spawnError = error;
+    spawnError = asError(error);
   });
   child.on('exit', () => {
     exited = true;
@@ -282,7 +332,7 @@ function main() {
       }
       valid = true;
     } catch (error) {
-      console.error('QA-2 acceptance not established:', error.message);
+      console.error('QA-2 acceptance not established:', errorMessage(error));
     }
     const cleaned = cleanup();
     // Optional, explicitly scoped diagnostic evidence. Never substitutes for gate checks.
@@ -313,7 +363,10 @@ function main() {
         );
       } catch (error) {
         telemetryWritten = false;
-        console.error('QA-2 requested telemetry unavailable:', error.message);
+        console.error(
+          'QA-2 requested telemetry unavailable:',
+          errorMessage(error)
+        );
       }
     }
     process.removeListener('SIGINT', onInt);
@@ -336,7 +389,10 @@ function main() {
           process.exit(1);
         });
       } catch (error) {
-        console.error('QA-2 signal disposition unavailable:', error.message);
+        console.error(
+          'QA-2 signal disposition unavailable:',
+          errorMessage(error)
+        );
         process.exitCode = 1;
       }
       return;

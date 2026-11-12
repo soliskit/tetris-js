@@ -14,6 +14,15 @@ import {
   TetrominoFactory
 } from '../public/game/tetrominoFactory.js';
 import {
+  jsonArray,
+  jsonObject,
+  jsonNumber,
+  jsonString,
+  parseJsonObject,
+  present,
+  remove
+} from './json.js';
+import {
   createFakeScheduler,
   newGame,
   pieceByColor,
@@ -22,6 +31,31 @@ import {
 } from './helpers.js';
 
 const SIZE = { rows: 20, columns: 10 };
+
+/** @typedef {import('./json.js').JsonObject} JsonObject */
+
+// Navigation into a parsed save; each fails the test when the part is absent.
+/** @param {JsonObject} data */
+const boardOf = (data) => jsonArray(data.gameBoard);
+/**
+ * @param {JsonObject} data
+ * @param {number} row
+ */
+const rowOf = (data, row) => jsonArray(boardOf(data)[row]);
+/**
+ * @param {JsonObject} data
+ * @param {number} row
+ * @param {number} column
+ */
+const cellOf = (data, row, column) => jsonObject(rowOf(data, row)[column]);
+/** @param {JsonObject} data */
+const currentOf = (data) => jsonObject(data.currentTetromino);
+/**
+ * @param {JsonObject} data
+ * @param {number} index
+ */
+const nextOf = (data, index) =>
+  jsonObject(jsonArray(data.nextTetrominos)[index]);
 
 // A realistic save: a few locked blocks, a held piece and a moved piece.
 function validSave() {
@@ -39,12 +73,12 @@ function validSave() {
   game.gameBoard[19][0] = { isFilled: true, color: PieceColors.cyan };
   game.gameBoard[19][1] = { isFilled: true, color: PieceColors.red };
   game.score = 1300;
-  return { game, data: JSON.parse(serializeSession(game)) };
+  return { game, data: parseJsonObject(serializeSession(game)) };
 }
 
 void test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
   const { game, data } = validSave();
-  const session = parseSession(JSON.stringify(data), SIZE);
+  const session = present(parseSession(JSON.stringify(data), SIZE));
   assert.deepEqual(session.gameBoard, game.gameBoard);
   assert.equal(session.score, 1300);
   assert.deepEqual(session.currentTetromino, game.currentTetromino);
@@ -58,15 +92,15 @@ void test('a saved game reads back exactly [SAF-1] [STA-4]', () => {
 
 void test('the pieces left in the bag are saved by color and read back [SAF-1] [STA-4] [PCE-5]', () => {
   const { game } = newGame({ factory: new TetrominoFactory(seededRandom(3)) });
-  const data = JSON.parse(serializeSession(game));
+  const data = parseJsonObject(serializeSession(game));
   // A new game deals the current piece and three upcoming ones from a full bag.
-  assert.equal(data.bag.length, 3);
+  assert.equal(jsonArray(data.bag).length, 3);
   assert.deepEqual(
     data.bag,
-    game.factory.bag.map((piece) => piece.color)
+    present(game.factory.bag).map((piece) => piece.color)
   );
   assert.deepEqual(
-    parseSession(JSON.stringify(data), SIZE).bag,
+    present(parseSession(JSON.stringify(data), SIZE)).bag,
     game.factory.bag
   );
 });
@@ -74,19 +108,22 @@ void test('the pieces left in the bag are saved by color and read back [SAF-1] [
 void test('a piece source without a bag saves an empty one [SAF-1] [STA-4]', () => {
   const { data } = validSave();
   assert.deepEqual(data.bag, []);
-  assert.deepEqual(parseSession(JSON.stringify(data), SIZE).bag, []);
+  assert.deepEqual(present(parseSession(JSON.stringify(data), SIZE)).bag, []);
 });
 
 void test('a save without the remaining bag is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
-  delete data.bag;
+  remove(data, 'bag');
   assert.equal(parseSession(JSON.stringify(data), SIZE), null);
 });
 
 void test('a save without a held piece is valid [SAF-1]', () => {
   const { data } = validSave();
   data.heldTetromino = null;
-  assert.equal(parseSession(JSON.stringify(data), SIZE).heldTetromino, null);
+  assert.equal(
+    present(parseSession(JSON.stringify(data), SIZE)).heldTetromino,
+    null
+  );
 });
 
 void test('saves leave out the derived level and refuse a stored level [SAF-1] [SCO-2] [STA-6]', () => {
@@ -100,35 +137,37 @@ void test('saves leave out the derived level and refuse a stored level [SAF-1] [
 
 void test('pieces are rebuilt from the built in shapes, not the stored ones [SAF-1] [PCE-2]', () => {
   const { data } = validSave();
-  data.currentTetromino.rotations = [
+  currentOf(data).rotations = [
     [
       [true, true, true, true],
       [true, true, true, true]
     ]
   ];
-  data.currentTetromino.wallKickData = [];
-  const session = parseSession(JSON.stringify(data), SIZE);
+  currentOf(data).wallKickData = [];
+  const session = present(parseSession(JSON.stringify(data), SIZE));
   assert.equal(session.currentTetromino.cells.length, 4);
   assert.deepEqual(
     session.currentTetromino.rotations,
-    pieceByColor(data.currentTetromino.color).rotations
+    pieceByColor(jsonString(currentOf(data).color)).rotations
   );
   assert.deepEqual(
     session.currentTetromino.wallKickData,
-    pieceByColor(data.currentTetromino.color).wallKickData
+    pieceByColor(jsonString(currentOf(data).color)).wallKickData
   );
 });
 
 void test('waiting pieces come back ready to spawn [SAF-1]', () => {
   const { data } = validSave();
-  data.nextTetrominos[0].position = { row: 15, column: 8 };
-  data.nextTetrominos[0].rotationState = 2;
-  const next = parseSession(JSON.stringify(data), SIZE).nextTetrominos[0];
+  nextOf(data, 0).position = { row: 15, column: 8 };
+  nextOf(data, 0).rotationState = 2;
+  const next = present(parseSession(JSON.stringify(data), SIZE))
+    .nextTetrominos[0];
   assert.equal(next.rotationState, 0);
   assert.equal(next.position.row, 0);
 });
 
 // Every way a save can be broken. Each must be rejected as a whole.
+/** @type {Record<string, (data: JsonObject) => string | null | void>} */
 const corruptions = {
   'text that is not JSON': () => '{"gameBoard": [',
   'nothing saved': () => null,
@@ -136,31 +175,31 @@ const corruptions = {
   'a list instead of an object': () => '[]',
   'a number': () => '42',
   'no board': (data) => {
-    delete data.gameBoard;
+    remove(data, 'gameBoard');
   },
   'a board with 19 rows': (data) => {
-    data.gameBoard.pop();
+    boardOf(data).pop();
   },
   'a board row with 11 cells': (data) => {
-    data.gameBoard[3].push({ isFilled: false, color: null });
+    rowOf(data, 3).push({ isFilled: false, color: null });
   },
   'a board row that is not a list': (data) => {
-    data.gameBoard[3] = 'row';
+    boardOf(data)[3] = 'row';
   },
   'a cell that is not an object': (data) => {
-    data.gameBoard[3][3] = 1;
+    rowOf(data, 3)[3] = 1;
   },
   'a cell without isFilled': (data) => {
-    data.gameBoard[3][3] = { color: null };
+    rowOf(data, 3)[3] = { color: null };
   },
   'a filled cell with an unknown color': (data) => {
-    data.gameBoard[19][0].color = '#123456';
+    cellOf(data, 19, 0).color = '#123456';
   },
   'a filled cell without a color': (data) => {
-    data.gameBoard[19][0].color = null;
+    cellOf(data, 19, 0).color = null;
   },
   'an empty cell with a color': (data) => {
-    data.gameBoard[5][5] = { isFilled: false, color: PieceColors.red };
+    rowOf(data, 5)[5] = { isFilled: false, color: PieceColors.red };
   },
   'a negative score': (data) => {
     data.score = -100;
@@ -175,62 +214,64 @@ const corruptions = {
     data.score = 2 ** 60;
   },
   'no current piece': (data) => {
-    delete data.currentTetromino;
+    remove(data, 'currentTetromino');
   },
   'a current piece of an unknown type': (data) => {
-    data.currentTetromino.color = '#000000';
+    currentOf(data).color = '#000000';
   },
   'a current piece without a position': (data) => {
-    delete data.currentTetromino.position;
+    remove(currentOf(data), 'position');
   },
   'a current piece at a fractional column': (data) => {
-    data.currentTetromino.position.column = 2.5;
+    jsonObject(currentOf(data).position).column = 2.5;
   },
   'a current piece with rotation 4': (data) => {
-    data.currentTetromino.rotationState = 4;
+    currentOf(data).rotationState = 4;
   },
   'a current piece with rotation -1': (data) => {
-    data.currentTetromino.rotationState = -1;
+    currentOf(data).rotationState = -1;
   },
   'a current piece with rotation 1.5': (data) => {
-    data.currentTetromino.rotationState = 1.5;
+    currentOf(data).rotationState = 1.5;
   },
   'a current piece with a rotation one past its last': (data) => {
-    data.currentTetromino.rotationState = pieceByColor(
-      data.currentTetromino.color
+    currentOf(data).rotationState = pieceByColor(
+      jsonString(currentOf(data).color)
     ).rotations.length;
   },
   'a current piece outside the board': (data) => {
-    data.currentTetromino.position = { row: 0, column: -3 };
+    currentOf(data).position = { row: 0, column: -3 };
   },
   'a current piece inside locked blocks': (data) => {
-    const { row, column } = data.currentTetromino.position;
+    const position = jsonObject(currentOf(data).position);
+    const row = jsonNumber(position.row);
+    const column = jsonNumber(position.column);
     for (let r = row; r < row + 3; r++)
       for (let c = column; c < column + 3; c++) {
         if (r !== 19 || c > 3)
-          data.gameBoard[r][c] = { isFilled: true, color: PieceColors.blue };
+          rowOf(data, r)[c] = { isFilled: true, color: PieceColors.blue };
       }
   },
   'no upcoming pieces': (data) => {
-    delete data.nextTetrominos;
+    remove(data, 'nextTetrominos');
   },
   'two upcoming pieces': (data) => {
-    data.nextTetrominos.pop();
+    jsonArray(data.nextTetrominos).pop();
   },
   'an upcoming piece of an unknown type': (data) => {
-    data.nextTetrominos[1].color = 'red';
+    nextOf(data, 1).color = 'red';
   },
   'an upcoming piece that is not an object': (data) => {
-    data.nextTetrominos[1] = 7;
+    jsonArray(data.nextTetrominos)[1] = 7;
   },
   'a held piece of an unknown type': (data) => {
-    data.heldTetromino.color = '#ffffff';
+    jsonObject(data.heldTetromino).color = '#ffffff';
   },
   'a held piece that is a string': (data) => {
     data.heldTetromino = 'T';
   },
   'a missing held piece field': (data) => {
-    delete data.heldTetromino;
+    remove(data, 'heldTetromino');
   },
   'can hold stored as text': (data) => {
     data.canHoldTetromino = 'false';
@@ -263,6 +304,7 @@ for (const [name, corrupt] of Object.entries(corruptions)) {
 
 // The former raw-position fixture is refused through the player's storage route.
 // The older fixture remains unchanged as evidence that its layout is refused.
+/** @type {Array<[string, string, (saved: JsonObject) => boolean]>} */
 const savedGameFormats = [
   [
     'raw-position format',
@@ -277,7 +319,7 @@ for (const [format, file, isThatFormat] of savedGameFormats) {
       new URL(`./fixtures/${file}`, import.meta.url),
       'utf8'
     );
-    assert.ok(isThatFormat(JSON.parse(text)));
+    assert.ok(isThatFormat(parseJsonObject(text)));
     const storage = createMemoryStorage();
     storage.setItem('tetris.savedGameSession', text);
     const game = new GameManager({ storage, scheduler: createFakeScheduler() });
@@ -302,7 +344,7 @@ for (const format of [
       'utf8'
     );
     if (format === 'a missing bag') {
-      const saved = JSON.parse(text);
+      const saved = parseJsonObject(text);
       delete saved.bag;
       text = JSON.stringify(saved);
     } else if (format === 'a malformed current save') {
@@ -316,7 +358,7 @@ for (const format of [
     const before = {
       board: game.gameBoard,
       piece: game.currentTetromino,
-      bag: [...game.factory.bag]
+      bag: [...present(game.factory.bag)]
     };
     game.handleAction(PlayerAction.continueGame);
     assert.equal(game.state, GameState.gameOver);
@@ -347,6 +389,7 @@ for (const source of ['unreadable save', 'missing save', 'unavailable save']) {
         throw new Error('SecurityError');
       return read(key);
     };
+    /** @type {Array<[string, unknown]>} */
     const writes = [];
     storage.setItem = (key, value) => {
       writes.push([key, value]);
@@ -371,6 +414,7 @@ void test('Continue ignores an unreadable former flag and loads a valid envelope
     if (key === 'tetris.isSessionSaved') throw new Error('SecurityError');
     return read(key);
   };
+  /** @type {Array<[string, unknown]>} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -387,7 +431,9 @@ void test('Continue leaves a valid save alone when its availability flag is fals
   const text = serializeSavedRecord(JSON.stringify(data), false);
   storage.setItem('tetris.savedGameSession', text);
   const read = storage.getItem;
+  /** @type {string[]} */
   const reads = [];
+  /** @type {Array<[string, unknown]>} */
   const writes = [];
   storage.getItem = (key) => {
     reads.push(key);
@@ -400,7 +446,7 @@ void test('Continue leaves a valid save alone when its availability flag is fals
   const before = {
     board: game.gameBoard,
     piece: game.currentTetromino,
-    bag: [...game.factory.bag]
+    bag: [...present(game.factory.bag)]
   };
   game.handleAction(PlayerAction.continueGame);
   assert.equal(game.state, GameState.gameOver);
@@ -420,6 +466,7 @@ void test('refusing an old save attempts withdrawal even when the write fails [S
   );
   storage.setItem('tetris.savedGameSession', text);
   storage.setItem('tetris.isSessionSaved', 'true');
+  /** @type {Array<[string, unknown]>} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -455,18 +502,19 @@ void test('the lock-delay state is saved and read back [PLY-6] [STA-4]', () => {
   game.softDrop();
   game.softDrop();
   game.lockDelayResetCount = 4; // stands in for resets burned while resting
-  const data = JSON.parse(serializeSession(game));
+  const data = parseJsonObject(serializeSession(game));
   assert.equal(data.lockDelayResetCount, 4);
   assert.equal(data.lowestRowReached, 4);
-  const session = parseSession(JSON.stringify(data), SIZE);
+  const session = present(parseSession(JSON.stringify(data), SIZE));
   assert.equal(session.lockDelayResetCount, 4);
   assert.equal(session.lowestRowReached, 4);
 });
 
 void test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () => {
   const { data } = validSave();
+  /** @param {unknown} count */
   const withCount = (count) => {
-    const d = JSON.parse(JSON.stringify(data));
+    const d = parseJsonObject(JSON.stringify(data));
     d.lockDelayResetCount = count;
     return parseSession(JSON.stringify(d), SIZE);
   };
@@ -476,9 +524,10 @@ void test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () 
   assert.equal(withCount('3'), null);
   assert.notEqual(withCount(15), null);
   assert.notEqual(withCount(0), null);
+  /** @param {unknown} row */
   const withRow = (row) => {
-    const d = JSON.parse(JSON.stringify(data));
-    d.currentTetromino.position.row = 5;
+    const d = parseJsonObject(JSON.stringify(data));
+    jsonObject(currentOf(d).position).row = 5;
     d.lowestRowReached = row;
     return parseSession(JSON.stringify(d), SIZE);
   };
@@ -501,8 +550,8 @@ void test('a save with invalid lock-delay state is refused [SAF-1] [STA-6]', () 
 
 void test('a pre-fix save without the lock-delay keys is refused [STA-6]', () => {
   const { data } = validSave();
-  delete data.lockDelayResetCount;
-  delete data.lowestRowReached;
+  remove(data, 'lockDelayResetCount');
+  remove(data, 'lowestRowReached');
   const session = parseSession(JSON.stringify(data), SIZE);
   assert.equal(session, null);
 });

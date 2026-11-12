@@ -5,6 +5,8 @@ const path = require('node:path');
 const { createHash } = require('node:crypto');
 const { StringDecoder } = require('node:string_decoder');
 const { pathToFileURL, fileURLToPath } = require('node:url');
+/** @typedef {string | number | boolean | Buffer} Field */
+/** @typedef {[number, string, string, number, number, Buffer, number, Buffer]} InventoryRow */
 const HEADER = 128;
 const PAYLOAD = 65536 - HEADER;
 const ZERO = Buffer.alloc(32);
@@ -16,6 +18,7 @@ const COUNT_NAMES = [
   'totalFunctionCount',
   'coveredFunctionCount'
 ];
+/** @type {Partial<Record<number, string[]>>} */
 const SCHEMAS = {
   1: ['n', 's', 's', 's', 'n', 'b', 'b'],
   2: ['n', 's', 's', 'n', 'n', 'd', 'n', 'd'],
@@ -43,22 +46,30 @@ const SCHEMAS = {
   ],
   6: ['d', 'n']
 };
+/** @param {string | NodeJS.ArrayBufferView} value */
 function hash(value) {
   return createHash('sha256').update(value).digest();
 }
+/** @param {unknown} value */
 function integer(value) {
-  if (!Number.isSafeInteger(value) || value < 0)
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
     throw new Error('unsafe nonnegative integer');
   return value;
 }
+/**
+ * @param {unknown} a
+ * @param {unknown} b
+ */
 function add(a, b) {
   return integer(integer(a) + integer(b));
 }
+/** @param {unknown} value */
 function u64(value) {
   const b = Buffer.alloc(8);
   b.writeBigUInt64BE(BigInt(integer(value)));
   return b;
 }
+/** @param {Buffer} buffer */
 function number(buffer) {
   if (buffer.length !== 8) throw new Error('invalid integer field');
   const n = buffer.readBigUInt64BE();
@@ -66,6 +77,7 @@ function number(buffer) {
     throw new Error('unsafe encoded integer');
   return Number(n);
 }
+/** @param {unknown} text */
 function* textBytes(text) {
   if (typeof text !== 'string') throw new Error('non-string text');
   // Each code unit is encoded independently. Surrogate boundaries cannot alter bytes.
@@ -77,6 +89,7 @@ function* textBytes(text) {
     yield b;
   }
 }
+/** @param {Iterable<unknown>} parts */
 function textHash(parts) {
   const h = createHash('sha256');
   let units = 0;
@@ -87,6 +100,10 @@ function textHash(parts) {
   }
   return { units, digest: h.digest() };
 }
+/**
+ * @param {string | undefined} type
+ * @param {unknown} value
+ */
 function fieldLength(type, value) {
   if (type === 'n') {
     integer(value);
@@ -107,6 +124,10 @@ function fieldLength(type, value) {
   }
   throw new Error('unknown field');
 }
+/**
+ * @param {number} kind
+ * @param {readonly unknown[]} values
+ */
 function recordLength(kind, values) {
   const schema = SCHEMAS[kind];
   if (!schema || values.length !== schema.length)
@@ -116,33 +137,50 @@ function recordLength(kind, values) {
     0
   );
 }
+/**
+ * @param {number} kind
+ * @param {readonly unknown[]} values
+ * @returns {Generator<Buffer>}
+ */
 function* encode(kind, values) {
   recordLength(kind, values);
+  const schema = SCHEMAS[kind] ?? [];
   for (let i = 0; i < values.length; i++) {
-    const type = SCHEMAS[kind][i],
+    const type = schema[i],
       value = values[i];
     yield u64(fieldLength(type, value));
     if (type === 's') yield* textBytes(value);
     else if (type === 'n') yield u64(value);
     else if (type === 'b') yield Buffer.from([value ? 1 : 0]);
-    else yield value;
+    else if (Buffer.isBuffer(value)) yield value;
   }
 }
+/**
+ * @param {import('node:crypto').Hash} h
+ * @param {number} kind
+ * @param {readonly unknown[]} values
+ */
 function updateCategory(h, kind, values) {
   h.update(u64(recordLength(kind, values)));
   for (const b of encode(kind, values)) h.update(b);
 }
+/**
+ * @param {number} kind
+ * @param {readonly unknown[]} values
+ */
 function recordHash(kind, values) {
   const h = createHash('sha256');
   for (const b of encode(kind, values)) h.update(b);
   return h.digest();
 }
+/** @param {string} p */
 function canonical(p) {
   const absolute = path.resolve(p);
   if (fileURLToPath(pathToFileURL(absolute)) !== absolute)
     throw new Error('path URL roundtrip conflict');
   return fs.realpathSync.native(absolute);
 }
+/** @param {string} filename */
 function fileIdentity(filename) {
   const raw = createHash('sha256'),
     text = createHash('sha256'),
@@ -173,19 +211,27 @@ function fileIdentity(filename) {
     fs.closeSync(fd);
   }
 }
+/** @param {string} cwd */
 function inventory(cwd) {
   const root = path.join(cwd, 'public', 'game');
-  const rows = [],
-    unknown = [];
+  /** @type {InventoryRow[]} */
+  const rows = [];
+  /** @type {string[]} */
+  const unknown = [];
+  /**
+   * @param {string} folder
+   * @param {string} relative
+   */
   function walk(folder, relative) {
     if (
       !fs.lstatSync(folder).isDirectory() ||
       fs.lstatSync(folder).isSymbolicLink()
     )
       throw new Error('unknown source directory form');
-    const names = fs.readdirSync(folder, {
-      encoding: process.platform === 'win32' ? 'utf8' : 'buffer'
-    });
+    const names =
+      process.platform === 'win32'
+        ? fs.readdirSync(folder, { encoding: 'utf8' })
+        : fs.readdirSync(folder, { encoding: 'buffer' });
     const decoded = names
       .map((name) => {
         if (typeof name === 'string') return name;
@@ -231,18 +277,29 @@ function inventory(cwd) {
     throw new Error('no required game sources');
   return rows;
 }
+/** @param {InventoryRow[]} rows */
 function inventoryDigest(rows) {
   const h = createHash('sha256');
   for (const row of rows) updateCategory(h, 2, row);
   return h.digest();
 }
+/** @param {unknown} row */
 function counts(row) {
-  const values = COUNT_NAMES.map((name) => integer(row[name]));
+  if (typeof row !== 'object' || row === null)
+    throw new Error('invalid coverage row');
+  const values = COUNT_NAMES.map((name) => integer(Reflect.get(row, name)));
   for (let i = 0; i < 6; i += 2)
-    if (values[i + 1] > values[i]) throw new Error('covered exceeds total');
+    if ((values[i + 1] ?? 0) > (values[i] ?? 0))
+      throw new Error('covered exceeds total');
   return values;
 }
 class Writer {
+  /**
+   * @param {string} directory
+   * @param {Buffer} launch
+   * @param {unknown} pid
+   * @param {Buffer} transaction
+   */
   constructor(directory, launch, pid, transaction) {
     this.directory = directory;
     this.launch = launch;
@@ -252,6 +309,11 @@ class Writer {
     this.previous = ZERO;
     this.sealed = false;
   }
+  /**
+   * @param {number} kind
+   * @param {Buffer} payload
+   * @param {boolean} end
+   */
   frame(kind, payload, end) {
     if (this.sealed || payload.length > PAYLOAD)
       throw new Error('invalid publication state');
@@ -287,6 +349,10 @@ class Writer {
     this.previous = hash(bytes);
     this.sequence = add(this.sequence, 1);
   }
+  /**
+   * @param {number} kind
+   * @param {readonly unknown[]} values
+   */
   record(kind, values) {
     let buffer = Buffer.alloc(PAYLOAD),
       used = 0;
@@ -310,15 +376,22 @@ class Writer {
 }
 // Incremental field reader: only identity strings, not source text, are retained.
 class Decoder {
+  /** @param {number} kind */
   constructor(kind) {
-    this.schema = SCHEMAS[kind];
-    if (!this.schema) throw new Error('unknown kind');
+    const schema = SCHEMAS[kind];
+    if (!schema) throw new Error('unknown kind');
+    /** @type {string[]} */
+    this.schema = schema;
+    /** @type {Field[]} */
     this.values = [];
     this.prefix = Buffer.alloc(8);
     this.prefixUsed = 0;
+    /** @type {number | null} */
     this.remaining = null;
+    /** @type {Buffer[]} */
     this.parts = [];
   }
+  /** @param {Buffer} bytes */
   push(bytes) {
     let offset = 0;
     while (offset < bytes.length) {
@@ -354,6 +427,7 @@ class Decoder {
   finish() {
     const b = Buffer.concat(this.parts),
       type = this.schema[this.values.length];
+    /** @type {Field} */
     let value;
     if (type === 's') value = b.toString('utf16le');
     else if (type === 'n') value = number(b);
@@ -375,13 +449,22 @@ class Decoder {
     return this.values;
   }
 }
+/**
+ * @param {string} directory
+ * @param {Buffer} launch
+ * @param {unknown} pid
+ * @param {(kind: number, values: Field[], sequence: number) => void} accept
+ */
 function readEvidence(directory, launch, pid, accept) {
   let sequence = 0,
     previous = ZERO,
-    transaction = null,
-    decoder = null,
-    kind = null,
     sealed = false;
+  /** @type {Buffer | null} */
+  let transaction = null;
+  /** @type {Decoder | null} */
+  let decoder = null;
+  /** @type {number | null} */
+  let kind = null;
   while (!sealed) {
     const filename = path.join(
       directory,
@@ -391,6 +474,7 @@ function readEvidence(directory, launch, pid, accept) {
       filename,
       fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)
     );
+    /** @type {Buffer} */
     let bytes;
     try {
       const st = fs.fstatSync(fd);
@@ -443,7 +527,9 @@ function readEvidence(directory, launch, pid, accept) {
   let entries = 0;
   const dir = fs.opendirSync(directory);
   try {
-    for (let entry; (entry = dir.readSync()) !== null;) {
+    /** @type {fs.Dirent | null} */
+    let entry;
+    while ((entry = dir.readSync()) !== null) {
       if (
         !entry.isFile() ||
         !/^[0-9a-f]{16}\.frame$/.test(entry.name) ||

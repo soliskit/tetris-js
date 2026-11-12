@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const serverFile = fileURLToPath(new URL('../index.js', import.meta.url));
 
+/** @returns {Promise<number>} */
 function freePort() {
   return new Promise((resolve, reject) => {
     const probe = net.createServer().listen(0, () => {
@@ -33,16 +34,16 @@ async function startServer(t) {
   /** @type {Promise<void>} */
   const listening = new Promise((resolve, reject) => {
     let output = '';
-    child.stdout.on('data', (chunk) => {
-      output += chunk;
-      if (output.includes(`running on port ${port}`)) resolve();
+    child.stdout.on('data', (/** @type {Buffer | string} */ chunk) => {
+      output += String(chunk);
+      if (output.includes(`running on port ${String(port)}`)) resolve();
     });
     child.on('exit', (code) => {
-      reject(new Error(`server exited with ${code}: ${output}`));
+      reject(new Error(`server exited with ${String(code)}: ${output}`));
     });
   });
   await listening;
-  return `http://localhost:${port}`;
+  return `http://localhost:${String(port)}`;
 }
 
 void test('the server serves the game and its files with the right types [APP-3]', async (t) => {
@@ -63,7 +64,7 @@ void test('the server serves the game and its files with the right types [APP-3]
     const contentType = response.headers.get('content-type');
     assert.ok(
       contentType !== null && contentType.startsWith(type),
-      `${path}: ${contentType}`
+      `${path}: ${String(contentType)}`
     );
   }
   const page = await (await fetch(base + '/')).text();
