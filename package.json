@@ -13,6 +13,7 @@
     "test": "node scripts/native-coverage.cjs --test --experimental-test-coverage --test-coverage-include=\"public/game/**\" --test-coverage-lines=100 --test-coverage-branches=100 --test-coverage-functions=100",
     "test:e2e": "playwright test && node scripts/browser-coverage.js",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.sw.json",
+    "typecheck:tests": "node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p tsconfig.tests.json",
     "test:mutation": "stryker run",
     "test:all": "npm run typecheck && npm test && npm run test:e2e",
     "lint": "eslint .",

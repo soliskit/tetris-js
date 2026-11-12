@@ -3,11 +3,14 @@ import { test, expect } from './fixtures.js';
 import {
   PieceColors,
   cellsOf,
+  canvasWidth,
   continueSavedGame,
   savedGame
 } from './helpers.js';
+/** @type {WeakMap<import('@playwright/test').Page, string[]>} */
 const drawingErrors = new WeakMap();
-test.beforeEach(async ({ page }) => {
+test.beforeEach(({ page }) => {
+  /** @type {string[]} */
   const errors = [];
   drawingErrors.set(page, errors);
   page.on('console', (message) => {
@@ -48,6 +51,8 @@ test.afterEach(async ({ page }, testInfo) => {
  */
 async function boardBitmapSnapshot(page) {
   return page.locator('#tetris').evaluate((c) => {
+    if (!(c instanceof HTMLCanvasElement))
+      throw new Error('drag-resize: #tetris is not a canvas');
     const r = c.getBoundingClientRect();
     const style = getComputedStyle(c);
     const width =
@@ -79,7 +84,10 @@ async function boardBitmapSnapshot(page) {
   });
 }
 
+/** @typedef {Array<[number, number]>} Cells */
+/** @param {Cells} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, column]) => column));
+/** @param {Cells} cells */
 const shapeOf = (cells) => {
   const row = Math.min(...cells.map(([r]) => r));
   const column = minColumn(cells);
@@ -87,6 +95,7 @@ const shapeOf = (cells) => {
 };
 // Each case uses score0/level1: gravity first runs at700ms. Stop setup
 // inconclusively before34playing frames(578ms), never poll through gravity.
+/** @type {WeakMap<import('@playwright/test').Page, number>} */
 const playingFrames = new WeakMap();
 /**
  * @param {import('@playwright/test').Page} page
@@ -139,6 +148,7 @@ async function pausedClockPiece(page) {
     .toBe(true);
   await page.clock.pauseAt(await page.evaluate(() => Date.now() + 100));
   // Seeded T spawn at row5/column3, from tetrominoFactory's .X./XXX.
+  /** @type {Cells} */
   const expected = [
     [5, 4],
     [6, 3],
@@ -195,7 +205,12 @@ for (const resize of ['shrink', 'grow']) {
         .locator('#tetris')
         .evaluate((canvas) => canvas.getBoundingClientRect().width);
       const desiredWidth = oldWidth * (resize === 'shrink' ? 0.75 : 1.25);
-      const send = (type, id, dx, dy) =>
+      const send = (
+        /** @type {string} */ type,
+        /** @type {number} */ id,
+        /** @type {number} */ dx,
+        /** @type {number} */ dy
+      ) =>
         page.locator('#tetris').evaluate(
           (canvas, args) => {
             const box = canvas.getBoundingClientRect();
@@ -237,15 +252,16 @@ for (const resize of ['shrink', 'grow']) {
       await expect
         .poll(async () => {
           await advancePlayingFrame(page);
-          return page
-            .locator('#tetris')
-            .evaluate(
-              (canvas) =>
-                Math.abs(
-                  canvas.width / devicePixelRatio -
-                    canvas.getBoundingClientRect().width
-                ) < 1
+          return page.locator('#tetris').evaluate((canvas) => {
+            if (!(canvas instanceof HTMLCanvasElement))
+              throw new Error('drag-resize: #tetris is not a canvas');
+            return (
+              Math.abs(
+                canvas.width / devicePixelRatio -
+                  canvas.getBoundingClientRect().width
+              ) < 1
             );
+          });
         })
         .toBe(true);
       const actualWidth = await page
@@ -282,10 +298,11 @@ async function syntheticDrag(page) {
     canvas.setPointerCapture = () => {};
   });
   const origin = await page.locator('#tetris').boundingBox();
+  if (!origin) throw new Error('drag-resize: #tetris has no bounding box');
   const cell = origin.width / 10;
   return {
     cell,
-    send: (type, dx, dy = 0) =>
+    send: (/** @type {string} */ type, /** @type {number} */ dx, dy = 0) =>
       page.locator('#tetris').evaluate(
         (canvas, a) => {
           canvas.dispatchEvent(
@@ -312,12 +329,17 @@ for (const change of ['preview CSS size', 'pixel density']) {
     if (change === 'pixel density') {
       await page.addInitScript(() => {
         const original = window.matchMedia.bind(window);
+        /** @type {EventListenerOrEventListenerObject[]} */
         const resolutionListeners = [];
         window.matchMedia = (query) => {
           const result = original(query);
           if (query.startsWith('(resolution:')) {
             const add = result.addEventListener.bind(result);
-            result.addEventListener = (type, listener, options) => {
+            result.addEventListener = (
+              /** @type {string} */ type,
+              /** @type {EventListenerOrEventListenerObject} */ listener,
+              /** @type {boolean | AddEventListenerOptions | undefined} */ options
+            ) => {
               if (type === 'change') resolutionListeners.push(listener);
               else add(type, listener, options);
             };
@@ -330,8 +352,10 @@ for (const change of ['preview CSS size', 'pixel density']) {
             configurable: true,
             value: before + 1
           });
-          for (const listener of resolutionListeners.splice(0))
-            listener(new Event('change'));
+          for (const listener of resolutionListeners.splice(0)) {
+            if (typeof listener === 'function') listener(new Event('change'));
+            else listener.handleEvent(new Event('change'));
+          }
         };
       });
     }
@@ -341,22 +365,23 @@ for (const change of ['preview CSS size', 'pixel density']) {
     await drag.send('pointermove', drag.cell * 0.4);
     await advancePlayingFrame(page);
     expect(await cellsOf(page, PieceColors.purple)).toEqual(initial);
-    const oldBitmap = await page.locator('#tetris').evaluate((c) => c.width);
+    const oldBitmap = await page.locator('#tetris').evaluate(canvasWidth);
     if (change === 'preview CSS size') {
       const boardBefore = await page.locator('#tetris').evaluate((c) => {
+        if (!(c instanceof HTMLCanvasElement))
+          throw new Error('drag-resize: #tetris is not a canvas');
         const r = c.getBoundingClientRect();
         return [r.x, r.y, r.width, r.height, c.width, c.height];
       });
       const nextBefore = await page.locator('#next0').boundingBox();
-      expect(nextBefore).not.toBeNull();
+      if (!nextBefore)
+        throw new Error('drag-resize: #next0 has no bounding box');
       expect(nextBefore.width).toBeGreaterThan(0);
       expect(nextBefore.height).toBeGreaterThan(0);
       const rowBefore = await page
         .locator('.previews')
         .evaluate((c) => c.getBoundingClientRect().height);
-      const before = await page
-        .locator('#heldPreview')
-        .evaluate((c) => c.width);
+      const before = await page.locator('#heldPreview').evaluate(canvasWidth);
       await page.locator('#heldPreview').evaluate((c) => {
         c.style.setProperty('width', '43px', 'important');
         c.style.setProperty('height', '43px', 'important');
@@ -364,11 +389,13 @@ for (const change of ['preview CSS size', 'pixel density']) {
       await expect
         .poll(async () => {
           await advancePlayingFrame(page);
-          return page.locator('#heldPreview').evaluate((c) => c.width);
+          return page.locator('#heldPreview').evaluate(canvasWidth);
         })
         .not.toBe(before);
       // next0 remains60px tall, preserving the preview row and board size.
       const boardAfter = await page.locator('#tetris').evaluate((c) => {
+        if (!(c instanceof HTMLCanvasElement))
+          throw new Error('drag-resize: #tetris is not a canvas');
         const r = c.getBoundingClientRect();
         return [r.x, r.y, r.width, r.height, c.width, c.height];
       });
@@ -382,9 +409,14 @@ for (const change of ['preview CSS size', 'pixel density']) {
           .evaluate((c) => c.getBoundingClientRect().height)
       ).toBe(rowBefore);
     } else {
-      await page.evaluate(() => window.testDensityChange());
+      await page.evaluate(() => {
+        const change = window.testDensityChange;
+        if (!change)
+          throw new Error('drag-resize: testDensityChange was not installed');
+        change();
+      });
       await expect
-        .poll(() => page.locator('#tetris').evaluate((c) => c.width))
+        .poll(() => page.locator('#tetris').evaluate(canvasWidth))
         .not.toBe(oldBitmap);
     }
     await drag.send('pointermove', drag.cell * 0.6);
@@ -406,7 +438,7 @@ test('board resize cancels a wall-blocked drag without banked travel [INP-5]', a
   await advancePlayingFrame(page);
   const blocked = await cellsOf(page, PieceColors.purple);
   expect(minColumn(blocked)).toBe(0);
-  const oldBitmap = await page.locator('#tetris').evaluate((c) => c.width);
+  const oldBitmap = await page.locator('#tetris').evaluate(canvasWidth);
   await page.locator('#tetris').evaluate((c) => {
     c.style.setProperty('width', '220px', 'important');
     c.style.setProperty('height', '440px', 'important');
@@ -414,7 +446,7 @@ test('board resize cancels a wall-blocked drag without banked travel [INP-5]', a
   await expect
     .poll(async () => {
       await advancePlayingFrame(page);
-      return page.locator('#tetris').evaluate((c) => c.width);
+      return page.locator('#tetris').evaluate(canvasWidth);
     })
     .not.toBe(oldBitmap);
   await drag.send('pointermove', drag.cell * 20);
@@ -435,7 +467,7 @@ test('a board resize alone consumes an otherwise still tap [INP-5]', async ({
   const initial = await pausedClockPiece(page);
   const drag = await syntheticDrag(page);
   await drag.send('pointerdown', 0);
-  const oldBitmap = await page.locator('#tetris').evaluate((c) => c.width);
+  const oldBitmap = await page.locator('#tetris').evaluate(canvasWidth);
   await page.locator('#tetris').evaluate((c) => {
     c.style.setProperty('width', '220px', 'important');
     c.style.setProperty('height', '440px', 'important');
@@ -443,7 +475,7 @@ test('a board resize alone consumes an otherwise still tap [INP-5]', async ({
   await expect
     .poll(async () => {
       await advancePlayingFrame(page);
-      return page.locator('#tetris').evaluate((c) => c.width);
+      return page.locator('#tetris').evaluate(canvasWidth);
     })
     .not.toBe(oldBitmap);
   await drag.send('pointerup', 0);
