@@ -9,7 +9,11 @@ const serverFile = fileURLToPath(new URL('../index.js', import.meta.url));
 function freePort() {
   return new Promise((resolve, reject) => {
     const probe = net.createServer().listen(0, () => {
-      const { port } = probe.address();
+      const address = probe.address();
+      if (address === null || typeof address === 'string') {
+        throw new Error('server test: probe has no port');
+      }
+      const { port } = address;
       probe.close(() => {
         resolve(port);
       });
@@ -19,13 +23,15 @@ function freePort() {
 }
 
 // Starts index.js on a free port and resolves once it is listening.
+/** @param {import('node:test').TestContext} t */
 async function startServer(t) {
   const port = await freePort();
   const child = spawn(process.execPath, [serverFile], {
     env: { ...process.env, PORT: String(port) }
   });
   t.after(() => child.kill());
-  await new Promise((resolve, reject) => {
+  /** @type {Promise<void>} */
+  const listening = new Promise((resolve, reject) => {
     let output = '';
     child.stdout.on('data', (chunk) => {
       output += chunk;
@@ -35,6 +41,7 @@ async function startServer(t) {
       reject(new Error(`server exited with ${code}: ${output}`));
     });
   });
+  await listening;
   return `http://localhost:${port}`;
 }
 
@@ -53,9 +60,10 @@ void test('the server serves the game and its files with the right types [APP-3]
   for (const [path, type] of expectations) {
     const response = await fetch(base + path);
     assert.equal(response.status, 200, path);
+    const contentType = response.headers.get('content-type');
     assert.ok(
-      response.headers.get('content-type').startsWith(type),
-      `${path}: ${response.headers.get('content-type')}`
+      contentType !== null && contentType.startsWith(type),
+      `${path}: ${contentType}`
     );
   }
   const page = await (await fetch(base + '/')).text();

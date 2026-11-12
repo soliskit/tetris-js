@@ -169,6 +169,7 @@ for (const { name, distances, rotates, cancel = false } of [
     await page.evaluate(() => {
       window.boundaryEvents = [];
       const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
       for (const type of ['pointerdown', 'pointermove']) {
         board.addEventListener(type, (event) => {
           window.boundaryEvents.push({
@@ -333,10 +334,17 @@ test('a dragged piece is never drawn over locked blocks [INP-5] [PCE-6]', async 
   await touch.moveBy(1.4, 0, 7);
   const rightEdge = await page.evaluate(() => {
     const canvas = document.getElementById('tetris');
+    if (!(canvas instanceof HTMLCanvasElement))
+      throw new Error('touch: #tetris is not a canvas');
     const size = canvas.width / 10;
-    const pixels = canvas
-      .getContext('2d')
-      .getImageData(0, Math.floor(size * 7.5), canvas.width, 1).data;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('touch: #tetris has no 2d context');
+    const pixels = context.getImageData(
+      0,
+      Math.floor(size * 7.5),
+      canvas.width,
+      1
+    ).data;
     let last = -1;
     for (let x = 0; x < canvas.width; x++) {
       const [r, g, b] = pixels.slice(x * 4, x * 4 + 3);
@@ -487,11 +495,11 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
   );
   // Clickable, it would otherwise flash on every tap.
   expect(
-    await page.evaluate(
-      () =>
-        getComputedStyle(document.getElementById('tetris'))
-          .webkitTapHighlightColor
-    )
+    await page.evaluate(() => {
+      const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
+      return getComputedStyle(board).webkitTapHighlightColor;
+    })
   ).toBe('rgba(0, 0, 0, 0)');
 });
 
@@ -554,10 +562,14 @@ test('if Safari zooms in anyway, its gestures are let through so the player can 
     page.evaluate(() => {
       const gesture = new Event('gesturestart', { cancelable: true });
       document.dispatchEvent(gesture);
+      const htmlTouchAction = getComputedStyle(
+        document.documentElement
+      ).touchAction;
+      const board = document.getElementById('tetris');
+      if (!board) throw new Error('touch: #tetris not found');
       return {
-        htmlTouchAction: getComputedStyle(document.documentElement).touchAction,
-        boardTouchAction: getComputedStyle(document.getElementById('tetris'))
-          .touchAction,
+        htmlTouchAction,
+        boardTouchAction: getComputedStyle(board).touchAction,
         pinchCancelled: gesture.defaultPrevented
       };
     });

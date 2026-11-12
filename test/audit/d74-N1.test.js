@@ -50,7 +50,7 @@ void test('a fault after a confirmed New Game stops safely and keeps the old pos
   assert.equal(game.state, GameState.paused);
   assert.equal(game.isSessionSaved, true);
   const textBefore = storage.getItem('tetris.savedGameSession');
-  assert.ok(textBefore.length > 0);
+  assert.ok(textBefore !== null && textBefore.length > 0);
 
   let reports = 0;
   game.onFault = () => {
@@ -73,9 +73,17 @@ void test('a fault after a confirmed New Game stops safely and keeps the old pos
     'true',
     'the stored save flag stays withdrawn'
   );
+  const textAfter = storage.getItem('tetris.savedGameSession');
+  assert.ok(textAfter !== null, 'the saved session is still stored');
+  const recordAfter = parseSavedRecord(textAfter);
+  const recordBefore = parseSavedRecord(textBefore);
+  assert.ok(
+    recordAfter !== null && recordBefore !== null,
+    'the stored save records parse'
+  );
   assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position,
-    parseSavedRecord(textBefore).position,
+    recordAfter.position,
+    recordBefore.position,
     'the exact stored position string is kept unchanged'
   );
   assert.equal(scheduler.pending, 0, 'no timer is left dangling');
