@@ -92,7 +92,7 @@ function knownColor(color) {
 }
 
 /**
- * @param {string | null} raw
+ * @param {unknown} raw The stored bytes; String() coercion below handles whatever the storage boundary returns, as before.
  * @returns {OracleSave}
  */
 export function oracle(raw) {

@@ -16,7 +16,7 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 /** @typedef {import('./gameState.js').GameStateValue} GameStateValue */
 /** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
 /** @typedef {import('./tetromino.js').Tetromino} Tetromino */
-/** @typedef {{ getItem(key: string): string | null, setItem(key: string, value: string): void }} KeyValueStorage */
+/** @typedef {{ getItem(key: string): unknown, setItem(key: string, value: string): void }} KeyValueStorage */
 /** @typedef {{ setTimeout(callback: () => void, ms: number): unknown, clearTimeout(handle: unknown): void }} Scheduler */
 /** @typedef {{ generate(): Tetromino, bag?: Tetromino[], resetBag?(pieces?: Tetromino[]): void }} PieceSource */
 /** @typedef {{ reason: string, error?: unknown }} Fault */
@@ -57,11 +57,33 @@ export function createMemoryStorage() {
   };
 }
 
+// A storage must actually store: a slot holding a value without getItem and
+// setItem cannot serve as one, so it falls back to memory exactly as an
+// absent slot does.
+// Exported for direct unit tests: the storage boundary's shape check.
+/** @param {unknown} value @returns {value is KeyValueStorage} */
+export function isKeyValueStorage(value) {
+  if (typeof value !== 'object' || value === null) return false;
+  return typeof Reflect.get(value, 'getItem') === 'function' && typeof Reflect.get(value, 'setItem') === 'function';
+}
+
+// A stored value is a string or null. A foreign object in the localStorage
+// slot can return anything; reject such a value loudly instead of letting it
+// flow into number conversion or JSON parsing as if it were text.
+/** @param {unknown} value @returns {string | null} */
+function checkStorageValue(value) {
+  if (typeof value !== 'string' && value !== null) throw new TypeError('storage.getItem returned a foreign value, not a string or null');
+  return value;
+}
+
 /** @returns {KeyValueStorage} */
 function defaultStorage() {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- outside ordinary windows localStorage can be absent, not only throwing; the fallback is the point.
-    if (globalThis.localStorage) return globalThis.localStorage;
+    // Outside ordinary windows localStorage can be absent, not only throwing;
+    // the fallback is the point.
+    /** @type {unknown} */
+    const slot = Reflect.get(globalThis, 'localStorage');
+    if (isKeyValueStorage(slot)) return slot;
   } catch {
     // Access can throw in private mode or sandboxed frames.
   }
@@ -148,12 +170,16 @@ export class GameManager {
    * @returns {string | null}
    */
   readItem(key) {
+    /** @type {unknown} */
+    let value;
     try {
-      return this.storage.getItem(key);
+      value = this.storage.getItem(key);
     } catch {
       // Unreadable storage counts as empty.
+      return null;
     }
-    return null;
+    // Foreign values fail loudly, outside the unreadable catch above.
+    return checkStorageValue(value);
   }
 
   get highScore() {
@@ -173,12 +199,16 @@ export class GameManager {
   // Save reads distinguish absent content from an operation that failed.
   /** @param {string} key @returns {{kind: 'value', value: string} | {kind: 'absent', value: null} | {kind: 'unreadable', value: null}} */
   readSaveItem(key) {
+    /** @type {unknown} */
+    let value;
     try {
-      const value = this.storage.getItem(key);
-      return value === null ? { kind: 'absent', value: null } : { kind: 'value', value };
+      value = this.storage.getItem(key);
     } catch {
       return { kind: 'unreadable', value: null };
     }
+    // Foreign values fail loudly, outside the unreadable catch above.
+    const checked = checkStorageValue(value);
+    return checked === null ? { kind: 'absent', value: null } : { kind: 'value', value: checked };
   }
 
   // Always fresh: Continue cannot restore an object from an earlier check.
