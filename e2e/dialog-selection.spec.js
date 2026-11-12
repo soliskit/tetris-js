@@ -28,7 +28,10 @@ for (const answer of ['Cancel', 'New Game']) {
     for (const target of ['question', 'padding']) {
       if (target === 'question') await page.locator('#newGameQuestion').click();
       else {
-        const { height } = await content.boundingBox();
+        const box = await content.boundingBox();
+        if (!box)
+          throw new Error('dialog-selection: .dialog-content has no box');
+        const { height } = box;
         await content.click({ position: { x: 10, y: height / 2 } });
       }
       await expect(selected).toBeFocused();
@@ -69,6 +72,7 @@ test('only a primary left pointer press inside question content suppresses focus
   // the ordinary browser-click focus-loss and recovery witnesses.
   const prevented = await page.evaluate(() => {
     const question = document.getElementById('newGameQuestion');
+    /** @type {[boolean, number][]} */
     const cases = [
       [false, 0],
       [true, 2],
@@ -81,6 +85,8 @@ test('only a primary left pointer press inside question content suppresses focus
         isPrimary,
         button
       });
+      if (!question)
+        throw new Error('dialog-selection: #newGameQuestion not found');
       question.dispatchEvent(event);
       return event.defaultPrevented;
     });

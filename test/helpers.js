@@ -49,7 +49,8 @@ export function createFakeScheduler() {
         /** @type {[number, { callback: () => void, at: number }] | undefined} */
         const due = [...timers.entries()]
           .filter(([, t]) => t.at <= end)
-          .sort((a, b) => a[1].at - b[1].at)[0];
+          .sort((a, b) => a[1].at - b[1].at)
+          .at(0);
         if (!due) break;
         const [handle, timer] = due;
         timers.delete(handle);
