@@ -173,7 +173,7 @@ jobs:
           path: done-${{ matrix.name }}.txt
           retention-days: 1
           overwrite: true
-      - if: failure()
+      - if: always()
         uses: actions/upload-artifact@v7
         with:
           name: mutation-report-${{ matrix.name }}
@@ -224,3 +224,4 @@ jobs:
             exit 1
           fi
           echo "All $(wc -l < expected.txt) expected shards are accounted for."
+
