@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 import promise from 'eslint-plugin-promise';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
-const TYPED_TEST_FILES = ['test/factory.test.js'];
+const TYPED_TEST_FILES = ['test/factory.test.js', 'test/game.test.js'];
 
 export default defineConfig(
   { ignores: ['node_modules/', 'reports/', 'docs/audit/evidence/'] },
