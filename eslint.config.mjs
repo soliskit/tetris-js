@@ -9,7 +9,11 @@ const TYPED_TEST_FILES = [
   'test/factory.test.js',
   'test/game.test.js',
   'test/model.test.js',
-  'test/audit/l1-trace.test.js'
+  'test/audit/l1-trace.test.js',
+  'test/saveOracle.js',
+  'test/semanticSave.test.js',
+  'e2e/global-setup.js',
+  'playwright.config.js'
 ];
 
 export default defineConfig(

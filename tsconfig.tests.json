@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["test/**/*.js", "e2e/**/*.js"]
+  "include": ["test/**/*.js", "e2e/**/*.js", "playwright.config.js"]
 }
