@@ -7,8 +7,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { jsonObject, jsonString, parseJsonObject } from './json.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+
+/** @param {string} file */
+function readJson(file) {
+  return parseJsonObject(fs.readFileSync(path.join(root, file), 'utf8'));
+}
 const requirementIds = [
   ...fs
     .readFileSync(path.join(root, 'docs', 'requirements.md'), 'utf8')
@@ -66,9 +72,7 @@ void test('every requirement is verified by at least one test [QA-1]', () => {
 });
 
 void test('npm test enforces 100% line, branch and function coverage of the game logic [QA-2]', () => {
-  const script = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
-  ).scripts.test;
+  const script = jsonString(jsonObject(readJson('package.json').scripts).test);
   for (const flag of [
     '--experimental-test-coverage',
     '--test-coverage-include="public/game/**"',
@@ -81,11 +85,11 @@ void test('npm test enforces 100% line, branch and function coverage of the game
 });
 
 void test('npm run test:e2e enforces 100% browser coverage of the page script [QA-3]', () => {
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
-  );
+  const pkg = readJson('package.json');
   assert.ok(
-    pkg.scripts['test:e2e'].endsWith('&& node scripts/browser-coverage.js')
+    jsonString(jsonObject(pkg.scripts)['test:e2e']).endsWith(
+      '&& node scripts/browser-coverage.js'
+    )
   );
   const script = fs.readFileSync(
     path.join(root, 'scripts/browser-coverage.js'),
@@ -108,10 +112,10 @@ void test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
     path.join(root, '.github/workflows/pages.yml'),
     'utf8'
   );
-  const lock = JSON.parse(
-    fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8')
+  const lock = readJson('package-lock.json');
+  const playwrightVersion = jsonString(
+    jsonObject(jsonObject(lock.packages)['node_modules/playwright']).version
   );
-  const playwrightVersion = lock.packages['node_modules/playwright'].version;
   assert.ok(
     workflow.includes('run: npx playwright install --with-deps chromium webkit')
   );
@@ -124,9 +128,7 @@ void test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
 });
 
 void test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
-  const config = JSON.parse(
-    fs.readFileSync(path.join(root, 'tsconfig.json'), 'utf8')
-  );
+  const config = readJson('tsconfig.json');
   for (const option of [
     'checkJs',
     'strict',
@@ -134,19 +136,13 @@ void test('the code the browser loads is type checked in strict mode, in CI [QA-
     'noUnusedLocals',
     'exactOptionalPropertyTypes'
   ]) {
-    assert.equal(config.compilerOptions[option], true, option);
+    assert.equal(jsonObject(config.compilerOptions)[option], true, option);
   }
   assert.deepEqual(config.include, ['public/game/**/*.js', 'public/script.js']);
-  assert.deepEqual(
-    JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.sw.json'), 'utf8'))
-      .include,
-    ['public/sw.js']
-  );
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
-  );
+  assert.deepEqual(readJson('tsconfig.sw.json').include, ['public/sw.js']);
+  const pkg = readJson('package.json');
   assert.equal(
-    pkg.scripts.typecheck,
+    jsonObject(pkg.scripts).typecheck,
     'tsc -p tsconfig.json && tsc -p tsconfig.sw.json'
   );
   assert.match(
@@ -156,19 +152,13 @@ void test('the code the browser loads is type checked in strict mode, in CI [QA-
 });
 
 void test('mutation testing must leave no mutant alive, and runs weekly and on pull requests in CI [QA-6]', () => {
-  const config = JSON.parse(
-    fs.readFileSync(path.join(root, 'stryker.config.json'), 'utf8')
-  );
+  const config = readJson('stryker.config.json');
   assert.deepEqual(config.mutate, ['public/game/**/*.js']);
-  assert.equal(config.thresholds.break, 100);
-  assert.match(
-    config.commandRunner.command,
-    /^exec node --test --test-isolation=none /
-  );
-  const pkg = JSON.parse(
-    fs.readFileSync(path.join(root, 'package.json'), 'utf8')
-  );
-  assert.equal(pkg.scripts['test:mutation'], 'stryker run');
+  assert.equal(jsonObject(config.thresholds).break, 100);
+  const command = jsonString(jsonObject(config.commandRunner).command);
+  assert.match(command, /^exec node --test --test-isolation=none /);
+  const pkg = readJson('package.json');
+  assert.equal(jsonObject(pkg.scripts)['test:mutation'], 'stryker run');
   const workflow = fs.readFileSync(
     path.join(root, '.github/workflows/mutation.yml'),
     'utf8'
@@ -241,6 +231,6 @@ void test('mutation testing must leave no mutant alive, and runs weekly and on p
     .filter((name) => name.endsWith('.test.js'))) {
     const source = fs.readFileSync(path.join(root, 'test', file), 'utf8');
     if (/^import .* from '\.\.\/public\/game\//m.test(source))
-      assert.ok(config.commandRunner.command.includes(`test/${file}`), file);
+      assert.ok(command.includes(`test/${file}`), file);
   }
 });

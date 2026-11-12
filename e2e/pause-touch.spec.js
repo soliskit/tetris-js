@@ -127,8 +127,7 @@ for (const boardFirst of [false, true]) {
       await page.clock.runFor(17);
       expect(await cellsOf(page, PieceColors.purple)).not.toEqual(before);
       if (browserName === 'chromium') {
-        const contextOptions = { ...testInfo.project.use };
-        delete contextOptions.browserName;
+        const contextOptions = nativeContextOptions(testInfo);
         const nativeContext = await browser.newContext(contextOptions);
         const nativePage = await nativeContext.newPage();
         try {
@@ -188,8 +187,7 @@ test('synthetic secondary touch Pause ignores canceled and leave-return taps but
     'Pause'
   );
   if (browserName === 'chromium') {
-    const contextOptions = { ...testInfo.project.use };
-    delete contextOptions.browserName;
+    const contextOptions = nativeContextOptions(testInfo);
     const nativeContext = await browser.newContext(contextOptions);
     const nativePage = await nativeContext.newPage();
     try {
@@ -205,9 +203,11 @@ test('synthetic secondary touch Pause ignores canceled and leave-return taps but
  */
 async function recordNative(page) {
   await page.evaluate(() => {
-    globalThis.pauseEvents = [];
-    globalThis.pauseEventOverflow = 0;
-    globalThis.pauseStates = [];
+    /** @type {PauseEvent[]} */
+    const events = [];
+    window.pauseEvents = events;
+    window.pauseEventOverflow = 0;
+    window.pauseStates = [];
     for (const type of [
       'pointerdown',
       'pointermove',
@@ -218,15 +218,23 @@ async function recordNative(page) {
       document.addEventListener(
         type,
         (event) => {
-          if (globalThis.pauseEvents.length >= 64) {
-            globalThis.pauseEventOverflow++;
+          if (events.length >= 64) {
+            window.pauseEventOverflow = (window.pauseEventOverflow ?? 0) + 1;
             return;
           }
+          /** @type {unknown} */
+          const pointerType = Reflect.get(event, 'pointerType');
+          /** @type {unknown} */
+          const pointerId = Reflect.get(event, 'pointerId');
+          /** @type {unknown} */
+          const isPrimary = Reflect.get(event, 'isPrimary');
+          const targetId =
+            event.target instanceof Element ? event.target.id : '';
           const button = document.getElementById('playPauseButton');
           if (!button)
             throw new Error('pause-touch: #playPauseButton not found');
           const label = button.getAttribute('aria-label');
-          globalThis.pauseEvents.push({
+          events.push({
             type,
             constructor:
               event instanceof PointerEvent
@@ -234,15 +242,18 @@ async function recordNative(page) {
                 : event instanceof MouseEvent
                   ? 'MouseEvent'
                   : 'other',
-            pointerType: ['touch', 'mouse', 'pen'].includes(event.pointerType)
-              ? event.pointerType
-              : 'other',
-            pointerId: Number.isFinite(event.pointerId)
-              ? event.pointerId
-              : null,
-            isPrimary: event.isPrimary ?? null,
-            target: ['playPauseButton', 'tetris'].includes(event.target.id)
-              ? event.target.id
+            pointerType:
+              typeof pointerType === 'string' &&
+              ['touch', 'mouse', 'pen'].includes(pointerType)
+                ? pointerType
+                : 'other',
+            pointerId:
+              typeof pointerId === 'number' && Number.isFinite(pointerId)
+                ? pointerId
+                : null,
+            isPrimary: typeof isPrimary === 'boolean' ? isPrimary : null,
+            target: ['playPauseButton', 'tetris'].includes(targetId)
+              ? targetId
               : 'other',
             stateAtCapture: ['Pause', 'Resume'].includes(String(label))
               ? label
@@ -287,11 +298,14 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
     await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
     await page.clock.runFor(17);
     await page.evaluate((type) => {
-      if (globalThis.pauseStates.length >= 32) return;
+      const states = window.pauseStates;
+      if (!states)
+        throw new Error('pause-touch: pauseStates was not installed');
+      if (states.length >= 32) return;
       const button = document.getElementById('playPauseButton');
       if (!button) throw new Error('pause-touch: #playPauseButton not found');
       const label = button.getAttribute('aria-label');
-      globalThis.pauseStates.push({
+      states.push({
         dispatch: type,
         label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
       });
@@ -315,9 +329,9 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
     let evidence = null;
     try {
       evidence = await page.evaluate(() => ({
-        events: globalThis.pauseEvents,
-        overflow: globalThis.pauseEventOverflow,
-        statesAfterDispatch: globalThis.pauseStates
+        events: window.pauseEvents,
+        overflow: window.pauseEventOverflow,
+        statesAfterDispatch: window.pauseStates
       }));
     } catch {
       /* Diagnostic reads must not replace the original assertion. */
@@ -329,7 +343,12 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
     }
     throw error;
   }
-  const events = await page.evaluate(() => globalThis.pauseEvents);
+  const events = await page.evaluate(() => {
+    const recorded = window.pauseEvents;
+    if (!recorded)
+      throw new Error('pause-touch: pauseEvents was not installed');
+    return recorded;
+  });
   console.log(
     'Native two-touch events',
     JSON.stringify({ boardFirst, dragging, events })
@@ -385,11 +404,14 @@ async function nativeControls(page) {
     await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
     await page.clock.runFor(17);
     await page.evaluate((type) => {
-      if (globalThis.pauseStates.length >= 32) return;
+      const states = window.pauseStates;
+      if (!states)
+        throw new Error('pause-touch: pauseStates was not installed');
+      if (states.length >= 32) return;
       const button = document.getElementById('playPauseButton');
       if (!button) throw new Error('pause-touch: #playPauseButton not found');
       const label = button.getAttribute('aria-label');
-      globalThis.pauseStates.push({
+      states.push({
         dispatch: type,
         label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
       });
@@ -410,7 +432,7 @@ async function nativeControls(page) {
     console.log(
       'Native negative control',
       kind,
-      JSON.stringify(await page.evaluate(() => globalThis.pauseEvents))
+      JSON.stringify(await page.evaluate(() => window.pauseEvents))
     );
   }
   await send('touchStart', [point]);
@@ -427,7 +449,19 @@ async function nativeControls(page) {
   );
   console.log(
     'Native single-touch Pause and Resume',
-    JSON.stringify(await page.evaluate(() => globalThis.pauseEvents))
+    JSON.stringify(await page.evaluate(() => window.pauseEvents))
   );
   await cdp.detach();
+}
+
+/**
+ * The project's use options without browserName, keeping every defined entry.
+ * @param {import('@playwright/test').TestInfo} testInfo
+ */
+function nativeContextOptions(testInfo) {
+  const options = {};
+  for (const [key, value] of Object.entries(testInfo.project.use))
+    if (key !== 'browserName' && value !== undefined)
+      Reflect.set(options, key, value);
+  return options;
 }

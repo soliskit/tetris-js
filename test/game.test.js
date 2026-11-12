@@ -11,6 +11,7 @@ import {
   createBoard
 } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
+import { present } from './json.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 import {
   createFakeScheduler,
@@ -138,11 +139,11 @@ void test('hold swaps once per piece [PLY-7]', () => {
   const first = game.currentTetromino;
   const upcoming = game.nextTetrominos[0];
   game.handleAction(PlayerAction.hold);
-  assert.equal(game.heldTetromino.color, first.color);
+  assert.equal(present(game.heldTetromino).color, first.color);
   assert.equal(game.currentTetromino.color, upcoming.color);
   assert.equal(game.canHoldTetromino, false);
   game.handleAction(PlayerAction.hold);
-  assert.equal(game.heldTetromino.color, first.color);
+  assert.equal(present(game.heldTetromino).color, first.color);
 });
 
 void test('pause saves and continue restores the session [STA-4]', () => {

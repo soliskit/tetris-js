@@ -11,6 +11,9 @@ import {
   createMemoryStorage
 } from '../public/game/gameManager.js';
 import { GameState, PlayerAction } from '../public/game/gameState.js';
+/** @typedef {import('../public/game/gameManager.js').Fault} Fault */
+/** @typedef {ReturnType<typeof createFakeScheduler>} FakeScheduler */
+import { present, remove } from './json.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 import {
   createFakeScheduler,
@@ -35,7 +38,9 @@ function breakableFactory(color = PieceColors.yellow) {
   return factory;
 }
 
+/** @param {Parameters<typeof newGame>[0]} [options] */
 function recordingGame(options = {}) {
+  /** @type {Fault[]} */
   const reported = [];
   const result = newGame({
     onFault: (fault) => reported.push(fault),
@@ -44,6 +49,24 @@ function recordingGame(options = {}) {
   return { ...result, reported };
 }
 
+/**
+ * The message of a reported fault's error object; a fault without one fails.
+ * @param {Fault | undefined} fault
+ */
+function faultMessage(fault) {
+  const error = present(fault).error;
+  assert.ok(typeof error === 'object' && error !== null);
+  /** @type {unknown} */
+  const message = Reflect.get(error, 'message');
+  return message;
+}
+
+/**
+ * @param {GameManager} game
+ * @param {FakeScheduler} scheduler
+ * @param {Fault[]} reported
+ * @param {string} reason
+ */
 function assertSafeStop(game, scheduler, reported, reason) {
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0, 'every timer stopped');
@@ -62,7 +85,7 @@ void test('an error during a player action stops the game safely and is reported
     game.handleAction(PlayerAction.drop);
   });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
-  assert.equal(reported[0].error.message, 'factory failure');
+  assert.equal(faultMessage(reported[0]), 'factory failure');
 });
 
 void test('the page is told about a fault too, so it shows the stopped game [SAF-3] [DSP-5]', () => {
@@ -101,7 +124,7 @@ void test('an error inside the gravity timer stops the game safely and is report
     scheduler.advance(700);
   });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
-  assert.equal(reported[0].error.message, 'factory failure');
+  assert.equal(faultMessage(reported[0]), 'factory failure');
 });
 
 void test('after a fault the last good save is kept exactly and can still be continued [SAF-3]', () => {
@@ -121,7 +144,9 @@ void test('after a fault the last good save is kept exactly and can still be con
     'not rewritten'
   );
   assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).available,
+    present(
+      parseSavedRecord(present(storage.getItem('tetris.savedGameSession')))
+    ).available,
     true,
     'not forgotten'
   );
@@ -135,7 +160,7 @@ void test('after a fault the last good save is kept exactly and can still be con
 void test('after a fault New Game starts a clean game [SAF-3]', () => {
   const factory = breakableFactory();
   const { game, scheduler } = recordingGame({ factory });
-  game.gameBoard[19][0] = filled();
+  present(game.gameBoard[19])[0] = filled();
   factory.broken = true;
   game.handleAction(PlayerAction.drop);
   factory.broken = false;
@@ -164,6 +189,7 @@ void test('after a fault no action or timer restarts play or changes the game [S
   const before = snapshot();
   // Checked after each one, since some would undo another (left, then right).
   // New Game and Continue are the ways out, tested above.
+  /** @type {Array<[string, () => void]>} */
   const attempts = [
     ...[
       PlayerAction.resume,
@@ -174,12 +200,16 @@ void test('after a fault no action or timer restarts play or changes the game [S
       PlayerAction.rotateCounterclockwise,
       PlayerAction.hold,
       PlayerAction.drop
-    ].map((action) => [
-      action,
-      () => {
-        game.handleAction(action);
-      }
-    ]),
+    ].map((action) => {
+      /** @type {[string, () => void]} */
+      const row = [
+        action,
+        () => {
+          game.handleAction(action);
+        }
+      ];
+      return row;
+    }),
     [
       'soft drop',
       () => {
@@ -209,6 +239,17 @@ void test('after a fault no action or timer restarts play or changes the game [S
 });
 
 // Each invariant, broken on purpose, is caught by the monitor after the next operation.
+/**
+ * Breaks an invariant on purpose, with a value of the wrong shape.
+ * @param {object} target
+ * @param {string | number} key
+ * @param {unknown} value
+ */
+function poke(target, key, value) {
+  assert.ok(Reflect.set(target, key, value));
+}
+
+/** @type {Array<[string, (game: GameManager) => unknown, string]>} */
 const violations = [
   [
     'the board losing a row',
@@ -223,73 +264,57 @@ const violations = [
   [
     'a board row going missing',
     (game) => {
-      delete game.gameBoard[5];
+      remove(game.gameBoard, 5);
     },
     'board contains an invalid cell'
   ],
   [
     'a board row losing a cell to a hole',
     (game) => {
-      delete game.gameBoard[5][4];
+      remove(present(game.gameBoard[5]), 4);
     },
     'board contains an invalid cell'
   ],
   [
     'a board row replaced by a sparse ten-slot list',
     (game) => {
-      game.gameBoard[3] = new Array(10);
+      poke(game.gameBoard, 3, new Array(10));
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell of the wrong type',
     (game) => {
-      game.gameBoard[5][4] = 0;
+      poke(present(game.gameBoard[5]), 4, 0);
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell being null',
     (game) => {
-      game.gameBoard[5][4] = null;
+      poke(present(game.gameBoard[5]), 4, null);
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell missing its isFilled field',
     (game) => {
-      game.gameBoard[5][4] = { color: null };
+      poke(present(game.gameBoard[5]), 4, { color: null });
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell missing its color field',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: true };
+      poke(present(game.gameBoard[5]), 4, { isFilled: true });
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell carrying an extra field',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: false, color: null, note: 'x' };
-    },
-    'board contains an invalid cell'
-  ],
-  [
-    'a board cell that is a list',
-    (game) => {
-      game.gameBoard[5][4] = Object.assign([], {
+      poke(present(game.gameBoard[5]), 4, {
         isFilled: false,
-        color: null
-      });
-    },
-    'board contains an invalid cell'
-  ],
-  [
-    'a board cell inheriting isFilled',
-    (game) => {
-      game.gameBoard[5][4] = Object.assign(Object.create({ isFilled: false }), {
         color: null,
         note: 'x'
       });
@@ -297,48 +322,79 @@ const violations = [
     'board contains an invalid cell'
   ],
   [
+    'a board cell that is a list',
+    (game) => {
+      poke(
+        present(game.gameBoard[5]),
+        4,
+        Object.assign([], {
+          isFilled: false,
+          color: null
+        })
+      );
+    },
+    'board contains an invalid cell'
+  ],
+  [
+    'a board cell inheriting isFilled',
+    (game) => {
+      poke(
+        present(game.gameBoard[5]),
+        4,
+        Object.assign(Object.create({ isFilled: false }), {
+          color: null,
+          note: 'x'
+        })
+      );
+    },
+    'board contains an invalid cell'
+  ],
+  [
     'a board cell with a hidden extra field',
     (game) => {
-      game.gameBoard[5][4] = {
+      poke(present(game.gameBoard[5]), 4, {
         isFilled: false,
         color: null,
         [Symbol('note')]: 'x'
-      };
+      });
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell with a stray field in place of its color',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: true, note: '#00C0E8' };
+      poke(present(game.gameBoard[5]), 4, { isFilled: true, note: '#00C0E8' });
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell whose isFilled is not true or false',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: 0, color: null };
+      poke(present(game.gameBoard[5]), 4, { isFilled: 0, color: null });
     },
     'board contains an invalid cell'
   ],
   [
     'a board block with a color that is not text',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: true, color: 7 };
+      poke(present(game.gameBoard[5]), 4, { isFilled: true, color: 7 });
     },
     'board contains an invalid cell'
   ],
   [
     'a board cell holding an unknown block kind',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: true, color: '#123456' };
+      poke(present(game.gameBoard[5]), 4, { isFilled: true, color: '#123456' });
     },
     'board contains an invalid cell'
   ],
   [
     'an empty board cell holding a color',
     (game) => {
-      game.gameBoard[5][4] = { isFilled: false, color: '#34C759' };
+      poke(present(game.gameBoard[5]), 4, {
+        isFilled: false,
+        color: '#34C759'
+      });
     },
     'board contains an invalid cell'
   ],
@@ -350,38 +406,42 @@ const violations = [
   [
     'the score turning negative',
     (game) => {
-      game.score = -100;
+      poke(game, 'score', -100);
     },
     'score is invalid'
   ],
   [
     'the score becoming a fraction',
     (game) => {
-      game.score = 12.5;
+      poke(game, 'score', 12.5);
     },
     'score is invalid'
   ],
   [
     'the piece overlapping locked blocks',
     (game) => {
-      game.gameBoard[1][4] = filled();
+      poke(present(game.gameBoard[1]), 4, filled());
     },
     'piece is invalid or overlaps the board'
   ],
   [
     'gravity stopping while playing',
-    (game) => game.stopGameLoop(),
+    (game) => {
+      game.stopGameLoop();
+    },
     'gravity stopped while playing'
   ],
   [
     'a lock delay running while the piece is in the air',
-    (game) => game.startLockDelay(),
+    (game) => {
+      game.startLockDelay();
+    },
     'lock delay running off the surface'
   ],
   [
     'the piece resting with no lock delay',
     (game) => {
-      game.gameBoard[2][4] = filled();
+      poke(present(game.gameBoard[2]), 4, filled());
     },
     'piece resting with no lock delay'
   ]
@@ -455,11 +515,12 @@ void test('a fault reporter that throws does not make things worse [SAF-3]', () 
 
 void test('a timer cancellation that throws during a fault stop still records and reports the fault [SAF-3]', () => {
   const scheduler = createFakeScheduler();
-  const clear = scheduler.clearTimeout;
+  const clear = Reflect.get(scheduler, 'clearTimeout');
+  if (typeof clear !== 'function') throw new Error('no clearTimeout');
   let armed = false;
   scheduler.clearTimeout = (handle) => {
     if (armed) throw new Error('cancel fault');
-    clear(handle);
+    Reflect.apply(clear, undefined, [handle]);
   };
   const { game, storage, reported } = recordingGame({
     scheduler,
@@ -536,7 +597,7 @@ void test('an error while checking the invariants stops the game safely, even if
       throw new Error('reporter broke');
     }
   });
-  game.nextTetrominos = null; // breaks the check itself, not one of its invariants
+  poke(game, 'nextTetrominos', null); // breaks the check itself, not one of its invariants
   assert.doesNotThrow(() => {
     scheduler.advance(700);
   });
@@ -549,10 +610,11 @@ void test('an error while checking the invariants stops the game safely, even if
 
 void test('a fault record that fails does not stop the report, the redraw or the safe stop [SAF-3]', () => {
   for (const reporterWorks of [true, false]) {
+    /** @type {Fault[]} */
     const reported = [];
     let changes = 0;
     const onFault = reporterWorks
-      ? (fault) => reported.push(fault)
+      ? (/** @type {Fault} */ fault) => reported.push(fault)
       : () => {
           throw new Error('reporter broke');
         };
@@ -562,7 +624,7 @@ void test('a fault record that fails does not stop the report, the redraw or the
         changes += 1;
       }
     });
-    game.faults = null; // the record itself breaks
+    poke(game, 'faults', null); // the record itself breaks
     game.gameBoard.pop(); // and an invariant breaks, so the game must stop
     changes = 0;
     assert.doesNotThrow(() => {
@@ -583,7 +645,7 @@ void test('only the 20 most recent faults are kept [SAF-3]', () => {
   for (let i = 0; i < 25; i++) game.failSafe(`fault ${String(i)}`);
   assert.equal(game.faults.length, 20);
   assert.equal(game.faults[0].reason, 'fault 5');
-  assert.equal(game.faults.at(-1).reason, 'fault 24');
+  assert.equal(present(game.faults.at(-1)).reason, 'fault 24');
 });
 
 void test('by default faults are reported to the console [SAF-3]', (t) => {
@@ -619,7 +681,9 @@ void test('pause is ignored unless playing, and resume unless paused [STA-2]', (
 void test('an unknown action does nothing [STA-2]', () => {
   const { game, reported } = recordingGame();
   const before = JSON.stringify(game.currentTetromino);
-  game.handleAction('fly');
+  const handle = Reflect.get(game, 'handleAction');
+  if (typeof handle !== 'function') throw new Error('no handleAction');
+  Reflect.apply(handle, game, ['fly']);
   assert.equal(JSON.stringify(game.currentTetromino), before);
   assert.deepEqual(reported, []);
 });
@@ -676,7 +740,9 @@ void test('localStorage is used when the browser provides it [SAF-2]', (t) => {
     value: storage,
     configurable: true
   });
-  t.after(() => delete globalThis.localStorage);
+  t.after(() => {
+    remove(globalThis, 'localStorage');
+  });
   const game = new GameManager({ scheduler: createFakeScheduler() });
   game.highScore = 700;
   assert.equal(storage.getItem('tetris.highScore'), '700');
@@ -689,7 +755,9 @@ void test('if touching localStorage throws, memory storage is used instead [SAF-
     },
     configurable: true
   });
-  t.after(() => delete globalThis.localStorage);
+  t.after(() => {
+    remove(globalThis, 'localStorage');
+  });
   const game = new GameManager({ scheduler: createFakeScheduler() });
   game.highScore = 400;
   assert.equal(game.highScore, 400);
@@ -713,41 +781,42 @@ void test('by default a broken invariant is reported to the console without an e
 const BAD_PIECE_REASON = 'upcoming piece is not a valid piece';
 const BAD_CURRENT_REASON = 'piece is invalid or overlaps the board';
 
+/** @type {Array<[string, (game: GameManager) => void]>} */
 const malformedUpcoming = [
   [
     'a missing piece',
     (game) => {
-      game.nextTetrominos[1] = undefined;
+      poke(game.nextTetrominos, 1, undefined);
     }
   ],
   [
     'a null piece',
     (game) => {
-      game.nextTetrominos[0] = null;
+      poke(game.nextTetrominos, 0, null);
     }
   ],
   [
     'a piece with no color',
     (game) => {
-      game.nextTetrominos[2] = { rotations: [] };
+      poke(game.nextTetrominos, 2, { rotations: [] });
     }
   ],
   [
     'a piece of an unknown color',
     (game) => {
-      game.nextTetrominos[1].color = '#123456';
+      poke(present(game.nextTetrominos[1]), 'color', '#123456');
     }
   ],
   [
     'a non-text color',
     (game) => {
-      game.nextTetrominos[1].color = 7;
+      poke(present(game.nextTetrominos[1]), 'color', 7);
     }
   ],
   [
     'a piece with no rotations',
     (game) => {
-      game.nextTetrominos[0].rotations = undefined;
+      poke(present(game.nextTetrominos[0]), 'rotations', undefined);
     }
   ],
   [
@@ -759,7 +828,7 @@ const malformedUpcoming = [
   [
     'a piece with a hole in its rotations',
     (game) => {
-      delete game.nextTetrominos[2].rotations[1];
+      remove(present(game.nextTetrominos[2]).rotations, 1);
     }
   ],
   [
@@ -771,25 +840,29 @@ const malformedUpcoming = [
   [
     'a piece with an empty row',
     (game) => {
-      game.nextTetrominos[0].rotations[0][1] = [];
+      poke(present(present(game.nextTetrominos[0]).rotations[0]), 1, []);
     }
   ],
   [
     'a piece with a hole in a row',
     (game) => {
-      delete game.nextTetrominos[0].rotations[0][1][2];
+      remove(present(game.nextTetrominos[0]).rotations[0][1], 2);
     }
   ],
   [
     'a piece with a non-list row',
     (game) => {
-      game.nextTetrominos[0].rotations[0][1] = 'XXXX';
+      poke(present(present(game.nextTetrominos[0]).rotations[0]), 1, 'XXXX');
     }
   ],
   [
     'a piece with a block counted as 1',
     (game) => {
-      game.nextTetrominos[0].rotations[0][1][0] = 1;
+      poke(
+        present(present(present(game.nextTetrominos[0]).rotations[0])[1]),
+        0,
+        1
+      );
     }
   ],
   [
@@ -816,15 +889,15 @@ const malformedUpcoming = [
   [
     'a hole in the list made up for by an extra property',
     (game) => {
-      delete game.nextTetrominos[1];
-      game.nextTetrominos.extra = game.nextTetrominos[0];
+      remove(game.nextTetrominos, 1);
+      poke(game.nextTetrominos, 'extra', game.nextTetrominos[0]);
     }
   ],
   [
     'a hole in a rotation list made up for by an extra property',
     (game) => {
-      delete game.nextTetrominos[2].rotations[1];
-      game.nextTetrominos[2].rotations.extra = [];
+      remove(present(game.nextTetrominos[2]).rotations, 1);
+      poke(present(game.nextTetrominos[2]).rotations, 'extra', []);
     }
   ],
   [
@@ -858,7 +931,7 @@ const malformedUpcoming = [
   [
     'a list of the right length that is not a list',
     (game) => {
-      game.nextTetrominos = { length: 3 };
+      poke(game, 'nextTetrominos', { length: 3 });
     }
   ]
 ];
@@ -874,134 +947,135 @@ for (const [name, corrupt] of malformedUpcoming) {
   });
 }
 
+/** @type {Array<[string, (game: GameManager) => void]>} */
 const malformedCurrent = [
   [
     'no blocks',
     (game) => {
-      game.currentTetromino.rotations[0] = [
+      poke(game.currentTetromino.rotations, 0, [
         [false, false],
         [false, false]
-      ];
+      ]);
     }
   ],
   [
     'one block',
     (game) => {
-      game.currentTetromino.rotations[0] = [
+      poke(game.currentTetromino.rotations, 0, [
         [true, false],
         [false, false]
-      ];
+      ]);
     }
   ],
   [
     'five blocks',
     (game) => {
-      game.currentTetromino.rotations[0] = [
+      poke(game.currentTetromino.rotations, 0, [
         [true, true, true],
         [true, true, false]
-      ];
+      ]);
     }
   ],
   [
     'the wrong four blocks for its color',
     (game) => {
-      game.currentTetromino.rotations[0] = [[true, true, true, true]];
+      poke(game.currentTetromino.rotations, 0, [[true, true, true, true]]);
     }
   ],
   [
     'no color',
     (game) => {
-      game.currentTetromino.color = undefined;
+      poke(game.currentTetromino, 'color', undefined);
     }
   ],
   [
     'an unknown color',
     (game) => {
-      game.currentTetromino.color = 'red';
+      poke(game.currentTetromino, 'color', 'red');
     }
   ],
   [
     'no rotations',
     (game) => {
-      game.currentTetromino.rotations = null;
+      poke(game.currentTetromino, 'rotations', null);
     }
   ],
   [
     'a rotation index past its last rotation',
     (game) => {
-      game.currentTetromino.rotationState = 4;
+      poke(game.currentTetromino, 'rotationState', 4);
     }
   ],
   [
     'a negative rotation index',
     (game) => {
-      game.currentTetromino.rotationState = -1;
+      poke(game.currentTetromino, 'rotationState', -1);
     }
   ],
   [
     'a fractional rotation index',
     (game) => {
-      game.currentTetromino.rotationState = 0.5;
+      poke(game.currentTetromino, 'rotationState', 0.5);
     }
   ],
   [
     'a text rotation index',
     (game) => {
-      game.currentTetromino.rotationState = '0';
+      poke(game.currentTetromino, 'rotationState', '0');
     }
   ],
   [
     'no position',
     (game) => {
-      game.currentTetromino.position = undefined;
+      poke(game.currentTetromino, 'position', undefined);
     }
   ],
   [
     'a fractional row',
     (game) => {
-      game.currentTetromino.position = { row: 0.5, column: 4 };
+      poke(game.currentTetromino, 'position', { row: 0.5, column: 4 });
     }
   ],
   [
     'a fractional column',
     (game) => {
-      game.currentTetromino.position = { row: 0, column: 4.5 };
+      poke(game.currentTetromino, 'position', { row: 0, column: 4.5 });
     }
   ],
   [
     'a text column',
     (game) => {
-      game.currentTetromino.position = { row: 0, column: '4' };
+      poke(game.currentTetromino, 'position', { row: 0, column: '4' });
     }
   ],
   [
     'an empty-text row that would read as row 0',
     (game) => {
-      game.currentTetromino.position = { row: '', column: 4 };
+      poke(game.currentTetromino, 'position', { row: '', column: 4 });
     }
   ],
   [
     'an empty-text column that would read as column 0',
     (game) => {
-      game.currentTetromino.position = { row: 0, column: '' };
+      poke(game.currentTetromino, 'position', { row: 0, column: '' });
     }
   ],
   [
     'a row below the board',
     (game) => {
-      game.currentTetromino.position = { row: 30, column: 4 };
+      poke(game.currentTetromino, 'position', { row: 30, column: 4 });
     }
   ],
   [
     'a row above the board',
     (game) => {
-      game.currentTetromino.position = { row: -5, column: 4 };
+      poke(game.currentTetromino, 'position', { row: -5, column: 4 });
     }
   ],
   [
     'a position off the board',
     (game) => {
-      game.currentTetromino.position = { row: 0, column: 40 };
+      poke(game.currentTetromino, 'position', { row: 0, column: 40 });
     }
   ]
 ];
@@ -1038,7 +1112,7 @@ void test('the falling piece is not checked once the game is over [SAF-4]', () =
   });
   game.failSafe('test stop');
   reported.length = 0;
-  game.currentTetromino.rotations = null;
+  poke(game.currentTetromino, 'rotations', null);
   game.guard(() => {});
   assert.equal(reported.length, 0);
 });
@@ -1079,8 +1153,8 @@ void test('waiting pieces are valid wherever their stored position and rotation 
   const { game, reported } = recordingGame({
     factory: fixedFactory(PieceColors.purple)
   });
-  game.nextTetrominos[0].position = { row: 99, column: -7 };
-  game.nextTetrominos[0].rotationState = 3;
+  poke(present(game.nextTetrominos[0]), 'position', { row: 99, column: -7 });
+  poke(present(game.nextTetrominos[0]), 'rotationState', 3);
   game.guard(() => {});
   assert.deepEqual(reported, []);
 });
@@ -1119,7 +1193,7 @@ void test('a hole in a rotation the piece is not using is still caught, playing 
     });
     if (paused) game.togglePause();
     game.currentTetromino.rotations = [...game.currentTetromino.rotations];
-    delete game.currentTetromino.rotations[2];
+    remove(game.currentTetromino.rotations, 2);
     game.guard(() => {});
     assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
   }

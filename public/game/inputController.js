@@ -72,9 +72,9 @@ export class InputController {
     this.questionButtons = questionButtons;
     /** @type {PlayerActionValue | null} The move being auto repeated. */
     this.movement = null;
-    /** @type {number | undefined} */
+    /** @type {ReturnType<typeof setTimeout> | undefined} */
     this.movementTimer = undefined;
-    /** @type {number | undefined} */
+    /** @type {ReturnType<typeof setInterval> | undefined} */
     this.softDropTimer = undefined;
     /** @type {Set<string>} */
     this.heldKeys = new Set();

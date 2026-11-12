@@ -29,8 +29,26 @@ import {
   repeatUntil
 } from './helpers.js';
 import { oracle } from './saveOracle.js';
+import {
+  jsonArray,
+  jsonObject,
+  parseJsonObject,
+  present,
+  stringifyLike,
+  remove
+} from './json.js';
 
 const { cyan, yellow, purple, green, red, orange } = PieceColors;
+
+/**
+ * Removes a stored key; fails the test when the storage cannot remove.
+ * @param {import('../public/game/gameManager.js').KeyValueStorage & { removeItem?(key: string): void }} storage
+ * @param {string} key
+ */
+function removeStored(storage, key) {
+  if (!storage.removeItem) assert.fail('the storage has no removeItem');
+  storage.removeItem(key);
+}
 
 /**
  * Reads and parses a stored record; fails the test when the record is absent
@@ -71,7 +89,9 @@ function snapshot(game) {
 function landOnSurface(game) {
   repeatUntil(
     () => game.isOnSurface,
-    () => game.softDrop(),
+    () => {
+      game.softDrop();
+    },
     'the piece landing'
   );
 }
@@ -116,6 +136,7 @@ void test('without injected storage it falls back to memory when localStorage is
 // State guards
 
 // Each action on its own, so opposite moves cannot cancel out.
+/** @type {Array<import('../public/game/gameState.js').PlayerActionValue | 'softDrop'>} */
 const PLAY_ACTIONS = [
   PlayerAction.moveLeft,
   PlayerAction.moveRight,
@@ -125,8 +146,10 @@ const PLAY_ACTIONS = [
   'softDrop'
 ];
 /** @type {(game: GameManager, action: import('../public/game/gameState.js').PlayerActionValue | 'softDrop') => void} */
-const perform = (game, action) =>
-  action === 'softDrop' ? game.softDrop() : game.handleAction(action);
+const perform = (game, action) => {
+  if (action === 'softDrop') game.softDrop();
+  else game.handleAction(action);
+};
 
 void test('moves, rotations, holds and drops do nothing at game over [STA-1]', () => {
   for (const action of PLAY_ACTIONS) {
@@ -226,9 +249,24 @@ void test('cancelling the New Game question keeps the paused game, and so does a
 
   /** @type {[string, (game: GameManager) => void][]} */
   const betweenCases = [
-    ['an ignored move', (game) => game.handleAction(PlayerAction.moveLeft)],
-    ['a soft drop', (game) => game.softDrop()],
-    ['a continue', (game) => game.handleAction(PlayerAction.continueGame)]
+    [
+      'an ignored move',
+      (game) => {
+        game.handleAction(PlayerAction.moveLeft);
+      }
+    ],
+    [
+      'a soft drop',
+      (game) => {
+        game.softDrop();
+      }
+    ],
+    [
+      'a continue',
+      (game) => {
+        game.handleAction(PlayerAction.continueGame);
+      }
+    ]
   ];
   for (const [what, between] of betweenCases) {
     const { game } = newGame({ factory: fixedFactory(cyan) });
@@ -513,7 +551,7 @@ void test('a refused availability write withdraws locally without replacing the 
   game.togglePause();
   storage.setItem('tetris.isSessionSaved', 'true');
   const setItem = storage.setItem;
-  /** @type {[string, string][]} */
+  /** @type {[string, unknown][]} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -633,7 +671,7 @@ void test('the session is saved after a line clear but not after a plain lock [S
   assert.equal(game.score, 100);
   assert.equal(game.isSessionSaved, true);
   assert.ok(
-    JSON.parse(readRecord(storage, 'tetris.savedGameSession').position)
+    parseJsonObject(readRecord(storage, 'tetris.savedGameSession').position)
       .gameBoard
   );
 });
@@ -720,11 +758,11 @@ void test('a save missing required history is refused whole [PLY-6] [STA-6]', ()
   assert.ok(game.lockDelayResetCount > 0, 'moves while resting burn resets');
   game.togglePause();
   // Simulate a save from before the lock-delay state was recorded.
-  const saved = JSON.parse(
+  const saved = parseJsonObject(
     readRecord(storage, 'tetris.savedGameSession').position
   );
-  delete saved.lockDelayResetCount;
-  delete saved.lowestRowReached;
+  remove(saved, 'lockDelayResetCount');
+  remove(saved, 'lowestRowReached');
   storage.setItem(
     'tetris.savedGameSession',
     serializeSavedRecord(JSON.stringify(saved), true)
@@ -749,10 +787,12 @@ void test('a continued save restores a remembered low below the piece [PLY-6] [S
   game.softDrop();
   game.togglePause();
   // A wall-kick can leave the remembered low below the anchor (F20).
-  const saved = JSON.parse(
+  const saved = parseJsonObject(
     readRecord(storage, 'tetris.savedGameSession').position
   );
-  saved.lowestRowReached = saved.currentTetromino.position.row + 2;
+  const anchorRow = jsonObject(jsonObject(saved.currentTetromino).position).row;
+  assert.equal(typeof anchorRow, 'number');
+  saved.lowestRowReached = Number(anchorRow) + 2;
   storage.setItem(
     'tetris.savedGameSession',
     serializeSavedRecord(JSON.stringify(saved), true)
@@ -762,10 +802,7 @@ void test('a continued save restores a remembered low below the piece [PLY-6] [S
     storage
   });
   continued.handleAction(PlayerAction.continueGame);
-  assert.equal(
-    continued.lowestRowReached,
-    saved.currentTetromino.position.row + 2
-  );
+  assert.equal(continued.lowestRowReached, Number(anchorRow) + 2);
 });
 
 void test('the counterclockwise action turns the piece the other way [PCE-4] [INP-1]', () => {
@@ -1013,7 +1050,7 @@ void test('continue carries on with the saved bag, so each piece still comes onc
   });
   game.handleAction(PlayerAction.drop);
   game.handleAction(PlayerAction.pause);
-  const saved = game.factory.bag.map((piece) => piece.color);
+  const saved = present(game.factory.bag).map((piece) => piece.color);
   assert.equal(saved.length, 2);
 
   const restored = new GameManager({
@@ -1038,10 +1075,10 @@ void test('Continue refuses a save without a bag and leaves the current bag alon
     factory: new TetrominoFactory(seededRandom(5))
   });
   game.handleAction(PlayerAction.pause);
-  const data = JSON.parse(
+  const data = parseJsonObject(
     readRecord(storage, 'tetris.savedGameSession').position
   );
-  delete data.bag;
+  remove(data, 'bag');
   storage.setItem('tetris.savedGameSession', JSON.stringify(data));
 
   // Its constructor has already dealt from this bag.
@@ -1431,23 +1468,26 @@ function rememberWrittenBytes(game, storage) {
   game.handleAction(PlayerAction.pause);
   const bytes = storage.getItem(serializerSavedKey);
   assert.ok(bytes);
-  const payload = JSON.parse(parseRecord(bytes).position);
+  const payload = parseJsonObject(parseRecord(bytes).position);
   // This is an engine-written byte-retention witness, not an independent
   // proof of B9/B16 semantic validity or the F29 last-good-save target.
   assert.equal(readRecord(storage, serializerSavedKey).available, true);
   assert.equal(payload.score, 0);
-  assert.equal(payload.gameBoard.length, 20);
-  for (const row of payload.gameBoard) {
+  const board = jsonArray(payload.gameBoard);
+  assert.equal(board.length, 20);
+  for (const rowValue of board) {
+    const row = jsonArray(rowValue);
     assert.equal(row.length, 10);
     for (const cell of row)
       assert.deepEqual(cell, { isFilled: false, color: null });
   }
-  assert.equal(payload.currentTetromino.color, PieceColors.cyan);
-  assert.deepEqual(payload.currentTetromino.position, { row: 0, column: 3 });
-  assert.equal(payload.currentTetromino.rotationState, 0);
+  const current = jsonObject(payload.currentTetromino);
+  assert.equal(current.color, PieceColors.cyan);
+  assert.deepEqual(current.position, { row: 0, column: 3 });
+  assert.equal(current.rotationState, 0);
   assert.equal(payload.lockDelayResetCount, 0);
   assert.equal(payload.lowestRowReached, 1);
-  assert.equal(payload.nextTetrominos.length, 3);
+  assert.equal(jsonArray(payload.nextTetrominos).length, 3);
   assert.equal(payload.heldTetromino, null);
   assert.equal(payload.canHoldTetromino, true);
   assert.deepEqual(payload.bag, []);
@@ -1457,7 +1497,7 @@ function rememberWrittenBytes(game, storage) {
 
 for (const route of ['Pause', 'line clear']) {
   for (const refusedWithdrawal of [false, true]) {
-    void test(`a serializer failure on ${route} stops safely even with withdrawal refused=${refusedWithdrawal} [SAF-3] [STA-4] [SAF-2]`, () => {
+    void test(`a serializer failure on ${route} stops safely even with withdrawal refused=${String(refusedWithdrawal)} [SAF-3] [STA-4] [SAF-2]`, () => {
       /** @type {import('../public/game/gameManager.js').Fault[]} */
       const reports = [];
       const { game, storage, scheduler } = newGame({
@@ -1491,16 +1531,23 @@ for (const route of ['Pause', 'line clear']) {
       const original = JSON.stringify;
       const error = new Error('injected session serialization failure');
       let injections = 0;
+      /**
+       * @param {unknown} value
+       * @param {unknown} replacer
+       * @param {unknown} space
+       * @returns {string}
+       */
       JSON.stringify = function (value, replacer, space) {
         if (
-          value &&
+          typeof value === 'object' &&
+          value !== null &&
           Object.hasOwn(value, 'gameBoard') &&
           Object.hasOwn(value, 'nextTetrominos')
         ) {
           injections += 1;
           throw error;
         }
-        return original(value, replacer, space);
+        return stringifyLike(original, value, replacer, space);
       };
       try {
         if (route === 'Pause') game.handleAction(PlayerAction.pause);
@@ -1582,7 +1629,7 @@ void test('a session storage-write failure stays nonfatal and attempts withdrawa
   });
   const before = rememberWrittenBytes(game, storage);
   const setItem = storage.setItem.bind(storage);
-  /** @type {[string, string][]} */
+  /** @type {[string, unknown][]} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -1602,6 +1649,7 @@ void test('a session storage-write failure stays nonfatal and attempts withdrawa
     writes.some(
       ([key, value]) =>
         key === serializerSavedKey &&
+        typeof value === 'string' &&
         parseSavedRecord(value)?.available === false
     )
   );
@@ -1632,7 +1680,10 @@ function priorSave() {
   const a = storage.getItem(DATA);
   assert.ok(a);
   assert.equal(
-    JSON.parse(parseRecord(a).position).currentTetromino.position.column,
+    jsonObject(
+      jsonObject(parseJsonObject(parseRecord(a).position).currentTetromino)
+        .position
+    ).column,
     3
   );
   game.handleAction(PlayerAction.resume);
@@ -1642,7 +1693,7 @@ function priorSave() {
 
 for (const failedWrite of ['atomic record']) {
   for (const refuseWithdrawal of [false, true]) {
-    void test(`${failedWrite} failure preserves A bytes and withdraws, withdrawal refused=${refuseWithdrawal} [STA-4] [SAF-2]`, () => {
+    void test(`${failedWrite} failure preserves A bytes and withdraws, withdrawal refused=${String(refuseWithdrawal)} [STA-4] [SAF-2]`, () => {
       const { game, storage, scheduler, reports, a } = priorSave();
       storage.setItem(FLAG, 'true');
       /** @type {[string, string][]} */
@@ -1688,8 +1739,11 @@ for (const failedWrite of ['atomic record']) {
       assert.equal(game.isSessionSaved, true);
       assert.equal(game.sessionSaveWithdrawn, false);
       assert.equal(
-        JSON.parse(readRecord(storage, DATA).position).currentTetromino.position
-          .column,
+        jsonObject(
+          jsonObject(
+            parseJsonObject(readRecord(storage, DATA).position).currentTetromino
+          ).position
+        ).column,
         2
       );
     });
@@ -1718,7 +1772,7 @@ void test('a prior game-written save passes the independent oracle after a refus
 });
 
 for (const initiallyWithdrawn of [false, true]) {
-  void test(`interleaved readers see only completed A then B, writer latch starts ${initiallyWithdrawn} [STA-4]`, () => {
+  void test(`interleaved readers see only completed A then B, writer latch starts ${String(initiallyWithdrawn)} [STA-4]`, () => {
     const { game, storage, a } = priorSave();
     storage.setItem(FLAG, 'true');
     game.sessionSaveWithdrawn = initiallyWithdrawn;
@@ -1761,7 +1815,10 @@ void test('a later engine fault retains fully completed B without rollback or wi
   assert.notEqual(b, a);
   assert.ok(b);
   assert.equal(
-    JSON.parse(parseRecord(b).position).currentTetromino.position.column,
+    jsonObject(
+      jsonObject(parseJsonObject(parseRecord(b).position).currentTetromino)
+        .position
+    ).column,
     2
   );
   const fault = new Error('after completed save');
@@ -1783,12 +1840,12 @@ void test('a later engine fault retains fully completed B without rollback or wi
 
 for (const bad of ['{invalid json', '{}', JSON.stringify({ score: 0 })]) {
   for (const refuseWithdrawal of [false, true]) {
-    void test(`availability rejects invalid content ${bad}, withdrawal refused=${refuseWithdrawal} [STA-4] [SAF-1]`, () => {
+    void test(`availability rejects invalid content ${bad}, withdrawal refused=${String(refuseWithdrawal)} [STA-4] [SAF-1]`, () => {
       const storage = createMemoryStorage();
       storage.setItem(FLAG, 'true');
       storage.setItem(DATA, bad);
       const setItem = storage.setItem;
-      /** @type {[string, string][]} */
+      /** @type {[string, unknown][]} */
       const writes = [];
       storage.setItem = (key, value) => {
         writes.push([key, value]);
@@ -1892,8 +1949,7 @@ for (const changed of [
     assert.notEqual(a, b);
     if (changed === 'invalid') storage.setItem(DATA, '{}');
     if (changed === 'absent') {
-      assert.ok(storage.removeItem);
-      storage.removeItem(DATA);
+      removeStored(storage, DATA);
     }
     if (changed === 'unreadable') {
       const getItem = storage.getItem.bind(storage);
@@ -1975,8 +2031,7 @@ void test('fresh Continue invalidates earlier cached ineligibility after restori
 
 void test('payload write invalidates a reentrant eligibility check during publication [STA-4] [DSP-3]', () => {
   const { game, storage } = priorSave();
-  assert.ok(storage.removeItem);
-  storage.removeItem(DATA);
+  removeStored(storage, DATA);
   game.sessionSaveWithdrawn = false;
   const setItem = storage.setItem.bind(storage);
   storage.setItem = (key, value) => {
@@ -2001,7 +2056,7 @@ void test('assigning true on an available record is a no-op, and withdrawn recor
   assert.equal(game.isSessionSaved, true);
   game.isSessionSaved = false;
   const withdrawn = storage.getItem(DATA);
-  /** @type {[string, string][]} */
+  /** @type {[string, unknown][]} */
   const writes = [];
   storage.setItem = (key, value) => writes.push([key, value]);
   game.isSessionSaved = false;
@@ -2028,16 +2083,23 @@ void test('invalid constructed save content withdraws and reports through the gu
   // The engine state remains valid; the serializer emits invalid content.
   const original = JSON.stringify;
   let constructions = 0;
+  /**
+   * @param {unknown} value
+   * @param {unknown} replacer
+   * @param {unknown} space
+   * @returns {string}
+   */
   JSON.stringify = function (value, replacer, space) {
     if (
-      value &&
+      typeof value === 'object' &&
+      value !== null &&
       Object.hasOwn(value, 'gameBoard') &&
       Object.hasOwn(value, 'nextTetrominos')
     ) {
       constructions++;
-      return original({ ...value, score: -1 }, replacer, space);
+      return stringifyLike(original, { ...value, score: -1 }, replacer, space);
     }
-    return original(value, replacer, space);
+    return stringifyLike(original, value, replacer, space);
   };
   try {
     game.handleAction(PlayerAction.pause);
@@ -2208,7 +2270,7 @@ for (const [name, start, final] of scoreCases) {
     const saved = readRecord(storage, 'tetris.savedGameSession');
     game.togglePause();
     let generated = 0;
-    const generate = game.factory.generate;
+    const generate = game.factory.generate.bind(game.factory);
     game.factory.generate = () => {
       generated += 1;
       return generate();
@@ -2255,7 +2317,7 @@ void test('a crossing award ends normally with a real lock delay pending [SCO-1]
   const saved = readRecord(storage, 'tetris.savedGameSession');
   game.togglePause();
   let generated = 0;
-  const generate = game.factory.generate;
+  const generate = game.factory.generate.bind(game.factory);
   game.factory.generate = () => {
     generated += 1;
     return generate();

@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures.js';
+import { present } from '../test/json.js';
 import {
   BOARD_COLOR,
   PieceColors,
@@ -13,7 +14,26 @@ import {
   savedGame
 } from './helpers.js';
 
+/** @typedef {Array<[number, number]>} Cells */
+
+/**
+ * The coordinates of the filled cells of a board.
+ * @param {Awaited<ReturnType<typeof boardCells>>} grid
+ * @returns {Cells}
+ */
+function filledCells(grid) {
+  /** @type {Cells} */
+  const result = [];
+  grid.forEach((row, r) => {
+    row.forEach((value, c) => {
+      if (value) result.push([r, c]);
+    });
+  });
+  return result;
+}
+
 // Shape of a set of cells, independent of where it is on the board.
+/** @param {Cells} cells */
 function shapeOf(cells) {
   const minRow = Math.min(...cells.map(([r]) => r));
   const minColumn = Math.min(...cells.map(([, c]) => c));
@@ -21,7 +41,9 @@ function shapeOf(cells) {
     cells.map(([r, c]) => [r - minRow, c - minColumn]).sort()
   );
 }
+/** @param {Cells} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, c]) => c));
+/** @param {Cells} cells */
 const minRow = (cells) => Math.min(...cells.map(([r]) => r));
 
 test.describe('start and game over', () => {
@@ -52,9 +74,7 @@ test.describe('start and game over', () => {
     await expect(page.locator('#playPauseButton')).toBeVisible();
     await expectLabel(page, 'Pause');
     await expect.poll(() => filledCount(page)).toBe(4);
-    const cells = (await boardCells(page)).flatMap((row, r) =>
-      row.map((value, c) => value && [r, c]).filter(Boolean)
-    );
+    const cells = filledCells(await boardCells(page));
     expect(cells).toHaveLength(4);
     expect(minRow(cells)).toBeLessThanOrEqual(1);
     await expect.poll(() => canvasHasDrawing(page, 'next0')).toBe(true);
@@ -145,8 +165,14 @@ test.describe('start and game over', () => {
     for (const activations of [2, 3]) {
       const openBeforeDrawing = await page.evaluate((count) => {
         const button = document.getElementById('newGameButton');
+        const dialog = document.getElementById('newGameDialog');
+        if (
+          !(button instanceof HTMLButtonElement) ||
+          !(dialog instanceof HTMLDialogElement)
+        )
+          throw new Error('game: the New Game controls are missing');
         for (let i = 0; i < count; i++) button.click();
-        return document.getElementById('newGameDialog').open;
+        return dialog.open;
       }, activations);
       expect(openBeforeDrawing).toBe(false);
       await expect(dialog).toBeVisible();
@@ -210,7 +236,8 @@ test.describe('start and game over', () => {
     await page.keyboard.press('KeyP');
     await expectLabel(page, 'Resume');
     const kept = await boardCells(page);
-    for (const [how, answer] of [
+    /** @type {Array<[string, () => Promise<unknown>]>} */
+    const ways = [
       ['Enter on Cancel', () => page.keyboard.press('Enter')],
       ['Cancel', () => cancel.click()],
       ['Escape', () => page.keyboard.press('Escape')],
@@ -222,7 +249,8 @@ test.describe('start and game over', () => {
             element.dispatchEvent(new Event('cancel', { cancelable: true }))
           )
       ]
-    ]) {
+    ];
+    for (const [how, answer] of ways) {
       await page.keyboard.press('Enter');
       await expect(dialog, how).toBeVisible();
       await expect(cancel, how).toBeFocused();
@@ -270,13 +298,17 @@ test.describe('start and game over', () => {
             requestAnimationFrame(() => requestAnimationFrame(resolve))
           )
       );
-    const push = async (button) => {
+    const push = async (/** @type {number} */ button) => {
       await page.evaluate((index) => {
-        window.testPad.buttons[index].pressed = true;
+        const pad = window.testPad;
+        if (!pad) throw new Error('game: testPad was not installed');
+        pad.buttons[index].pressed = true;
       }, button);
       await frames();
       await page.evaluate((index) => {
-        window.testPad.buttons[index].pressed = false;
+        const pad = window.testPad;
+        if (!pad) throw new Error('game: testPad was not installed');
+        pad.buttons[index].pressed = false;
       }, button);
       await frames();
     };
@@ -397,10 +429,14 @@ test.describe('playing with the keyboard', () => {
     await expect(hold).toBeFocused();
     // Listening after the game, on the hold box itself, sees what the game did with each key.
     await hold.evaluate((canvas) => {
-      window.holdKeys = [];
+      /** @type {Array<[string, boolean]>} */
+      const keys = [];
+      window.holdKeys = keys;
       canvas.addEventListener('keydown', (event) => {
+        if (!(event instanceof KeyboardEvent))
+          throw new Error('game: keydown was not a KeyboardEvent');
         if (event.key === 'Enter' || event.key === ' ')
-          window.holdKeys.push([event.key, event.defaultPrevented]);
+          keys.push([event.key, event.defaultPrevented]);
       });
     });
     // A key with Cmd, Ctrl or Alt is the browser's shortcut: it never
@@ -452,7 +488,7 @@ test.describe('playing with the keyboard', () => {
     // halfway down, clear of the rounded corners, which are outside it.
     await page.locator('#newGameQuestion').click();
     const content = page.locator('.dialog-content');
-    const { height } = await content.boundingBox();
+    const { height } = present(await content.boundingBox());
     await content.click({ position: { x: 10, y: height / 2 } });
     await page.waitForTimeout(300);
     await expect(dialog).toBeVisible();
@@ -466,10 +502,7 @@ test.describe('playing with the keyboard', () => {
     await page.goto('/');
     await page.keyboard.press('Enter');
     await expect.poll(() => filledCount(page)).toBe(4);
-    const piece = async () =>
-      (await boardCells(page)).flatMap((row, r) =>
-        row.map((value, c) => value && [r, c]).filter(Boolean)
-      );
+    const piece = async () => filledCells(await boardCells(page));
     const start = minRow(await piece());
     await expect
       .poll(async () => minRow(await piece()), { timeout: 3000 })
@@ -598,12 +631,12 @@ test.describe('playing with the keyboard', () => {
     await page.close();
     await expect
       .poll(() =>
-        otherTab.evaluate(
-          async () =>
-            !(await navigator.locks.query()).held.some(
-              (lock) => lock.name === 'tetris.game-page'
-            )
-        )
+        otherTab.evaluate(async () => {
+          const snapshot = await navigator.locks.query();
+          return !(snapshot.held ?? []).some(
+            (lock) => lock.name === 'tetris.game-page'
+          );
+        })
       )
       .toBe(true);
     await otherTab.locator('#tabLockRetry').click();
@@ -619,60 +652,74 @@ test.describe('playing with the keyboard', () => {
     context
   }) => {
     await page.addInitScript(() => {
+      let keyReads = 0;
       window.gameKeyReads = 0;
-      window.readProbe = {
+      /** @type {NonNullable<Window['readProbe']>} */
+      const probe = {
         phase: 'initialization',
         started: performance.now(),
         reads: [],
         overflow: 0,
         ownReads: 0
       };
-      const getItem = Storage.prototype.getItem;
-      Storage.prototype.getItem = function (key) {
-        if (String(key).startsWith('tetris.')) {
-          window.gameKeyReads++;
-          const probe = window.readProbe;
-          if (probe.phase === 'diagnostic') probe.ownReads++;
-          if (probe.reads.length < 32) {
-            const stack = new Error().stack ?? '';
-            const callers = [
-              'get highScore',
-              'get isSessionSaved',
-              'readSavedSession',
-              'storageChanged',
-              'drawIfChanged',
-              'redrawAll'
-            ].filter((label) => stack.includes(label));
-            probe.reads.push({
-              key: [
-                'tetris.highScore',
-                'tetris.isSessionSaved',
-                'tetris.savedGameSession'
-              ].includes(String(key))
-                ? String(key)
-                : 'other-tetris',
-              phase: probe.phase,
-              elapsedMs: Math.round(performance.now() - probe.started),
-              callers: callers.length ? callers : ['unclassified']
-            });
-          } else probe.overflow++;
+      window.readProbe = probe;
+      /** @type {unknown} */
+      const getItem = Reflect.get(Storage.prototype, 'getItem');
+      if (typeof getItem !== 'function')
+        throw new Error('game: Storage.getItem is not a function');
+      Reflect.set(
+        Storage.prototype,
+        'getItem',
+        /** @this {Storage} */ function (/** @type {unknown[]} */ ...args) {
+          const key = args[0];
+          if (String(key).startsWith('tetris.')) {
+            window.gameKeyReads = ++keyReads;
+            if (probe.phase === 'diagnostic') probe.ownReads++;
+            if (probe.reads.length < 32) {
+              const stack = new Error().stack ?? '';
+              const callers = [
+                'get highScore',
+                'get isSessionSaved',
+                'readSavedSession',
+                'storageChanged',
+                'drawIfChanged',
+                'redrawAll'
+              ].filter((label) => stack.includes(label));
+              probe.reads.push({
+                key: [
+                  'tetris.highScore',
+                  'tetris.isSessionSaved',
+                  'tetris.savedGameSession'
+                ].includes(String(key))
+                  ? String(key)
+                  : 'other-tetris',
+                phase: probe.phase,
+                elapsedMs: Math.round(performance.now() - probe.started),
+                callers: callers.length ? callers : ['unclassified']
+              });
+            } else probe.overflow++;
+          }
+          /** @type {unknown} */
+          const result = Reflect.apply(getItem, this, args);
+          return result;
         }
-        return getItem.apply(this, arguments);
-      };
-      window.seenStorageKeys = [];
-      window.probeTallies = {
+      );
+      /** @type {(string | null)[]} */
+      const seen = [];
+      window.seenStorageKeys = seen;
+      const tallies = {
         events: 0,
         tetrisPrefixKey: 0,
         otherKey: 0,
         nullKey: 0
       };
+      window.probeTallies = tallies;
       window.addEventListener('storage', (event) => {
-        window.seenStorageKeys.push(event.key);
-        window.probeTallies.events++;
-        if (event.key === null) window.probeTallies.nullKey++;
-        else if (String(event.key).startsWith('tetris.'))
-          window.probeTallies.tetrisPrefixKey++;
-        else window.probeTallies.otherKey++;
+        seen.push(event.key);
+        tallies.events++;
+        if (event.key === null) tallies.nullKey++;
+        else if (event.key.startsWith('tetris.')) tallies.tetrisPrefixKey++;
+        else tallies.otherKey++;
       });
     });
     await page.goto('/');
@@ -680,7 +727,9 @@ test.describe('playing with the keyboard', () => {
     const otherTab = await context.newPage();
     await otherTab.goto('/icons/icon.svg');
     const before = await page.evaluate(() => {
-      window.readProbe.phase = 'foreign-write-window';
+      const probe = window.readProbe;
+      if (!probe) throw new Error('game: readProbe was not installed');
+      probe.phase = 'foreign-write-window';
       return window.gameKeyReads;
     });
     await otherTab.evaluate(() => {
@@ -698,17 +747,20 @@ test.describe('playing with the keyboard', () => {
       // rethrow the original error unchanged. The state read and the
       // logging are each guarded and best-effort: a failed read logs the
       // fixed label with no state, and no raw error text is recorded.
+      /** @type {object | null} */
       let evidence;
       try {
-        evidence = await page.evaluate(() => {
-          const bucket = (state) =>
+        const base = await page.evaluate(() => {
+          const bucket = (/** @type {string} */ state) =>
             state === 'visible' ? 'visible' : 'not-visible';
+          const tallies = window.probeTallies;
+          if (!tallies) throw new Error('game: probeTallies was not installed');
           return {
             tallies: {
-              events: window.probeTallies.events,
-              tetrisPrefixKey: window.probeTallies.tetrisPrefixKey,
-              otherKey: window.probeTallies.otherKey,
-              nullKey: window.probeTallies.nullKey
+              events: tallies.events,
+              tetrisPrefixKey: tallies.tetrisPrefixKey,
+              otherKey: tallies.otherKey,
+              nullKey: tallies.nullKey
             },
             gameKeyReads: window.gameKeyReads,
             foreignKeyWriteVisible:
@@ -717,10 +769,14 @@ test.describe('playing with the keyboard', () => {
             focused: document.hasFocus()
           };
         });
-        evidence.readsBeforeWrite = before;
-        evidence.otherTabVisibility = await otherTab.evaluate(() =>
+        const otherTabVisibility = await otherTab.evaluate(() =>
           document.visibilityState === 'visible' ? 'visible' : 'not-visible'
         );
+        evidence = {
+          ...base,
+          readsBeforeWrite: before,
+          otherTabVisibility
+        };
       } catch {
         evidence = null;
       }
@@ -733,7 +789,9 @@ test.describe('playing with the keyboard', () => {
     }
     try {
       const after = await page.evaluate(() => {
-        window.readProbe.phase = 'final-sample';
+        const probe = window.readProbe;
+        if (!probe) throw new Error('game: readProbe was not installed');
+        probe.phase = 'final-sample';
         return window.gameKeyReads;
       });
       expect(after).toBe(before);
@@ -741,11 +799,13 @@ test.describe('playing with the keyboard', () => {
       let evidence = null;
       try {
         evidence = await page.evaluate(() => {
-          window.readProbe.phase = 'diagnostic';
+          const probe = window.readProbe;
+          if (!probe) throw new Error('game: readProbe was not installed');
+          probe.phase = 'diagnostic';
           return {
-            reads: window.readProbe.reads,
-            overflow: window.readProbe.overflow,
-            diagnosticOwnReads: window.readProbe.ownReads,
+            reads: probe.reads,
+            overflow: probe.overflow,
+            diagnosticOwnReads: probe.ownReads,
             gameKeyReads: window.gameKeyReads
           };
         });
@@ -771,9 +831,11 @@ test.describe('playing with the keyboard', () => {
     context
   }) => {
     await page.addInitScript(() => {
-      window.seenStorageKeys = [];
+      /** @type {(string | null)[]} */
+      const seen = [];
+      window.seenStorageKeys = seen;
       window.addEventListener('storage', (event) => {
-        window.seenStorageKeys.push(event.key);
+        seen.push(event.key);
       });
     });
     await page.goto('/');
@@ -789,9 +851,13 @@ test.describe('playing with the keyboard', () => {
         .poll(() => page.evaluate(() => window.seenStorageKeys))
         .toContain('tetris.highScore');
     } catch (error) {
+      /**
+       * @param {import('@playwright/test').Page} target
+       * @param {string} expectedOrigin
+       */
       const inspectPage = async (target, expectedOrigin) => {
         try {
-          return await target.evaluate((origin) => {
+          return await target.evaluate((/** @type {string} */ origin) => {
             const value = localStorage.getItem('tetris.highScore');
             const keys = window.seenStorageKeys;
             return {
@@ -875,15 +941,17 @@ test.describe('playing with the keyboard', () => {
 });
 
 test.describe('layout', () => {
+  /** @param {import('@playwright/test').Page} page */
   async function checkFits(page) {
     const layout = await page.evaluate(() => {
-      const board = document.getElementById('tetris').getBoundingClientRect();
-      const pause = document
-        .getElementById('playPauseButton')
-        .getBoundingClientRect();
-      const held = document
-        .getElementById('heldPreview')
-        .getBoundingClientRect();
+      const rectOf = (/** @type {string} */ id) => {
+        const element = document.getElementById(id);
+        if (!element) throw new Error(`game: #${id} is missing`);
+        return element.getBoundingClientRect();
+      };
+      const board = rectOf('tetris');
+      const pause = rectOf('playPauseButton');
+      const held = rectOf('heldPreview');
       return {
         scrollHeight: document.documentElement.scrollHeight,
         scrollWidth: document.documentElement.scrollWidth,
@@ -931,9 +999,9 @@ test.describe('layout', () => {
   }) => {
     const boardSize = () =>
       page.evaluate(() => {
-        const { width, height } = document
-          .getElementById('tetris')
-          .getBoundingClientRect();
+        const board = document.getElementById('tetris');
+        if (!board) throw new Error('game: #tetris is missing');
+        const { width, height } = board.getBoundingClientRect();
         return { width, height };
       });
     await page.goto('/');
@@ -964,6 +1032,8 @@ test.describe('layout', () => {
       .poll(() =>
         page.evaluate(() => {
           const canvas = document.getElementById('tetris');
+          if (!(canvas instanceof HTMLCanvasElement))
+            throw new Error('game: #tetris is not a canvas');
           return (
             canvas.width ===
             Math.round(canvas.getBoundingClientRect().width * devicePixelRatio)
@@ -974,7 +1044,8 @@ test.describe('layout', () => {
   });
 });
 
-for (const [kind, start, final] of [
+/** @type {Array<[string, number, number]>} */
+const scoreLimits = [
   ['exact award', Number.MAX_SAFE_INTEGER - 100, Number.MAX_SAFE_INTEGER],
   [
     'crossing award',
@@ -982,7 +1053,8 @@ for (const [kind, start, final] of [
     Number.MAX_SAFE_INTEGER - 50
   ],
   ['restored ceiling', Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]
-]) {
+];
+for (const [kind, start, final] of scoreLimits) {
   test(`score limit ${kind} uses ordinary Game Over on the page [SCO-1] [SCO-2] [STA-3] [STA-4] [SAF-4]`, async ({
     page
   }, testInfo) => {
@@ -994,9 +1066,17 @@ for (const [kind, start, final] of [
         score: start
       })
     );
-    const before = await page.evaluate(
-      () => JSON.parse(localStorage.getItem('tetris.savedGameSession')).position
-    );
+    const before = await page.evaluate(() => {
+      const saved = localStorage.getItem('tetris.savedGameSession');
+      if (saved === null) throw new Error('game: no saved session');
+      /** @type {unknown} */
+      const record = JSON.parse(saved);
+      if (typeof record !== 'object' || record === null)
+        throw new Error('game: the saved session is not an object');
+      /** @type {unknown} */
+      const position = Reflect.get(record, 'position');
+      return position;
+    });
     await page.keyboard.press('KeyP');
     if (kind !== 'restored ceiling') {
       await page.keyboard.press('ArrowUp');
@@ -1005,8 +1085,10 @@ for (const [kind, start, final] of [
       await page.keyboard.press('Space');
     }
     await expect(page.locator('#gameOverMessage')).toBeVisible();
-    await expect(page.locator('#score')).toHaveText(`Score: ${final}`);
-    await expect(page.locator('#highScore')).toHaveText(`High Score: ${final}`);
+    await expect(page.locator('#score')).toHaveText(`Score: ${String(final)}`);
+    await expect(page.locator('#highScore')).toHaveText(
+      `High Score: ${String(final)}`
+    );
     await expect(page.locator('#continueGameButton')).toBeHidden();
     await expect(page.locator('#gameOverMessage')).toHaveText('Game Over');
     await expect(page.locator('#gameOverMessage')).not.toHaveClass(
@@ -1020,9 +1102,13 @@ for (const [kind, start, final] of [
     await page.keyboard.up('ArrowLeft');
     expect(await boardCells(page)).toEqual(terminal);
     expect(
-      await page.evaluate(() =>
-        JSON.parse(localStorage.getItem('tetris.savedGameSession'))
-      )
+      await page.evaluate(() => {
+        const saved = localStorage.getItem('tetris.savedGameSession');
+        if (saved === null) throw new Error('game: no saved session');
+        /** @type {unknown} */
+        const record = JSON.parse(saved);
+        return record;
+      })
     ).toMatchObject({ available: false, position: before });
     await page.screenshot({
       path: `/tmp/tetris-score-${testInfo.project.name}-${kind.replaceAll(' ', '-')}.png`
@@ -1059,7 +1145,10 @@ test.describe('controller disconnect release boundary', () => {
       await expect.poll(() => filledCount(page)).toBe(4);
       const survivorIndex = removedIndex === 0 ? 1 : 0;
       await page.evaluate((index) => {
-        window.testPads[index].buttons[0].pressed = true;
+        const pad = window.testPads?.[index];
+        const button = pad?.buttons[0];
+        if (!button) throw new Error('game: no such test pad button');
+        button.pressed = true;
       }, survivorIndex);
       await page.clock.runFor(32);
       // Only the first connected pad is polled. If it survives, its initial
@@ -1067,7 +1156,8 @@ test.describe('controller disconnect release boundary', () => {
       const before = removedIndex === 0 ? 4 : 8;
       await expect.poll(() => filledCount(page)).toBe(before);
       await page.evaluate((index) => {
-        const pad = window.testPads[index];
+        const pad = window.testPads?.[index];
+        if (!pad) throw new Error('game: no such test pad');
         pad.connected = false;
         const event = new Event('gamepaddisconnected');
         Object.defineProperty(event, 'gamepad', { value: pad });
@@ -1076,11 +1166,17 @@ test.describe('controller disconnect release boundary', () => {
       await page.clock.runFor(220);
       expect(await filledCount(page)).toBe(before);
       await page.evaluate((index) => {
-        window.testPads[index].buttons[0].pressed = false;
+        const pad = window.testPads?.[index];
+        const button = pad?.buttons[0];
+        if (!button) throw new Error('game: no such test pad button');
+        button.pressed = false;
       }, survivorIndex);
       await page.clock.runFor(32);
       await page.evaluate((index) => {
-        window.testPads[index].buttons[0].pressed = true;
+        const pad = window.testPads?.[index];
+        const button = pad?.buttons[0];
+        if (!button) throw new Error('game: no such test pad button');
+        button.pressed = true;
       }, survivorIndex);
       await page.clock.runFor(32);
       await expect.poll(() => filledCount(page)).toBe(before + 4);

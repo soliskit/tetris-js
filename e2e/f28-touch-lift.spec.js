@@ -63,7 +63,9 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
   const cdp = await page.context().newCDPSession(page);
   // Trial-D variant: reuse the pointer id the browser assigns to the real touch-down.
   await page.evaluate(() => {
-    document.getElementById('tetris').addEventListener(
+    const board = document.getElementById('tetris');
+    if (!board) throw new Error('#tetris not found');
+    board.addEventListener(
       'pointerdown',
       (e) => {
         window.__downId = e.pointerId;
@@ -77,9 +79,14 @@ test('a touch lift far from touch-down with no move event is not a tap [INP-5]',
   });
   await page.evaluate(
     ({ x, y }) => {
-      document.getElementById('tetris').dispatchEvent(
+      const board = document.getElementById('tetris');
+      if (!board) throw new Error('#tetris not found');
+      const downId = window.__downId;
+      if (downId === undefined)
+        throw new Error('the real touch-down was not recorded');
+      board.dispatchEvent(
         new PointerEvent('pointerup', {
-          pointerId: window.__downId,
+          pointerId: downId,
           pointerType: 'touch',
           clientX: x + 60,
           clientY: y,

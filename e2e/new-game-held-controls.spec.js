@@ -15,12 +15,14 @@ const pieceCells = async (page) =>
   (await boardCells(page)).flatMap((row, r) =>
     row.flatMap((color, c) => (color ? [[r, c]] : []))
   );
+/** @type {Array<[string, 0 | 1]>} */
+const heldKeys = [
+  ['KeyA', 1],
+  ['KeyD', 1],
+  ['KeyS', 0]
+];
 for (const start of ['Enter', 'button'])
-  for (const [key, axis] of [
-    ['KeyA', 1],
-    ['KeyD', 1],
-    ['KeyS', 0]
-  ]) {
+  for (const [key, axis] of heldKeys) {
     test(`New Game ignores an old ${key} hold via ${start} until release and press [INP-2]`, async ({
       page
     }) => {
@@ -45,11 +47,7 @@ for (const start of ['Enter', 'button'])
     });
   }
 
-for (const [key, axis] of [
-  ['KeyA', 1],
-  ['KeyD', 1],
-  ['KeyS', 0]
-]) {
+for (const [key, axis] of heldKeys) {
   test(`Game Over releases an active ${key} hold before button restart [INP-2]`, async ({
     page
   }) => {
@@ -110,7 +108,9 @@ test('a pad direction used in the New Game question stays spent after confirmati
   await page.clock.runFor(32);
   await expect(page.locator('#newGameDialog')).toBeVisible();
   await page.evaluate(() => {
-    window.testPad.axes[0] = -1;
+    const pad = window.testPad;
+    if (!pad) throw new Error('testPad was not installed');
+    pad.axes[0] = -1;
   });
   await page.clock.runFor(32);
   await page.locator('#confirmNewGameButton').click();
@@ -124,11 +124,15 @@ test('a pad direction used in the New Game question stays spent after confirmati
     first.map((cell) => cell[1])
   );
   await page.evaluate(() => {
-    window.testPad.axes[0] = 0;
+    const pad = window.testPad;
+    if (!pad) throw new Error('testPad was not installed');
+    pad.axes[0] = 0;
   });
   await page.clock.runFor(32);
   await page.evaluate(() => {
-    window.testPad.axes[0] = -1;
+    const pad = window.testPad;
+    if (!pad) throw new Error('testPad was not installed');
+    pad.axes[0] = -1;
   });
   await page.clock.runFor(32);
   await expect

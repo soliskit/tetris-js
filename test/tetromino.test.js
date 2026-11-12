@@ -3,8 +3,17 @@ import assert from 'node:assert/strict';
 
 import { createBoard } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
+import { present } from './json.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 import { filled, pieceByColor, shapeStrings } from './helpers.js';
+
+/**
+ * The color of the named piece; fails the test for a name the game lacks.
+ * @param {string} name
+ */
+function colorNamed(name) {
+  return present(Object.entries(PieceColors).find(([key]) => key === name))[1];
+}
 
 // Standard Super Rotation System states: spawn, clockwise, 180, counterclockwise.
 /** @type {Record<string, string[][]>} */
@@ -50,7 +59,7 @@ const SRS_SHAPES = {
 
 for (const [name, expected] of Object.entries(SRS_SHAPES)) {
   void test(`${name} piece has the standard rotation states [PCE-2]`, () => {
-    const piece = pieceByColor(PieceColors[name]);
+    const piece = pieceByColor(colorNamed(name));
     assert.deepEqual(piece.rotations.map(shapeStrings), expected);
     for (const rotation of piece.rotations) {
       assert.equal(
@@ -73,7 +82,7 @@ void test('every piece spawns in its first rotation, centered in the top rows [P
     orange: 3
   };
   for (const [name, column] of Object.entries(expectedColumns)) {
-    const piece = pieceByColor(PieceColors[name]);
+    const piece = pieceByColor(colorNamed(name));
     piece.rotationState = piece.rotations.length - 1;
     piece.position = position(12, 0);
     const spawned = piece.spawned(10);
@@ -313,7 +322,7 @@ const asPositions = (table) =>
 void test('wall kicks match the standard SRS tables for every piece [PCE-4]', () => {
   for (const name of ['purple', 'green', 'red', 'blue', 'orange']) {
     assert.deepEqual(
-      pieceByColor(PieceColors[name]).wallKickData,
+      pieceByColor(colorNamed(name)).wallKickData,
       asPositions(SRS_KICKS_JLSTZ),
       name
     );
@@ -351,7 +360,7 @@ void test('each piece has its fixed color [PCE-2]', () => {
   };
   for (const [name, letter] of Object.entries(shapes)) {
     assert.deepEqual(
-      shapeStrings(pieceByColor(PieceColors[name]).shape),
+      shapeStrings(pieceByColor(colorNamed(name)).shape),
       SRS_SHAPES[name][0],
       `${letter} is ${name}`
     );

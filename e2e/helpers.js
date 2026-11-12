@@ -7,6 +7,7 @@ import {
 } from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
 import { allPieces } from '../public/game/tetrominoFactory.js';
+import { present } from '../test/json.js';
 
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 
@@ -37,7 +38,7 @@ export function savedGame({
   lockDelayResetCount = 0
 }) {
   const storage = createMemoryStorage();
-  const shape = allPieces().find((p) => p.color === piece);
+  const shape = present(allPieces().find((p) => p.color === piece));
   const game = new GameManager({
     storage,
     scheduler: { setTimeout: () => 0, clearTimeout() {} },
@@ -100,12 +101,11 @@ export async function continueSavedGame(page, saved) {
  * @param {string} label
  */
 export async function expectLabel(page, label) {
-  await page.waitForFunction(
-    (text) =>
-      document.getElementById('playPauseButton').getAttribute('aria-label') ===
-      text,
-    label
-  );
+  await page.waitForFunction((text) => {
+    const button = document.getElementById('playPauseButton');
+    if (!button) throw new Error('#playPauseButton not found');
+    return button.getAttribute('aria-label') === text;
+  }, label);
 }
 
 // The piece color at the center of every board cell, or null when empty.
@@ -207,6 +207,7 @@ export async function boardTouch(page) {
   const box = await page.locator('#tetris').boundingBox();
   if (!box) throw new Error('boardTouch: #tetris has no bounding box');
   const cell = box.width / 10;
+  /** @type {{ x: number, y: number } | null} */
   let last = null;
   /**
    * @param {number} column
@@ -216,7 +217,7 @@ export async function boardTouch(page) {
     x: box.x + cell * column,
     y: box.y + cell * row
   });
-  /** @type {(type: string, p?: { x: number, y: number }) => Promise<unknown>} */
+  /** @type {(type: 'touchStart' | 'touchMove' | 'touchEnd', p?: { x: number, y: number }) => Promise<unknown>} */
   let send;
   if (isChromium(page)) {
     const cdp = await page.context().newCDPSession(page);
@@ -225,10 +226,13 @@ export async function boardTouch(page) {
   } else {
     send = async (type, p) => {
       if (type === 'touchStart') {
+        if (!p) throw new Error('boardTouch: touchStart needs a point');
         await page.mouse.move(p.x, p.y);
         await page.mouse.down();
-      } else if (type === 'touchMove') await page.mouse.move(p.x, p.y);
-      else await page.mouse.up();
+      } else if (type === 'touchMove') {
+        if (!p) throw new Error('boardTouch: touchMove needs a point');
+        await page.mouse.move(p.x, p.y);
+      } else await page.mouse.up();
     };
   }
   return {
@@ -249,6 +253,7 @@ export async function boardTouch(page) {
      */
     async moveBy(columns, rows, steps = 8) {
       const start = last;
+      if (!start) throw new Error('boardTouch: moveBy before down');
       for (let i = 1; i <= steps; i++) {
         last = {
           x: start.x + (cell * columns * i) / steps,
@@ -264,7 +269,9 @@ export async function boardTouch(page) {
 }
 
 // Collects page errors and console errors, for asserting a clean run.
+/** @param {import('@playwright/test').Page} page */
 export function trackErrors(page) {
+  /** @type {string[]} */
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -278,31 +285,46 @@ export function trackErrors(page) {
 // window.grantWakeLocks(), 'missing' removes the API. Like the real one, a
 // lock fires 'release' when let go; window.revokeWakeLocks() lets every
 // lock go the way the system does when the battery runs low.
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {'grant' | 'refuse' | 'hold' | 'missing'} mode
+ */
 export async function fakeWakeLock(page, mode) {
   await page.addInitScript((mode) => {
     if (mode === 'missing') {
-      delete Navigator.prototype.wakeLock;
-      delete navigator.wakeLock;
+      if (
+        !Reflect.deleteProperty(Navigator.prototype, 'wakeLock') ||
+        !Reflect.deleteProperty(navigator, 'wakeLock')
+      )
+        throw new Error('could not remove the wakeLock API');
       return;
     }
-    window.wakeLocks = [];
+    /** @type {WakeLockWitness[]} */
+    const wakeLocks = [];
+    window.wakeLocks = wakeLocks;
     window.wakeLockRequests = 0;
+    /** @type {Array<() => void>} */
     const pending = [];
     window.grantWakeLocks = () => {
-      pending.splice(0).forEach((grant) => grant());
+      pending.splice(0).forEach((grant) => {
+        grant();
+      });
     };
-    window.revokeWakeLocks = () =>
-      window.wakeLocks.forEach((lock) => lock.release());
-    const request = (type) =>
+    window.revokeWakeLocks = () => {
+      for (const lock of [...wakeLocks]) void lock.release();
+    };
+    const request = (/** @type {string} */ type) =>
       new Promise((resolve, reject) => {
-        window.wakeLockRequests++;
+        window.wakeLockRequests = (window.wakeLockRequests ?? 0) + 1;
         if (mode === 'refuse') {
           reject(new DOMException('Wake lock refused', 'NotAllowedError'));
           return;
         }
+        /** @type {WakeLockWitness} */
         const sentinel = Object.assign(new EventTarget(), {
           type,
           released: false,
+          /** @this {WakeLockWitness} */
           release() {
             if (!this.released) {
               this.released = true;
@@ -312,7 +334,7 @@ export async function fakeWakeLock(page, mode) {
           }
         });
         const grant = () => {
-          window.wakeLocks.push(sentinel);
+          wakeLocks.push(sentinel);
           resolve(sentinel);
         };
         if (mode === 'hold') pending.push(grant);
@@ -326,14 +348,28 @@ export async function fakeWakeLock(page, mode) {
 }
 
 // How many wake locks the fake was asked for.
+/** @param {import('@playwright/test').Page} page */
 export function wakeLockRequests(page) {
   return page.evaluate(() => window.wakeLockRequests);
 }
 
 // How many wake locks the fake has granted, and how many are still held.
+/** @param {import('@playwright/test').Page} page */
 export function wakeLockCounts(page) {
-  return page.evaluate(() => ({
-    granted: window.wakeLocks.length,
-    held: window.wakeLocks.filter((lock) => !lock.released).length
-  }));
+  return page.evaluate(() => {
+    const locks = window.wakeLocks;
+    if (!locks) throw new Error('the wake lock fake was not installed');
+    return {
+      granted: locks.length,
+      held: locks.filter((lock) => !lock.released).length
+    };
+  });
+}
+
+// For Locator.evaluate on a canvas element: its bitmap width in pixels.
+/** @param {Element} element */
+export function canvasWidth(element) {
+  if (!(element instanceof HTMLCanvasElement))
+    throw new Error('the element is not a canvas');
+  return element.width;
 }

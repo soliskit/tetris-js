@@ -19,8 +19,10 @@ test('refused record and withdrawal writes keep prior bytes and hide Continue on
   );
   await page.locator('#playPauseButton').click();
   await page.evaluate(() => {
-    const storage = window.testGame.storage;
-    window.testGame.storage = {
+    const game = window.testGame;
+    if (!game) throw new Error('testGame was not exposed');
+    const storage = game.storage;
+    game.storage = {
       getItem: (key) => storage.getItem(key),
       setItem: (key, value) => {
         if (key === 'tetris.savedGameSession') throw new Error('refused');
@@ -29,13 +31,17 @@ test('refused record and withdrawal writes keep prior bytes and hide Continue on
     };
   });
   await page.locator('#playPauseButton').click();
-  const saved = await page.evaluate(() => ({
-    bytes: localStorage.getItem('tetris.savedGameSession'),
-    flag: localStorage.getItem('tetris.isSessionSaved'),
-    available: window.testGame.isSessionSaved,
-    state: window.testGame.state,
-    faults: window.testGame.faults.length
-  }));
+  const saved = await page.evaluate(() => {
+    const game = window.testGame;
+    if (!game) throw new Error('testGame was not exposed');
+    return {
+      bytes: localStorage.getItem('tetris.savedGameSession'),
+      flag: localStorage.getItem('tetris.isSessionSaved'),
+      available: game.isSessionSaved,
+      state: game.state,
+      faults: game.faults.length
+    };
+  });
   expect(saved).toEqual({
     bytes: a,
     flag: null,
@@ -45,8 +51,10 @@ test('refused record and withdrawal writes keep prior bytes and hide Continue on
   });
   // Present the main menu without resetting storage or the local latch.
   await page.evaluate(() => {
-    window.testGame.guard(() => {
-      window.testGame.state = 'gameOver';
+    const game = window.testGame;
+    if (!game) throw new Error('testGame was not exposed');
+    game.guard(() => {
+      game.state = 'gameOver';
     });
   });
   await expect(page.locator('#continueGameButton')).toHaveCount(1);

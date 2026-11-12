@@ -10,18 +10,31 @@ const test = base.extend({
   }
 });
 
+/**
+ * The page's lock witness, which its init script installs.
+ * @param {import('@playwright/test').Page} target
+ */
+async function witnessOf(target) {
+  const witness = await target.evaluate(() => window.lockWitness);
+  if (!witness) throw new Error('tab-lock: lockWitness was not installed');
+  return witness;
+}
+
 const blockedMessage = 'Game already open in another tab.';
 
+/**
+ * @param {import('@playwright/test').Page} observer
+ */
 async function waitForRelease(observer) {
   // Observe the browser's actual release, without retrying acquisition/clicks.
   await expect
     .poll(() =>
-      observer.evaluate(
-        async () =>
-          !(await navigator.locks.query()).held.some(
-            (lock) => lock.name === 'tetris.game-page'
-          )
-      )
+      observer.evaluate(async () => {
+        const snapshot = await navigator.locks.query();
+        return !(snapshot.held ?? []).some(
+          (lock) => lock.name === 'tetris.game-page'
+        );
+      })
     )
     .toBe(true);
 }
@@ -80,22 +93,36 @@ test('pending admission and duplicate retry cannot access storage or initialize 
   await page.addInitScript(() => {
     window.lockRequests = 0;
     window.gameStorageTouches = 0;
-    const get = Storage.prototype.getItem;
-    const set = Storage.prototype.setItem;
-    Storage.prototype.getItem = function (key) {
-      if (String(key).startsWith('tetris.')) window.gameStorageTouches++;
-      return get.call(this, key);
-    };
-    Storage.prototype.setItem = function (key, value) {
-      if (String(key).startsWith('tetris.')) window.gameStorageTouches++;
-      set.call(this, key, value);
-    };
+    let storageTouches = 0;
+    let lockRequests = 0;
+    for (const name of ['getItem', 'setItem']) {
+      /** @type {unknown} */
+      const operation = Reflect.get(Storage.prototype, name);
+      if (typeof operation !== 'function')
+        throw new Error('tab-lock: Storage.' + name + ' is not a function');
+      Reflect.set(
+        Storage.prototype,
+        name,
+        /** @this {Storage} */
+        function (/** @type {unknown[]} */ ...args) {
+          if (String(args[0]).startsWith('tetris.'))
+            window.gameStorageTouches = ++storageTouches;
+          /** @type {unknown} */
+          const result = Reflect.apply(operation, this, args);
+          return result;
+        }
+      );
+    }
     Object.defineProperty(navigator, 'locks', {
       value: {
-        request: (_name, options, callback) => {
+        request: (
+          /** @type {string} */ _name,
+          /** @type {LockOptions} */ options,
+          /** @type {(lock: null) => void} */ callback
+        ) => {
           if (options.ifAvailable !== true)
             throw new Error('Queued request is forbidden');
-          window.lockRequests++;
+          window.lockRequests = ++lockRequests;
           window.deliverLock = () => {
             callback(null);
           };
@@ -109,7 +136,11 @@ test('pending admission and duplicate retry cannot access storage or initialize 
   expect(await page.evaluate(() => window.gameStorageTouches)).toBe(0);
   await page.locator('#tabLockRetry').dispatchEvent('click');
   expect(await page.evaluate(() => window.lockRequests)).toBe(1);
-  await page.evaluate(() => window.deliverLock());
+  await page.evaluate(() => {
+    const deliver = window.deliverLock;
+    if (!deliver) throw new Error('tab-lock: deliverLock was not installed');
+    deliver();
+  });
   await expect(page.locator('#tabLockMessage')).toHaveText(blockedMessage);
   await page.locator('#tabLockRetry').dispatchEvent('click');
   await page.locator('#tabLockRetry').dispatchEvent('click');
@@ -164,7 +195,8 @@ test('history restoration retains actual ownership or requires fresh admission [
   context
 }) => {
   await context.addInitScript(() => {
-    window.lockWitness = {
+    /** @type {LockWitness} */
+    const witness = {
       documentStart: performance.timeOrigin,
       clientId: null,
       granted: false,
@@ -173,53 +205,79 @@ test('history restoration retains actual ownership or requires fresh admission [
       violations: 0,
       shows: []
     };
-    const witness = window.lockWitness;
+    window.lockWitness = witness;
     window.addEventListener('pageshow', (event) =>
       witness.shows.push(event.persisted)
     );
-    const request = navigator.locks.request.bind(navigator.locks);
-    navigator.locks.request = (name, options, callback) =>
-      request(name, options, (lock) => {
-        const result = callback(lock);
-        if (lock && name === 'tetris.game-page') {
-          witness.granted = true;
-          void (async () => {
-            try {
-              const snapshot = await navigator.locks.query();
-              witness.clientId =
-                snapshot.held.find((item) => item.name === name)?.clientId ??
-                null;
-            } catch {
-              witness.clientId = null;
+    /** @type {unknown} */
+    const request = Reflect.get(navigator.locks, 'request');
+    if (typeof request !== 'function')
+      throw new Error('tab-lock: navigator.locks.request is missing');
+    Reflect.set(
+      navigator.locks,
+      'request',
+      (
+        /** @type {string} */ name,
+        /** @type {LockOptions} */ options,
+        /** @type {(lock: Lock | null) => unknown} */ callback
+      ) => {
+        /** @type {unknown} */
+        const outcome = Reflect.apply(request, navigator.locks, [
+          name,
+          options,
+          (/** @type {Lock | null} */ lock) => {
+            const result = callback(lock);
+            if (lock && name === 'tetris.game-page') {
+              witness.granted = true;
+              void (async () => {
+                try {
+                  const snapshot = await navigator.locks.query();
+                  witness.clientId =
+                    (snapshot.held ?? []).find((item) => item.name === name)
+                      ?.clientId ?? null;
+                } catch {
+                  witness.clientId = null;
+                }
+              })();
+              void (async () => {
+                try {
+                  await result;
+                  witness.settled = true;
+                } catch {
+                  witness.settled = true;
+                }
+              })();
             }
-          })();
-          void (async () => {
-            try {
-              await result;
-              witness.settled = true;
-            } catch {
-              witness.settled = true;
-            }
-          })();
-        }
-        return result;
-      });
+            return result;
+          }
+        ]);
+        return outcome;
+      }
+    );
     for (const name of ['getItem', 'setItem', 'removeItem']) {
-      const operation = Storage.prototype[name];
-      Storage.prototype[name] = function (key, ...args) {
-        if (String(key).startsWith('tetris.')) {
-          witness.touches++;
-          if (!witness.granted || witness.settled) witness.violations++;
+      /** @type {unknown} */
+      const operation = Reflect.get(Storage.prototype, name);
+      if (typeof operation !== 'function')
+        throw new Error('tab-lock: Storage.' + name + ' is not a function');
+      Reflect.set(
+        Storage.prototype,
+        name,
+        /** @this {Storage} */
+        function (/** @type {unknown[]} */ ...args) {
+          if (String(args[0]).startsWith('tetris.')) {
+            witness.touches++;
+            if (!witness.granted || witness.settled) witness.violations++;
+          }
+          /** @type {unknown} */
+          const result = Reflect.apply(operation, this, args);
+          return result;
         }
-        return operation.call(this, key, ...args);
-      };
+      );
     }
   });
   await page.goto('/');
   await expect(page.locator('main.app')).toBeVisible();
-  const initialDocument = await page.evaluate(
-    () => window.lockWitness.documentStart
-  );
+  const initialDocument = (await witnessOf(page)).documentStart;
   await page.goto('/icons/icon.svg');
   const second = await context.newPage();
   await second.goto('/');
@@ -236,7 +294,7 @@ test('history restoration retains actual ownership or requires fresh admission [
   const blocked = owner === page ? second : page;
   await expect(blocked.locator('#tabLockMessage')).toHaveText(blockedMessage);
   await expect
-    .poll(() => owner.evaluate(() => window.lockWitness.clientId))
+    .poll(async () => (await witnessOf(owner)).clientId)
     .not.toBeNull();
   const probe = await context.newPage();
   await probe.goto('/icons/icon.svg');
@@ -246,22 +304,16 @@ test('history restoration retains actual ownership or requires fresh admission [
       { ifAvailable: true },
       (lock) => !!lock
     ),
-    held: (await navigator.locks.query()).held
+    held: ((await navigator.locks.query()).held ?? [])
       .filter((lock) => lock.name === 'tetris.game-page')
       .map((lock) => lock.clientId)
   }));
   expect(actual.available).toBe(false);
-  expect(actual.held).toEqual([
-    await owner.evaluate(() => window.lockWitness.clientId)
-  ]);
-  const beforeBlocked = await blocked.evaluate(
-    () => window.lockWitness.touches
-  );
+  expect(actual.held).toEqual([(await witnessOf(owner)).clientId]);
+  const beforeBlocked = (await witnessOf(blocked)).touches;
   await blocked.keyboard.press('Enter');
   await blocked.locator('#newGameButton').dispatchEvent('click');
-  expect(await blocked.evaluate(() => window.lockWitness.touches)).toBe(
-    beforeBlocked
-  );
+  expect((await witnessOf(blocked)).touches).toBe(beforeBlocked);
   await owner.keyboard.press('Enter');
   await owner.keyboard.press('Space');
   await owner.keyboard.press('KeyP');
@@ -269,12 +321,10 @@ test('history restoration retains actual ownership or requires fresh admission [
     'aria-label',
     'Resume'
   );
-  expect(
-    await owner.evaluate(() => window.lockWitness.touches)
-  ).toBeGreaterThan(0);
-  expect(await owner.evaluate(() => window.lockWitness.violations)).toBe(0);
-  expect(await blocked.evaluate(() => window.lockWitness.violations)).toBe(0);
-  const restored = await page.evaluate(() => window.lockWitness);
+  expect((await witnessOf(owner)).touches).toBeGreaterThan(0);
+  expect((await witnessOf(owner)).violations).toBe(0);
+  expect((await witnessOf(blocked)).violations).toBe(0);
+  const restored = await witnessOf(page);
   console.log(
     'Tab lock restoration evidence:',
     JSON.stringify({
@@ -297,13 +347,17 @@ test('a stale request rejection after grant cannot reopen retry [APP-7]', async 
     window.requestCalls = 0;
     Object.defineProperty(navigator, 'locks', {
       value: {
-        request: (_name, _options, callback) => {
-          window.requestCalls++;
+        request: (
+          /** @type {string} */ _name,
+          /** @type {unknown} */ _options,
+          /** @type {(lock: Lock) => unknown} */ callback
+        ) => {
+          window.requestCalls = (window.requestCalls ?? 0) + 1;
           window.returnedHold = callback({
             name: 'tetris.game-page',
             mode: 'exclusive'
           });
-          window.rejectOldRequest = undefined;
+          Reflect.deleteProperty(window, 'rejectOldRequest');
           return new Promise((_resolve, reject) => {
             window.rejectOldRequest = reject;
           });
@@ -313,9 +367,12 @@ test('a stale request rejection after grant cannot reopen retry [APP-7]', async 
   });
   await page.goto('/');
   await expect(page.locator('main.app')).toBeVisible();
-  await page.evaluate(() =>
-    window.rejectOldRequest(new Error('Stale controlled rejection'))
-  );
+  await page.evaluate(() => {
+    const reject = window.rejectOldRequest;
+    if (!reject)
+      throw new Error('tab-lock: the old request was never captured');
+    reject(new Error('Stale controlled rejection'));
+  });
   await expect(page.locator('#tabLockStatus')).toBeHidden();
   await page.locator('#tabLockRetry').dispatchEvent('click');
   expect(await page.evaluate(() => window.requestCalls)).toBe(1);
@@ -330,16 +387,27 @@ test('post-grant bootstrap failure does not release the real lifetime lock [APP-
 }) => {
   await page.addInitScript(() => {
     window.startupFaultReached = false;
+    /** @type {WeakSet<HTMLCanvasElement>} */
     const seen = new WeakSet();
-    const getContext = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (...args) {
-      if (!seen.has(this)) {
-        seen.add(this);
-        return getContext.apply(this, args);
+    /** @type {unknown} */
+    const getContext = Reflect.get(HTMLCanvasElement.prototype, 'getContext');
+    if (typeof getContext !== 'function')
+      throw new Error('tab-lock: getContext is not a function');
+    Reflect.set(
+      HTMLCanvasElement.prototype,
+      'getContext',
+      /** @this {HTMLCanvasElement} */
+      function (/** @type {unknown[]} */ ...args) {
+        if (!seen.has(this)) {
+          seen.add(this);
+          /** @type {unknown} */
+          const context = Reflect.apply(getContext, this, args);
+          return context;
+        }
+        window.startupFaultReached = true;
+        throw new Error('Controlled startup refusal');
       }
-      window.startupFaultReached = true;
-      throw new Error('Controlled startup refusal');
-    };
+    );
   });
   await page.goto('/');
   // Prove the controlled post-admission failure was actually reached.
@@ -363,16 +431,27 @@ test('display preflight refusal is visible and never requests game ownership [AP
   await page.addInitScript(() => {
     window.preflightReached = false;
     window.preflightLockRequests = 0;
-    const request = navigator.locks.request.bind(navigator.locks);
-    navigator.locks.request = (...args) => {
-      window.preflightLockRequests++;
-      return request(...args);
-    };
+    let lockRequests = 0;
+    /** @type {unknown} */
+    const request = Reflect.get(navigator.locks, 'request');
+    if (typeof request !== 'function')
+      throw new Error('tab-lock: navigator.locks.request is missing');
+    Reflect.set(
+      navigator.locks,
+      'request',
+      (/** @type {unknown[]} */ ...args) => {
+        window.preflightLockRequests = ++lockRequests;
+        /** @type {unknown} */
+        const result = Reflect.apply(request, navigator.locks, args);
+        return result;
+      }
+    );
     HTMLCanvasElement.prototype.getContext = () => {
       window.preflightReached = true;
       throw new Error('Controlled display preflight refusal');
     };
   });
+  /** @type {string[]} */
   const reports = [];
   page.on('console', (message) => {
     if (message.type() === 'error') reports.push(message.text());
@@ -399,27 +478,51 @@ test('a refused display-preflight report cannot request ownership or start a gam
     window.preflightReportAttempts = 0;
     window.preflightLockRequests = 0;
     window.preflightStorageTouches = 0;
+    let storageTouches = 0;
     for (const name of ['getItem', 'setItem', 'removeItem']) {
-      const operation = Storage.prototype[name];
-      Storage.prototype[name] = function (key, ...args) {
-        if (String(key).startsWith('tetris.')) window.preflightStorageTouches++;
-        return operation.call(this, key, ...args);
-      };
+      /** @type {unknown} */
+      const operation = Reflect.get(Storage.prototype, name);
+      if (typeof operation !== 'function')
+        throw new Error('tab-lock: Storage.' + name + ' is not a function');
+      Reflect.set(
+        Storage.prototype,
+        name,
+        /** @this {Storage} */
+        function (/** @type {unknown[]} */ ...args) {
+          if (String(args[0]).startsWith('tetris.'))
+            window.preflightStorageTouches = ++storageTouches;
+          /** @type {unknown} */
+          const result = Reflect.apply(operation, this, args);
+          return result;
+        }
+      );
     }
-    const request = navigator.locks.request.bind(navigator.locks);
-    navigator.locks.request = (...args) => {
-      window.preflightLockRequests++;
-      return request(...args);
-    };
+    let lockRequests = 0;
+    /** @type {unknown} */
+    const request = Reflect.get(navigator.locks, 'request');
+    if (typeof request !== 'function')
+      throw new Error('tab-lock: navigator.locks.request is missing');
+    Reflect.set(
+      navigator.locks,
+      'request',
+      (/** @type {unknown[]} */ ...args) => {
+        window.preflightLockRequests = ++lockRequests;
+        /** @type {unknown} */
+        const result = Reflect.apply(request, navigator.locks, args);
+        return result;
+      }
+    );
     HTMLCanvasElement.prototype.getContext = () => {
       throw new Error('Controlled display preflight refusal');
     };
-    console.error = (message) => {
+    let reportAttempts = 0;
+    console.error = (/** @type {unknown} */ message) => {
       if (message === 'Tetris display setup failed.')
-        window.preflightReportAttempts++;
+        window.preflightReportAttempts = ++reportAttempts;
       throw new Error('Controlled display report refusal');
     };
   });
+  /** @type {string[]} */
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');

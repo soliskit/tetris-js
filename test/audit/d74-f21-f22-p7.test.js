@@ -19,8 +19,10 @@ import {
   GameManager,
   createMemoryStorage
 } from '../../public/game/gameManager.js';
+/** @typedef {import('../../public/game/gameState.js').Cell} Cell */
 import { PlayerAction, GameState } from '../../public/game/gameState.js';
 import { createFakeScheduler, newGame } from '../helpers.js';
+import { parseJsonObject, present, remove } from '../json.js';
 
 // F21 is a Confirmed Defect at injected scope (D74): the safety check accepts
 // a directly written board that is missing a row or cell. The todo mark keeps
@@ -28,26 +30,31 @@ import { createFakeScheduler, newGame } from '../helpers.js';
 // removes the mark. The callback runs in full on every push, so the CI log
 // shows the defect record on each run.
 void test('F21: the invariant check flags a board with a missing row or cell [D74]', () => {
-  for (const [label, mutate] of [
+  /** @type {Array<[string, (g: GameManager) => void]>} */
+  const mutations = [
     [
       'delete a whole row',
       (g) => {
-        delete g.gameBoard[5];
+        remove(g.gameBoard, 5);
       }
     ],
     [
       'row replaced by a sparse 10-slot array',
       (g) => {
-        g.gameBoard[3] = new Array(10);
+        /** @type {Cell[]} */
+        const sparse = [];
+        sparse.length = 10;
+        g.gameBoard[3] = sparse;
       }
     ],
     [
       'one cell hole in a row',
       (g) => {
-        delete g.gameBoard[7][3];
+        remove(present(g.gameBoard[7]), 3);
       }
     ]
-  ]) {
+  ];
+  for (const [label, mutate] of mutations) {
     const { game } = newGame();
     mutate(game);
     assert.notEqual(game.findInvariantViolation(), null, label);
@@ -83,7 +90,9 @@ void test('P7: a hand-edited save granting one more hold is accepted after loadi
   game.saveGameSession();
 
   const key = 'tetris.savedGameSession';
-  const data = JSON.parse(parseSavedRecord(storage.getItem(key)).position);
+  const data = parseJsonObject(
+    present(parseSavedRecord(present(storage.getItem(key)))).position
+  );
   assert.equal(data.canHoldTetromino, false, 'the used hold is stored');
   data.canHoldTetromino = true;
   storage.setItem(key, serializeSavedRecord(JSON.stringify(data), true));

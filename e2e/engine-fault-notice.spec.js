@@ -3,8 +3,11 @@
 import { test, expect } from './fixtures.js';
 import { savedGame, PieceColors } from './helpers.js';
 
+/** @typedef {import('@playwright/test').Page} Page */
+
 const cause = 'The game stopped because of an internal error.';
 
+/** @param {Page} page */
 async function openPage(page) {
   await page.route('**/script.js', async (route) => {
     const response = await route.fetch();
@@ -18,24 +21,31 @@ async function openPage(page) {
   await page.evaluate(() => new Promise(requestAnimationFrame));
 }
 
+/**
+ * @param {Page} page
+ * @param {{ startBeforeDraw?: boolean, frozenRecord?: boolean, cappedRecord?: boolean, refuseConsole?: boolean, refuseDraw?: boolean }} [options]
+ */
 async function fault(page, options = {}) {
   return page.evaluate((options) => {
     const game = window.testGame;
+    if (!game) throw new Error('testGame was not exposed');
     if (options.startBeforeDraw) game.handleAction('newGame');
     if (options.frozenRecord) Object.freeze(game.faults);
     if (options.cappedRecord)
       game.faults.push(
         ...Array.from({ length: 20 }, () => ({ reason: 'earlier' }))
       );
-    const report = console.error;
-    const draw = window.requestAnimationFrame;
+    /** @type {unknown} */
+    const report = Reflect.get(console, 'error');
+    /** @type {unknown} */
+    const draw = Reflect.get(window, 'requestAnimationFrame');
     if (options.refuseConsole)
       console.error = () => {
         throw new Error('report refused');
       };
     if (options.refuseDraw)
       window.requestAnimationFrame = () => {
-        window.requestAnimationFrame = draw;
+        Reflect.set(window, 'requestAnimationFrame', draw);
         throw new Error('draw refused');
       };
     try {
@@ -43,8 +53,8 @@ async function fault(page, options = {}) {
         throw new Error('injected engine failure');
       });
     } finally {
-      console.error = report;
-      window.requestAnimationFrame = draw;
+      Reflect.set(console, 'error', report);
+      Reflect.set(window, 'requestAnimationFrame', draw);
     }
     return {
       state: game.state,
@@ -55,6 +65,7 @@ async function fault(page, options = {}) {
   }, options);
 }
 
+/** @param {Page} page */
 async function expectCause(page) {
   await expect(page.locator('#gameOverMessage')).toBeVisible();
   await expect(page.locator('#gameOverMessage')).toHaveText(cause);
@@ -70,6 +81,7 @@ for (const timing of ['after playing draw', 'before playing draw']) {
   test(`engine fault ${timing} explains the stop and preserves reports [SAF-3] [F25]`, async ({
     page
   }, testInfo) => {
+    /** @type {string[]} */
     const reports = [];
     page.on('console', (message) => {
       if (message.type() === 'error') reports.push(message.text());
@@ -113,6 +125,7 @@ for (const recovery of [
     await fault(page);
     await page.evaluate((recovery) => {
       const game = window.testGame;
+      if (!game) throw new Error('testGame was not exposed');
       if (recovery === 'reset throws')
         game.resetGameSession = () => {
           throw new Error('reset failed');
@@ -152,6 +165,7 @@ for (const recovery of ['New Game', 'Continue']) {
     await page.evaluate(
       ({ recovery, saved }) => {
         const game = window.testGame;
+        if (!game) throw new Error('testGame was not exposed');
         if (recovery === 'Continue') {
           for (const [key, value] of Object.entries(saved))
             localStorage.setItem(key, String(value));
@@ -163,9 +177,13 @@ for (const recovery of ['New Game', 'Continue']) {
     );
     await expect(page.locator('#gameOverMessage')).toBeHidden();
     await expect(page.locator('#announcer')).toHaveText('');
-    expect(await page.evaluate(() => window.testGame.state)).toBe(
-      recovery === 'Continue' ? 'paused' : 'playing'
-    );
+    expect(
+      await page.evaluate(() => {
+        const game = window.testGame;
+        if (!game) throw new Error('testGame was not exposed');
+        return game.state;
+      })
+    ).toBe(recovery === 'Continue' ? 'paused' : 'playing');
   });
 }
 
@@ -178,6 +196,7 @@ for (const option of [
   test(`${option} keeps independent notice and report attempts [SAF-3]`, async ({
     page
   }) => {
+    /** @type {string[]} */
     const reports = [];
     page.on('console', (message) => {
       if (message.type() === 'error') reports.push(message.text());
@@ -195,7 +214,11 @@ for (const option of [
     if (option === 'refuseDraw')
       await page.setViewportSize({ width: 420, height: 900 });
     await expectCause(page);
-    await page.evaluate(() => window.testGame.handleAction('newGame'));
+    await page.evaluate(() => {
+      const game = window.testGame;
+      if (!game) throw new Error('testGame was not exposed');
+      game.handleAction('newGame');
+    });
     await expect(page.locator('#gameOverMessage')).toBeHidden();
   });
 }
@@ -207,10 +230,13 @@ test('repeated fault-over checks keep one notice without repeated announcements 
   await fault(page);
   await expectCause(page);
   await page.evaluate(() => {
+    const announcer = document.getElementById('announcer');
+    if (!announcer) throw new Error('#announcer not found');
     window.announcementChanges = 0;
     new MutationObserver((records) => {
-      window.announcementChanges += records.length;
-    }).observe(document.getElementById('announcer'), { childList: true });
+      window.announcementChanges =
+        (window.announcementChanges ?? 0) + records.length;
+    }).observe(announcer, { childList: true });
   });
   for (let i = 0; i < 3; i++) {
     await fault(page);

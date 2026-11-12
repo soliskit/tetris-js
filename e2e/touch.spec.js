@@ -167,12 +167,16 @@ for (const { name, distances, rotates, cancel = false } of [
       y: Math.round(box.y + box.height / 2)
     };
     await page.evaluate(() => {
-      window.boundaryEvents = [];
+      /** @type {Array<{ type: string, x: number, y: number, pointerId: number }>} */
+      const events = [];
+      window.boundaryEvents = events;
       const board = document.getElementById('tetris');
       if (!board) throw new Error('touch: #tetris not found');
       for (const type of ['pointerdown', 'pointermove']) {
         board.addEventListener(type, (event) => {
-          window.boundaryEvents.push({
+          if (!(event instanceof PointerEvent))
+            throw new Error('touch: board event is not a PointerEvent');
+          events.push({
             type,
             x: event.clientX,
             y: event.clientY,
@@ -186,19 +190,16 @@ for (const { name, distances, rotates, cancel = false } of [
     for (const distance of distances)
       await page.mouse.move(start.x + distance, start.y);
     const delivered = await page.evaluate(() => {
-      const down = window.boundaryEvents.find(
-        (event) => event.type === 'pointerdown'
-      );
-      return window.boundaryEvents
+      const events = window.boundaryEvents;
+      if (!events) throw new Error('touch: boundary events were not recorded');
+      const down = events.find((event) => event.type === 'pointerdown');
+      if (!down) throw new Error('touch: no pointerdown was recorded');
+      return events
         .filter(
           (event) =>
             event.type === 'pointermove' && event.pointerId === down.pointerId
         )
-        .filter(
-          (event) =>
-            window.boundaryEvents.indexOf(event) >
-            window.boundaryEvents.indexOf(down)
-        )
+        .filter((event) => events.indexOf(event) > events.indexOf(down))
         .map((event) => Math.hypot(event.x - down.x, event.y - down.y));
     });
     expect(delivered).toEqual(distances);
@@ -206,11 +207,13 @@ for (const { name, distances, rotates, cancel = false } of [
     // reached the page before the up/cancel event.
     expect(shapeOf(await cellsOf(page, PieceColors.purple))).toBe(first);
     if (cancel) {
-      const pointerId = await page.evaluate(
-        () =>
-          window.boundaryEvents.find((event) => event.type === 'pointerdown')
-            .pointerId
-      );
+      const pointerId = await page.evaluate(() => {
+        const down = window.boundaryEvents?.find(
+          (event) => event.type === 'pointerdown'
+        );
+        if (!down) throw new Error('touch: no pointerdown was recorded');
+        return down.pointerId;
+      });
       await page
         .locator('#tetris')
         .dispatchEvent('pointercancel', { pointerId });
@@ -482,12 +485,27 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
 }) => {
   test.skip(!isChromium(page), 'only Chromium can send real touch events');
   await page.addInitScript(() => {
-    window.listenedFor = [];
-    const addEventListener = EventTarget.prototype.addEventListener;
-    EventTarget.prototype.addEventListener = function (type, ...rest) {
-      window.listenedFor.push(`${this.id ?? ''} ${type}`);
-      addEventListener.call(this, type, ...rest);
-    };
+    /** @type {string[]} */
+    const listened = [];
+    window.listenedFor = listened;
+    /** @type {unknown} */
+    const addEventListener = Reflect.get(
+      EventTarget.prototype,
+      'addEventListener'
+    );
+    if (typeof addEventListener !== 'function')
+      throw new Error('EventTarget.addEventListener is not a function');
+    Reflect.set(
+      EventTarget.prototype,
+      'addEventListener',
+      /** @this {EventTarget} */
+      function (/** @type {string} */ type, /** @type {unknown[]} */ ...rest) {
+        /** @type {unknown} */
+        const id = Reflect.get(this, 'id');
+        listened.push(`${typeof id === 'string' ? id : ''} ${type}`);
+        Reflect.apply(addEventListener, this, [type, ...rest]);
+      }
+    );
   });
   await page.goto('/');
   expect(await page.evaluate(() => window.listenedFor)).toContain(
@@ -498,7 +516,9 @@ test('the board listens for clicks, so Safari takes quick taps there as clicks r
     await page.evaluate(() => {
       const board = document.getElementById('tetris');
       if (!board) throw new Error('touch: #tetris not found');
-      return getComputedStyle(board).webkitTapHighlightColor;
+      return getComputedStyle(board).getPropertyValue(
+        '-webkit-tap-highlight-color'
+      );
     })
   ).toBe('rgba(0, 0, 0, 0)');
 });
@@ -548,14 +568,16 @@ test('if Safari zooms in anyway, its gestures are let through so the player can 
   // No test browser here really zooms (Chromium ignores a simulated pinch or
   // double tap), so Safari zooming in is stood in for by the scale the page reads.
   await page.evaluate(() => {
+    const viewport = visualViewport;
+    if (!viewport) throw new Error('touch: visualViewport is missing');
     let scale = 1;
-    Object.defineProperty(visualViewport, 'scale', {
+    Object.defineProperty(viewport, 'scale', {
       get: () => scale,
       configurable: true
     });
     window.zoomTo = (value) => {
       scale = value;
-      visualViewport.dispatchEvent(new Event('resize'));
+      viewport.dispatchEvent(new Event('resize'));
     };
   });
   const zoomState = () =>
@@ -573,14 +595,22 @@ test('if Safari zooms in anyway, its gestures are let through so the player can 
         pinchCancelled: gesture.defaultPrevented
       };
     });
-  await page.evaluate(() => window.zoomTo(2));
+  await page.evaluate(() => {
+    const zoomTo = window.zoomTo;
+    if (!zoomTo) throw new Error('touch: zoomTo was not installed');
+    zoomTo(2);
+  });
   expect(await zoomState()).toEqual({
     htmlTouchAction: 'auto',
     boardTouchAction: 'auto',
     pinchCancelled: false
   });
   // Zoomed back out, zooming is blocked again.
-  await page.evaluate(() => window.zoomTo(1));
+  await page.evaluate(() => {
+    const zoomTo = window.zoomTo;
+    if (!zoomTo) throw new Error('touch: zoomTo was not installed');
+    zoomTo(1);
+  });
   expect(await zoomState()).toEqual({
     htmlTouchAction: 'none',
     boardTouchAction: 'none',
@@ -594,11 +624,13 @@ test('a page that opens already zoomed in, as Safari keeps the zoom on reload, l
   // Stands in for Safari's restored zoom, as no test browser here really zooms.
   // No resize event comes, so the page has to notice the zoom as it starts.
   await page.addInitScript(() => {
-    Object.defineProperty(visualViewport, 'scale', {
+    const viewport = visualViewport;
+    if (!viewport) throw new Error('touch: visualViewport is missing');
+    Object.defineProperty(viewport, 'scale', {
       get: () => 2,
       configurable: true
     });
-    visualViewport.addEventListener = () => {};
+    viewport.addEventListener = () => {};
   });
   await page.goto('/');
   expect(

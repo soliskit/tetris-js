@@ -12,6 +12,7 @@ test('persistent canvas faults do not defer controls [DSP-5] [SAF-5]', async ({
   page
 }, testInfo) => {
   test.setTimeout(30000);
+  /** @type {string[]} */
   const reports = [];
   page.on('console', (message) => {
     if (
@@ -22,17 +23,22 @@ test('persistent canvas faults do not defer controls [DSP-5] [SAF-5]', async ({
     }
   });
   await page.addInitScript(() => {
-    const fill = CanvasRenderingContext2D.prototype.fill;
+    /** @type {unknown} */
+    const fill = Reflect.get(CanvasRenderingContext2D.prototype, 'fill');
+    if (typeof fill !== 'function')
+      throw new Error('CanvasRenderingContext2D.fill is not a function');
     window.drawingFails = false;
     window.failedDraws = 0;
     window.successfulFills = 0;
-    CanvasRenderingContext2D.prototype.fill = function (...args) {
+    CanvasRenderingContext2D.prototype.fill = function (
+      /** @type {unknown[]} */ ...args
+    ) {
       if (window.drawingFails) {
-        window.failedDraws += 1;
+        window.failedDraws = (window.failedDraws ?? 0) + 1;
         throw new Error('injected persistent canvas failure');
       }
-      fill.apply(this, args);
-      window.successfulFills += 1;
+      Reflect.apply(fill, this, args);
+      window.successfulFills = (window.successfulFills ?? 0) + 1;
     };
   });
   try {
@@ -82,6 +88,8 @@ test('persistent canvas faults do not defer controls [DSP-5] [SAF-5]', async ({
     expect(reports).toHaveLength(1);
     const fillsBeforeRecovery = await page.evaluate(() => {
       window.drawingFails = false;
+      if (window.successfulFills === undefined)
+        throw new Error('fill counter was not installed');
       return window.successfulFills;
     });
     await expect

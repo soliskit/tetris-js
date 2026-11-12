@@ -3,14 +3,21 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
-import path from 'node:path';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { spawnSync as nativeSpawnSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { present, parseJsonObject, jsonObject, jsonString } from './json.js';
+import { runInNewContext } from 'node:vm';
+import { EventEmitter } from 'node:events';
+import C from '../scripts/native-coverage-common.cjs';
+import supervisorModule from '../scripts/native-coverage.cjs';
+const { validate } = supervisorModule;
 const require = createRequire(import.meta.url);
-const C = require('../scripts/native-coverage-common.cjs');
-const { validate } = require('../scripts/native-coverage.cjs');
+/** @typedef {import('../scripts/native-coverage-common.cjs').Field} Field */
+/** @typedef {import('../scripts/native-coverage-common.cjs').InventoryRow} InventoryRow */
+/** @typedef {Field[]} Row */
 const supervisor = fileURLToPath(
   new URL('../scripts/native-coverage.cjs', import.meta.url)
 );
@@ -18,6 +25,7 @@ const supervisor = fileURLToPath(
 // top-level assertions. When no telemetry directory is configured, no telemetry
 // path is used.
 let telemetrySequence = 0;
+/** @param {Record<string, unknown>} record */
 function subrunTelemetry(record) {
   const directory = process.env.TETRIS_QA2_CASE_TELEMETRY;
   if (!directory) return;
@@ -33,11 +41,13 @@ function subrunTelemetry(record) {
 // Standalone fixture CLIs are not recursive node:test API calls. Remove only
 // the inherited native child marker here, never in the product supervisor or
 // the user's command. Capture its before/after state for interpretation.
+/** @param {NodeJS.ProcessEnv} [original] */
 function fixtureEnvironment(original = process.env) {
   const env = { ...original };
   delete env.NODE_TEST_CONTEXT;
   return env;
 }
+/** @param {NodeJS.ProcessEnv} env */
 function environmentEvidence(env) {
   return {
     NODE_TEST_CONTEXT: Object.hasOwn(env, 'NODE_TEST_CONTEXT')
@@ -48,6 +58,12 @@ function environmentEvidence(env) {
     TMPDIR: env.TMPDIR ?? null
   };
 }
+/**
+ * @param {string} executable
+ * @param {string[]} argv
+ * @param {import('node:child_process').SpawnSyncOptionsWithStringEncoding} options
+ * @param {boolean} [allowRecursiveWarning]
+ */
 function spawnSync(executable, argv, options, allowRecursiveWarning = false) {
   const inherited = options.env ?? process.env;
   const standalone = fixtureEnvironment(inherited);
@@ -55,7 +71,7 @@ function spawnSync(executable, argv, options, allowRecursiveWarning = false) {
   const isSupervisor = argv[0] === supervisor;
   const statusPath =
     directory && isSupervisor
-      ? path.join(directory, 'native-status-' + telemetrySequence + '.json')
+      ? path.join(directory, `native-status-${String(telemetrySequence)}.json`)
       : null;
   const effective = {
     ...standalone,
@@ -63,9 +79,10 @@ function spawnSync(executable, argv, options, allowRecursiveWarning = false) {
   };
   const childOptions = { ...options, env: effective };
   const result = nativeSpawnSync(executable, argv, childOptions);
+  /** @type {Record<string, unknown> | null} */
   let supervisorActual = null;
   if (statusPath && fs.existsSync(statusPath))
-    supervisorActual = JSON.parse(fs.readFileSync(statusPath, 'utf8'));
+    supervisorActual = parseJsonObject(fs.readFileSync(statusPath, 'utf8'));
   subrunTelemetry({
     domain:
       argv[0] === supervisor ? 'supervisor-native-observer' : 'native-control',
@@ -74,24 +91,27 @@ function spawnSync(executable, argv, options, allowRecursiveWarning = false) {
     cwd: options.cwd,
     inheritedEnvironment: environmentEvidence(inherited),
     effectiveEnvironment: environmentEvidence(effective),
-    recursiveSkipWarningObserved: String(result.stderr).includes(
+    recursiveSkipWarningObserved: result.stderr.includes(
       'node:test run() is being called recursively'
     ),
     status: result.status,
     signal: result.signal,
     supervisorActual,
     error: result.error
-      ? { message: result.error.message, code: result.error.code }
+      ? {
+          message: result.error.message,
+          code: 'code' in result.error ? result.error.code : undefined
+        }
       : null,
     stdout: result.stdout,
     stderr: result.stderr,
     observer:
       argv[0] === supervisor
         ? {
-            certificateObserved: String(result.stdout).includes(
+            certificateObserved: result.stdout.includes(
               'QA-2: owning finite coverage'
             ),
-            diagnostics: String(result.stderr),
+            diagnostics: result.stderr,
             evidenceValidity:
               supervisorActual?.observer ?? 'unavailable: no close telemetry'
           }
@@ -99,13 +119,18 @@ function spawnSync(executable, argv, options, allowRecursiveWarning = false) {
   });
   if (!allowRecursiveWarning) {
     assert.doesNotMatch(
-      String(result.stderr),
+      result.stderr,
       /node:test run\(\) is being called recursively/,
       'standalone fixture unexpectedly took recursive-skip path'
     );
   }
   return result;
 }
+/**
+ * @template T
+ * @param {(folder: string) => T} fn
+ * @returns {T}
+ */
 function temporary(fn) {
   const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'qa2-regression-'));
   try {
@@ -120,6 +145,7 @@ function temporary(fn) {
     }
   }
 }
+/** @param {string} folder */
 function gameFixture(folder) {
   fs.writeFileSync(
     path.join(folder, 'package.json'),
@@ -139,6 +165,12 @@ const flags = [
   '--test-coverage-branches=100',
   '--test-coverage-functions=100'
 ];
+/**
+ * @param {string} folder
+ * @param {string[]} tail
+ * @param {string[]} [extra]
+ * @param {boolean} [allowRecursiveWarning]
+ */
 function run(folder, tail, extra = [], allowRecursiveWarning = false) {
   const result = spawnSync(
     process.execPath,
@@ -164,7 +196,7 @@ void test('native evidence code-unit hashing is invariant at surrogate boundarie
     createHash('sha256').update(Buffer.from(whole, 'utf16le')).digest('hex')
   );
 });
-void test('native source decoder keeps raw bytes distinct and matches whole-file UTF8 text [QA-2]', () =>
+void test('native source decoder keeps raw bytes distinct and matches whole-file UTF8 text [QA-2]', () => {
   temporary((folder) => {
     const filename = path.join(folder, 'invalid.js');
     const bytes = Buffer.concat([
@@ -181,14 +213,16 @@ void test('native source decoder keeps raw bytes distinct and matches whole-file
       identity.text.toString('hex'),
       C.textHash([fs.readFileSync(filename, 'utf8')]).digest.toString('hex')
     );
-  }));
-void test('framing preserves long segmented text and rejects orphan data [QA-2]', () =>
+  });
+});
+void test('framing preserves long segmented text and rejects orphan data [QA-2]', () => {
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
     const text = 'x'.repeat(70000) + '\ud800';
     writer.record(1, [1, text, 'linux', 'x64', 123, true, false]);
     writer.record(6, [C.ZERO, writer.sequence]);
+    /** @type {Array<[number, Field[]]>} */
     const seen = [];
     C.readEvidence(folder, launch, 123, (kind, values) =>
       seen.push([kind, values])
@@ -198,8 +232,9 @@ void test('framing preserves long segmented text and rejects orphan data [QA-2]'
     assert.throws(() => {
       C.readEvidence(folder, launch, 123, () => {});
     }, /orphan|unknown/);
-  }));
-void test('issue-329 equivalent empty-directory witness fails specifically for required membership [QA-2]', () =>
+  });
+});
+void test('issue-329 equivalent empty-directory witness fails specifically for required membership [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.mkdirSync(path.join(folder, 'empty-tests'));
@@ -211,8 +246,9 @@ void test('issue-329 equivalent empty-directory witness fails specifically for r
       result.stderr,
       /QA-2 observer incomplete: required source membership missing/
     );
-  }));
-void test('an owning successful finite run can cover the complete discovered source set [QA-2]', () =>
+  });
+});
+void test('an owning successful finite run can cover the complete discovered source set [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -226,8 +262,9 @@ void test('an owning successful finite run can cover the complete discovered sou
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /owning finite coverage/);
-  }));
-void test('lowered native thresholds cannot excuse missing required game sources [QA-2]', () =>
+  });
+});
+void test('lowered native thresholds cannot excuse missing required game sources [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -249,8 +286,9 @@ void test('lowered native thresholds cannot excuse missing required game sources
     );
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
-  }));
-void test('an omitted zero-byte source receives no invented native measurement [QA-2]', () =>
+  });
+});
+void test('an omitted zero-byte source receives no invented native measurement [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/empty.js'), '');
@@ -261,8 +299,9 @@ void test('an omitted zero-byte source receives no invented native measurement [
     const result = run(folder, ['partial.test.mjs']);
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
-  }));
-void test('native failure cannot become success from a complete coverage stream [QA-2]', () =>
+  });
+});
+void test('native failure cannot become success from a complete coverage stream [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -273,13 +312,15 @@ void test('native failure cannot become success from a complete coverage stream 
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
-  }));
-void test('private evidence validation rejects absent completion even for an otherwise empty directory [QA-2]', () =>
+  });
+});
+void test('private evidence validation rejects absent completion even for an otherwise empty directory [QA-2]', () => {
   temporary((folder) => {
     assert.throws(() => {
       validate(folder, randomBytes(16), 123, []);
     });
-  }));
+  });
+});
 void test('typed decoder rejects malformed lengths and incomplete fields [QA-2]', () => {
   const odd = Buffer.alloc(8);
   odd.writeBigUInt64BE(3n);
@@ -297,7 +338,7 @@ void test('typed decoder rejects malformed lengths and incomplete fields [QA-2]'
   incomplete.push(Buffer.from([0, 0]));
   assert.throws(() => incomplete.end(), /incomplete/);
 });
-void test('frame binding rejects a different launch and altered payload [QA-2]', () =>
+void test('frame binding rejects a different launch and altered payload [QA-2]', () => {
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -313,8 +354,9 @@ void test('frame binding rejects a different launch and altered payload [QA-2]',
     assert.throws(() => {
       C.readEvidence(folder, launch, 123, () => {});
     }, /binding|chain/);
-  }));
-void test('evidence data after a terminal seal is not silently ignored [QA-2]', () =>
+  });
+});
+void test('evidence data after a terminal seal is not silently ignored [QA-2]', () => {
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -326,8 +368,9 @@ void test('evidence data after a terminal seal is not silently ignored [QA-2]', 
     assert.throws(() => {
       C.readEvidence(folder, launch, 123, () => {});
     }, /later|orphan|unknown/);
-  }));
-void test('source inventory discovers nested files and does not invent empty-file counts [QA-2]', () =>
+  });
+});
+void test('source inventory discovers nested files and does not invent empty-file counts [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.mkdirSync(path.join(folder, 'public/game/nested'));
@@ -339,8 +382,9 @@ void test('source inventory discovers nested files and does not invent empty-fil
     assert.equal(empty[6], 0);
     assert.equal(empty[5].toString('hex'), createHash('sha256').digest('hex'));
     assert.ok(rows.some((r) => r[3] === 2));
-  }));
-void test('unknown source forms are explicit domain conflicts rather than ignored entries [QA-2]', () =>
+  });
+});
+void test('unknown source forms are explicit domain conflicts rather than ignored entries [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -348,8 +392,9 @@ void test('unknown source forms are explicit domain conflicts rather than ignore
       'export const future = 1;'
     );
     assert.throws(() => C.inventory(folder), /unknown source-domain/);
-  }));
-void test('native isolation none retains required finite acceptance [QA-2]', () =>
+  });
+});
+void test('native isolation none retains required finite acceptance [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -363,8 +408,9 @@ void test('native isolation none retains required finite acceptance [QA-2]', () 
     );
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
-  }));
-void test('native force-exit still requires synchronously complete finite evidence [QA-2]', () =>
+  });
+});
+void test('native force-exit still requires synchronously complete finite evidence [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -374,8 +420,9 @@ void test('native force-exit still requires synchronously complete finite eviden
     const result = run(folder, ['complete.test.mjs'], ['--test-force-exit']);
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
-  }));
-void test('a failing custom reporter cannot acquire a coverage success [QA-2]', () =>
+  });
+});
+void test('a failing custom reporter cannot acquire a coverage success [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -394,8 +441,9 @@ void test('a failing custom reporter cannot acquire a coverage success [QA-2]', 
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
-  }));
-void test('private evidence does not replace the user native coverage destination [QA-2]', () =>
+  });
+});
+void test('private evidence does not replace the user native coverage destination [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -419,14 +467,16 @@ void test('private evidence does not replace the user native coverage destinatio
     assert.ok(
       fs.readdirSync(destination).some((name) => name.startsWith('coverage-'))
     );
-  }));
+  });
+});
 void test('watch keeps its lifetime and never publishes a finite certificate before interruption [QA-2]', async () => {
   const { spawn } = await import('node:child_process');
   const { once } = await import('node:events');
   const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'qa2-watch-'));
-  let child,
-    childClosed = false,
-    childClosedAt = null;
+  /** @type {import('node:child_process').ChildProcessByStdio<null, import('node:stream').Readable, import('node:stream').Readable> | undefined} */
+  let child;
+  /** @type {{ closed: boolean, at: bigint | null }} */
+  const close = { closed: false, at: null };
   try {
     gameFixture(folder);
     fs.writeFileSync(
@@ -445,28 +495,31 @@ void test('watch keeps its lifetime and never publishes a finite certificate bef
       ...fixtureEnvironment(watchInherited),
       ...(watchStatus ? { TETRIS_QA2_SUBRUN_STATUS: watchStatus } : {})
     };
+    /** @type {['ignore', 'pipe', 'pipe']} */
+    const watchStdio = ['ignore', 'pipe', 'pipe'];
     child = spawn(
       process.execPath,
       [supervisor, ...flags, '--watch', 'watch.test.mjs'],
       {
         cwd: folder,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: watchStdio,
         env: watchEffective
       }
     );
     const watchLaunchedAt = process.hrtime.bigint();
     let output = '',
       errorOutput = '';
-    child.stdout.on('data', (b) => {
-      output += b;
+    child.stdout.on('data', (/** @type {Buffer | string} */ b) => {
+      output += b.toString();
     });
-    child.stderr.on('data', (b) => {
-      errorOutput += b;
+    child.stderr.on('data', (/** @type {Buffer | string} */ b) => {
+      errorOutput += b.toString();
     });
     child.once('close', () => {
-      childClosed = true;
-      childClosedAt = process.hrtime.bigint();
+      close.closed = true;
+      close.at = process.hrtime.bigint();
     });
+    /** @type {Promise<unknown[]>} */
     const closed = once(child, 'close');
     for (
       let watchSettleAttempt = 0;
@@ -505,26 +558,27 @@ void test('watch keeps its lifetime and never publishes a finite certificate bef
     );
     assert.doesNotMatch(output, /QA-2: owning finite/);
     const sigintRequestedAt = process.hrtime.bigint();
+    /** @type {{ requestedSignal: string, delivered: boolean, sigintRequestedAtMs?: number, closeAtMs?: number }} */
     const interruption = {
       requestedSignal: 'SIGINT',
       delivered: child.kill('SIGINT')
     };
     let deadline;
-    let result;
+    /** @type {Promise<never>} */
+    const timedOut = new Promise((_resolve, reject) => {
+      deadline = setTimeout(() => {
+        reject(new Error('watch close deadline'));
+      }, 12000);
+    });
+    /** @type {unknown[]} */
+    let result = [];
     try {
-      result = await Promise.race([
-        closed,
-        new Promise((_resolve, reject) => {
-          deadline = setTimeout(() => {
-            reject(new Error('watch close deadline'));
-          }, 12000);
-        })
-      ]);
+      result = await Promise.race([closed, timedOut]);
     } finally {
       clearTimeout(deadline);
     }
     interruption.sigintRequestedAtMs = Number(sigintRequestedAt) / 1e6;
-    interruption.closeAtMs = Number(childClosedAt) / 1e6;
+    interruption.closeAtMs = Number(close.at) / 1e6;
     subrunTelemetry({
       domain: 'watch-supervisor',
       status: result[0],
@@ -554,7 +608,8 @@ void test('watch keeps its lifetime and never publishes a finite certificate bef
       'standalone watch fixture unexpectedly took recursive-skip path before close'
     );
     assert.ok(result[0] !== 0 || result[1] !== null, errorOutput);
-    const sigintToCloseMs = Number(childClosedAt - sigintRequestedAt) / 1e6;
+    assert.ok(close.at !== null, 'the child close time was recorded');
+    const sigintToCloseMs = Number(close.at - sigintRequestedAt) / 1e6;
     assert.ok(
       Number.isFinite(sigintToCloseMs) &&
         sigintToCloseMs >= 0 &&
@@ -563,7 +618,7 @@ void test('watch keeps its lifetime and never publishes a finite certificate bef
     );
     assert.doesNotMatch(output, /QA-2: owning finite/);
   } finally {
-    if (child && !childClosed) {
+    if (child && !close.closed) {
       const reaped = once(child, 'close');
       if (child.exitCode === null && child.signalCode === null)
         child.kill('SIGKILL');
@@ -591,11 +646,11 @@ void test('watch keeps its lifetime and never publishes a finite certificate bef
       domain: 'fixture-cleanup',
       folder,
       removed: true,
-      directChildClosed: childClosed
+      directChildClosed: close.closed
     });
   }
 });
-void test('raw-byte identity distinguishes sources with equal replacement-decoded text [QA-2]', () =>
+void test('raw-byte identity distinguishes sources with equal replacement-decoded text [QA-2]', () => {
   temporary((folder) => {
     const a = path.join(folder, 'a.js'),
       b = path.join(folder, 'b.js');
@@ -605,8 +660,9 @@ void test('raw-byte identity distinguishes sources with equal replacement-decode
       y = C.fileIdentity(b);
     assert.ok(x.text.equals(y.text));
     assert.ok(!x.raw.equals(y.raw));
-  }));
-void test('stream decoder agrees with whole-file native text across UTF8 boundaries and EOF [QA-2]', () =>
+  });
+});
+void test('stream decoder agrees with whole-file native text across UTF8 boundaries and EOF [QA-2]', () => {
   temporary((folder) => {
     const filename = path.join(folder, 'boundary.js');
     const patterns = [
@@ -630,8 +686,9 @@ void test('stream decoder agrees with whole-file native text across UTF8 boundar
         assert.equal(actual.units, expected.units);
         assert.ok(actual.text.equals(expected.digest));
       }
-  }));
-void test('frame-size bounds and truncated frame cannot be accepted [QA-2]', () =>
+  });
+});
+void test('frame-size bounds and truncated frame cannot be accepted [QA-2]', () => {
   temporary((folder) => {
     const launch = randomBytes(16),
       filename = path.join(folder, '0000000000000000.frame');
@@ -641,22 +698,23 @@ void test('frame-size bounds and truncated frame cannot be accepted [QA-2]', () 
         C.readEvidence(folder, launch, 123, () => {});
       }, /size/);
     }
-  }));
+  });
+});
 // prettier-ignore
-void test('source links are surfaced as an unresolved domain form [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
+void test('source links are surfaced as an unresolved domain form [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=> { temporary(folder=>{
   gameFixture(folder);
   fs.symlinkSync('logic.js',path.join(folder,'public/game/alias.js'));
   assert.throws(()=>C.inventory(folder),/source-domain link/);
-}));
+}); });
 // prettier-ignore
-void test('evidence symlinks cannot supply a terminal frame [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=>temporary(folder=>{
+void test('evidence symlinks cannot supply a terminal frame [QA-2]',{skip:process.platform==='win32'?'symbolic-link privilege is a separate Windows cell':false},()=> { temporary(folder=>{
   const outside=path.join(folder,'outside');
   fs.writeFileSync(outside,Buffer.alloc(128));
   fs.mkdirSync(path.join(folder,'evidence'));
   fs.symlinkSync(outside,path.join(folder,'evidence/0000000000000000.frame'));
   assert.throws(()=>{ C.readEvidence(path.join(folder,'evidence'),randomBytes(16),123,()=>{}); });
-}));
-void test('excludes cannot omit a required source even with zero native floors [QA-2]', () =>
+}); });
+void test('excludes cannot omit a required source even with zero native floors [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -675,8 +733,9 @@ void test('excludes cannot omit a required source even with zero native floors [
     );
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
-  }));
-void test('partial native line coverage fails independently of caller floors [QA-2]', () =>
+  });
+});
+void test('partial native line coverage fails independently of caller floors [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -698,8 +757,9 @@ void test('partial native line coverage fails independently of caller floors [QA
     );
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
-  }));
-void test('unknown source-domain diagnostics enumerate every encountered unknown entry [QA-2]', () =>
+  });
+});
+void test('unknown source-domain diagnostics enumerate every encountered unknown entry [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/a.ts'), '');
@@ -707,10 +767,13 @@ void test('unknown source-domain diagnostics enumerate every encountered unknown
     assert.throws(
       () => C.inventory(folder),
       (error) =>
-        error.message.includes('a.ts') && error.message.includes('b.txt')
+        error instanceof Error &&
+        error.message.includes('a.ts') &&
+        error.message.includes('b.txt')
     );
-  }));
-void test('source change while native runs cannot preserve the prelaunch inventory [QA-2]', () =>
+  });
+});
+void test('source change while native runs cannot preserve the prelaunch inventory [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -723,8 +786,9 @@ void test('source change while native runs cannot preserve the prelaunch invento
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
-  }));
-void test('a late nonzero process status cannot be repaired by sealed evidence [QA-2]', () =>
+  });
+});
+void test('a late nonzero process status cannot be repaired by sealed evidence [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -735,8 +799,9 @@ void test('a late nonzero process status cannot be repaired by sealed evidence [
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
-  }));
-void test('native row expansion retains a legitimate fully covered non-game source [QA-2]', () =>
+  });
+});
+void test('native row expansion retains a legitimate fully covered non-game source [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'extra.js'), 'export const extra=1;\n');
@@ -751,14 +816,40 @@ void test('native row expansion retains a legitimate fully covered non-game sour
     );
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
-  }));
+  });
+});
 // Construct protocol controls without borrowing the observer's acceptance code.
 // A healthy zero-count row is intentional here: required membership, not a
 // fabricated positive code count, is the independently checked condition.
+/**
+ * @typedef {object} ProtocolState
+ * @property {Row} begin
+ * @property {InventoryRow[]} baseline
+ * @property {Row} witness
+ * @property {Row} native
+ * @property {boolean} omitWitness
+ * @property {boolean} omitNative
+ * @property {boolean} omitManifest
+ * @property {boolean} omitSeal
+ * @property {Array<[number, Row]>} extra
+ * @property {(manifest: Row) => void} manifestEdit
+ */
+/**
+ * @typedef {object} Protocol
+ * @property {InventoryRow[]} baseline
+ * @property {Buffer} launch
+ * @property {number} pid
+ * @property {string} directory
+ */
+/**
+ * @param {string} folder
+ * @param {(state: ProtocolState) => void} [alter]
+ * @returns {Protocol}
+ */
 function protocolFixture(folder, alter = () => {}) {
   gameFixture(folder);
   const baseline = C.inventory(folder),
-    source = baseline.find((row) => row[3] === 1),
+    source = present(baseline.find((row) => row[3] === 1)),
     launch = randomBytes(16),
     pid = 123;
   const inventory = path.join(folder, 'protocol');
@@ -772,6 +863,7 @@ function protocolFixture(folder, alter = () => {}) {
     true,
     false
   ];
+  /** @type {Row} */
   const witness = [
     0,
     pathToFileURL(source[2]).href,
@@ -779,7 +871,9 @@ function protocolFixture(folder, alter = () => {}) {
     source[6],
     source[7]
   ];
+  /** @type {Row} */
   const native = [0, source[2], source[2], 0, 0, 0, 0, 0, 0];
+  /** @type {ProtocolState} */
   const state = {
     begin,
     baseline,
@@ -832,14 +926,16 @@ function protocolFixture(folder, alter = () => {}) {
     writer.record(6, [C.recordHash(5, manifest), writer.sequence]);
   return { baseline, launch, pid, directory: inventory };
 }
-void test('independent supervisor validates an internally consistent complete protocol control [QA-2]', () =>
+void test('independent supervisor validates an internally consistent complete protocol control [QA-2]', () => {
   temporary((folder) => {
     const p = protocolFixture(folder);
     assert.doesNotThrow(() => {
       validate(p.directory, p.launch, p.pid, p.baseline);
     });
-  }));
-for (const [name, alter] of [
+  });
+});
+/** @type {Array<[string, (s: ProtocolState) => void]>} */
+const protocolAlterations = [
   [
     'missing witness',
     (s) => {
@@ -886,7 +982,7 @@ for (const [name, alter] of [
     'forged manifest count',
     (s) => {
       s.manifestEdit = (m) => {
-        m[0]++;
+        m[0] = Number(m[0]) + 1;
       };
     }
   ],
@@ -912,15 +1008,18 @@ for (const [name, alter] of [
       s.extra.push([1, [...s.begin]]);
     }
   ]
-])
-  void test(`independent supervisor rejects ${name} [QA-2]`, () =>
+];
+for (const [name, alter] of protocolAlterations)
+  void test(`independent supervisor rejects ${name} [QA-2]`, () => {
     temporary((folder) => {
       const p = protocolFixture(folder, alter);
       assert.throws(() => {
         validate(p.directory, p.launch, p.pid, p.baseline);
       });
-    }));
-for (const [name, change] of [
+    });
+  });
+/** @type {Array<[string, (p: Protocol) => void]>} */
+const transportChanges = [
   ['wrong PID', (p) => p.pid++],
   ['wrong launch', (p) => (p.launch = randomBytes(16))],
   [
@@ -951,46 +1050,71 @@ for (const [name, change] of [
       fs.truncateSync(f, 129);
     }
   ]
-])
-  void test(`transport rejects ${name} [QA-2]`, () =>
+];
+for (const [name, change] of transportChanges)
+  void test(`transport rejects ${name} [QA-2]`, () => {
     temporary((folder) => {
       const p = protocolFixture(folder);
       change(p);
       assert.throws(() => {
         validate(p.directory, p.launch, p.pid, p.baseline);
       });
-    }));
+    });
+  });
 for (const method of ['openSync', 'writeSync', 'closeSync', 'renameSync'])
-  void test(`publication ${method} failure never completes a healthy record [QA-2]`, () =>
+  void test(`publication ${method} failure never completes a healthy record [QA-2]`, () => {
     temporary((folder) => {
-      const original = fs[method],
-        opened = [],
-        writer = new C.Writer(folder, randomBytes(16), 123, randomBytes(16));
+      /** @type {unknown} */
+      const original = Reflect.get(fs, method);
+      /** @type {number[]} */
+      const opened = [];
+      const writer = new C.Writer(
+        folder,
+        randomBytes(16),
+        123,
+        randomBytes(16)
+      );
+      if (typeof original !== 'function') throw new Error('missing fs method');
       let failed = false;
-      const originalOpen = fs.openSync;
+      const originalOpen = Reflect.get(fs, 'openSync');
+      if (typeof originalOpen !== 'function')
+        throw new Error('missing fs.openSync');
       if (method === 'closeSync')
-        fs.openSync = function (...args) {
-          const fd = Reflect.apply(originalOpen, this, args);
-          opened.push(fd);
-          return fd;
-        };
-      fs[method] = function (...args) {
-        if (!failed) {
-          failed = true;
-          const error = new Error(`injected ${method}`);
-          error.code = 'ENOSPC';
-          throw error;
+        Reflect.set(
+          fs,
+          'openSync',
+          /** @this {unknown} */
+          function (/** @type {unknown[]} */ ...args) {
+            /** @type {unknown} */
+            const fd = Reflect.apply(originalOpen, this, args);
+            if (typeof fd === 'number') opened.push(fd);
+            return fd;
+          }
+        );
+      Reflect.set(
+        fs,
+        method,
+        /** @this {unknown} */
+        function (/** @type {unknown[]} */ ...args) {
+          if (!failed) {
+            failed = true;
+            throw Object.assign(new Error(`injected ${method}`), {
+              code: 'ENOSPC'
+            });
+          }
+          /** @type {unknown} */
+          const out = Reflect.apply(original, this, args);
+          return out;
         }
-        return Reflect.apply(original, this, args);
-      };
+      );
       try {
         assert.throws(() => {
           writer.record(6, [C.ZERO, 0]);
         }, /injected/);
         assert.equal(writer.sealed, false);
       } finally {
-        fs[method] = original;
-        fs.openSync = originalOpen;
+        Reflect.set(fs, method, original);
+        Reflect.set(fs, 'openSync', originalOpen);
         for (const fd of opened) {
           try {
             fs.closeSync(fd);
@@ -999,16 +1123,19 @@ for (const method of ['openSync', 'writeSync', 'closeSync', 'renameSync'])
           }
         }
       }
-    }));
-for (const [name, offset] of [
+    });
+  });
+/** @type {Array<[string, number]>} */
+const frameOffsets = [
   ['kind', 40],
   ['flags', 41],
   ['reserved', 42],
   ['root transaction', 112],
   ['previous digest', 48],
   ['payload digest', 80]
-])
-  void test(`frame rejects changed ${name} [QA-2]`, () =>
+];
+for (const [name, offset] of frameOffsets)
+  void test(`frame rejects changed ${name} [QA-2]`, () => {
     temporary((folder) => {
       const p = protocolFixture(folder),
         filename = path.join(p.directory, '0000000000000001.frame'),
@@ -1018,13 +1145,14 @@ for (const [name, offset] of [
       assert.throws(() => {
         validate(p.directory, p.launch, p.pid, p.baseline);
       });
-    }));
+    });
+  });
 void test('unsafe count values and arithmetic are rejected rather than rounded [QA-2]', () => {
   for (const n of [-1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])
     assert.throws(() => C.integer(n));
   assert.throws(() => C.add(Number.MAX_SAFE_INTEGER, 1));
 });
-void test('source paths retain URL escapes and native Unicode identity [QA-2]', () =>
+void test('source paths retain URL escapes and native Unicode identity [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     const filename = path.join(folder, 'public/game/space #% é.js');
@@ -1032,8 +1160,9 @@ void test('source paths retain URL escapes and native Unicode identity [QA-2]', 
     const rows = C.inventory(folder);
     assert.ok(rows.some((row) => row[2] === C.canonical(filename)));
     assert.equal(fileURLToPath(pathToFileURL(filename)), filename);
-  }));
-void test('recursive programmatic native runner cannot lend another root its membership [QA-2]', () =>
+  });
+});
+void test('recursive programmatic native runner cannot lend another root its membership [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1048,10 +1177,23 @@ void test('recursive programmatic native runner cannot lend another root its mem
     assert.ifError(result.error);
     assert.notEqual(result.status, 0);
     assert.doesNotMatch(result.stdout, /QA-2: owning finite/);
-  }));
+  });
+});
 // It models the native call edges explicitly; it cannot qualify a Node release.
+/**
+ * @typedef {{
+ *   watch?: boolean, mappedText?: boolean, nativeThrow?: boolean,
+ *   mutateEmission?: boolean, coverageThrow?: boolean,
+ *   mutateCounters?: boolean, summaryThrow?: boolean, unrelated?: boolean,
+ *   repeatedCollector?: boolean, mutateAfterSummary?: boolean,
+ *   postThrow?: boolean, resetWatch?: boolean
+ * }} ModelMode
+ */
+/**
+ * @param {string} folder
+ * @param {ModelMode} [mode]
+ */
 function observerModel(folder, mode = {}) {
-  const { runInNewContext } = require('node:vm');
   gameFixture(folder);
   const directory = path.join(folder, 'model-evidence');
   fs.mkdirSync(directory);
@@ -1082,9 +1224,15 @@ function observerModel(folder, mode = {}) {
   let postCalls = 0,
     summaryCalls = 0,
     linesCalls = 0;
+  // Records the urls only; nothing asserts them (the observer's evidence
+  // depends on getLines being called with the url).
+  /** @type {string[]} */
+  const linesUrls = [];
   class Collector {
-    getLines() {
+    /** @param {string} url */
+    getLines(url) {
       linesCalls++;
+      linesUrls.push(url);
       return [
         { src: mode.mappedText ? 'different attributed conversion text' : text }
       ];
@@ -1097,11 +1245,24 @@ function observerModel(folder, mode = {}) {
     }
   }
   class Stream {
-    coverage(nesting, loc, summary) {
+    /**
+     * @param {number} _nesting
+     * @param {unknown} _loc
+     * @param {{ files: { coveredLineCount: number }[] }} summary
+     */
+    coverage(_nesting, _loc, summary) {
       if (mode.mutateEmission) summary.files[0].coveredLineCount = 1;
       if (mode.coverageThrow) throw nativeError;
     }
-    summary(nesting, file, success, counts) {
+    /**
+     * @param {number} _nesting
+     * @param {unknown} _file
+     * @param {boolean} _success
+     * @param {{ failed: number }} counts
+     * @param {number} extra
+     */
+    summary(_nesting, _file, _success, counts, extra) {
+      if (extra !== 0) throw new Error('unexpected summary argument');
       if (mode.mutateCounters) counts.failed++;
       if (mode.summaryThrow) throw nativeError;
     }
@@ -1109,7 +1270,6 @@ function observerModel(folder, mode = {}) {
   const collector = new Collector(),
     unrelated = new Collector();
   const reporter = new Stream();
-  let root;
   const harness = {
     config,
     success: true,
@@ -1125,6 +1285,13 @@ function observerModel(folder, mode = {}) {
     }
   };
   class Root {
+    /** @type {Root | null} */ parent = null;
+    /** @type {Root | null} */ root = null;
+    harness = harness;
+    config = config;
+    reporter = reporter;
+    nesting = 0;
+    /** @type {{ file: string | undefined }} */ loc = { file: undefined };
     postRun() {
       postCalls++;
       this.reported = true;
@@ -1141,16 +1308,7 @@ function observerModel(folder, mode = {}) {
       return 'native-post-return';
     }
   }
-  root = new Root();
-  Object.assign(root, {
-    parent: null,
-    root: null,
-    harness,
-    config,
-    reporter,
-    nesting: 0,
-    loc: { file: undefined }
-  });
+  const root = new Root();
   root.root = root;
   const fakeProcess = {
     pid: 123,
@@ -1168,6 +1326,7 @@ function observerModel(folder, mode = {}) {
     stderr: { write() {} },
     exitCode: undefined
   };
+  /** @param {string} id */
   function modelRequire(id) {
     if (id === 'node:worker_threads') return { isMainThread: true };
     if (id === './native-coverage-common.cjs') return C;
@@ -1178,7 +1337,9 @@ function observerModel(folder, mode = {}) {
       return { TestsStream: Stream };
     if (id === 'internal/test_runner/utils')
       return { parseCommandLine: () => config };
-    return require(id);
+    /** @type {unknown} */
+    const loaded = require(id);
+    return loaded;
   }
   runInNewContext(
     fs.readFileSync(
@@ -1194,6 +1355,7 @@ function observerModel(folder, mode = {}) {
   }
   return {
     root,
+    Root,
     directory,
     harness,
     collector,
@@ -1211,7 +1373,7 @@ function observerModel(folder, mode = {}) {
     }
   };
 }
-void test('observer model binds exact owning normal return without using unrelated collector evidence [QA-2]', () =>
+void test('observer model binds exact owning normal return without using unrelated collector evidence [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder, { unrelated: true });
     assert.equal(model.root.postRun(), 'native-post-return');
@@ -1221,55 +1383,62 @@ void test('observer model binds exact owning normal return without using unrelat
       summaryCalls: 2,
       linesCalls: 2
     });
-  }));
+  });
+});
 for (const mode of [
   'nativeThrow',
   'coverageThrow',
   'summaryThrow',
   'postThrow'
 ])
-  void test(`observer preserves ${mode} original exception identity [QA-2]`, () =>
+  void test(`observer preserves ${mode} original exception identity [QA-2]`, () => {
     temporary((folder) => {
       const model = observerModel(folder, { [mode]: true });
-      const original = model.harness.coverage;
+      /** @type {unknown} */
+      const original = Reflect.get(model.harness, 'coverage');
       assert.throws(
         () => model.root.postRun(),
         (error) => error === model.nativeError
       );
-      assert.equal(model.harness.coverage, original);
+      assert.equal(Reflect.get(model.harness, 'coverage'), original);
       assert.throws(model.validate);
-    }));
+    });
+  });
 for (const mode of [
   'mutateEmission',
   'mutateCounters',
   'mutateAfterSummary',
   'repeatedCollector'
 ])
-  void test(`observer rejects ${mode} without replacing native return [QA-2]`, () =>
+  void test(`observer rejects ${mode} without replacing native return [QA-2]`, () => {
     temporary((folder) => {
       const model = observerModel(folder, { [mode]: true });
       assert.equal(model.root.postRun(), 'native-post-return');
       assert.throws(model.validate);
-    }));
-void test('parsed watch classification stays nonfinite after native watch flags reset [QA-2]', () =>
+    });
+  });
+void test('parsed watch classification stays nonfinite after native watch flags reset [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder, { watch: true, resetWatch: true });
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
     assert.equal(fs.readdirSync(model.directory).length, 0);
-  }));
-void test('a second qualifying root cannot reuse an existing terminal seal [QA-2]', () =>
+  });
+});
+void test('a second qualifying root cannot reuse an existing terminal seal [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder);
     model.root.postRun();
     assert.doesNotThrow(model.validate);
-    const second = Object.create(Object.getPrototypeOf(model.root));
-    Object.assign(second, model.root, { reported: undefined });
+    const second = Object.assign(new model.Root(), model.root, {
+      reported: undefined
+    });
     second.root = second;
     second.postRun();
     assert.throws(model.validate);
-  }));
-void test('reported undefined is eligible but reported true never opens another transaction [QA-2]', () =>
+  });
+});
+void test('reported undefined is eligible but reported true never opens another transaction [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder);
     assert.equal(model.root.reported, undefined);
@@ -1278,29 +1447,38 @@ void test('reported undefined is eligible but reported true never opens another 
     const before = fs.readdirSync(model.directory).length;
     model.root.postRun();
     assert.equal(fs.readdirSync(model.directory).length, before);
-  }));
+  });
+});
 // Deterministic event/timer models are distinct from actual OS signal controls.
+/**
+ * @param {string} folder
+ * @param {string} [platform]
+ * @param {{ kill?: boolean, selfKill?: boolean, cleanup?: boolean }} [fault]
+ */
 function supervisorModel(folder, platform = process.platform, fault = {}) {
-  const { runInNewContext } = require('node:vm');
-  const { EventEmitter } = require('node:events');
   gameFixture(folder);
-  const events = new EventEmitter(),
-    child = new EventEmitter();
-  const signals = [],
-    timers = [],
-    messages = [],
-    exits = [];
+  const events = new EventEmitter();
+  /** @type {{ name: string, pid?: number, at: number }[]} */
+  const signals = [];
+  /** @type {{ fn: () => void, at: number, cancelled: boolean }[]} */
+  const timers = [];
+  /** @type {string[]} */
+  const messages = [];
+  /** @type {{ code: number | undefined, at: number }[]} */
+  const exits = [];
   let clock = 0;
-  Object.assign(child, {
-    pid: 123,
-    exitCode: null,
-    signalCode: null,
+  class Child extends EventEmitter {
+    pid = 123;
+    /** @type {number | null} */ exitCode = null;
+    /** @type {string | null} */ signalCode = null;
+    /** @param {string} name */
     kill(name) {
       signals.push({ name, at: clock });
       if (fault.kill) throw new Error('injected kill refusal');
       return true;
     }
-  });
+  }
+  const child = new Child();
   const proc = Object.assign(events, {
     pid: 99,
     execPath: process.execPath,
@@ -1311,29 +1489,40 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
     arch: process.arch,
     cwd: () => folder,
     exitCode: undefined,
+    /** @param {number | undefined} code */
     exit(code) {
       exits.push({ code, at: clock });
     },
+    /**
+     * @param {number} pid
+     * @param {string} name
+     */
     kill(pid, name) {
       signals.push({ pid, name, at: clock });
       if (fault.selfKill) throw new Error('injected self-signal refusal');
     }
   });
-  const fakeFS = Object.create(fs);
-  fakeFS.mkdtempSync = () => {
-    const target = path.join(folder, 'private');
-    fs.mkdirSync(target);
-    return target;
+  /** @type {{ mkdtempSync: () => string, rmSync?: () => never }} */
+  const fakeFS = {
+    mkdtempSync: () => {
+      const target = path.join(folder, 'private');
+      fs.mkdirSync(target);
+      return target;
+    }
   };
+  Object.setPrototypeOf(fakeFS, fs);
   if (fault.cleanup)
     fakeFS.rmSync = () => {
       throw new Error('injected cleanup refusal');
     };
+  /** @param {string} id */
   function modelRequire(id) {
     if (id === 'node:fs') return fakeFS;
     if (id === 'node:child_process') return { spawn: () => child };
     if (id === './native-coverage-common.cjs') return C;
-    return require(id);
+    /** @type {unknown} */
+    const loaded = require(id);
+    return loaded;
   }
   const module = { exports: {} };
   modelRequire.main = module;
@@ -1344,17 +1533,25 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
     process: proc,
     Buffer,
     console: {
+      /** @param {string} m */
       log: (m) => messages.push(m),
+      /** @param {string[]} m */
       error: (...m) => messages.push(m.join(' '))
     },
+    /**
+     * @param {() => void} fn
+     * @param {number} ms
+     */
     setTimeout(fn, ms) {
       const timer = { fn, at: clock + ms, cancelled: false };
       timers.push(timer);
       return timer;
     },
+    /** @param {{ cancelled: boolean }} t */
     clearTimeout(t) {
       t.cancelled = true;
     },
+    /** @param {() => void} fn */
     setImmediate(fn) {
       timers.push({ fn, at: clock, cancelled: false });
     }
@@ -1362,12 +1559,14 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
   runInNewContext(fs.readFileSync(supervisor, 'utf8'), context, {
     filename: 'native-coverage.cjs'
   });
+  /** @param {number} ms */
   function advance(ms) {
     const target = clock + ms;
     for (;;) {
       const next = timers
         .filter((t) => !t.cancelled && t.at <= target)
-        .sort((a, b) => a.at - b.at)[0];
+        .sort((a, b) => a.at - b.at)
+        .at(0);
       if (!next) break;
       next.cancelled = true;
       clock = next.at;
@@ -1382,12 +1581,21 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
     messages,
     exits,
     advance,
+    /** @param {string} name */
     interrupt: (name) => events.emit(name),
+    /**
+     * @param {number | null} [code]
+     * @param {string | null} [signal]
+     */
     exit(code = 0, signal = null) {
       child.exitCode = code;
       child.signalCode = signal;
       child.emit('exit', code, signal);
     },
+    /**
+     * @param {number | null} [code]
+     * @param {string | null} [signal]
+     */
     close(code = 0, signal = null) {
       child.exitCode = code;
       child.signalCode = signal;
@@ -1395,7 +1603,7 @@ function supervisorModel(folder, platform = process.platform, fault = {}) {
     }
   };
 }
-void test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model boundaries [QA-2]', () =>
+void test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model boundaries [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1410,8 +1618,9 @@ void test('POSIX supervisor-only interruption uses absolute 250ms/5s/10s model b
       m.exits.map((x) => [x.code, x.at]),
       [[1, 10000]]
     );
-  }));
-void test('exit before close forbids later direct-child signals but retains absolute close deadline [QA-2]', () =>
+  });
+});
+void test('exit before close forbids later direct-child signals but retains absolute close deadline [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'darwin');
     m.interrupt('SIGTERM');
@@ -1420,8 +1629,9 @@ void test('exit before close forbids later direct-child signals but retains abso
     m.advance(9900);
     assert.equal(m.signals.length, 0);
     assert.equal(m.exits[0].at, 10000);
-  }));
-void test('repeated interruption escalates without extending first close deadline [QA-2]', () =>
+  });
+});
+void test('repeated interruption escalates without extending first close deadline [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1434,16 +1644,18 @@ void test('repeated interruption escalates without extending first close deadlin
     m.advance(9950);
     assert.equal(m.exits[0].at, 10000);
     assert.equal(m.signals.length, 1);
-  }));
-void test('Windows supervisor-only cancellation is forced with five-second model close deadline [QA-2]', () =>
+  });
+});
+void test('Windows supervisor-only cancellation is forced with five-second model close deadline [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'win32');
     m.interrupt('SIGINT');
     assert.equal(m.signals[0].name, 'SIGKILL');
     m.advance(5000);
     assert.equal(m.exits[0].at, 5000);
-  }));
-void test('normal close clears cancellation escalation and never accepts interrupted evidence [QA-2]', () =>
+  });
+});
+void test('normal close clears cancellation escalation and never accepts interrupted evidence [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     m.interrupt('SIGINT');
@@ -1453,16 +1665,18 @@ void test('normal close clears cancellation escalation and never accepts interru
     assert.equal(m.signals.length, 0);
     assert.equal(m.exits.length, 0);
     assert.ok(!m.messages.some((x) => x.includes('QA-2: owning finite')));
-  }));
-void test('failed termination stays non-PASS and still reaches the final close deadline [QA-2]', () =>
+  });
+});
+void test('failed termination stays non-PASS and still reaches the final close deadline [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux', { kill: true });
     m.interrupt('SIGINT');
     m.advance(10000);
     assert.equal(m.exits[0].code, 1);
     assert.ok(m.messages.some((x) => x.includes('incomplete cleanup')));
-  }));
-void test('signal disposition fallback does not call unrelated supervisor handlers directly [QA-2]', () =>
+  });
+});
+void test('signal disposition fallback does not call unrelated supervisor handlers directly [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux');
     let foreign = 0;
@@ -1473,15 +1687,17 @@ void test('signal disposition fallback does not call unrelated supervisor handle
     assert.equal(foreign, 0);
     assert.ok(m.signals.some((s) => s.pid === 99 && s.name === 'SIGTERM'));
     assert.equal(m.exits[0].code, 1);
-  }));
-void test('cleanup refusal prevents acceptance and preserves explicit failure diagnostic [QA-2]', () =>
+  });
+});
+void test('cleanup refusal prevents acceptance and preserves explicit failure diagnostic [QA-2]', () => {
   temporary((folder) => {
     const m = supervisorModel(folder, 'linux', { cleanup: true });
     m.close(0);
     assert.equal(m.proc.exitCode, 1);
     assert.ok(m.messages.some((x) => x.includes('cleanup failed')));
-  }));
-void test('evidence enumeration failure cannot produce supervisor acceptance [QA-2]', () =>
+  });
+});
+void test('evidence enumeration failure cannot produce supervisor acceptance [QA-2]', () => {
   temporary((folder) => {
     const p = protocolFixture(folder),
       original = fs.opendirSync;
@@ -1495,8 +1711,9 @@ void test('evidence enumeration failure cannot produce supervisor acceptance [QA
     } finally {
       fs.opendirSync = original;
     }
-  }));
-void test('source descriptor read failure remains an explicit identity failure [QA-2]', () =>
+  });
+});
+void test('source descriptor read failure remains an explicit identity failure [QA-2]', () => {
   temporary((folder) => {
     const filename = path.join(folder, 'source.js');
     fs.writeFileSync(filename, 'x');
@@ -1509,10 +1726,10 @@ void test('source descriptor read failure remains an explicit identity failure [
     } finally {
       fs.readSync = original;
     }
-  }));
-void test('inherited worker or mismatched parent never patches native entry points [QA-2]', () =>
+  });
+});
+void test('inherited worker or mismatched parent never patches native entry points [QA-2]', () => {
   temporary(() => {
-    const { runInNewContext } = require('node:vm');
     let internalReads = 0;
     for (const isMainThread of [true, false]) {
       const code = fs.readFileSync(
@@ -1520,6 +1737,7 @@ void test('inherited worker or mismatched parent never patches native entry poin
         'utf8'
       );
       runInNewContext(code, {
+        /** @param {string} id */
         require(id) {
           if (id === 'node:worker_threads') return { isMainThread };
           internalReads++;
@@ -1529,8 +1747,9 @@ void test('inherited worker or mismatched parent never patches native entry poin
       });
     }
     assert.equal(internalReads, 0);
-  }));
-void test('native preload output survives the supervisor launch [QA-2]', () =>
+  });
+});
+void test('native preload output survives the supervisor launch [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1549,8 +1768,9 @@ void test('native preload output survives the supervisor launch [QA-2]', () =>
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /user-preload-marker/);
-  }));
-void test('native import-hook option remains a native import rather than an observer replacement [QA-2]', () =>
+  });
+});
+void test('native import-hook option remains a native import rather than an observer replacement [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1565,8 +1785,9 @@ void test('native import-hook option remains a native import rather than an obse
     assert.ifError(result.error);
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /user-import-marker/);
-  }));
-void test('custom native reporter output destination is not used as evidence transport [QA-2]', () =>
+  });
+});
+void test('custom native reporter output destination is not used as evidence transport [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(
@@ -1586,8 +1807,9 @@ void test('custom native reporter output destination is not used as evidence tra
         .includes('TAP version')
     );
     assert.match(result.stdout, /QA-2: owning finite/);
-  }));
-void test('native zero-byte source import does not authorize an invented row if Node omits it [QA-2]', () =>
+  });
+});
+void test('native zero-byte source import does not authorize an invented row if Node omits it [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     fs.writeFileSync(path.join(folder, 'public/game/empty.js'), '');
@@ -1612,19 +1834,21 @@ void test('native zero-byte source import does not authorize an invented row if 
     );
     assert.ifError(native.error);
     assert.equal(native.status, 0, native.stderr);
-    const summary = JSON.parse(native.stdout.trim());
+    const summary = parseJsonObject(native.stdout.trim());
     assert.ok(
       Array.isArray(summary.files),
       'native coverage event required for empty-file row'
     );
     const hasEmpty = summary.files.some(
-      (file) => file.path === path.join(folder, 'public/game/empty.js')
+      (file) =>
+        jsonObject(file).path === path.join(folder, 'public/game/empty.js')
     );
     const result = run(folder, ['empty-import.test.mjs']);
     assert.ifError(result.error);
     assert.equal(result.status === 0, hasEmpty, result.stderr);
-  }));
-void test('test-pattern and declaration-pattern entries are not silently dropped from the game domain [QA-2]', () =>
+  });
+});
+void test('test-pattern and declaration-pattern entries are not silently dropped from the game domain [QA-2]', () => {
   temporary((folder) => {
     gameFixture(folder);
     for (const name of ['a.test.js', 'b.spec.js', 'types.d.ts'])
@@ -1632,19 +1856,29 @@ void test('test-pattern and declaration-pattern entries are not silently dropped
     assert.throws(
       () => C.inventory(folder),
       (error) =>
+        error instanceof Error &&
         ['a.test.js', 'b.spec.js', 'types.d.ts'].every((name) =>
           error.message.includes(name)
         )
     );
-  }));
-const pinnedNode = require('../package.json').engines.node;
+  });
+});
+const pinnedNode = jsonString(
+  jsonObject(
+    jsonObject(
+      parseJsonObject(
+        fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+      )
+    ).engines
+  ).node
+);
 // Current-base zero-byte stand-in only. Historical issue329 reported no report
 // at b6a5000; exact historical filename/bytes were not supplied. That mismatch
 // stays open. This observed baseline is not product coverage acceptance.
 // prettier-ignore
 void test('current-base native zero-byte stand-in observation remains separate from corrected membership rejection [QA-2]',
   {skip:process.version!=='v'+pinnedNode?`stand-in observation is specifically Node v${pinnedNode}`:false},
-  ()=>temporary(folder=>{
+  ()=> { temporary(folder=>{
     gameFixture(folder);
     fs.mkdirSync(path.join(folder,'empty-tests'));
     fs.writeFileSync(path.join(folder,'empty-tests/empty.test.mjs'),'');
@@ -1670,21 +1904,23 @@ void test('current-base native zero-byte stand-in observation remains separate f
     assert.ifError(corrected.error);
     assert.notEqual(corrected.status,0);
     assert.match(corrected.stderr,/QA-2 observer incomplete: required source membership missing/);
-  }));
-void test('an observable source-map text conflict cannot lend required disk-source membership [QA-2]', () =>
+  }); });
+void test('an observable source-map text conflict cannot lend required disk-source membership [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder, { mappedText: true });
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
-  }));
-void test('a missing postspawn PID binding cannot acquire a healthy observer transaction [QA-2]', () =>
+  });
+});
+void test('a missing postspawn PID binding cannot acquire a healthy observer transaction [QA-2]', () => {
   temporary((folder) => {
     const model = observerModel(folder);
     fs.unlinkSync(path.join(folder, 'model-pid'));
     assert.equal(model.root.postRun(), 'native-post-return');
     assert.throws(model.validate);
-  }));
-void test('frame publication stays within the legal boundary for long code-unit fields [QA-2]', () =>
+  });
+});
+void test('frame publication stays within the legal boundary for long code-unit fields [QA-2]', () => {
   temporary((folder) => {
     const launch = randomBytes(16),
       writer = new C.Writer(folder, launch, 123, randomBytes(16));
@@ -1693,10 +1929,12 @@ void test('frame publication stays within the legal boundary for long code-unit 
     writer.record(6, [C.ZERO, writer.sequence]);
     for (const name of fs.readdirSync(folder))
       assert.ok(fs.statSync(path.join(folder, name)).size <= 65536);
+    /** @type {unknown[][]} */
     const records = [];
-    C.readEvidence(folder, launch, 123, (kind, row) => records.push(row));
+    C.readEvidence(folder, launch, 123, (_kind, row) => records.push(row));
     assert.equal(records[0][1], text);
-  }));
+  });
+});
 void test('standalone fixture environment removes only native child context without mutating caller [QA-2]', () => {
   const inherited = {
     NODE_TEST_CONTEXT: 'child-v8',

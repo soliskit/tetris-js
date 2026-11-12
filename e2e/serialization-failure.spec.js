@@ -1,11 +1,13 @@
 // Route interception exposes the existing private manager only in this test.
 // The injected JSON failure is not an ordinary-play or physical-device claim.
 import { test, expect } from './fixtures.js';
+import { jsonString, parseJsonObject, present } from '../test/json.js';
 
 for (const refusedWithdrawal of [false, true]) {
-  test(`serialization failure on page Pause shows the internal-error notice with withdrawal refused=${refusedWithdrawal} [SAF-3] [STA-4] [SAF-2]`, async ({
+  test(`serialization failure on page Pause shows the internal-error notice with withdrawal refused=${String(refusedWithdrawal)} [SAF-3] [STA-4] [SAF-2]`, async ({
     page
   }, testInfo) => {
+    /** @type {string[]} */
     const reports = [];
     page.on('console', (message) => {
       if (message.type() === 'error') reports.push(message.text());
@@ -31,47 +33,78 @@ for (const refusedWithdrawal of [false, true]) {
       localStorage.getItem('tetris.savedGameSession')
     );
     expect(typeof before).toBe('string');
-    expect(JSON.parse(JSON.parse(before).position).gameBoard).toHaveLength(20);
+    const beforePosition = jsonString(
+      parseJsonObject(present(before)).position
+    );
+    expect(parseJsonObject(beforePosition).gameBoard).toHaveLength(20);
     await page.locator('#playPauseButton').click();
     await expect(page.locator('#playPauseButton')).toHaveAttribute(
       'aria-label',
       'Pause'
     );
     await page.evaluate((refusedWithdrawal) => {
-      const original = JSON.stringify;
-      const storage = window.testGame.storage;
+      const game = window.testGame;
+      if (!game) throw new Error('testGame was not exposed');
+      /** @type {unknown} */
+      const original = Reflect.get(JSON, 'stringify');
+      if (typeof original !== 'function')
+        throw new Error('JSON.stringify is not a function');
+      const storage = game.storage;
+      /** @param {string} text */
+      const availableOf = (text) => {
+        /** @type {unknown} */
+        const parsed = JSON.parse(text);
+        /** @type {unknown} */
+        const available =
+          typeof parsed === 'object' && parsed !== null
+            ? Reflect.get(parsed, 'available')
+            : undefined;
+        return available;
+      };
       window.withdrawalAttempts = 0;
       window.serializerAttempts = 0;
-      window.serializerError = new Error(
-        'injected session serialization failure'
-      );
-      JSON.stringify = function (value, ...args) {
-        if (
-          value &&
-          Object.hasOwn(value, 'gameBoard') &&
-          Object.hasOwn(value, 'nextTetrominos')
+      const injected = new Error('injected session serialization failure');
+      window.serializerError = injected;
+      Reflect.set(
+        JSON,
+        'stringify',
+        function (
+          /** @type {unknown} */ value,
+          /** @type {unknown[]} */ ...args
         ) {
-          window.serializerAttempts += 1;
-          throw window.serializerError;
+          // Original gate was `value && Object.hasOwn(value, ...)`: null and
+          // other falsy values skip; objects and functions are inspected;
+          // other primitives box to objects without these own keys.
+          if (
+            ((typeof value === 'object' && value !== null) ||
+              typeof value === 'function') &&
+            Object.hasOwn(value, 'gameBoard') &&
+            Object.hasOwn(value, 'nextTetrominos')
+          ) {
+            window.serializerAttempts = (window.serializerAttempts ?? 0) + 1;
+            throw injected;
+          }
+          /** @type {unknown} */
+          const result = Reflect.apply(original, JSON, [value, ...args]);
+          return result;
         }
-        return original(value, ...args);
-      };
-      window.testGame.storage = {
+      );
+      game.storage = {
         getItem: (key) => storage.getItem(key),
         setItem: (key, value) => {
           if (
             key === 'tetris.savedGameSession' &&
-            JSON.parse(value).available === false
+            availableOf(value) === false
           ) {
-            window.withdrawalAttempts += 1;
+            window.withdrawalAttempts = (window.withdrawalAttempts ?? 0) + 1;
             if (refusedWithdrawal) throw new Error('withdrawal refused');
           }
           storage.setItem(key, value);
         }
       };
       window.restoreSerializationProviders = () => {
-        JSON.stringify = original;
-        window.testGame.storage = storage;
+        Reflect.set(JSON, 'stringify', original);
+        game.storage = storage;
       };
     }, refusedWithdrawal);
     try {
@@ -85,6 +118,19 @@ for (const refusedWithdrawal of [false, true]) {
       );
       const result = await page.evaluate(() => {
         const game = window.testGame;
+        if (!game) throw new Error('testGame was not exposed');
+        const storedAvailable = () => {
+          const text = localStorage.getItem('tetris.savedGameSession');
+          if (text === null) throw new Error('no saved record');
+          /** @type {unknown} */
+          const parsed = JSON.parse(text);
+          /** @type {unknown} */
+          const available =
+            typeof parsed === 'object' && parsed !== null
+              ? Reflect.get(parsed, 'available')
+              : undefined;
+          return available;
+        };
         return {
           state: game.state,
           gravity: game.gameLoopTask,
@@ -92,9 +138,7 @@ for (const refusedWithdrawal of [false, true]) {
           attempts: window.serializerAttempts,
           eligible: game.isSessionSaved,
           withdrawalAttempts: window.withdrawalAttempts,
-          storedAvailable: JSON.parse(
-            localStorage.getItem('tetris.savedGameSession')
-          ).available,
+          storedAvailable: storedAvailable(),
           originalError: game.faults.at(-1)?.error === window.serializerError,
           reason: game.faults.at(-1)?.reason,
           bytes: localStorage.getItem('tetris.savedGameSession')
@@ -109,8 +153,8 @@ for (const refusedWithdrawal of [false, true]) {
       expect(result.eligible).toBe(false);
       expect(result.originalError).toBe(true);
       expect(result.reason).toBe('unexpected error');
-      expect(JSON.parse(result.bytes).position).toBe(
-        JSON.parse(before).position
+      expect(parseJsonObject(present(result.bytes)).position).toBe(
+        parseJsonObject(present(before)).position
       );
       if (refusedWithdrawal) expect(result.bytes).toBe(before);
       expect(
@@ -124,7 +168,12 @@ for (const refusedWithdrawal of [false, true]) {
         path: testInfo.outputPath('serialization-fault-notice.png')
       });
     } finally {
-      await page.evaluate(() => window.restoreSerializationProviders());
+      await page.evaluate(() => {
+        const restore = window.restoreSerializationProviders;
+        if (!restore)
+          throw new Error('serialization providers were not patched');
+        restore();
+      });
     }
   });
 }

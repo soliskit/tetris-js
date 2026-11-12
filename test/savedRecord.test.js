@@ -14,6 +14,13 @@ import {
 } from '../public/game/gameManager.js';
 import { PlayerAction } from '../public/game/gameState.js';
 import { createFakeScheduler, repeatUntil } from './helpers.js';
+import {
+  jsonArray,
+  jsonObject,
+  parseJsonObject,
+  present,
+  remove
+} from './json.js';
 
 const KEY = 'tetris.savedGameSession';
 function setup() {
@@ -31,7 +38,7 @@ function setup() {
 void test('record grammar rejects duplicate escaped members and malformed metadata [STA-6] [SAF-1]', () => {
   const position = '{ "retained" : [1,true,null] }';
   assert.equal(
-    parseSavedRecord(serializeSavedRecord(position, true)).position,
+    present(parseSavedRecord(serializeSavedRecord(position, true))).position,
     position
   );
   for (const text of [
@@ -57,9 +64,9 @@ void test('record grammar rejects duplicate escaped members and malformed metada
 void test('withdrawn record stays unavailable after refused new save and withdrawal [STA-4] [SAF-2]', () => {
   const { storage, game } = setup();
   game.isSessionSaved = false;
-  const withdrawn = storage.getItem(KEY);
-  const position = parseSavedRecord(withdrawn).position;
-  assert.equal(parseSavedRecord(withdrawn).available, false);
+  const withdrawn = present(storage.getItem(KEY));
+  const position = present(parseSavedRecord(withdrawn)).position;
+  assert.equal(present(parseSavedRecord(withdrawn)).available, false);
   game.score = 151;
   storage.setItem = () => {
     throw new Error('full');
@@ -68,21 +75,21 @@ void test('withdrawn record stays unavailable after refused new save and withdra
   assert.equal(storage.getItem(KEY), withdrawn);
   const other = new GameManager({ storage, scheduler: createFakeScheduler() });
   assert.equal(other.isSessionSaved, false);
-  assert.equal(parseSavedRecord(withdrawn).position, position);
+  assert.equal(present(parseSavedRecord(withdrawn)).position, position);
 });
 
 void test('complete save publishes valid position atomically and later fault retains it [STA-4] [SAF-3]', () => {
   const { storage, game } = setup();
   game.score = 151;
   game.saveGameSession();
-  const completed = storage.getItem(KEY);
+  const completed = present(storage.getItem(KEY));
   const other = new GameManager({ storage, scheduler: createFakeScheduler() });
   assert.equal(other.isSessionSaved, true);
   other.handleAction(PlayerAction.continueGame);
   assert.equal(other.score, 151);
   game.failSafe('later engine fault');
   assert.equal(storage.getItem(KEY), completed);
-  assert.equal(parseSavedRecord(completed).available, true);
+  assert.equal(present(parseSavedRecord(completed)).available, true);
 });
 
 void test('raw old or invalid records are retained whole and unreadable records are not written [STA-6] [SAF-2]', () => {
@@ -116,15 +123,17 @@ void test('raw old or invalid records are retained whole and unreadable records 
 
 void test('persisted full rows and nonmultiple scores obey the written snapshot rules [SAF-1] [STA-4]', () => {
   const { game } = setup();
-  const data = JSON.parse(serializeSession(game));
-  data.gameBoard[19] = data.gameBoard[19].map(() => ({
+  const data = parseJsonObject(serializeSession(game));
+  const board = jsonArray(data.gameBoard);
+  board[19] = jsonArray(board[19]).map(() => ({
     isFilled: true,
     color: '#007AFF'
   }));
   for (const score of [1, 151, Number.MAX_SAFE_INTEGER]) {
     data.score = score;
     assert.equal(
-      parseSession(JSON.stringify(data), { rows: 20, columns: 10 }).score,
+      present(parseSession(JSON.stringify(data), { rows: 20, columns: 10 }))
+        .score,
       score
     );
   }
@@ -148,10 +157,10 @@ void test('count16 is only accepted resting and required history never defaults 
   game.lockDelayResetCount = 15;
   game.handleAction(PlayerAction.pause);
   assert.equal(game.lockDelayResetCount, 16);
-  let data = JSON.parse(serializeSession(game));
+  let data = parseJsonObject(serializeSession(game));
   const size = { rows: 20, columns: 10 };
   assert.equal(
-    parseSession(JSON.stringify(data), size).lockDelayResetCount,
+    present(parseSession(JSON.stringify(data), size)).lockDelayResetCount,
     16
   );
   game.handleAction(PlayerAction.resume);
@@ -159,18 +168,18 @@ void test('count16 is only accepted resting and required history never defaults 
     game.gameBoard.flat().some((cell) => cell.isFilled),
     'resume16 locks at once'
   );
-  data.currentTetromino.position.row = 0;
+  jsonObject(jsonObject(data.currentTetromino).position).row = 0;
   assert.equal(parseSession(JSON.stringify(data), size), null, '16 offsurface');
   for (const field of ['lowestRowReached', 'lockDelayResetCount']) {
-    data = JSON.parse(serializeSession(game));
-    delete data[field];
+    data = parseJsonObject(serializeSession(game));
+    remove(data, field);
     assert.equal(parseSession(JSON.stringify(data), size), null);
   }
 });
 
 void test('lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]', () => {
   const { game } = setup();
-  const data = JSON.parse(serializeSession(game));
+  const data = parseJsonObject(serializeSession(game));
   const maximum = Math.max(
     ...game.currentTetromino.cells.map((cell) => cell.row)
   );
@@ -178,7 +187,7 @@ void test('lowest-row history tracks occupied current-piece blocks and allows ol
   for (const history of [maximum, 19]) {
     data.lowestRowReached = history;
     assert.equal(
-      parseSession(JSON.stringify(data), { rows: 20, columns: 10 })
+      present(parseSession(JSON.stringify(data), { rows: 20, columns: 10 }))
         .lowestRowReached,
       history
     );
@@ -226,6 +235,7 @@ void test('field whitelist requires all own names and non-array records [STA-6] 
     assert.equal(hasFields(value, []), false);
   assert.equal(hasFields({ a: 1 }, ['a', 'b']), false);
   for (const key of ['extra', '', 'a\u0301', '__proto__', 'constructor']) {
+    /** @type {unknown} */
     const record = JSON.parse(JSON.stringify({ a: 1, [key]: 2 }));
     assert.equal(hasFields(record, ['a']), false, key);
     assert.equal(hasFields(record, ['a'], [key]), true, key);
@@ -237,26 +247,32 @@ void test('field whitelist requires all own names and non-array records [STA-6] 
 void test('cell and piece metadata cannot bypass the exact field and type boundary [STA-6] [SAF-1]', () => {
   const { game } = setup();
   for (const change of [
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
-      data.gameBoard[19][0].isFilled = 0;
+      jsonObject(jsonArray(jsonArray(data.gameBoard)[19])[0]).isFilled = 0;
     },
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
-      data.gameBoard[19][0].extra = true;
+      jsonObject(jsonArray(jsonArray(data.gameBoard)[19])[0]).extra = true;
     },
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
-      data.currentTetromino.extra = true;
+      jsonObject(data.currentTetromino).extra = true;
     },
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
-      data.currentTetromino.position.extra = true;
+      jsonObject(jsonObject(data.currentTetromino).position).extra = true;
     },
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
-      data.nextTetrominos[0].extra = true;
+      jsonObject(jsonArray(data.nextTetrominos)[0]).extra = true;
     },
+    /** @param {import('./json.js').JsonObject} data */
     (data) => {
       data.heldTetromino = { color: '#00C0E8', extra: true };
     }
   ]) {
-    const data = JSON.parse(serializeSession(game));
+    const data = parseJsonObject(serializeSession(game));
     change(data);
     assert.equal(
       parseSession(JSON.stringify(data), { rows: 20, columns: 10 }),
