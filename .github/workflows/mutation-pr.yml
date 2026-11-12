@@ -137,8 +137,8 @@ jobs:
             # line 1, ends with the 99999 sentinel to cover later file growth,
             # and the mutation job re-verifies coverage against the parsed AST
             # before running: a mutated node type spanning a boundary fails
-            # the job instead of being silently skipped. Whole-file entries
-            # carry mutate == file.
+            # the job instead of being silently skipped. Whole-file entries carry the
+            # bare path in file; ranged entries append :start-end.
             entries=()
             for f in "${game_files[@]}"; do
               base=$(basename "$f" .js)
@@ -148,11 +148,11 @@ jobs:
                 *) ranges=() ;;
               esac
               if [ "${#ranges[@]}" -eq 0 ]; then
-                entries+=("$(jq -n -c --arg f "$f" --arg n "$base" '{file: $f, name: $n, mutate: $f}')")
+                entries+=("$(jq -n -c --arg f "$f" --arg n "$base" '{file: $f, name: $n}')")
               else
                 total="${#ranges[@]}"
                 for idx in "${!ranges[@]}"; do
-                  entries+=("$(jq -n -c --arg f "$f" --arg n "${base}-$((idx + 1))of${total}" --arg m "$f:${ranges[$idx]}" --arg s "${ranges[*]}" '{file: $f, name: $n, mutate: $m, shards: $s}')")
+                  entries+=("$(jq -n -c --arg f "$f:${ranges[$idx]}" --arg n "${base}-$((idx + 1))of${total}" --arg s "${ranges[*]}" '{file: $f, name: $n, shards: $s}')")
                 done
               fi
             done
@@ -181,11 +181,11 @@ jobs:
       - run: npm install --global npm@12.2.0
       - run: npm ci
       - name: Verify line-range shards split the file exactly (AST check)
-        if: contains(matrix.mutate, ':')
+        if: contains(matrix.file, ':')
         shell: bash
         run: |
           set -euo pipefail
-          mutate="${{ matrix.mutate }}"
+          mutate="${{ matrix.file }}"
           file="${mutate%%:*}"
           node --input-type=module - "$file" ${{ matrix.shards }} <<'GUARD'
           // Fail-closed shard-boundary check for line-range mutation shards.
@@ -274,13 +274,13 @@ jobs:
           }
           console.log(`OK ${file}: ${boundaries.length} boundaries, ranges contiguous, tail covered, every range has candidate nodes, no mutable node spans`);
           GUARD
-      - name: Mutate ${{ matrix.mutate }}
-        run: npx stryker run --mutate "${{ matrix.mutate }}"
+      - name: Mutate ${{ matrix.file }}
+        run: npx stryker run --mutate "${{ matrix.file }}"
       # A zero-mutant shard reports NaN score and passes green even under
       # thresholds.break (NaN < break is false), so a drift-emptied range
       # would otherwise pass silently. Fail closed on an empty report.
       - name: Verify this ranged shard produced mutants
-        if: contains(matrix.mutate, ':')
+        if: contains(matrix.file, ':')
         shell: bash
         run: |
           set -euo pipefail
