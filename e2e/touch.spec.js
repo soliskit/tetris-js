@@ -272,7 +272,7 @@ test('dragging down soft drops one row per cell dragged [INP-5] [PLY-3]', async 
   await page.addInitScript(
     (values) => {
       for (const [key, value] of Object.entries(values))
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, String(value));
     },
     savedGame({
       piece: PieceColors.yellow,

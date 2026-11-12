@@ -27,9 +27,12 @@ test.skip(
   'simulated touch runs on the Chromium phone project only'
 );
 
+/** @param {number[][]} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, c]) => c));
+/** @param {number[][]} cells */
 const minRow = (cells) => Math.min(...cells.map(([r]) => r));
 // Normalized shape: translation by gravity does not change it, rotation does.
+/** @param {number[][]} cells */
 const shapeOf = (cells) => {
   const r0 = minRow(cells);
   const c0 = minColumn(cells);

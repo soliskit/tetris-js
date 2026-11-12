@@ -25,9 +25,10 @@ void test('createBoard makes rows of empty, independent cells [PCE-1]', () => {
   const board = createBoard(20, 10);
   assert.equal(board.length, 20);
   assert.ok(board.every((row) => row.length === 10));
-  assert.ok(
-    board.flat().every((cell) => cell.isFilled === false && cell.color === null)
-  );
+  for (const cell of board.flat()) {
+    assert.equal(cell.isFilled, false);
+    assert.equal(cell.color, null);
+  }
   board[0][0].isFilled = true;
   assert.equal(board[0][1].isFilled, false);
   assert.equal(board[1][0].isFilled, false);
