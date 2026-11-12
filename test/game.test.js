@@ -23,6 +23,7 @@ import {
 void test('rotations are generated clockwise from the spawn shape [PCE-2] [PCE-4]', () => {
   const t = pieceByColor(PieceColors.purple);
   assert.equal(t.rotations.length, 4);
+  /** @param {boolean[][]} shape */
   const toStrings = (shape) =>
     shape.map((row) => row.map((b) => (b ? 'X' : '.')).join(''));
   assert.deepEqual(toStrings(t.rotations[1]), ['.X.', '.XX', '.X.']);
