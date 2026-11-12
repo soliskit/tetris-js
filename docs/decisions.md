@@ -12,7 +12,7 @@ Current approved decisions with implementation checks still pending. Requirement
 
 ## SAVE-1 and VALID-1 evidence reconciliation
 
-The retired [audit blueprint](https://github.com/soliskit/tetris-js/blob/1354e7711d02070b0f6d54849646657e1965aeef/docs/audit/audit-blueprint.txt) defines Phase 8 in section 8 and persistence ordering in property O4. Persistence ordering means preserving the required last-good saved representation until the transition has passed the required validation boundary. Those existing criteria govern this reconciliation.
+The retired audit blueprint defines Phase 8 in section 8 and persistence ordering in property O4. Persistence ordering means preserving the required last-good saved representation until the transition has passed the required validation boundary. Those existing criteria govern this reconciliation.
 
 Read-only reconciliation on November 4, 2026. The Pending work labels above remain unchanged. Supported implementation evidence is separate from the historical proof needed for the re-proof and re-falsification phase (Phase 8); this record does not certify a phase or a live deployment.
 
