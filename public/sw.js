@@ -39,14 +39,18 @@ const APP_SHELL = [
 ];
 
 // `self` is this service worker; the cast tells the type checker so.
-const worker = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
+const worker = /** @type {ServiceWorkerGlobalScope} */ (
+  /** @type {unknown} */ (self)
+);
 
 /** @param {string} name */
-const versionNumber = name => parseInt(name.slice(VERSION_PREFIX.length), 10);
+const versionNumber = (name) => parseInt(name.slice(VERSION_PREFIX.length), 10);
 
 /** @returns {Promise<string[]>} Every version cache, oldest first. */
 async function versionNames() {
-  const names = (await caches.keys()).filter(name => name.startsWith(VERSION_PREFIX));
+  const names = (await caches.keys()).filter((name) =>
+    name.startsWith(VERSION_PREFIX)
+  );
   return names.sort((a, b) => versionNumber(a) - versionNumber(b));
 }
 
@@ -57,7 +61,8 @@ async function completeVersions() {
   /** @type {string[]} */
   const complete = [];
   for (const name of (await versionNames()).reverse()) {
-    if ((await (await caches.open(name)).keys()).length > 0) complete.push(name);
+    if ((await (await caches.open(name)).keys()).length > 0)
+      complete.push(name);
   }
   return complete;
 }
@@ -68,21 +73,24 @@ async function newestVersion() {
 }
 
 /** @param {string} clientId */
-const pinKey = clientId => `pins/${encodeURIComponent(clientId)}`;
+const pinKey = (clientId) => `pins/${encodeURIComponent(clientId)}`;
 
 /**
  * @param {string} clientId
  * @param {string} version
  */
 async function pin(clientId, version) {
-  await (await caches.open(PINS)).put(pinKey(clientId), Response.json({ version, at: Date.now() }));
+  await (
+    await caches.open(PINS)
+  ).put(pinKey(clientId), Response.json({ version, at: Date.now() }));
 }
 
 /**
  * @param {Request} key
  * @returns {string} The page whose record this is.
  */
-const pinClient = key => decodeURIComponent(new URL(key.url).pathname.split('/').pop() ?? '');
+const pinClient = (key) =>
+  decodeURIComponent(new URL(key.url).pathname.split('/').pop() ?? '');
 
 // Pin notes are stored data: an unreadable one counts as none in cleanup
 // (SAF-2), so reading never throws and one bad note cannot interrupt version
@@ -96,8 +104,20 @@ async function readPin(response) {
   try {
     /** @type {unknown} */
     const note = await response?.json();
-    if (typeof note !== 'object' || note === null || !('version' in note) || typeof note.version !== 'string') return null;
-    return { version: note.version, at: 'at' in note && typeof note.at === 'number' && Number.isFinite(note.at) ? note.at : null };
+    if (
+      typeof note !== 'object' ||
+      note === null ||
+      !('version' in note) ||
+      typeof note.version !== 'string'
+    )
+      return null;
+    return {
+      version: note.version,
+      at:
+        'at' in note && typeof note.at === 'number' && Number.isFinite(note.at)
+          ? note.at
+          : null
+    };
   } catch {
     return null;
   }
@@ -112,13 +132,22 @@ async function readPin(response) {
  * @returns {Promise<string | null>}
  */
 async function versionFor(clientId) {
-  const pinned = clientId ? await caches.match(pinKey(clientId), { cacheName: PINS }) : undefined;
+  const pinned = clientId
+    ? await caches.match(pinKey(clientId), { cacheName: PINS })
+    : undefined;
   if (!pinned) return newestVersion();
   /** @type {unknown} */
   const note = await pinned.json();
-  if (typeof note !== 'object' || note === null || !('version' in note) || typeof note.version !== 'string')
+  if (
+    typeof note !== 'object' ||
+    note === null ||
+    !('version' in note) ||
+    typeof note.version !== 'string'
+  )
     throw new TypeError('malformed pin: no string version');
-  return note.version && await caches.has(note.version) ? note.version : newestVersion();
+  return note.version && (await caches.has(note.version))
+    ? note.version
+    : newestVersion();
 }
 
 /**
@@ -126,7 +155,9 @@ async function versionFor(clientId) {
  * @param {string | null} version
  */
 async function answer(request, version) {
-  const cached = version ? await caches.match(request, { cacheName: version, ignoreSearch: true }) : undefined;
+  const cached = version
+    ? await caches.match(request, { cacheName: version, ignoreSearch: true })
+    : undefined;
   // Not cached: ask the network, or a plain network error if offline.
   return cached ?? fetch(request).catch(() => Response.error());
 }
@@ -134,7 +165,8 @@ async function answer(request, version) {
 /** @param {FetchEvent} event */
 async function openPage(event) {
   const version = await newestVersion();
-  if (version && event.resultingClientId) await pin(event.resultingClientId, version);
+  if (version && event.resultingClientId)
+    await pin(event.resultingClientId, version);
   return answer(event.request, version);
 }
 
@@ -153,7 +185,11 @@ async function removeOldVersions() {
   // deleted under it. Only a record whose page is gone can expire by time.
   // A page still loading is not yet controlled by this worker, so the list
   // asks for uncontrolled pages too.
-  const live = new Set((await worker.clients.matchAll({ includeUncontrolled: true })).map(client => client.id));
+  const live = new Set(
+    (await worker.clients.matchAll({ includeUncontrolled: true })).map(
+      (client) => client.id
+    )
+  );
   let unreadableLive = false;
   for (const key of await pins.keys()) {
     const pinned = await pins.match(key);
@@ -168,12 +204,17 @@ async function removeOldVersions() {
       continue;
     }
     if (live.has(pinClient(key))) kept.add(note.version);
-    else if (note.at === null || Date.now() - note.at <= PIN_MS) kept.add(note.version);
+    else if (note.at === null || Date.now() - note.at <= PIN_MS)
+      kept.add(note.version);
     else await pins.delete(key);
   }
   if (unreadableLive) return;
   for (const name of await versionNames()) {
-    if (versionNumber(name) < versionNumber(newest) && !kept.has(name) && !(await isPinned(pins, name))) {
+    if (
+      versionNumber(name) < versionNumber(newest) &&
+      !kept.has(name) &&
+      !(await isPinned(pins, name))
+    ) {
       await caches.delete(name);
     }
   }
@@ -202,11 +243,14 @@ async function isPinned(pins, version) {
 // browser's own copy, which may be minutes old.
 async function download() {
   const names = await versionNames();
-  const number = names.length > 0 ? versionNumber(names[names.length - 1]) + 1 : 1;
+  const number =
+    names.length > 0 ? versionNumber(names[names.length - 1]) + 1 : 1;
   // The random part keeps downloads that start at the same time apart.
   const name = `${VERSION_PREFIX}${String(number)}-${Math.random().toString(36).slice(2)}`;
   try {
-    await (await caches.open(name)).addAll(APP_SHELL.map(file => new Request(file, { cache: 'no-cache' })));
+    await (
+      await caches.open(name)
+    ).addAll(APP_SHELL.map((file) => new Request(file, { cache: 'no-cache' })));
   } catch (error) {
     await caches.delete(name);
     throw error;
@@ -215,19 +259,23 @@ async function download() {
   await removeOldVersions().catch(() => {});
 }
 
-worker.addEventListener('install', event => {
+worker.addEventListener('install', (event) => {
   event.waitUntil(download());
   void worker.skipWaiting();
 });
 
-worker.addEventListener('activate', event => {
+worker.addEventListener('activate', (event) => {
   event.waitUntil(worker.clients.claim());
 });
 
-worker.addEventListener('fetch', event => {
+worker.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.mode !== 'navigate') {
-    event.respondWith(versionFor(event.clientId).then(version => answer(event.request, version)));
+    event.respondWith(
+      versionFor(event.clientId).then((version) =>
+        answer(event.request, version)
+      )
+    );
     return;
   }
   const opened = openPage(event);

@@ -44,7 +44,20 @@ const KEY_ACTIONS = {
 };
 
 // Standard gamepad mapping button indices.
-const PAD_BUTTONS = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, view: 8, menu: 9, up: 12, down: 13, left: 14, right: 15 };
+const PAD_BUTTONS = {
+  a: 0,
+  b: 1,
+  x: 2,
+  y: 3,
+  lb: 4,
+  rb: 5,
+  view: 8,
+  menu: 9,
+  up: 12,
+  down: 13,
+  left: 14,
+  right: 15
+};
 /** @type {Array<[string, PlayerActionValue]>} */
 const PAD_ACTIONS = [
   ['y', PlayerAction.continueGame],
@@ -93,10 +106,10 @@ export class InputController {
     /** Blur blocks horizontal and down pad input until both return to rest. */
     this.padNeedsRest = false;
 
-    window.addEventListener('keydown', event => {
+    window.addEventListener('keydown', (event) => {
       this.handleKey(event, true);
     });
-    window.addEventListener('keyup', event => {
+    window.addEventListener('keyup', (event) => {
       this.handleKey(event, false);
     });
     window.addEventListener('blur', () => {
@@ -169,21 +182,33 @@ export class InputController {
       } else if (pressed && key === 'Escape') {
         event.preventDefault();
         this.gameManager.cancelNewGame();
-      } else if (pressed && (event.code === 'ArrowLeft' || event.code === 'ArrowRight')) {
+      } else if (
+        pressed &&
+        (event.code === 'ArrowLeft' || event.code === 'ArrowRight')
+      ) {
         event.preventDefault();
         this.questionButtons.move(event.code === 'ArrowLeft' ? -1 : 1);
       }
       return;
     }
 
-    const handled = key === 'KeyA' || key === 'KeyD' || key === 'KeyS' || key === 'KeyP' || key === 'Escape' || key in KEY_ACTIONS;
+    const handled =
+      key === 'KeyA' ||
+      key === 'KeyD' ||
+      key === 'KeyS' ||
+      key === 'KeyP' ||
+      key === 'Escape' ||
+      key in KEY_ACTIONS;
     if (!handled) return;
     event.preventDefault();
     if (pressed && event.repeat) return;
 
     if (key === 'KeyA' || key === 'KeyD') {
       if (pressed && fresh && this.gameManager.state === GameState.playing) {
-        this.heldDirections.set(token, key === 'KeyA' ? PlayerAction.moveLeft : PlayerAction.moveRight);
+        this.heldDirections.set(
+          token,
+          key === 'KeyA' ? PlayerAction.moveLeft : PlayerAction.moveRight
+        );
       } else if (!pressed) this.heldDirections.delete(token);
       this.resumeHeldMovement();
     } else if (key === 'KeyS') {
@@ -203,7 +228,7 @@ export class InputController {
 
   /** @returns {boolean} Whether a gamepad is connected. */
   pollGamepads() {
-    const gamepad = navigator.getGamepads().find(pad => pad?.connected);
+    const gamepad = navigator.getGamepads().find((pad) => pad?.connected);
     if (!gamepad) return false;
     const pressed = new Set(
       Object.entries(PAD_BUTTONS)
@@ -222,12 +247,18 @@ export class InputController {
    */
   processInput(pressed, xAxis, yAxis) {
     const wasPlaying = this.gameManager.state === GameState.playing;
-    const newPresses = new Set([...pressed].filter(button => !this.heldButtons.has(button)));
+    const newPresses = new Set(
+      [...pressed].filter((button) => !this.heldButtons.has(button))
+    );
     this.heldButtons = pressed;
     const [directions, drops] = this.readPadControls(pressed, xAxis, yAxis);
     // Dialog navigation keeps its existing left-first physical selection.
-    const direction = xAxis < -0.5 || pressed.has('left') ? PlayerAction.moveLeft
-      : xAxis > 0.5 || pressed.has('right') ? PlayerAction.moveRight : null;
+    const direction =
+      xAxis < -0.5 || pressed.has('left')
+        ? PlayerAction.moveLeft
+        : xAxis > 0.5 || pressed.has('right')
+          ? PlayerAction.moveRight
+          : null;
     // Blur requires horizontal and down controls to return to rest together.
     if (directions.size === 0 && drops.size === 0) this.padNeedsRest = false;
     const previousDirections = this.padDirections;
@@ -242,7 +273,8 @@ export class InputController {
     if (this.gameManager.isConfirmingNewGame) {
       if (newPresses.has('a')) this.questionButtons.press();
       else if (newPresses.has('b')) this.gameManager.cancelNewGame();
-      else if (direction && direction !== this.padDirection) this.questionButtons.move(direction === PlayerAction.moveLeft ? -1 : 1);
+      else if (direction && direction !== this.padDirection)
+        this.questionButtons.move(direction === PlayerAction.moveLeft ? -1 : 1);
       this.padDirection = direction;
       return;
     }
@@ -263,17 +295,25 @@ export class InputController {
     } else {
       // Each action once, even when two of its buttons are pressed together:
       // A and pad up at once must not hard drop two pieces.
-      const actions = new Set(PAD_ACTIONS.filter(([button]) => newPresses.has(button)).map(([, action]) => action));
+      const actions = new Set(
+        PAD_ACTIONS.filter(([button]) => newPresses.has(button)).map(
+          ([, action]) => action
+        )
+      );
       for (const action of actions) this.gameManager.handleAction(action);
     }
 
     // Admit only fresh physical holds made during play. Remember spent
     // holds in the pad snapshot, so resume or an unrelated release cannot
     // make them fresh. A stick reversal is a new hold of that same token.
-    const active = wasPlaying && this.gameManager.state === GameState.playing && !this.padNeedsRest;
+    const active =
+      wasPlaying &&
+      this.gameManager.state === GameState.playing &&
+      !this.padNeedsRest;
     let movementChanged = false;
     for (const [token, held] of previousDirections) {
-      if (directions.get(token) !== held) movementChanged = this.heldDirections.delete(token) || movementChanged;
+      if (directions.get(token) !== held)
+        movementChanged = this.heldDirections.delete(token) || movementChanged;
     }
     for (const [token, held] of directions) {
       if (active && previousDirections.get(token) !== held) {
@@ -392,7 +432,7 @@ export class InputController {
     // Disconnect remains a keyboard reset, unlike an ordinary pause.
     this.heldKeys.clear();
     try {
-      const gamepad = navigator.getGamepads().find(pad => pad?.connected);
+      const gamepad = navigator.getGamepads().find((pad) => pad?.connected);
       if (!gamepad) {
         this.releaseAllInput();
         return;
@@ -402,10 +442,17 @@ export class InputController {
           .filter(([, index]) => gamepad.buttons[index]?.pressed)
           .map(([name]) => name)
       );
-      [this.padDirections, this.padDrops] = this.readPadControls(this.heldButtons, gamepad.axes[0] ?? 0, -(gamepad.axes[1] ?? 0));
-      this.padDirection = gamepad.axes[0] < -0.5 || this.heldButtons.has('left') ? PlayerAction.moveLeft
-        : gamepad.axes[0] > 0.5 || this.heldButtons.has('right') ? PlayerAction.moveRight
-          : null;
+      [this.padDirections, this.padDrops] = this.readPadControls(
+        this.heldButtons,
+        gamepad.axes[0] ?? 0,
+        -(gamepad.axes[1] ?? 0)
+      );
+      this.padDirection =
+        gamepad.axes[0] < -0.5 || this.heldButtons.has('left')
+          ? PlayerAction.moveLeft
+          : gamepad.axes[0] > 0.5 || this.heldButtons.has('right')
+            ? PlayerAction.moveRight
+            : null;
     } catch (error) {
       console.error('Tetris gamepad error:', error);
     }
