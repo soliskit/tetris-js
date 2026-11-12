@@ -28,6 +28,10 @@ jobs:
           cache: npm
       - run: npm install --global npm@12.2.0
       - run: npm ci
+      - uses: actions/setup-python@v6
+      - run: pip install ruff==0.17.4
+      - run: ruff check .
+      - run: ruff format --check .
       - run: npm run lint
       - run: npm run format:check
       - run: npx playwright install --with-deps chromium webkit
