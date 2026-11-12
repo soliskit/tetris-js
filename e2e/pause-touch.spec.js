@@ -222,9 +222,10 @@ async function recordNative(page) {
             globalThis.pauseEventOverflow++;
             return;
           }
-          const label = document
-            .getElementById('playPauseButton')
-            .getAttribute('aria-label');
+          const button = document.getElementById('playPauseButton');
+          if (!button)
+            throw new Error('pause-touch: #playPauseButton not found');
+          const label = button.getAttribute('aria-label');
           globalThis.pauseEvents.push({
             type,
             constructor:
@@ -287,9 +288,9 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
     await page.clock.runFor(17);
     await page.evaluate((type) => {
       if (globalThis.pauseStates.length >= 32) return;
-      const label = document
-        .getElementById('playPauseButton')
-        .getAttribute('aria-label');
+      const button = document.getElementById('playPauseButton');
+      if (!button) throw new Error('pause-touch: #playPauseButton not found');
+      const label = button.getAttribute('aria-label');
       globalThis.pauseStates.push({
         dispatch: type,
         label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
@@ -385,9 +386,9 @@ async function nativeControls(page) {
     await page.clock.runFor(17);
     await page.evaluate((type) => {
       if (globalThis.pauseStates.length >= 32) return;
-      const label = document
-        .getElementById('playPauseButton')
-        .getAttribute('aria-label');
+      const button = document.getElementById('playPauseButton');
+      if (!button) throw new Error('pause-touch: #playPauseButton not found');
+      const label = button.getAttribute('aria-label');
       globalThis.pauseStates.push({
         dispatch: type,
         label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
