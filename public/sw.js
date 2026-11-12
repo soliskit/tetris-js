@@ -104,15 +104,21 @@ async function readPin(response) {
 }
 
 // The version a page opened with, while it still exists, or else the newest.
+// A pin stores untrusted JSON; one that does not name a string version fails
+// loudly here, as a null pin always has, rather than silently answering from
+// a version the page never opened with.
 /**
  * @param {string} clientId
  * @returns {Promise<string | null>}
  */
 async function versionFor(clientId) {
   const pinned = clientId ? await caches.match(pinKey(clientId), { cacheName: PINS }) : undefined;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access -- a pin is parsed JSON and arrives untyped; a malformed (null) pin throws here, exactly as before this change.
-  const version = pinned ? /** @type {{ version: string }} */ (await pinned.json()).version : null;
-  return version && await caches.has(version) ? version : newestVersion();
+  if (!pinned) return newestVersion();
+  /** @type {unknown} */
+  const note = await pinned.json();
+  if (typeof note !== 'object' || note === null || !('version' in note) || typeof note.version !== 'string')
+    throw new TypeError('malformed pin: no string version');
+  return note.version && await caches.has(note.version) ? note.version : newestVersion();
 }
 
 /**

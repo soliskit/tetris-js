@@ -56,6 +56,7 @@ void test('record grammar rejects duplicate escaped members and malformed metada
   assert.deepEqual(parseUniqueJSON('{"a":[{},[],{"b":3}]}'), {
     a: [{}, [], { b: 3 }]
   });
+  assert.equal(parseUniqueJSON(null), null);
   assert.throws(() => parseUniqueJSON(''));
   assert.throws(() => parseUniqueJSON('{"a":{"x":1,"x":2}}'));
   assert.equal(hasFields(null, []), false);
@@ -175,6 +176,10 @@ void test('count16 is only accepted resting and required history never defaults 
     remove(data, field);
     assert.equal(parseSession(JSON.stringify(data), size), null);
   }
+});
+
+void test('a missing save reads as no session [SAF-2]', () => {
+  assert.equal(parseSession(null, { rows: 20, columns: 10 }), null);
 });
 
 void test('lowest-row history tracks occupied current-piece blocks and allows older deeper history [STA-4] [PLY-6]', () => {
