@@ -306,7 +306,7 @@ jobs:
           path: done-${{ matrix.name }}.txt
           retention-days: 1
           overwrite: true
-      - if: always()
+      - if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: mutation-report-${{ matrix.name }}
