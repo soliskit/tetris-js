@@ -6,6 +6,10 @@ import {
   savedGame
 } from './helpers.js';
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {boolean} [frameDriven]
+ */
 async function setup(page, frameDriven = false) {
   await page.clock.install();
   const saved = savedGame({
@@ -15,7 +19,7 @@ async function setup(page, frameDriven = false) {
   if (frameDriven) {
     await page.addInitScript((values) => {
       for (const [key, value] of Object.entries(values))
-        localStorage.setItem(key, value);
+        localStorage.setItem(key, String(value));
     }, saved);
     await page.goto('/');
     await page.waitForFunction(() =>
@@ -55,6 +59,10 @@ async function setup(page, frameDriven = false) {
   );
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} type
+ */
 async function touchPause(page, type, options = {}) {
   await page.locator('#playPauseButton').evaluate(
     (button, { type, options }) => {
@@ -86,6 +94,7 @@ for (const boardFirst of [false, true]) {
     }, testInfo) => {
       await setup(page);
       const board = await page.locator('#tetris').boundingBox();
+      if (!board) throw new Error('pause-touch: #tetris has no bounding box');
       const x = board.x + board.width / 2;
       const y = board.y + board.height / 2;
       await page.mouse.move(x, y);
@@ -191,6 +200,9 @@ test('synthetic secondary touch Pause ignores canceled and leave-return taps but
   }
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function recordNative(page) {
   await page.evaluate(() => {
     globalThis.pauseEvents = [];
@@ -231,7 +243,7 @@ async function recordNative(page) {
             target: ['playPauseButton', 'tetris'].includes(event.target.id)
               ? event.target.id
               : 'other',
-            stateAtCapture: ['Pause', 'Resume'].includes(label)
+            stateAtCapture: ['Pause', 'Resume'].includes(String(label))
               ? label
               : 'other'
           });
@@ -242,11 +254,19 @@ async function recordNative(page) {
   });
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {boolean} boardFirst
+ * @param {boolean} dragging
+ */
 async function nativeTwoTouch(page, boardFirst, dragging) {
   await setup(page, true);
   await recordNative(page);
   const board = await page.locator('#tetris').boundingBox();
   const button = await page.locator('#playPauseButton').boundingBox();
+  if (!board) throw new Error('pause-touch: #tetris has no bounding box');
+  if (!button)
+    throw new Error('pause-touch: #playPauseButton has no bounding box');
   const finger = {
     id: 0,
     x: board.x + board.width / 2,
@@ -258,6 +278,10 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
     y: button.y + button.height / 2
   };
   const cdp = await page.context().newCDPSession(page);
+  /**
+   * @param {'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel'} type
+   * @param {Array<{ id: number, x: number, y: number }>} touchPoints
+   */
   const send = async (type, touchPoints) => {
     await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
     await page.clock.runFor(17);
@@ -268,7 +292,7 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
         .getAttribute('aria-label');
       globalThis.pauseStates.push({
         dispatch: type,
-        label: ['Pause', 'Resume'].includes(label) ? label : 'other'
+        label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
       });
     }, type);
   };
@@ -340,13 +364,22 @@ async function nativeTwoTouch(page, boardFirst, dragging) {
   await cdp.detach();
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function nativeControls(page) {
   await setup(page, true);
   await recordNative(page);
   const box = await page.locator('#playPauseButton').boundingBox();
+  if (!box)
+    throw new Error('pause-touch: #playPauseButton has no bounding box');
   const point = { id: 0, x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const away = { ...point, x: 1, y: 1 };
   const cdp = await page.context().newCDPSession(page);
+  /**
+   * @param {'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel'} type
+   * @param {Array<{ id: number, x: number, y: number }>} touchPoints
+   */
   const send = async (type, touchPoints) => {
     await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
     await page.clock.runFor(17);
@@ -357,7 +390,7 @@ async function nativeControls(page) {
         .getAttribute('aria-label');
       globalThis.pauseStates.push({
         dispatch: type,
-        label: ['Pause', 'Resume'].includes(label) ? label : 'other'
+        label: ['Pause', 'Resume'].includes(String(label)) ? label : 'other'
       });
     }, type);
   };

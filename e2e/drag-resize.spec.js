@@ -43,6 +43,9 @@ test.afterEach(async ({ page }, testInfo) => {
   expect(errors).toEqual([]);
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function boardBitmapSnapshot(page) {
   return page.locator('#tetris').evaluate((c) => {
     const r = c.getBoundingClientRect();
@@ -85,6 +88,9 @@ const shapeOf = (cells) => {
 // Each case uses score0/level1: gravity first runs at700ms. Stop setup
 // inconclusively before34playing frames(578ms), never poll through gravity.
 const playingFrames = new WeakMap();
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function advancePlayingFrame(page) {
   const frames = (playingFrames.get(page) ?? 0) + 1;
   if (frames > 34)
@@ -111,6 +117,9 @@ test('the initial board bitmap reaches its native CSS size [DSP-2]', async ({
     .toBe(true);
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function pausedClockPiece(page) {
   await page.clock.install();
   await continueSavedGame(
@@ -136,6 +145,7 @@ async function pausedClockPiece(page) {
     [6, 4],
     [6, 5]
   ];
+  /** @type {Array<[number, number]>} */
   let cells = [];
   let sized = false;
   const sizingSamples = [];
@@ -264,6 +274,9 @@ for (const resize of ['shrink', 'grow']) {
   }
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 async function syntheticDrag(page) {
   await page.locator('#tetris').evaluate((canvas) => {
     canvas.setPointerCapture = () => {};

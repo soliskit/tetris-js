@@ -16,14 +16,21 @@ test.skip(
   'touch gestures run on the phone sized project'
 );
 
+/** @param {number[][]} cells */
 const minColumn = (cells) => Math.min(...cells.map(([, c]) => c));
+/** @param {number[][]} cells */
 const minRow = (cells) => Math.min(...cells.map(([r]) => r));
+/** @param {number[][]} cells */
 const shapeOf = (cells) => {
   const r0 = minRow(cells);
   const c0 = minColumn(cells);
   return JSON.stringify(cells.map(([r, c]) => [r - r0, c - c0]).sort());
 };
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {Parameters<typeof savedGame>[0]} options
+ */
 async function playSaved(page, options) {
   await continueSavedGame(page, savedGame(options));
   await page.keyboard.press('KeyP');
@@ -62,7 +69,13 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   await page.keyboard.press('KeyP');
   await page.clock.runFor(17);
   const box = await page.locator('#tetris').boundingBox();
+  if (!box) throw new Error('touch: #tetris has no bounding box');
   const cell = box.width / 10;
+  /**
+   * @param {number} id
+   * @param {number} column
+   * @param {number} row
+   */
   const finger = (id, column, row) => ({
     id,
     x: box.x + cell * column,
@@ -70,6 +83,10 @@ test('a second finger on the board does nothing: the first keeps its drag, and n
   });
   const cdp = await page.context().newCDPSession(page);
   // Lists every finger still down; the one added or left out is the one that changed.
+  /**
+   * @param {'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel'} type
+   * @param {Array<{ id: number, x: number, y: number }>} fingers
+   */
   const send = (type, fingers) =>
     cdp.send('Input.dispatchTouchEvent', { type, touchPoints: fingers });
   const piece = async () => {
@@ -144,6 +161,7 @@ for (const { name, distances, rotates, cancel = false } of [
     });
     const first = shapeOf(await cellsOf(page, PieceColors.purple));
     const box = await page.locator('#tetris').boundingBox();
+    if (!box) throw new Error('touch: #tetris has no bounding box');
     const start = {
       x: Math.round(box.x + box.width / 2),
       y: Math.round(box.y + box.height / 2)
@@ -439,8 +457,13 @@ test('a piece pushed against a ledge slides in once it drops below it [INP-5]', 
   await touch.up();
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} selector
+ */
 async function centerOf(page, selector) {
   const box = await page.locator(selector).boundingBox();
+  if (!box) throw new Error(`touch: ${selector} has no bounding box`);
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 

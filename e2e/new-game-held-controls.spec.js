@@ -8,6 +8,9 @@ test.beforeEach(async ({ page }) => {
   await page.clock.pauseAt(new Date());
 });
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 const pieceCells = async (page) =>
   (await boardCells(page)).flatMap((row, r) =>
     row.flatMap((color, c) => (color ? [[r, c]] : []))
