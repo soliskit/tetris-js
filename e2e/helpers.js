@@ -18,6 +18,16 @@ export const BOARD_COLOR = PieceColors.blue;
 
 // Builds a saved game in Node with the real engine, for the page to continue.
 // board: list of [row, column] cells to fill. piece: color of every piece.
+/**
+ * @param {object} options
+ * @param {string} options.piece
+ * @param {Array<[number, number]>} [options.board]
+ * @param {{ row: number, column: number }} [options.position]
+ * @param {number} [options.rotationState]
+ * @param {number} [options.score]
+ * @param {number} [options.lockDelayResetCount]
+ * @returns {Record<string, string | null>}
+ */
 export function savedGame({
   piece,
   board = [],
@@ -54,7 +64,12 @@ export function savedGame({
 }
 
 // Rows fully filled except the listed columns, as [row, column] cells.
+/**
+ * @param {number[]} rows
+ * @param {number[]} exceptColumns
+ */
 export function rowsExcept(rows, exceptColumns) {
+  /** @type {Array<[number, number]>} */
   const cells = [];
   for (const row of rows)
     for (let column = 0; column < 10; column++) {
@@ -64,6 +79,10 @@ export function rowsExcept(rows, exceptColumns) {
 }
 
 // Opens the game with a saved game in storage and continues it (paused).
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {Record<string, string | null>} saved
+ */
 export async function continueSavedGame(page, saved) {
   await page.addInitScript((values) => {
     if (sessionStorage.getItem('seeded')) return;
@@ -76,6 +95,10 @@ export async function continueSavedGame(page, saved) {
   await expectLabel(page, 'Resume');
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} label
+ */
 export async function expectLabel(page, label) {
   await page.waitForFunction(
     (text) =>
@@ -87,6 +110,9 @@ export async function expectLabel(page, label) {
 
 // The piece color at the center of every board cell, or null when empty.
 // Ghost pieces are outlines, so their centers read as empty.
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 export function boardCells(page) {
   return page.evaluate(() => {
     const canvas = document.getElementById('tetris');
@@ -120,27 +146,39 @@ export function boardCells(page) {
 }
 
 // [row, column] of every cell showing the given color.
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} color
+ */
 export async function cellsOf(page, color) {
   const cells = await boardCells(page);
+  /** @type {Array<[number, number]>} */
   const result = [];
-  cells.forEach((row, r) =>
+  cells.forEach((row, r) => {
     row.forEach((value, c) => {
       if (value === color) result.push([r, c]);
-    })
-  );
+    });
+  });
   return result;
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 export async function filledCount(page) {
   return (await boardCells(page)).flat().filter(Boolean).length;
 }
 
 // Whether a canvas has any opaque pixels drawn on it.
+/**
+ * @param {import('@playwright/test').Page} page
+ * @param {string} id
+ */
 export function canvasHasDrawing(page, id) {
   return page.evaluate((id) => {
     const canvas = document.getElementById(id);
     if (!(canvas instanceof HTMLCanvasElement))
-      throw new Error(`canvasHasDrawing: #${String(id)} is not a canvas`);
+      throw new Error(`canvasHasDrawing: #${id} is not a canvas`);
     const context = canvas.getContext('2d');
     if (!context) throw new Error('canvasHasDrawing: no 2d context');
     const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -149,6 +187,9 @@ export function canvasHasDrawing(page, id) {
   }, id);
 }
 
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 export const isChromium = (page) => {
   const browser = page.context().browser();
   if (!browser) throw new Error('isChromium: page has no browser');
@@ -159,15 +200,23 @@ export const isChromium = (page) => {
 // events through the DevTools Protocol. Playwright cannot drag a finger in
 // WebKit, so there the same gestures use the mouse; the game reads both
 // through the same pointer events.
+/**
+ * @param {import('@playwright/test').Page} page
+ */
 export async function boardTouch(page) {
   const box = await page.locator('#tetris').boundingBox();
   if (!box) throw new Error('boardTouch: #tetris has no bounding box');
   const cell = box.width / 10;
   let last = null;
+  /**
+   * @param {number} column
+   * @param {number} row
+   */
   const point = (column, row) => ({
     x: box.x + cell * column,
     y: box.y + cell * row
   });
+  /** @type {(type: string, p?: { x: number, y: number }) => Promise<unknown>} */
   let send;
   if (isChromium(page)) {
     const cdp = await page.context().newCDPSession(page);
@@ -184,11 +233,20 @@ export async function boardTouch(page) {
   }
   return {
     cell,
+    /**
+     * @param {number} column
+     * @param {number} row
+     */
     async down(column, row) {
       last = point(column, row);
       await send('touchStart', last);
     },
     // Moves in small steps, like a real finger.
+    /**
+     * @param {number} columns
+     * @param {number} rows
+     * @param {number} [steps]
+     */
     async moveBy(columns, rows, steps = 8) {
       const start = last;
       for (let i = 1; i <= steps; i++) {
