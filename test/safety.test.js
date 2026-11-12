@@ -97,7 +97,9 @@ void test('an error inside the gravity timer stops the game safely and is report
   assert.equal(game.lockDelayTask, null);
   assert.equal(scheduler.pending, 1, 'only gravity is waiting');
   factory.broken = true;
-  assert.doesNotThrow(() => scheduler.advance(700));
+  assert.doesNotThrow(() => {
+    scheduler.advance(700);
+  });
   assertSafeStop(game, scheduler, reported, 'unexpected error');
   assert.equal(reported[0].error.message, 'factory failure');
 });
@@ -190,7 +192,12 @@ void test('after a fault no action or timer restarts play or changes the game [S
         game.togglePause();
       }
     ],
-    ['time passing', () => scheduler.advance(5000)]
+    [
+      'time passing',
+      () => {
+        scheduler.advance(5000);
+      }
+    ]
   ];
   for (const [name, attempt] of attempts) {
     attempt();
@@ -530,7 +537,9 @@ void test('an error while checking the invariants stops the game safely, even if
     }
   });
   game.nextTetrominos = null; // breaks the check itself, not one of its invariants
-  assert.doesNotThrow(() => scheduler.advance(700));
+  assert.doesNotThrow(() => {
+    scheduler.advance(700);
+  });
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
   assert.equal(game.faults.length, 1);

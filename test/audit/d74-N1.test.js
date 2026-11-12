@@ -24,13 +24,19 @@ void test('a fault after a confirmed New Game stops safely and keeps the old pos
   const real = createFakeScheduler();
   let boom = false;
   const scheduler = {
+    /**
+     * @param {() => void} cb
+     * @param {number} ms
+     */
     setTimeout: (cb, ms) => {
       if (boom) throw new Error('scheduler fault');
       return real.setTimeout(cb, ms);
     },
+    /** @param {number} h */
     clearTimeout: (h) => {
       real.clearTimeout(h);
     },
+    /** @param {number} ms */
     advance: (ms) => {
       real.advance(ms);
     },

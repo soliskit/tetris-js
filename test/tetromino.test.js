@@ -7,6 +7,7 @@ import { PieceColors } from '../public/game/tetrominoFactory.js';
 import { filled, pieceByColor, shapeStrings } from './helpers.js';
 
 // Standard Super Rotation System states: spawn, clockwise, 180, counterclockwise.
+/** @type {Record<string, string[][]>} */
 const SRS_SHAPES = {
   cyan: [
     ['....', 'XXXX', '....', '....'],
@@ -305,6 +306,7 @@ const SRS_KICKS_I = [
   ]
 ];
 // The game uses rows that count down the screen, so y flips sign.
+/** @param {number[][][]} table */
 const asPositions = (table) =>
   table.map((kicks) => kicks.map(([x, y]) => position(0 - y, x)));
 
