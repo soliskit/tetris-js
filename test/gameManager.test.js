@@ -32,6 +32,30 @@ import { oracle } from './saveOracle.js';
 
 const { cyan, yellow, purple, green, red, orange } = PieceColors;
 
+/**
+ * Reads and parses a stored record; fails the test when the record is absent
+ * or invalid, which is exactly where the read sites already threw.
+ * @param {import('../public/game/gameManager.js').KeyValueStorage} storage
+ * @param {string} key
+ */
+function readRecord(storage, key) {
+  const raw = storage.getItem(key);
+  assert.ok(raw);
+  return parseRecord(raw);
+}
+
+/**
+ * Parses saved-record bytes; fails the test when invalid, which is exactly
+ * where the read sites already threw.
+ * @param {string} text
+ */
+function parseRecord(text) {
+  const record = parseSavedRecord(text);
+  assert.ok(record);
+  return record;
+}
+
+/** @param {GameManager} game */
 function snapshot(game) {
   return JSON.stringify({
     state: game.state,
@@ -43,6 +67,7 @@ function snapshot(game) {
   });
 }
 
+/** @param {GameManager} game */
 function landOnSurface(game) {
   repeatUntil(
     () => game.isOnSurface,
@@ -52,6 +77,7 @@ function landOnSurface(game) {
 }
 
 // Storage whose writes throw for the listed keys (all keys when omitted).
+/** @param {string[]} [failingKeys] */
 function failingStorage(failingKeys) {
   const storage = createMemoryStorage();
   const setItem = storage.setItem;
@@ -98,6 +124,7 @@ const PLAY_ACTIONS = [
   PlayerAction.drop,
   'softDrop'
 ];
+/** @type {(game: GameManager, action: import('../public/game/gameState.js').PlayerActionValue | 'softDrop') => void} */
 const perform = (game, action) =>
   action === 'softDrop' ? game.softDrop() : game.handleAction(action);
 
@@ -197,11 +224,13 @@ void test('cancelling the New Game question keeps the paused game, and so does a
   assert.equal(game.state, GameState.paused, 'the next New Game asks again');
   assert.equal(game.isConfirmingNewGame, true);
 
-  for (const [what, between] of [
+  /** @type {[string, (game: GameManager) => void][]} */
+  const betweenCases = [
     ['an ignored move', (game) => game.handleAction(PlayerAction.moveLeft)],
     ['a soft drop', (game) => game.softDrop()],
     ['a continue', (game) => game.handleAction(PlayerAction.continueGame)]
-  ]) {
+  ];
+  for (const [what, between] of betweenCases) {
     const { game } = newGame({ factory: fixedFactory(cyan) });
     game.togglePause();
     game.handleAction(PlayerAction.newGame);
@@ -447,7 +476,7 @@ void test('a withdrawal write that storage refuses counts for the rest of the se
   };
   game.togglePause(); // the save fails, and so does the withdrawal write
   assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).available,
+    readRecord(storage, 'tetris.savedGameSession').available,
     true,
     'the old record remains available'
   );
@@ -471,6 +500,7 @@ void test('a withdrawal write that storage refuses counts for the rest of the se
 
 void test('a refused availability write withdraws locally without replacing the prior bytes [STA-4] [SAF-2]', () => {
   const storage = createMemoryStorage();
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const reports = [];
   const { game, scheduler } = newGame({
     storage,
@@ -483,6 +513,7 @@ void test('a refused availability write withdraws locally without replacing the 
   game.togglePause();
   storage.setItem('tetris.isSessionSaved', 'true');
   const setItem = storage.setItem;
+  /** @type {[string, string][]} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -491,10 +522,7 @@ void test('a refused availability write withdraws locally without replacing the 
     setItem(key, value);
   };
   game.togglePause();
-  assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).available,
-    true
-  );
+  assert.equal(readRecord(storage, 'tetris.savedGameSession').available, true);
   assert.equal(game.isSessionSaved, false);
   assert.equal(storage.getItem('tetris.savedGameSession'), before);
   assert.equal(writes.length, 2);
@@ -605,9 +633,8 @@ void test('the session is saved after a line clear but not after a plain lock [S
   assert.equal(game.score, 100);
   assert.equal(game.isSessionSaved, true);
   assert.ok(
-    JSON.parse(
-      parseSavedRecord(storage.getItem('tetris.savedGameSession')).position
-    ).gameBoard
+    JSON.parse(readRecord(storage, 'tetris.savedGameSession').position)
+      .gameBoard
   );
 });
 
@@ -694,7 +721,7 @@ void test('a save missing required history is refused whole [PLY-6] [STA-6]', ()
   game.togglePause();
   // Simulate a save from before the lock-delay state was recorded.
   const saved = JSON.parse(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position
+    readRecord(storage, 'tetris.savedGameSession').position
   );
   delete saved.lockDelayResetCount;
   delete saved.lowestRowReached;
@@ -723,7 +750,7 @@ void test('a continued save restores a remembered low below the piece [PLY-6] [S
   game.togglePause();
   // A wall-kick can leave the remembered low below the anchor (F20).
   const saved = JSON.parse(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position
+    readRecord(storage, 'tetris.savedGameSession').position
   );
   saved.lowestRowReached = saved.currentTetromino.position.row + 2;
   storage.setItem(
@@ -790,6 +817,7 @@ void test('the first hold stores the piece at its spawn state and brings in the 
   game.handleAction(PlayerAction.moveLeft);
   game.softDrop();
   game.handleAction(PlayerAction.hold);
+  assert.ok(game.heldTetromino);
   assert.equal(game.heldTetromino.color, purple);
   assert.equal(game.heldTetromino.rotationState, 0);
   assert.deepEqual(game.heldTetromino.position, position(0, 3));
@@ -809,6 +837,7 @@ void test('hold is available again after the next piece locks, and swaps back [P
   game.handleAction(PlayerAction.drop); // O locks, plays S
   assert.equal(game.canHoldTetromino, true);
   game.handleAction(PlayerAction.hold);
+  assert.ok(game.heldTetromino);
   assert.equal(game.heldTetromino.color, green);
   assert.equal(game.currentTetromino.color, purple);
   assert.deepEqual(game.currentTetromino.position, position(0, 3));
@@ -890,6 +919,7 @@ void test('pause records 15 or 16 and resume distinguishes a delay from immediat
 });
 
 void test('resuming into a lock that ends the game leaves no timers running [STA-2] [STA-3] [SAF-4]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: fixedFactory(yellow),
@@ -995,7 +1025,9 @@ void test('continue carries on with the saved bag, so each piece still comes onc
   restored.togglePause();
   for (const color of saved) {
     restored.handleAction(PlayerAction.drop);
-    assert.equal(restored.nextTetrominos.at(-1).color, color);
+    const dropped = restored.nextTetrominos.at(-1);
+    assert.ok(dropped);
+    assert.equal(dropped.color, color);
   }
 });
 
@@ -1007,7 +1039,7 @@ void test('Continue refuses a save without a bag and leaves the current bag alon
   });
   game.handleAction(PlayerAction.pause);
   const data = JSON.parse(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).position
+    readRecord(storage, 'tetris.savedGameSession').position
   );
   delete data.bag;
   storage.setItem('tetris.savedGameSession', JSON.stringify(data));
@@ -1018,6 +1050,7 @@ void test('Continue refuses a save without a bag and leaves the current bag alon
     storage,
     factory: new TetrominoFactory(seededRandom(6))
   });
+  assert.ok(restored.factory.bag);
   const bag = [...restored.factory.bag];
   restored.handleAction(PlayerAction.continueGame);
   assert.equal(restored.state, GameState.gameOver);
@@ -1157,10 +1190,7 @@ void test('saves keep the prefixed storage key with the new labeled format [STA-
   fillRows(game, [19], [9]);
   dropVerticalIIntoColumn9(game);
   assert.equal(storage.getItem('tetris.highScore'), '100');
-  assert.equal(
-    parseSavedRecord(storage.getItem('tetris.savedGameSession')).available,
-    true
-  );
+  assert.equal(readRecord(storage, 'tetris.savedGameSession').available, true);
   assert.ok(storage.getItem('tetris.savedGameSession'));
 });
 
@@ -1209,6 +1239,7 @@ void test('if a save fails after an earlier one worked, the old save is no longe
 });
 
 void test('a soft drop that ends the game leaves no timers running [STA-3] [SAF-4]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: fixedFactory(yellow),
@@ -1356,6 +1387,7 @@ void test('a piece swapped in from hold starts with a fresh lock delay [PLY-6] [
 });
 
 void test('a first hold that brings in a piece with no room ends the game with no timers [STA-3] [PLY-7]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: sequenceFactory([purple, yellow]),
@@ -1370,6 +1402,7 @@ void test('a first hold that brings in a piece with no room ends the game with n
 });
 
 void test('holding during the lock delay when the held piece has no room ends the game with no timers [PLY-6] [PLY-7] [STA-3]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: sequenceFactory([purple, yellow, green]),
@@ -1390,16 +1423,18 @@ void test('holding during the lock delay when the held piece has no room ends th
 // Serializer fault regressions use injected failures, not organic errors.
 const serializerSavedKey = 'tetris.savedGameSession';
 
+/**
+ * @param {GameManager} game
+ * @param {import('../public/game/gameManager.js').KeyValueStorage} storage
+ */
 function rememberWrittenBytes(game, storage) {
   game.handleAction(PlayerAction.pause);
   const bytes = storage.getItem(serializerSavedKey);
-  const payload = JSON.parse(parseSavedRecord(bytes).position);
+  assert.ok(bytes);
+  const payload = JSON.parse(parseRecord(bytes).position);
   // This is an engine-written byte-retention witness, not an independent
   // proof of B9/B16 semantic validity or the F29 last-good-save target.
-  assert.equal(
-    parseSavedRecord(storage.getItem(serializerSavedKey)).available,
-    true
-  );
+  assert.equal(readRecord(storage, serializerSavedKey).available, true);
   assert.equal(payload.score, 0);
   assert.equal(payload.gameBoard.length, 20);
   for (const row of payload.gameBoard) {
@@ -1423,6 +1458,7 @@ function rememberWrittenBytes(game, storage) {
 for (const route of ['Pause', 'line clear']) {
   for (const refusedWithdrawal of [false, true]) {
     void test(`a serializer failure on ${route} stops safely even with withdrawal refused=${refusedWithdrawal} [SAF-3] [STA-4] [SAF-2]`, () => {
+      /** @type {import('../public/game/gameManager.js').Fault[]} */
       const reports = [];
       const { game, storage, scheduler } = newGame({
         factory: fixedFactory(cyan),
@@ -1439,6 +1475,7 @@ for (const route of ['Pause', 'line clear']) {
           };
         }
       }
+      /** @type {[string, string][]} */
       const writes = [];
       const setItem = storage.setItem.bind(storage);
       storage.setItem = (key, value) => {
@@ -1454,7 +1491,7 @@ for (const route of ['Pause', 'line clear']) {
       const original = JSON.stringify;
       const error = new Error('injected session serialization failure');
       let injections = 0;
-      JSON.stringify = function (value, ...args) {
+      JSON.stringify = function (value, replacer, space) {
         if (
           value &&
           Object.hasOwn(value, 'gameBoard') &&
@@ -1463,7 +1500,7 @@ for (const route of ['Pause', 'line clear']) {
           injections += 1;
           throw error;
         }
-        return original(value, ...args);
+        return original(value, replacer, space);
       };
       try {
         if (route === 'Pause') game.handleAction(PlayerAction.pause);
@@ -1491,8 +1528,8 @@ for (const route of ['Pause', 'line clear']) {
         'withdrawal failure cannot replace the original error'
       );
       assert.equal(
-        parseSavedRecord(storage.getItem(serializerSavedKey)).position,
-        parseSavedRecord(before).position,
+        readRecord(storage, serializerSavedKey).position,
+        parseRecord(before).position,
         'exact earlier position bytes remain'
       );
       if (refusedWithdrawal)
@@ -1521,7 +1558,7 @@ for (const route of ['Pause', 'line clear']) {
         'withdrawal holds for this session'
       );
       assert.equal(
-        parseSavedRecord(storage.getItem(serializerSavedKey)).available,
+        readRecord(storage, serializerSavedKey).available,
         refusedWithdrawal
       );
       // No reload promise for refused withdrawal. A new local save after
@@ -1530,16 +1567,14 @@ for (const route of ['Pause', 'line clear']) {
       game.handleAction(PlayerAction.pause);
       assert.equal(game.state, GameState.paused);
       assert.equal(game.isSessionSaved, true);
-      assert.equal(
-        parseSavedRecord(storage.getItem(serializerSavedKey)).available,
-        true
-      );
+      assert.equal(readRecord(storage, serializerSavedKey).available, true);
       assert.equal(reports.length, 1);
     });
   }
 }
 
 void test('a session storage-write failure stays nonfatal and attempts withdrawal [SAF-2] [STA-4]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const reports = [];
   const { game, storage, scheduler } = newGame({
     factory: fixedFactory(cyan),
@@ -1547,6 +1582,7 @@ void test('a session storage-write failure stays nonfatal and attempts withdrawa
   });
   const before = rememberWrittenBytes(game, storage);
   const setItem = storage.setItem.bind(storage);
+  /** @type {[string, string][]} */
   const writes = [];
   storage.setItem = (key, value) => {
     writes.push([key, value]);
@@ -1575,6 +1611,7 @@ void test('a session storage-write failure stays nonfatal and attempts withdrawa
 // Saving-publication regressions.
 const FLAG = 'tetris.isSessionSaved';
 const DATA = 'tetris.savedGameSession';
+/** @param {import('../public/game/gameManager.js').KeyValueStorage} storage */
 const manager = (storage) =>
   new GameManager({
     storage,
@@ -1585,6 +1622,7 @@ const manager = (storage) =>
 // Actual normal-action A/B trace; these literal byte checks are not a full
 // independent semantic-good-save proof or certification of the audit gap.
 function priorSave() {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const reports = [];
   const { game, storage, scheduler } = newGame({
     factory: fixedFactory(PieceColors.cyan),
@@ -1592,8 +1630,9 @@ function priorSave() {
   });
   game.handleAction(PlayerAction.pause);
   const a = storage.getItem(DATA);
+  assert.ok(a);
   assert.equal(
-    JSON.parse(parseSavedRecord(a).position).currentTetromino.position.column,
+    JSON.parse(parseRecord(a).position).currentTetromino.position.column,
     3
   );
   game.handleAction(PlayerAction.resume);
@@ -1606,6 +1645,7 @@ for (const failedWrite of ['atomic record']) {
     void test(`${failedWrite} failure preserves A bytes and withdraws, withdrawal refused=${refuseWithdrawal} [STA-4] [SAF-2]`, () => {
       const { game, storage, scheduler, reports, a } = priorSave();
       storage.setItem(FLAG, 'true');
+      /** @type {[string, string][]} */
       const writes = [];
       const setItem = storage.setItem.bind(storage);
       storage.setItem = (key, value) => {
@@ -1621,19 +1661,13 @@ for (const failedWrite of ['atomic record']) {
       assert.equal(game.state, GameState.paused);
       assert.equal(scheduler.pending, 0);
       assert.deepEqual(reports, []);
-      assert.equal(
-        parseSavedRecord(storage.getItem(DATA)).position,
-        parseSavedRecord(a).position
-      );
-      assert.equal(
-        parseSavedRecord(storage.getItem(DATA)).available,
-        refuseWithdrawal
-      );
+      assert.equal(readRecord(storage, DATA).position, parseRecord(a).position);
+      assert.equal(readRecord(storage, DATA).available, refuseWithdrawal);
       if (refuseWithdrawal) assert.equal(storage.getItem(DATA), a);
       assert.equal(game.isSessionSaved, false);
       assert.equal(game.sessionSaveWithdrawn, true);
       assert.deepEqual(
-        writes.map(([key, value]) => [key, parseSavedRecord(value).available]),
+        writes.map(([key, value]) => [key, parseRecord(value).available]),
         [
           [DATA, true],
           [DATA, false]
@@ -1654,8 +1688,8 @@ for (const failedWrite of ['atomic record']) {
       assert.equal(game.isSessionSaved, true);
       assert.equal(game.sessionSaveWithdrawn, false);
       assert.equal(
-        JSON.parse(parseSavedRecord(storage.getItem(DATA)).position)
-          .currentTetromino.position.column,
+        JSON.parse(readRecord(storage, DATA).position).currentTetromino.position
+          .column,
         2
       );
     });
@@ -1690,6 +1724,7 @@ for (const initiallyWithdrawn of [false, true]) {
     game.sessionSaveWithdrawn = initiallyWithdrawn;
     const observer = manager(storage);
     const setItem = storage.setItem.bind(storage);
+    /** @type {[string, number][]} */
     const points = [];
     storage.setItem = (key, value) => {
       setItem(key, value);
@@ -1724,8 +1759,9 @@ void test('a later engine fault retains fully completed B without rollback or wi
   game.handleAction(PlayerAction.pause);
   const b = storage.getItem(DATA);
   assert.notEqual(b, a);
+  assert.ok(b);
   assert.equal(
-    JSON.parse(parseSavedRecord(b).position).currentTetromino.position.column,
+    JSON.parse(parseRecord(b).position).currentTetromino.position.column,
     2
   );
   const fault = new Error('after completed save');
@@ -1735,7 +1771,7 @@ void test('a later engine fault retains fully completed B without rollback or wi
   assert.equal(game.state, GameState.gameOver);
   assert.equal(scheduler.pending, 0);
   assert.equal(storage.getItem(DATA), b);
-  assert.equal(parseSavedRecord(storage.getItem(DATA)).available, true);
+  assert.equal(readRecord(storage, DATA).available, true);
   assert.equal(game.isSessionSaved, true);
   assert.equal(reports.length, 1);
   assert.equal(reports[0].error, fault);
@@ -1752,6 +1788,7 @@ for (const bad of ['{invalid json', '{}', JSON.stringify({ score: 0 })]) {
       storage.setItem(FLAG, 'true');
       storage.setItem(DATA, bad);
       const setItem = storage.setItem;
+      /** @type {[string, string][]} */
       const writes = [];
       storage.setItem = (key, value) => {
         writes.push([key, value]);
@@ -1781,6 +1818,7 @@ for (const key of [DATA]) {
       const { storage } = priorSave();
       storage.setItem(FLAG, 'true');
       const getItem = storage.getItem.bind(storage);
+      /** @type {[string, string][]} */
       const writes = [];
       storage.getItem = (k) => {
         if (k === key) {
@@ -1814,6 +1852,7 @@ for (const flag of ['', 'TRUE', 'false', '1']) {
 void test('one complete record read is cached until actual invalidation [DSP-3] [STA-4]', () => {
   const { storage } = priorSave();
   storage.setItem(FLAG, 'true');
+  /** @type {Record<string, number>} */
   const reads = { [FLAG]: 0, [DATA]: 0 };
   const getItem = storage.getItem.bind(storage);
   storage.getItem = (key) => {
@@ -1852,7 +1891,10 @@ for (const changed of [
     const b = storage.getItem(DATA);
     assert.notEqual(a, b);
     if (changed === 'invalid') storage.setItem(DATA, '{}');
-    if (changed === 'absent') storage.removeItem(DATA);
+    if (changed === 'absent') {
+      assert.ok(storage.removeItem);
+      storage.removeItem(DATA);
+    }
     if (changed === 'unreadable') {
       const getItem = storage.getItem.bind(storage);
       storage.getItem = (key) => {
@@ -1860,10 +1902,11 @@ for (const changed of [
         return getItem(key);
       };
     }
+    assert.ok(b);
     if (changed === 'unavailable record')
       storage.setItem(
         DATA,
-        serializeSavedRecord(parseSavedRecord(b).position, false)
+        serializeSavedRecord(parseRecord(b).position, false)
       );
     const beforeBoard = game.gameBoard;
     game.handleAction(PlayerAction.continueGame);
@@ -1898,6 +1941,7 @@ void test('fresh Continue with unavailable content is a nonthrowing no-op, not a
     const storage = createMemoryStorage();
     storage.setItem(FLAG, 'true');
     if (value !== null) storage.setItem(DATA, value);
+    /** @type {import('../public/game/gameManager.js').Fault[]} */
     const reports = [];
     const game = new GameManager({
       storage,
@@ -1916,9 +1960,10 @@ void test('fresh Continue with unavailable content is a nonthrowing no-op, not a
 void test('fresh Continue invalidates earlier cached ineligibility after restoring valid content [STA-4] [DSP-3]', () => {
   const { storage } = priorSave();
   const record = storage.getItem(DATA);
+  assert.ok(record);
   storage.setItem(
     DATA,
-    serializeSavedRecord(parseSavedRecord(record).position, false)
+    serializeSavedRecord(parseRecord(record).position, false)
   );
   const game = manager(storage);
   assert.equal(game.isSessionSaved, false);
@@ -1930,6 +1975,7 @@ void test('fresh Continue invalidates earlier cached ineligibility after restori
 
 void test('payload write invalidates a reentrant eligibility check during publication [STA-4] [DSP-3]', () => {
   const { game, storage } = priorSave();
+  assert.ok(storage.removeItem);
   storage.removeItem(DATA);
   game.sessionSaveWithdrawn = false;
   const setItem = storage.setItem.bind(storage);
@@ -1955,6 +2001,7 @@ void test('assigning true on an available record is a no-op, and withdrawn recor
   assert.equal(game.isSessionSaved, true);
   game.isSessionSaved = false;
   const withdrawn = storage.getItem(DATA);
+  /** @type {[string, string][]} */
   const writes = [];
   storage.setItem = (key, value) => writes.push([key, value]);
   game.isSessionSaved = false;
@@ -1981,16 +2028,16 @@ void test('invalid constructed save content withdraws and reports through the gu
   // The engine state remains valid; the serializer emits invalid content.
   const original = JSON.stringify;
   let constructions = 0;
-  JSON.stringify = function (value, ...args) {
+  JSON.stringify = function (value, replacer, space) {
     if (
       value &&
       Object.hasOwn(value, 'gameBoard') &&
       Object.hasOwn(value, 'nextTetrominos')
     ) {
       constructions++;
-      return original({ ...value, score: -1 }, ...args);
+      return original({ ...value, score: -1 }, replacer, space);
     }
-    return original(value, ...args);
+    return original(value, replacer, space);
   };
   try {
     game.handleAction(PlayerAction.pause);
@@ -2007,9 +2054,9 @@ void test('invalid constructed save content withdraws and reports through the gu
   assert.equal(reports[0], game.faults[0]);
   assert.equal(reports[0].reason, 'unexpected error');
   assert.ok(reports[0].error instanceof Error);
-  const record = parseSavedRecord(storage.getItem(DATA));
+  const record = readRecord(storage, DATA);
   assert.equal(record.available, false);
-  assert.equal(record.position, parseSavedRecord(a).position);
+  assert.equal(record.position, parseRecord(a).position);
   assert.equal(game.sessionSaveWithdrawn, true);
 });
 
@@ -2023,7 +2070,7 @@ void test('ordinary spawn and held-piece game over withdraw an existing availabl
       game.handleAction(PlayerAction.drop);
     }
     game.handleAction(PlayerAction.pause);
-    const before = parseSavedRecord(storage.getItem(DATA)).position;
+    const before = readRecord(storage, DATA).position;
     game.handleAction(PlayerAction.resume);
     game.currentTetromino.position = position(12, 3);
     for (let row = 0; row < 3; row++)
@@ -2032,7 +2079,7 @@ void test('ordinary spawn and held-piece game over withdraw an existing availabl
     if (route === 'next') game.generateNextTetromino();
     else game.holdTetromino();
     assert.equal(game.state, GameState.gameOver);
-    const record = parseSavedRecord(storage.getItem(DATA));
+    const record = readRecord(storage, DATA);
     assert.equal(record.available, false);
     assert.equal(record.position, before);
     assert.equal(game.sessionSaveWithdrawn, true);
@@ -2058,7 +2105,7 @@ void test('a resting move with no running delay starts one, and terminal line cl
   terminal.saveGameSession = () => {
     saves++;
   };
-  terminal.clearFullRows = () => 1;
+  terminal.clearFullRows = () => true;
   terminal.generateNextTetromino = () => {
     terminal.state = GameState.gameOver;
   };
@@ -2067,6 +2114,7 @@ void test('a resting move with no running delay starts one, and terminal line cl
 });
 
 void test('moving onto a ledge starts the lock delay at once, without using a reset [PLY-6]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: fixedFactory(yellow),
@@ -2086,6 +2134,7 @@ void test('moving onto a ledge starts the lock delay at once, without using a re
 });
 
 void test('turning onto a ledge starts the lock delay at once [PLY-6]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: fixedFactory(purple),
@@ -2104,6 +2153,7 @@ void test('turning onto a ledge starts the lock delay at once [PLY-6]', () => {
 });
 
 void test('a new piece that appears resting on the stack starts its lock delay at once [PLY-6]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: fixedFactory(yellow),
@@ -2122,6 +2172,7 @@ void test('a new piece that appears resting on the stack starts its lock delay a
 });
 
 void test('a held piece swapped in resting on the stack starts its lock delay at once [PLY-6] [PLY-7]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler } = newGame({
     factory: sequenceFactory([purple, yellow, green]),
@@ -2139,11 +2190,14 @@ void test('a held piece swapped in resting on the stack starts its lock delay at
   assert.deepEqual(faults, []);
 });
 
-for (const [name, start, final] of [
+/** @type {[string, number, number][]} */
+const scoreCases = [
   ['exact hit', Number.MAX_SAFE_INTEGER - 100, Number.MAX_SAFE_INTEGER],
   ['crossing award', Number.MAX_SAFE_INTEGER - 50, Number.MAX_SAFE_INTEGER - 50]
-]) {
+];
+for (const [name, start, final] of scoreCases) {
   void test(`score limit ends on ${name} without another piece, save or timer [SCO-1] [SCO-2] [STA-3] [STA-4] [SAF-4]`, () => {
+    /** @type {import('../public/game/gameManager.js').Fault[]} */
     const faults = [];
     const { game, scheduler, storage } = newGame({
       factory: fixedFactory(PieceColors.cyan),
@@ -2151,7 +2205,7 @@ for (const [name, start, final] of [
     });
     game.score = start;
     game.togglePause();
-    const saved = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+    const saved = readRecord(storage, 'tetris.savedGameSession');
     game.togglePause();
     let generated = 0;
     const generate = game.factory.generate;
@@ -2175,9 +2229,7 @@ for (const [name, start, final] of [
     assert.equal(generated, 0);
     assert.equal(scheduler.pending, 0);
     assert.equal(game.isSessionSaved, false);
-    const withdrawn = parseSavedRecord(
-      storage.getItem('tetris.savedGameSession')
-    );
+    const withdrawn = readRecord(storage, 'tetris.savedGameSession');
     assert.equal(withdrawn.available, false);
     assert.equal(withdrawn.position, saved.position);
     assert.deepEqual(faults, []);
@@ -2191,6 +2243,7 @@ for (const [name, start, final] of [
 }
 
 void test('a crossing award ends normally with a real lock delay pending [SCO-1] [STA-3] [STA-4] [SAF-4]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler, storage } = newGame({
     factory: fixedFactory(PieceColors.cyan),
@@ -2199,7 +2252,7 @@ void test('a crossing award ends normally with a real lock delay pending [SCO-1]
   const final = Number.MAX_SAFE_INTEGER - 50;
   game.score = final;
   game.togglePause();
-  const saved = parseSavedRecord(storage.getItem('tetris.savedGameSession'));
+  const saved = readRecord(storage, 'tetris.savedGameSession');
   game.togglePause();
   let generated = 0;
   const generate = game.factory.generate;
@@ -2230,9 +2283,7 @@ void test('a crossing award ends normally with a real lock delay pending [SCO-1]
   assert.equal(game.lockDelayTask, null);
   assert.equal(scheduler.pending, 0);
   assert.equal(game.isSessionSaved, false);
-  const withdrawn = parseSavedRecord(
-    storage.getItem('tetris.savedGameSession')
-  );
+  const withdrawn = readRecord(storage, 'tetris.savedGameSession');
   assert.equal(withdrawn.available, false);
   assert.equal(withdrawn.position, saved.position);
   assert.deepEqual(
@@ -2249,6 +2300,7 @@ void test('a crossing award ends normally with a real lock delay pending [SCO-1]
 });
 
 void test('a saved score at the ceiling restores paused and ends on resume [STA-4] [SCO-2] [SAF-4]', () => {
+  /** @type {import('../public/game/gameManager.js').Fault[]} */
   const faults = [];
   const { game, scheduler, storage } = newGame({
     onFault: (fault) => faults.push(fault)
