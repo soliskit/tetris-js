@@ -87,13 +87,12 @@ function parseBoard(board, rows, columns) {
         typeof cell.isFilled !== 'boolean'
       )
         return null;
-      if (cell.isFilled ? !colors.has(cell.color) : cell.color !== null)
-        return null;
+      if (cell.isFilled) {
+        if (typeof cell.color !== 'string' || !colors.has(cell.color))
+          return null;
+      } else if (cell.color !== null) return null;
       // Checked just above: a piece color when filled, otherwise null.
-      cells.push({
-        isFilled: cell.isFilled,
-        color: /** @type {string | null} */ (cell.color)
-      });
+      cells.push({ isFilled: cell.isFilled, color: cell.color });
     }
     result.push(cells);
   }
@@ -263,11 +262,13 @@ export const SAVE_FORMAT = 'tetris-session-envelope';
 /** @param {string | null} text @returns {unknown} The parsed value; a missing save (null) reads as null. */
 export function parseUniqueJSON(text) {
   if (text === null) return null;
-  const value = /** @type {unknown} */ (JSON.parse(text));
+  /** @type {unknown} */
+  const value = JSON.parse(text);
   // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
   // names, including escaped spellings of the same name, at every object depth.
-  const tokens = /** @type {RegExpMatchArray} */ (
-    text.match(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g)
+  const tokens = Array.from(
+    text.matchAll(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g),
+    (match) => match[0]
   );
   let index = 0;
   function visit() {
@@ -277,9 +278,9 @@ export function parseUniqueJSON(text) {
       if (tokens[index] !== '}') {
         do {
           // The token walked is a quoted string, so its value is a string.
-          const key = String(
-            /** @type {unknown} */ (JSON.parse(tokens[index++]))
-          );
+          /** @type {unknown} */
+          const parsed = JSON.parse(tokens[index++]);
+          const key = String(parsed);
           if (names.has(key)) throw new SyntaxError();
           names.add(key);
           index++; // colon

@@ -355,7 +355,7 @@ export class GameManager {
 
   generateNextTetromino() {
     // Never undefined: the queue always holds three pieces (checked by SAF-4).
-    const next = /** @type {Tetromino} */ (this.nextTetrominos.shift());
+    const [next] = this.nextTetrominos.splice(0, 1);
     this.currentTetromino = next.spawned(this.columns);
     this.nextTetrominos.push(this.factory.generate());
     this.canHoldTetromino = true;

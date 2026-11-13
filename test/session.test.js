@@ -293,6 +293,27 @@ const corruptions = {
   }
 };
 
+// A doctored color lookup must not smuggle a non-text color into the board.
+void test('a filled cell whose color is not text is rejected even when the color lookup is doctored [SAF-1]', () => {
+  const { data } = validSave();
+  cellOf(data, 19, 0).color = 7;
+  const original =
+    /** @type {(this: Set<unknown>, value: unknown) => boolean} */ (
+      Reflect.get(Set.prototype, 'has')
+    );
+  const doctored =
+    /** @type {(this: Set<unknown>, value: unknown) => boolean} */
+    function (value) {
+      return value === 7 || Reflect.apply(original, this, [value]);
+    };
+  Reflect.set(Set.prototype, 'has', doctored);
+  try {
+    assert.equal(parseSession(JSON.stringify(data), SIZE), null);
+  } finally {
+    Reflect.set(Set.prototype, 'has', original);
+  }
+});
+
 for (const [name, corrupt] of Object.entries(corruptions)) {
   void test(`a save with ${name} is rejected [SAF-1]`, () => {
     const { data } = validSave();

@@ -154,7 +154,8 @@ export class TetrominoFactory {
       this.bag = shuffle(allPieces(), this.random);
     }
     // Never undefined: the bag was just refilled if it was empty.
-    return /** @type {Tetromino} */ (this.bag.shift());
+    const [piece] = this.bag.splice(0, 1);
+    return piece;
   }
 
   // Starts a full bag, or carries on with the pieces left in a saved one.
