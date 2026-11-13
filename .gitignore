@@ -6,5 +6,10 @@ playwright-report/
 coverage/
 reports/
 .stryker-tmp/
+dist/
+.release-evidence/
+bundle.js
+bundle.js.map
 __pycache__/
 *.pyc
+

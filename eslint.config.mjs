@@ -31,7 +31,7 @@ const TYPED_TEST_FILES = [
 ];
 
 export default defineConfig(
-  { ignores: ['node_modules/', 'reports/'] },
+  { ignores: ['node_modules/', 'reports/', '.release-evidence/'] },
   js.configs.recommended,
   tseslint.configs.recommended,
   promiseRecommended,
@@ -120,7 +120,13 @@ export default defineConfig(
     }
   },
   {
-    files: ['public/**/*.js', 'e2e/**/*.js', 'playwright.config.js'],
+    files: [
+      'public/**/*.js',
+      'e2e/**/*.js',
+      'delivery-e2e/**/*.js',
+      'dist/**/*.js',
+      'playwright.config.js'
+    ],
     languageOptions: {
       globals: { ...globals.browser }
     }

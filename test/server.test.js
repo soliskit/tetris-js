@@ -27,7 +27,7 @@ function freePort() {
 /** @param {import('node:test').TestContext} t */
 async function startServer(t) {
   const port = await freePort();
-  const child = spawn(process.execPath, [serverFile], {
+  const child = spawn(process.execPath, [serverFile, '--source-test'], {
     env: { ...process.env, PORT: String(port) }
   });
   t.after(() => child.kill());

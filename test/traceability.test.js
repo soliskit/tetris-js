@@ -7,7 +7,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { jsonObject, jsonString, parseJsonObject } from './json.js';
+import { jsonArray, jsonObject, jsonString, parseJsonObject } from './json.js';
+import { extractTestTitles } from '../scripts/test-title-traceability.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 
@@ -21,24 +22,18 @@ const requirementIds = [
     .matchAll(/^\| ([A-Z]{2,3}-\d+) \|/gm)
 ].map((match) => match[1]);
 
-// Every test() call in the unit and browser test files, with its tags.
-const tests = ['test', 'e2e'].flatMap((folder) =>
-  fs
-    .readdirSync(path.join(root, folder))
-    .filter((file) => file.endsWith('.js'))
-    .flatMap((file) =>
-      fs
-        .readFileSync(path.join(root, folder, file), 'utf8')
-        .split('\n')
-        .filter((line) => /^\s*(void\s+)?test\(/.test(line))
-        .map((line) => ({
-          where: `${folder}/${file}`,
-          line: line.trim(),
-          tags: [...line.matchAll(/\[([A-Z]{2,3}-\d+)\]/g)].map(
-            (match) => match[1]
-          )
-        }))
-    )
+// Every test() call in the unit, browser and delivery test files, with its tags.
+const tests = ['test', 'e2e', 'delivery-e2e', 'delivery-checks'].flatMap(
+  (folder) =>
+    fs
+      .readdirSync(path.join(root, folder))
+      .filter((file) => file.endsWith('.js'))
+      .flatMap((file) =>
+        extractTestTitles(
+          fs.readFileSync(path.join(root, folder, file), 'utf8'),
+          `${folder}/${file}`
+        )
+      )
 );
 
 void test('requirements have unique IDs [QA-1]', () => {
@@ -124,7 +119,22 @@ void test('the browser tests run in WebKit at iPhone size [QA-4]', () => {
       `require('playwright/package.json').version==='${playwrightVersion}'`
     )
   );
-  assert.match(workflow, /npm run test:e2e/);
+  for (const configName of [
+    'playwright.config.js',
+    'playwright.delivery.config.js'
+  ]) {
+    assert.ok(
+      workflow.includes(
+        `node node_modules/playwright/cli.js test --config ${configName} --reporter=list,.github/offline-current/qualification-reporter.mjs --output test-results/`
+      )
+    );
+  }
+  assert.ok(workflow.includes('run: node scripts/browser-coverage.js'));
+  assert.ok(
+    workflow.includes(
+      'run: python3 .github/offline-current/validate-reports.py'
+    )
+  );
 });
 
 void test('the code the browser loads is type checked in strict mode, in CI [QA-5]', () => {
@@ -140,10 +150,15 @@ void test('the code the browser loads is type checked in strict mode, in CI [QA-
   }
   assert.deepEqual(config.include, ['public/game/**/*.js', 'public/script.js']);
   assert.deepEqual(readJson('tsconfig.sw.json').include, ['public/sw.js']);
+  const generated = readJson('tsconfig.generated-sw.json');
+  assert.equal(jsonString(generated.extends), './tsconfig.sw.json');
+  assert.deepEqual(jsonArray(generated.include).map(jsonString), [
+    'dist/sw.js'
+  ]);
   const pkg = readJson('package.json');
   assert.equal(
     jsonObject(pkg.scripts).typecheck,
-    'tsc -p tsconfig.json && tsc -p tsconfig.sw.json'
+    'tsc -p tsconfig.json && tsc -p tsconfig.sw.json && tsc -p tsconfig.generated-sw.json'
   );
   assert.match(
     fs.readFileSync(path.join(root, '.github/workflows/pages.yml'), 'utf8'),

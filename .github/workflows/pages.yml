@@ -12,26 +12,34 @@ concurrency:
 
 jobs:
   test:
+    env:
+      QUALIFICATION_HEAD: ${{ github.sha }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       tests: ${{ steps.counts.outputs.tests }}
       skipped: ${{ steps.counts.outputs.skipped }}
-      e2e_passed: ${{ steps.e2e.outputs.passed }}
+      e2e_expected: ${{ steps.e2e.outputs.expected }}
       e2e_skipped: ${{ steps.e2e.outputs.skipped }}
+      delivery_passed: ${{ steps.e2e.outputs.delivery_passed }}
+      delivery_skipped: ${{ steps.e2e.outputs.delivery_skipped }}
     steps:
+      - name: Set the owned receipt path
+        shell: bash
+        run: echo "QUALIFICATION_EVIDENCE=$RUNNER_TEMP/normal-browser-receipts" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version-file: package.json
           cache: npm
       - run: npm install --global npm@12.2.0
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - uses: actions/setup-python@v6
       - run: pip install ruff==0.17.4
       - run: ruff check .
       - run: ruff format --check .
+      - run: npm run build
       - run: npm run lint
       - run: npm run format:check
       - run: npx playwright install --with-deps chromium webkit
@@ -39,6 +47,8 @@ jobs:
         run: node -e "process.exit(require('playwright/package.json').version==='1.65.0'?0:1)"
       - run: npm run typecheck
       - run: npm run typecheck:tests
+      - name: Check the generated distribution
+        run: npm run test:delivery:unit
       - name: Run the unit tests
         shell: bash
         run: |
@@ -52,29 +62,38 @@ jobs:
           count() { grep -E "^(#|ℹ) $1 [0-9]+" test-output.txt | tail -n 1 | grep -oE '[0-9]+$' || true; }
           echo "tests=$(count tests)" >> "$GITHUB_OUTPUT"
           echo "skipped=$(count skipped)" >> "$GITHUB_OUTPUT"
-      - name: Run the browser tests
-        shell: bash
-        run: |
-          set -o pipefail
-          npm run test:e2e 2>&1 | tee e2e-output.txt
-      - name: Count the browser tests
+      - name: Prepare fresh separate browser receipts
+        run: mkdir "$QUALIFICATION_EVIDENCE"
+      - name: Run original-source browser tests
+        env:
+          QUALIFICATION_SUITE: source
+        run: node node_modules/playwright/cli.js test --config playwright.config.js --reporter=list,.github/offline-current/qualification-reporter.mjs --output test-results/source-current
+      - name: Run built-delivery browser tests
+        env:
+          QUALIFICATION_SUITE: delivery
+        run: node node_modules/playwright/cli.js test --config playwright.delivery.config.js --reporter=list,.github/offline-current/qualification-reporter.mjs --output test-results/delivery-current
+      - run: node scripts/browser-coverage.js
+      - name: Validate complete browser results and screenshot assignments
+        run: python3 .github/offline-current/validate-reports.py
+      - name: Count each completed suite independently
         id: e2e
-        if: always()
         shell: bash
         run: |
-          n() { grep -E "^ +[0-9]+ $1" e2e-output.txt | tail -n 1 | grep -oE '[0-9]+' | head -n 1 || true; }
-          echo "passed=$(n passed)" >> "$GITHUB_OUTPUT"
-          echo "skipped=$(n skipped)" >> "$GITHUB_OUTPUT"
-      - name: List the skipped browser tests
-        if: always()
-        shell: bash
-        run: |
-          grep -E '^ +- +[0-9]+ \[' e2e-output.txt | sed -E 's/^ +- +[0-9]+ //; s/:[0-9]+:[0-9]+ ›/ ›/' | sort > skipped-now.txt || true
-          echo "SKIPPED-IDENTITIES $(wc -l < skipped-now.txt)"
-          cat skipped-now.txt
-      - name: Check the skipped browser tests are the expected ones
-        shell: bash
-        run: diff .github/expected-browser-skips.txt skipped-now.txt
+          python3 - <<'PYCOUNT'
+          import json, os, pathlib
+          report = json.loads((pathlib.Path(os.environ['QUALIFICATION_EVIDENCE']) / 'validated-browser-receipts.json').read_text())
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              for name, value in {'expected': report['suites']['source']['expected'], 'skipped': report['suites']['source']['skipped'], 'delivery_passed': report['suites']['delivery']['passed'], 'delivery_skipped': report['suites']['delivery']['skipped']}.items():
+                  output.write(f'{name}={value}\n')
+          PYCOUNT
+      - uses: actions/upload-artifact@v7
+        with:
+          name: browser-proof-${{ github.sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/normal-browser-receipts
+          if-no-files-found: error
+          retention-days: 7
+      - name: Record exact qualified output identity
+        run: node scripts/print-release-identity.mjs
 
   # Final gate. Fails unless the test job succeeded, the unit tests and the
   # browser tests each ran at least one test. Unit tests may skip none. The
@@ -91,8 +110,10 @@ jobs:
           RESULT: ${{ needs.test.result }}
           UNIT_TESTS: ${{ needs.test.outputs.tests }}
           UNIT_SKIPPED: ${{ needs.test.outputs.skipped }}
-          E2E_PASSED: ${{ needs.test.outputs.e2e_passed }}
+          E2E_EXPECTED: ${{ needs.test.outputs.e2e_expected }}
           E2E_SKIPPED: ${{ needs.test.outputs.e2e_skipped }}
+          DELIVERY_PASSED: ${{ needs.test.outputs.delivery_passed }}
+          DELIVERY_SKIPPED: ${{ needs.test.outputs.delivery_skipped }}
         run: |
           fail=0
           check() {
@@ -103,30 +124,8 @@ jobs:
             [ "$skipped" -le "$allowed" ] || { echo "  $name skipped more than allowed"; fail=1; }
           }
           check unit "$RESULT" "$UNIT_TESTS" "$UNIT_SKIPPED" 0
-          check browser "$RESULT" "$E2E_PASSED" "$E2E_SKIPPED" 30
+          check source-browser "$RESULT" "$E2E_EXPECTED" "$E2E_SKIPPED" 30
+          check delivery-browser "$RESULT" "$DELIVERY_PASSED" "$DELIVERY_SKIPPED" 0
+          [ "$E2E_EXPECTED" = 420 ] && [ "$E2E_SKIPPED" = 30 ] || fail=1
+          [ "$DELIVERY_PASSED" = 42 ] && [ "$DELIVERY_SKIPPED" = 0 ] || fail=1
           exit "$fail"
-
-  publish-site:
-    needs: [test, suites-ran]
-    if: github.event_name == 'push' && github.repository == 'soliskit/tetris-js' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions: {}
-    timeout-minutes: 5
-    steps:
-      - name: Request the website workflow
-        shell: bash
-        env:
-          SITE_PUBLISH_TOKEN: ${{ secrets.SITE_PUBLISH_TOKEN }}
-        run: |
-          if [ -z "$SITE_PUBLISH_TOKEN" ]; then
-            echo "SITE_PUBLISH_TOKEN is not set." >&2
-            exit 1
-          fi
-          curl --fail-with-body --silent --show-error --max-time 60 \
-            --request POST \
-            --header "Accept: application/vnd.github+json" \
-            --header "Authorization: Bearer $SITE_PUBLISH_TOKEN" \
-            --header "Content-Type: application/json" \
-            --header "X-GitHub-Api-Version: 2026-03-10" \
-            --data '{"ref":"main"}' \
-            https://api.github.com/repos/soliskit/soliskit.github.io/actions/workflows/pages.yml/dispatches
