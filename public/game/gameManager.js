@@ -7,9 +7,23 @@
 // (game over, no timers), reports the fault and keeps the last good save.
 
 import { below, position } from './position.js';
-import { GameState, PlayerAction, UPCOMING_COUNT, createBoard } from './gameState.js';
-import { parseSession, serializeSession, parseSavedRecord, serializeSavedRecord } from './session.js';
-import { isValidBoard, isValidFallingPiece, isValidPieceList } from './tetromino.js';
+import {
+  GameState,
+  PlayerAction,
+  UPCOMING_COUNT,
+  createBoard
+} from './gameState.js';
+import {
+  parseSession,
+  serializeSession,
+  parseSavedRecord,
+  serializeSavedRecord
+} from './session.js';
+import {
+  isValidBoard,
+  isValidFallingPiece,
+  isValidPieceList
+} from './tetromino.js';
 import { TetrominoFactory } from './tetrominoFactory.js';
 
 /** @typedef {import('./gameState.js').Board} Board */
@@ -49,11 +63,15 @@ export function createMemoryStorage() {
   const values = new Map();
   return {
     /** @param {string} key */
-    getItem: key => values.get(key) ?? null,
+    getItem: (key) => values.get(key) ?? null,
     /** @param {string} key @param {unknown} value */
-    setItem: (key, value) => { values.set(key, String(value)); },
+    setItem: (key, value) => {
+      values.set(key, String(value));
+    },
     /** @param {string} key */
-    removeItem: key => { values.delete(key); }
+    removeItem: (key) => {
+      values.delete(key);
+    }
   };
 }
 
@@ -64,7 +82,10 @@ export function createMemoryStorage() {
 /** @param {unknown} value @returns {value is KeyValueStorage} */
 export function isKeyValueStorage(value) {
   if (typeof value !== 'object' || value === null) return false;
-  return typeof Reflect.get(value, 'getItem') === 'function' && typeof Reflect.get(value, 'setItem') === 'function';
+  return (
+    typeof Reflect.get(value, 'getItem') === 'function' &&
+    typeof Reflect.get(value, 'setItem') === 'function'
+  );
 }
 
 // A stored value is a string or null. A foreign object in the localStorage
@@ -72,7 +93,10 @@ export function isKeyValueStorage(value) {
 // flow into number conversion or JSON parsing as if it were text.
 /** @param {unknown} value @returns {string | null} */
 function checkStorageValue(value) {
-  if (typeof value !== 'string' && value !== null) throw new TypeError('storage.getItem returned a foreign value, not a string or null');
+  if (typeof value !== 'string' && value !== null)
+    throw new TypeError(
+      'storage.getItem returned a foreign value, not a string or null'
+    );
   return value;
 }
 
@@ -93,7 +117,7 @@ function defaultStorage() {
 /** @type {Scheduler} */
 const defaultScheduler = {
   setTimeout: (callback, ms) => globalThis.setTimeout(callback, ms),
-  clearTimeout: handle => {
+  clearTimeout: (handle) => {
     globalThis.clearTimeout(/** @type {number} */ (handle));
   }
 };
@@ -159,7 +183,9 @@ export class GameManager {
   }
 
   generateUpcoming() {
-    return Array.from({ length: UPCOMING_COUNT }, () => this.factory.generate());
+    return Array.from({ length: UPCOMING_COUNT }, () =>
+      this.factory.generate()
+    );
   }
 
   // Storage (@AppStorage equivalents). Reads and writes can throw when
@@ -208,7 +234,9 @@ export class GameManager {
     }
     // Foreign values fail loudly, outside the unreadable catch above.
     const checked = checkStorageValue(value);
-    return checked === null ? { kind: 'absent', value: null } : { kind: 'value', value: checked };
+    return checked === null
+      ? { kind: 'absent', value: null }
+      : { kind: 'value', value: checked };
   }
 
   // Always fresh: Continue cannot restore an object from an earlier check.
@@ -217,7 +245,9 @@ export class GameManager {
     const content = this.readSaveItem(SAVED_SESSION_KEY);
     if (content.kind !== 'value') return null;
     const record = parseSavedRecord(content.value);
-    const session = record && parseSession(record.position, { rows: this.rows, columns: this.columns });
+    const session =
+      record &&
+      parseSession(record.position, { rows: this.rows, columns: this.columns });
     if (!session) this.isSessionSaved = false;
     return record?.available ? session : null;
   }
@@ -236,10 +266,16 @@ export class GameManager {
     const content = this.readSaveItem(SAVED_SESSION_KEY);
     if (content.kind !== 'value') return;
     const record = parseSavedRecord(content.value);
-    const valid = record && parseSession(record.position, { rows: this.rows, columns: this.columns });
+    const valid =
+      record &&
+      parseSession(record.position, { rows: this.rows, columns: this.columns });
     try {
       if (record && valid) {
-        if (record.available) this.storage.setItem(SAVED_SESSION_KEY, serializeSavedRecord(record.position, false));
+        if (record.available)
+          this.storage.setItem(
+            SAVED_SESSION_KEY,
+            serializeSavedRecord(record.position, false)
+          );
       } else {
         // Refused content is retained verbatim, including malformed envelopes.
         this.storage.setItem(IS_SESSION_SAVED_KEY, 'false');
@@ -298,7 +334,8 @@ export class GameManager {
     let record;
     try {
       session = serializeSession(this);
-      if (!parseSession(session, { rows: this.rows, columns: this.columns })) throw new Error();
+      if (!parseSession(session, { rows: this.rows, columns: this.columns }))
+        throw new Error();
       record = serializeSavedRecord(session, true);
     } catch (error) {
       // Serialization is an engine failure, not a refused storage operation.
@@ -348,7 +385,10 @@ export class GameManager {
   }
 
   get isOnSurface() {
-    return !this.currentTetromino.fits(this.gameBoard, below(this.currentTetromino.position));
+    return !this.currentTetromino.fits(
+      this.gameBoard,
+      below(this.currentTetromino.position)
+    );
   }
 
   startLockDelay() {
@@ -387,14 +427,19 @@ export class GameManager {
       this.landIfResting();
     } else if (!this.isOnSurface) {
       this.cancelLockDelay();
-    } else if (reachedNewLow || this.lockDelayResetCount < this.maxLockDelayResets) {
+    } else if (
+      reachedNewLow ||
+      this.lockDelayResetCount < this.maxLockDelayResets
+    ) {
       if (!reachedNewLow) this.lockDelayResetCount += 1;
       this.startLockDelay();
     }
   }
 
   noteLowestRow() {
-    const row = Math.max(...this.currentTetromino.cells.map(cell => cell.row));
+    const row = Math.max(
+      ...this.currentTetromino.cells.map((cell) => cell.row)
+    );
     if (row <= this.lowestRowReached) return false;
     this.lowestRowReached = row;
     this.lockDelayResetCount = 0;
@@ -404,7 +449,9 @@ export class GameManager {
   resetLockDelayForNewPiece() {
     this.cancelLockDelay();
     this.lockDelayResetCount = 0;
-    this.lowestRowReached = Math.max(...this.currentTetromino.cells.map(cell => cell.row));
+    this.lowestRowReached = Math.max(
+      ...this.currentTetromino.cells.map((cell) => cell.row)
+    );
   }
 
   cancelLockDelay() {
@@ -425,7 +472,10 @@ export class GameManager {
   // The piece always fits on the board (checked by the invariant monitor).
   lockTetrominoInPlace() {
     for (const cell of this.currentTetromino.cells) {
-      this.gameBoard[cell.row][cell.column] = { isFilled: true, color: this.currentTetromino.color };
+      this.gameBoard[cell.row][cell.column] = {
+        isFilled: true,
+        color: this.currentTetromino.color
+      };
     }
     this.boardVersion += 1;
   }
@@ -434,7 +484,7 @@ export class GameManager {
     /** @type {number[]} */
     const completedLineIndices = [];
     this.gameBoard.forEach((row, index) => {
-      if (row.every(cell => cell.isFilled)) completedLineIndices.push(index);
+      if (row.every((cell) => cell.isFilled)) completedLineIndices.push(index);
     });
     if (completedLineIndices.length === 0) return false;
     const award = LINE_SCORES[completedLineIndices.length];
@@ -466,7 +516,10 @@ export class GameManager {
 
   get ghostTetromino() {
     const ghost = this.currentTetromino.copy();
-    ghost.position = position(ghost.position.row + ghost.dropDistance(this.gameBoard), ghost.position.column);
+    ghost.position = position(
+      ghost.position.row + ghost.dropDistance(this.gameBoard),
+      ghost.position.column
+    );
     return ghost;
   }
 
@@ -527,19 +580,31 @@ export class GameManager {
   /** @returns {string | null} */
   findInvariantViolation() {
     const board = this.gameBoard;
-    if (!Array.isArray(board) || board.length !== this.rows || !board.every(row => Array.isArray(row) && row.length === this.columns)) {
+    if (
+      !Array.isArray(board) ||
+      board.length !== this.rows ||
+      !board.every((row) => Array.isArray(row) && row.length === this.columns)
+    ) {
       return 'board is not 20 by 10';
     }
     if (!isValidBoard(board)) return 'board contains an invalid cell';
     const upcoming = this.nextTetrominos;
     if (upcoming.length !== UPCOMING_COUNT) return 'upcoming pieces missing';
-    if (!isValidPieceList(upcoming)) return 'upcoming piece is not a valid piece';
-    if (!Number.isSafeInteger(this.score) || this.score < 0) return 'score is invalid';
-    if (this.state !== GameState.gameOver && !isValidFallingPiece(this.currentTetromino, board)) return 'piece is invalid or overlaps the board';
+    if (!isValidPieceList(upcoming))
+      return 'upcoming piece is not a valid piece';
+    if (!Number.isSafeInteger(this.score) || this.score < 0)
+      return 'score is invalid';
+    if (
+      this.state !== GameState.gameOver &&
+      !isValidFallingPiece(this.currentTetromino, board)
+    )
+      return 'piece is invalid or overlaps the board';
     if (this.state === GameState.playing) {
       if (this.gameLoopTask === null) return 'gravity stopped while playing';
-      if (this.lockDelayTask !== null && !this.isOnSurface) return 'lock delay running off the surface';
-      if (this.lockDelayTask === null && this.isOnSurface) return 'piece resting with no lock delay';
+      if (this.lockDelayTask !== null && !this.isOnSurface)
+        return 'lock delay running off the surface';
+      if (this.lockDelayTask === null && this.isOnSurface)
+        return 'piece resting with no lock delay';
     } else if (this.gameLoopTask !== null || this.lockDelayTask !== null) {
       return 'timers running while not playing';
     }
@@ -633,7 +698,8 @@ export class GameManager {
           return;
         }
         this.state = GameState.playing;
-        if (this.isOnSurface && this.lockDelayResetCount === 16) this.lockAndSpawnNext();
+        if (this.isOnSurface && this.lockDelayResetCount === 16)
+          this.lockAndSpawnNext();
         else if (this.isOnSurface) this.startLockDelay();
         if (isPlaying(this)) this.startGameLoop();
         break;
@@ -659,7 +725,11 @@ export class GameManager {
   }
 
   togglePause() {
-    this.handleAction(this.state === GameState.playing ? PlayerAction.pause : PlayerAction.resume);
+    this.handleAction(
+      this.state === GameState.playing
+        ? PlayerAction.pause
+        : PlayerAction.resume
+    );
   }
 
   softDrop() {
@@ -689,7 +759,10 @@ export class GameManager {
   /** @param {number} deltaX */
   moveTetromino(deltaX) {
     if (this.state !== GameState.playing) return;
-    const newPosition = position(this.currentTetromino.position.row, this.currentTetromino.position.column + deltaX);
+    const newPosition = position(
+      this.currentTetromino.position.row,
+      this.currentTetromino.position.column + deltaX
+    );
     if (this.currentTetromino.fits(this.gameBoard, newPosition)) {
       this.currentTetromino.position = newPosition;
       this.resetLockDelay();

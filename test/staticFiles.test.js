@@ -22,6 +22,9 @@ const read = (file) => fs.readFileSync(path.join(publicDir, file), 'utf8');
 const exists = (file) => fs.existsSync(path.join(publicDir, file));
 
 const html = read('index.html');
+// Tag assertions ignore layout: line breaks and a self-closing slash inside a
+// tag are the formatter's choice, not part of the page's contract.
+const flatHtml = html.replace(/\s+/g, ' ').replace(/ \/>/g, '>');
 const manifest = parseJsonObject(read('manifest.webmanifest'));
 const manifestIcons = jsonArray(manifest.icons).map((icon) => jsonObject(icon));
 const serviceWorker = read('sw.js');
@@ -60,7 +63,7 @@ void test('the page preloads exactly the modules script.js imports, directly or 
   /** @param {string} file */
   const visit = (file) => {
     for (const [, specifier] of read(file).matchAll(
-      /^import .* from '(\.[^']+)';$/gm
+      /^import\s[\s\S]*?from\s+'(\.[^']+)';$/gm
     )) {
       const target = path.posix.join(path.posix.dirname(file), specifier);
       if (!imported.has(target)) {
@@ -72,7 +75,7 @@ void test('the page preloads exactly the modules script.js imports, directly or 
   visit('script.js');
   assert.ok(imported.size >= 7, `${String(imported.size)} modules`);
   const preloaded = [
-    ...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)
+    ...flatHtml.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)
   ].map((match) => match[1]);
   assert.deepEqual([...preloaded].sort(), [...imported].sort());
 });
@@ -101,8 +104,16 @@ void test('the page ids used by script.js all exist, canvases are canvases, and 
   );
   for (const id of ids) assert.match(html, new RegExp(`id="${id}"`), id);
   for (const id of canvasIds)
-    assert.match(html, new RegExp(`<canvas id="${id}"`), `${id} is a canvas`);
-  assert.match(html, /<dialog id="newGameDialog"/, 'newGameDialog is a dialog');
+    assert.match(
+      flatHtml,
+      new RegExp(`<canvas id="${id}"`),
+      `${id} is a canvas`
+    );
+  assert.match(
+    flatHtml,
+    /<dialog id="newGameDialog"/,
+    'newGameDialog is a dialog'
+  );
   assert.doesNotMatch(
     script,
     /getElementById\('/,
@@ -112,7 +123,7 @@ void test('the page ids used by script.js all exist, canvases are canvases, and 
 
 void test('the viewport fits notches and blocks zooming [DSP-4] [APP-4]', () => {
   const viewport = present(
-    html.match(/<meta name="viewport" content="([^"]+)"/)
+    flatHtml.match(/<meta name="viewport" content="([^"]+)"/)
   )[1];
   for (const part of [
     'width=device-width',
@@ -132,7 +143,7 @@ void test('the page has the tags iPhone needs to install the game [APP-1] [APP-4
     '<meta name="apple-mobile-web-app-capable" content="yes">',
     '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'
   ]) {
-    assert.ok(html.includes(tag), tag);
+    assert.ok(flatHtml.includes(tag), tag);
   }
 });
 

@@ -39,7 +39,7 @@ export function serializeSession(game) {
     lockDelayResetCount: game.lockDelayResetCount,
     lowestRowReached: game.lowestRowReached,
     // By color: the type is all a piece in the bag needs.
-    bag: (game.factory.bag ?? []).map(piece => piece.color)
+    bag: (game.factory.bag ?? []).map((piece) => piece.color)
   });
 }
 
@@ -49,20 +49,20 @@ export function serializeSession(game) {
  * @param {unknown} value
  * @returns {value is number}
  */
-const isInteger = value => Number.isInteger(value);
+const isInteger = (value) => Number.isInteger(value);
 
 /**
  * @param {unknown} value
  * @returns {value is number}
  */
-const isSafeInteger = value => Number.isSafeInteger(value);
+const isSafeInteger = (value) => Number.isSafeInteger(value);
 
 /**
  * @param {unknown} color
  * @returns {Tetromino | null}
  */
 function pieceWithColor(color) {
-  return allPieces().find(piece => piece.color === color) ?? null;
+  return allPieces().find((piece) => piece.color === color) ?? null;
 }
 
 /**
@@ -74,7 +74,7 @@ function pieceWithColor(color) {
 function parseBoard(board, rows, columns) {
   if (!Array.isArray(board) || board.length !== rows) return null;
   /** @type {Set<unknown>} */
-  const colors = new Set(allPieces().map(piece => piece.color));
+  const colors = new Set(allPieces().map((piece) => piece.color));
   /** @type {Board} */
   const result = [];
   for (const row of board) {
@@ -82,10 +82,18 @@ function parseBoard(board, rows, columns) {
     /** @type {Cell[]} */
     const cells = [];
     for (const cell of row) {
-      if (!hasFields(cell, ['isFilled', 'color']) || typeof cell.isFilled !== 'boolean') return null;
-      if (cell.isFilled ? !colors.has(cell.color) : cell.color !== null) return null;
+      if (
+        !hasFields(cell, ['isFilled', 'color']) ||
+        typeof cell.isFilled !== 'boolean'
+      )
+        return null;
+      if (cell.isFilled ? !colors.has(cell.color) : cell.color !== null)
+        return null;
       // Checked just above: a piece color when filled, otherwise null.
-      cells.push({ isFilled: cell.isFilled, color: /** @type {string | null} */ (cell.color) });
+      cells.push({
+        isFilled: cell.isFilled,
+        color: /** @type {string | null} */ (cell.color)
+      });
     }
     result.push(cells);
   }
@@ -100,12 +108,24 @@ function parseBoard(board, rows, columns) {
  * @returns {Tetromino | null}
  */
 function parseActivePiece(data, board) {
-  if (!hasFields(data, ['color', 'position', 'rotationState'], ['rotations', 'wallKickData'])
-    || !hasFields(data.position, ['row', 'column'])) return null;
+  if (
+    !hasFields(
+      data,
+      ['color', 'position', 'rotationState'],
+      ['rotations', 'wallKickData']
+    ) ||
+    !hasFields(data.position, ['row', 'column'])
+  )
+    return null;
   const piece = pieceWithColor(data.color);
   const { row, column } = data.position;
   if (!piece || !isInteger(row) || !isInteger(column)) return null;
-  if (!isInteger(data.rotationState) || data.rotationState < 0 || data.rotationState >= piece.rotations.length) return null;
+  if (
+    !isInteger(data.rotationState) ||
+    data.rotationState < 0 ||
+    data.rotationState >= piece.rotations.length
+  )
+    return null;
   piece.rotationState = data.rotationState;
   piece.position = position(row, column);
   return piece.fits(board) ? piece : null;
@@ -118,7 +138,14 @@ function parseActivePiece(data, board) {
  * @returns {Tetromino | null}
  */
 function parseWaitingPiece(data, columns) {
-  if (!hasFields(data, ['color'], ['position', 'rotationState', 'rotations', 'wallKickData'])) return null;
+  if (
+    !hasFields(
+      data,
+      ['color'],
+      ['position', 'rotationState', 'rotations', 'wallKickData']
+    )
+  )
+    return null;
   return pieceWithColor(data.color)?.spawned(columns) ?? null;
 }
 
@@ -128,9 +155,10 @@ function parseWaitingPiece(data, columns) {
  * @returns {Tetromino[] | null}
  */
 function parseBag(colors) {
-  if (!Array.isArray(colors) || new Set(colors).size !== colors.length) return null;
+  if (!Array.isArray(colors) || new Set(colors).size !== colors.length)
+    return null;
   const pieces = colors.map(pieceWithColor);
-  return pieces.every(piece => piece !== null) ? pieces : null;
+  return pieces.every((piece) => piece !== null) ? pieces : null;
 }
 
 // Returns the saved game as validated game state, or null when the text is
@@ -149,7 +177,20 @@ export function parseSession(text, { rows, columns }) {
   } catch {
     // Not JSON: data stays null and is rejected below.
   }
-  if (!hasFields(data, ['gameBoard', 'score', 'currentTetromino', 'nextTetrominos', 'heldTetromino', 'canHoldTetromino', 'bag', 'lockDelayResetCount', 'lowestRowReached'])) return null;
+  if (
+    !hasFields(data, [
+      'gameBoard',
+      'score',
+      'currentTetromino',
+      'nextTetrominos',
+      'heldTetromino',
+      'canHoldTetromino',
+      'bag',
+      'lockDelayResetCount',
+      'lowestRowReached'
+    ])
+  )
+    return null;
 
   const gameBoard = parseBoard(data.gameBoard, rows, columns);
   if (!gameBoard) return null;
@@ -157,7 +198,11 @@ export function parseSession(text, { rows, columns }) {
   if (!isSafeInteger(score) || score < 0) return null;
   const currentTetromino = parseActivePiece(data.currentTetromino, gameBoard);
   if (!currentTetromino) return null;
-  if (!Array.isArray(data.nextTetrominos) || data.nextTetrominos.length !== UPCOMING_COUNT) return null;
+  if (
+    !Array.isArray(data.nextTetrominos) ||
+    data.nextTetrominos.length !== UPCOMING_COUNT
+  )
+    return null;
   const nextTetrominos = [];
   for (const piece of data.nextTetrominos) {
     const parsed = parseWaitingPiece(piece, columns);
@@ -175,11 +220,29 @@ export function parseSession(text, { rows, columns }) {
 
   const lockDelayResetCount = data.lockDelayResetCount;
   const lowestRowReached = data.lowestRowReached;
-  const greatestRow = Math.max(...currentTetromino.cells.map(cell => cell.row));
-  const resting = !currentTetromino.fits(gameBoard, position(currentTetromino.position.row + 1, currentTetromino.position.column));
-  if (!isInteger(lockDelayResetCount) || lockDelayResetCount < 0 || lockDelayResetCount > 16
-    || (lockDelayResetCount === 16 && !resting)) return null;
-  if (!isInteger(lowestRowReached) || lowestRowReached < greatestRow || lowestRowReached >= rows) return null;
+  const greatestRow = Math.max(
+    ...currentTetromino.cells.map((cell) => cell.row)
+  );
+  const resting = !currentTetromino.fits(
+    gameBoard,
+    position(
+      currentTetromino.position.row + 1,
+      currentTetromino.position.column
+    )
+  );
+  if (
+    !isInteger(lockDelayResetCount) ||
+    lockDelayResetCount < 0 ||
+    lockDelayResetCount > 16 ||
+    (lockDelayResetCount === 16 && !resting)
+  )
+    return null;
+  if (
+    !isInteger(lowestRowReached) ||
+    lowestRowReached < greatestRow ||
+    lowestRowReached >= rows
+  )
+    return null;
 
   return {
     gameBoard,
@@ -203,7 +266,9 @@ export function parseUniqueJSON(text) {
   const value = /** @type {unknown} */ (JSON.parse(text));
   // JSON.parse has already checked syntax. Walk tokens only to reject duplicate
   // names, including escaped spellings of the same name, at every object depth.
-  const tokens = /** @type {RegExpMatchArray} */ (text.match(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g));
+  const tokens = /** @type {RegExpMatchArray} */ (
+    text.match(/"(?:[^"\\]|\\.)*"|[{}[\],:]|[^\s{}[\],:]+/g)
+  );
   let index = 0;
   function visit() {
     const token = tokens[index++];
@@ -212,7 +277,9 @@ export function parseUniqueJSON(text) {
       if (tokens[index] !== '}') {
         do {
           // The token walked is a quoted string, so its value is a string.
-          const key = String(/** @type {unknown} */ (JSON.parse(tokens[index++])));
+          const key = String(
+            /** @type {unknown} */ (JSON.parse(tokens[index++]))
+          );
           if (names.has(key)) throw new SyntaxError();
           names.add(key);
           index++; // colon
@@ -221,7 +288,9 @@ export function parseUniqueJSON(text) {
       } else index++;
     } else if (token === '[') {
       if (tokens[index] !== ']') {
-        do { visit(); } while (tokens[index++] === ',');
+        do {
+          visit();
+        } while (tokens[index++] === ',');
       } else index++;
     }
   }
@@ -231,18 +300,33 @@ export function parseUniqueJSON(text) {
 
 /** @param {unknown} value @param {string[]} required @param {string[]} [optional] @returns {value is Record<string, unknown>} */
 export function hasFields(value, required, optional) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    && required.every(key => Object.hasOwn(value, key))
-    && Object.keys(value).every(key => required.includes(key) || (optional && optional.includes(key)));
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    required.every((key) => Object.hasOwn(value, key)) &&
+    Object.keys(value).every(
+      (key) => required.includes(key) || (optional && optional.includes(key))
+    )
+  );
 }
 
 /** @param {string} text @returns {{format: string, available: boolean, position: string} | null} */
 export function parseSavedRecord(text) {
   try {
     const data = parseUniqueJSON(text);
-    if (!hasFields(data, ['format', 'available', 'position']) || data.format !== SAVE_FORMAT
-      || typeof data.available !== 'boolean' || typeof data.position !== 'string') return null;
-    return { format: SAVE_FORMAT, available: data.available, position: data.position };
+    if (
+      !hasFields(data, ['format', 'available', 'position']) ||
+      data.format !== SAVE_FORMAT ||
+      typeof data.available !== 'boolean' ||
+      typeof data.position !== 'string'
+    )
+      return null;
+    return {
+      format: SAVE_FORMAT,
+      available: data.available,
+      position: data.position
+    };
   } catch {
     return null;
   }
