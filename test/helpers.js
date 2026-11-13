@@ -16,7 +16,7 @@ import { allPieces, PieceColors } from '../public/game/tetrominoFactory.js';
  * @typedef {import('../public/game/gameManager.js').GameManagerOptions} GameManagerOptions
  * @typedef {import('../public/game/gameManager.js').PieceSource} PieceSource
  * @typedef {import('../public/game/gameManager.js').KeyValueStorage} KeyValueStorage
- * @typedef {import('../public/game/gameManager.js').Scheduler} Scheduler
+ * @typedef {import('../public/game/gameManager.js').Scheduler<unknown>} Scheduler
  * @typedef {import('../public/game/gameState.js').Board} Board
  * @typedef {import('../public/game/tetromino.js').Shape} Shape
  */

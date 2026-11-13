@@ -31,13 +31,18 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 /** @typedef {import('./gameState.js').PlayerActionValue} PlayerActionValue */
 /** @typedef {import('./tetromino.js').Tetromino} Tetromino */
 /** @typedef {{ getItem(key: string): unknown, setItem(key: string, value: string): void }} KeyValueStorage */
-/** @typedef {{ setTimeout(callback: () => void, ms: number): unknown, clearTimeout(handle: unknown): void }} Scheduler */
+/**
+ * A scheduler's clearTimeout accepts exactly the handles its own setTimeout
+ * issued: browser timers use numbers, other implementations their own.
+ * @template THandle
+ * @typedef {{ setTimeout(callback: () => void, ms: number): THandle, clearTimeout(handle: THandle): void }} Scheduler
+ */
 /** @typedef {{ generate(): Tetromino, bag?: Tetromino[], resetBag?(pieces?: Tetromino[]): void }} PieceSource */
 /** @typedef {{ reason: string, error?: unknown }} Fault */
 /**
  * @typedef {object} GameManagerOptions
  * @property {KeyValueStorage} [storage] Defaults to localStorage, or memory when unavailable.
- * @property {Scheduler} [scheduler] Defaults to the browser timers.
+ * @property {Scheduler<unknown>} [scheduler] Defaults to the browser timers.
  * @property {PieceSource} [factory] Defaults to a 7 bag.
  * @property {(fault: Fault) => void} [onFault] Defaults to console.error.
  * @property {() => void} [onChange] Called after every action and timer, so the page knows to draw.
@@ -114,11 +119,11 @@ function defaultStorage() {
   return createMemoryStorage();
 }
 
-/** @type {Scheduler} */
+/** @type {Scheduler<ReturnType<typeof globalThis.setTimeout>>} */
 const defaultScheduler = {
   setTimeout: (callback, ms) => globalThis.setTimeout(callback, ms),
   clearTimeout: (handle) => {
-    globalThis.clearTimeout(/** @type {number} */ (handle));
+    globalThis.clearTimeout(handle);
   }
 };
 
