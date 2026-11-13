@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.sw.json",
+  "include": ["dist/sw.js"]
+}

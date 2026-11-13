@@ -1,0 +1,48 @@
+name: Current offline browser qualification
+on:
+  push:
+    branches: [offline-complete-response]
+permissions:
+  contents: read
+concurrency:
+  group: current-offline-browser-qualification-v1
+  cancel-in-progress: false
+jobs:
+  qualify:
+    if: github.repository == 'soliskit/tetris-js' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      QUALIFICATION_HEAD: ${{ github.sha }}
+      QUALIFICATION_SOURCE_MODE: candidate
+      QUALIFICATION_EVIDENCE: ${{ runner.temp }}/current-offline-evidence-v1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26.13.0
+          package-manager-cache: false
+      - name: Run one owned bounded qualification with no repair or retry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/offline-current/supervise.py
+      - name: Compare one second clean build within ten minutes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/offline-current/reproduce-build.py
+      - name: Preserve bounded owned receipts for review
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: offline-qualification-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/current-offline-evidence-v1
+            ${{ runner.temp }}/current-offline-evidence-v1-reproducibility
+          if-no-files-found: error
+          retention-days: 7
+      - name: Emit exact bounded receipts even after a failed qualification
+        if: always()
+        run: python3 .github/offline-current/emit-evidence.py

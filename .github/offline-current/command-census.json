@@ -1,0 +1,265 @@
+{
+  "schema": 1,
+  "mode": "HOSTED_CURRENT_BROWSER_QUALIFICATION_PROPOSAL_ONLY",
+  "clock": {
+    "supervisorSeconds": 2400,
+    "workflowJobMinutes": 45,
+    "cleanupReserveSeconds": 30,
+    "transportReserveOutsideSupervisorMinutes": 5
+  },
+  "receipts": {
+    "maximumBytes": 16777216,
+    "maximumFileBytes": 8388608,
+    "maximumFiles": 512,
+    "stdoutOrStderrLimitBytes": 2097152,
+    "truncate": false,
+    "fallback": false
+  },
+  "stages": [
+    {
+      "name": "node-version",
+      "seconds": 10,
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "exactStdout": "v26.13.0"
+    },
+    {
+      "name": "bundled-npm-version",
+      "seconds": 10,
+      "argv": [
+        "npm",
+        "--version"
+      ],
+      "exactStdout": "11.20.0"
+    },
+    {
+      "name": "bootstrap-locked-npm-once",
+      "seconds": 180,
+      "argv": [
+        "npm",
+        "ci",
+        "--prefix",
+        ".github/offline-current/npm-runtime",
+        "--ignore-scripts",
+        "--omit=optional",
+        "--no-audit",
+        "--no-fund",
+        "--registry=https://registry.npmjs.org/"
+      ]
+    },
+    {
+      "name": "npm-version",
+      "seconds": 10,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "--version"
+      ],
+      "exactStdout": "12.2.0"
+    },
+    {
+      "name": "install-once",
+      "seconds": 420,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "ci",
+        "--ignore-scripts",
+        "--include=optional",
+        "--no-audit",
+        "--no-fund",
+        "--registry=https://registry.npmjs.org/"
+      ]
+    },
+    {
+      "name": "build-once",
+      "seconds": 120,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "build"
+      ]
+    },
+    {
+      "name": "lint-once",
+      "seconds": 120,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "lint"
+      ]
+    },
+    {
+      "name": "format-once",
+      "seconds": 120,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "format:check"
+      ]
+    },
+    {
+      "name": "product-types-once",
+      "seconds": 150,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "typecheck"
+      ]
+    },
+    {
+      "name": "test-types-once",
+      "seconds": 150,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "typecheck:tests"
+      ]
+    },
+    {
+      "name": "source-units-once",
+      "seconds": 600,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "test"
+      ]
+    },
+    {
+      "name": "delivery-units-once",
+      "seconds": 300,
+      "argv": [
+        "node",
+        ".github/offline-current/npm-runtime/node_modules/npm/bin/npm-cli.js",
+        "run",
+        "test:delivery:unit"
+      ]
+    },
+    {
+      "name": "python-style-once",
+      "seconds": 120,
+      "argv": [
+        "python3",
+        ".github/offline-current/python-style.py"
+      ]
+    },
+    {
+      "name": "affected-traceability-once",
+      "seconds": 60,
+      "argv": [
+        "node",
+        "--test",
+        "test/traceability.test.js"
+      ]
+    },
+    {
+      "name": "bind-before-browser",
+      "seconds": 30,
+      "env": {
+        "QUALIFICATION_BINDING_STAGE": "before-browser"
+      },
+      "argv": [
+        "python3",
+        ".github/offline-current/bind-product.py"
+      ]
+    },
+    {
+      "name": "hosted-browser-install-once",
+      "seconds": 420,
+      "argv": [
+        "sudo",
+        "-n",
+        "--preserve-env=PATH,PLAYWRIGHT_BROWSERS_PATH,QUALIFICATION_EVIDENCE,QUALIFICATION_HEAD,GITHUB_SHA,GITHUB_RUN_ID,GITHUB_RUN_ATTEMPT,QUALIFICATION_SETUP_DEADLINE",
+        "python3",
+        ".github/offline-current/privileged-setup.py"
+      ]
+    },
+    {
+      "name": "source-browser-once",
+      "seconds": 900,
+      "env": {
+        "QUALIFICATION_SUITE": "source"
+      },
+      "argv": [
+        "node",
+        "node_modules/playwright/cli.js",
+        "test",
+        "--config",
+        "playwright.config.js",
+        "--reporter=list,.github/offline-current/qualification-reporter.mjs",
+        "--output",
+        "test-results/source-current"
+      ]
+    },
+    {
+      "name": "delivery-browser-once",
+      "seconds": 600,
+      "env": {
+        "QUALIFICATION_SUITE": "delivery"
+      },
+      "argv": [
+        "node",
+        "node_modules/playwright/cli.js",
+        "test",
+        "--config",
+        "playwright.delivery.config.js",
+        "--reporter=list,.github/offline-current/qualification-reporter.mjs",
+        "--output",
+        "test-results/delivery-current"
+      ]
+    },
+    {
+      "name": "source-browser-coverage-once",
+      "seconds": 60,
+      "argv": [
+        "node",
+        "scripts/browser-coverage.js"
+      ]
+    },
+    {
+      "name": "validate-exact-rosters-once",
+      "seconds": 30,
+      "argv": [
+        "python3",
+        ".github/offline-current/validate-reports.py"
+      ]
+    },
+    {
+      "name": "bind-after-browser",
+      "seconds": 30,
+      "env": {
+        "QUALIFICATION_BINDING_STAGE": "after-browser"
+      },
+      "argv": [
+        "python3",
+        ".github/offline-current/bind-product.py"
+      ]
+    }
+  ],
+  "semantics": "One fresh hosted attempt. Every native status, process settlement, source identity, output binding, full result roster and final inventory must pass. Original stage and global deadlines remain stop bounds. No repair, retry, fallback or evidence truncation inside an attempt. Pixel inspection and reproducibility are separate completion gates.",
+  "expectedBrowserCounts": {
+    "source": {
+      "planned": 450,
+      "passed": 419,
+      "expectedFailed": 1,
+      "expected": 420,
+      "skipped": 30
+    },
+    "delivery": {
+      "planned": 42,
+      "passed": 42,
+      "expectedFailed": 0,
+      "expected": 42,
+      "skipped": 0
+    },
+    "screenshots": 12
+  }
+}
