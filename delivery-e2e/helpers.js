@@ -148,13 +148,11 @@ export async function serverFor(directory, scope) {
       let worker = fs.readFileSync(path.join(state.directory, 'sw.js'), 'utf8');
       if (state.corrupt) {
         // One known embedded body, unchanged digest: installation must reject.
-        const match = worker.match(/"body":"([A-Za-z0-9+/=]+)"/);
+        const match = worker.match(/\bbody: '([A-Za-z0-9+/=]+)'/);
         if (!match) throw new Error('worker payload shape changed');
         const body = match[1];
-        worker = worker.replace(
-          '"body":"' + body + '"',
-          '"body":"' + (body[0] === 'A' ? 'B' : 'A') + body.slice(1) + '"'
-        );
+        const changed = (body[0] === 'A' ? 'B' : 'A') + body.slice(1);
+        worker = worker.replace(match[0], () => "body: '" + changed + "'");
       }
       return response.set('Cache-Control', 'no-store').type('js').send(worker);
     }

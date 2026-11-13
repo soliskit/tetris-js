@@ -3,6 +3,7 @@
 import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import {
   serverFor,
   ready,
@@ -65,10 +66,35 @@ for (const scope of ['/', '/nested/app/']) {
     'built worker preserves malformed old-pin cache contents and foreign caches ' +
       scope +
       ' [APP-2] [APP-6] [SAF-2]',
-    async ({ page }) => {
+    async ({ playwright, browserName }, info) => {
+      // CacheStorage must outlive navigation to test the worker's preservation.
+      // WebKit's ephemeral contexts discard cache records on navigation.
+      const profile = fs.mkdtempSync(
+        path.join(os.tmpdir(), 'tetris-cache-preservation-')
+      );
+      let context;
+      let launchUncertain = false;
+      let closeUncertain = false;
+      let retainedClose;
       const host = await serverFor(path.resolve('dist'), scope);
       let primary;
       try {
+        const use = info.project.use;
+        launchUncertain = true;
+        context = await playwright[browserName].launchPersistentContext(
+          profile,
+          {
+            headless: true,
+            viewport: use.viewport,
+            deviceScaleFactor: use.deviceScaleFactor,
+            isMobile: use.isMobile,
+            hasTouch: use.hasTouch,
+            serviceWorkers: 'allow',
+            timeout: 15000
+          }
+        );
+        launchUncertain = false;
+        const page = context.pages()[0] || (await context.newPage());
         await page.goto(host.base + 'harness.html');
         await page.evaluate(async () => {
           for (const name of [
@@ -103,7 +129,48 @@ for (const scope of ['/', '/nested/app/']) {
       } catch (error) {
         primary = error;
       } finally {
-        await cleanupAll([host], primary);
+        await cleanupAll(
+          [
+            {
+              close: async () => {
+                if (!context) return;
+                closeUncertain = true;
+                let timer;
+                try {
+                  await Promise.race([
+                    retainedClose || (retainedClose = context.close()),
+                    new Promise((_resolve, reject) => {
+                      timer = setTimeout(
+                        () =>
+                          reject(
+                            new Error(
+                              'cache context close unsettled; profile retained'
+                            )
+                          ),
+                        10000
+                      );
+                    })
+                  ]);
+                  closeUncertain = false;
+                } finally {
+                  clearTimeout(timer);
+                }
+              }
+            },
+            host,
+            {
+              close: () => {
+                if (launchUncertain || closeUncertain)
+                  throw new Error(
+                    'cache browser ownership uncertain; profile retained: ' +
+                      profile
+                  );
+                fs.rmSync(profile, { recursive: true });
+              }
+            }
+          ],
+          primary
+        );
       }
     }
   );
