@@ -10,7 +10,8 @@ import { InputController } from './game/inputController.js';
 
 // Every id below exists in index.html; test/staticFiles.test.js checks that.
 /** @param {string} id */
-const element = id => /** @type {HTMLElement} */ (document.getElementById(id));
+const element = (id) =>
+  /** @type {HTMLElement} */ (document.getElementById(id));
 
 // DSP-6 reserves first contexts as the page starts, before asynchronous
 // admission. This allocates contexts, but does not draw or start a game.
@@ -55,7 +56,7 @@ async function ownGamePage() {
   let pending = false;
   let admitted = false;
   const lifetime = new Promise(() => {});
-  await new Promise(resolve => {
+  await new Promise((resolve) => {
     const attempt = () => {
       if (pending || admitted) return;
       pending = true;
@@ -78,22 +79,24 @@ async function ownGamePage() {
         }
       };
       try {
-        void navigator.locks.request('tetris.game-page', { ifAvailable: true }, lock => {
-          if (!lock) {
-            pending = false;
-            document.documentElement.dataset.tabAdmission = 'blocked';
-            retry.disabled = false;
-            retry.hidden = false;
-            message.textContent = 'Game already open in another tab.';
-            detail.textContent = 'Close the other game tab, then try again.';
-            return;
-          }
-          admitted = true;
-          resolve(undefined);
-          // Never release on pause, hide, pagehide or initialization failure.
-          // Only browser context cleanup ends this lifetime hold.
-          return lifetime;
-        }).catch(failed);
+        void navigator.locks
+          .request('tetris.game-page', { ifAvailable: true }, (lock) => {
+            if (!lock) {
+              pending = false;
+              document.documentElement.dataset.tabAdmission = 'blocked';
+              retry.disabled = false;
+              retry.hidden = false;
+              message.textContent = 'Game already open in another tab.';
+              detail.textContent = 'Close the other game tab, then try again.';
+              return;
+            }
+            admitted = true;
+            resolve(undefined);
+            // Never release on pause, hide, pagehide or initialization failure.
+            // Only browser context cleanup ends this lifetime hold.
+            return lifetime;
+          })
+          .catch(failed);
       } catch {
         failed();
       }
@@ -107,13 +110,17 @@ async function ownGamePage() {
 
 const internalErrorMessage = 'The game stopped because of an internal error.';
 let engineFaultNotice = false;
-const gameManager = new GameManager({ onChange: engineChanged, onFault: reportEngineFault });
+const gameManager = new GameManager({
+  onChange: engineChanged,
+  onFault: reportEngineFault
+});
 
 // The guard finishes the operation and its checks before this callback.
 // A fault stays over (or never reaches this callback), so only a completed
 // New Game or accepted Continue clears the cause on the default page route.
 function engineChanged() {
-  if (gameManager.state === GameState.gameOver) inputController.releaseForPause();
+  if (gameManager.state === GameState.gameOver)
+    inputController.releaseForPause();
   if (gameManager.state !== GameState.gameOver) engineFaultNotice = false;
   requestDraw();
 }
@@ -136,7 +143,8 @@ function reportEngineFault(fault) {
 }
 
 /** @param {string} id */
-const canvasElement = id => /** @type {HTMLCanvasElement} */ (document.getElementById(id));
+const canvasElement = (id) =>
+  /** @type {HTMLCanvasElement} */ (document.getElementById(id));
 
 const boardCanvas = canvasElement('tetris');
 const heldCanvas = canvasElement('heldPreview');
@@ -146,7 +154,9 @@ const highScoreLabel = element('highScore');
 const menuControls = element('menuControls');
 const gameOverMessage = element('gameOverMessage');
 const announcer = element('announcer');
-const newGameDialog = /** @type {HTMLDialogElement} */ (element('newGameDialog'));
+const newGameDialog = /** @type {HTMLDialogElement} */ (
+  element('newGameDialog')
+);
 const continueButton = element('continueGameButton');
 const keyHint = element('keyHint');
 const playPauseButton = element('playPauseButton');
@@ -157,13 +167,24 @@ const canvases = [boardCanvas, heldCanvas, ...nextCanvases];
 // sRGB. A canvas always has a 2d context unless another kind was requested
 // first.
 /** @type {Map<HTMLCanvasElement, CanvasRenderingContext2D>} */
-const contexts = new Map(canvases.map(canvas => [canvas, /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { colorSpace: 'display-p3' }))]));
+const contexts = new Map(
+  canvases.map((canvas) => [
+    canvas,
+    /** @type {CanvasRenderingContext2D} */ (
+      canvas.getContext('2d', { colorSpace: 'display-p3' })
+    )
+  ])
+);
 
 // The contexts that really draw in Display P3. A browser without Display P3
 // canvases gives sRGB ones, where P3 colors would be clipped, so pieces keep
 // their usual colors there.
 /** @type {WeakSet<CanvasRenderingContext2D>} */
-const p3Contexts = new WeakSet([...contexts.values()].filter(context => context.getImageData(0, 0, 1, 1).colorSpace === 'display-p3'));
+const p3Contexts = new WeakSet(
+  [...contexts.values()].filter(
+    (context) => context.getImageData(0, 0, 1, 1).colorSpace === 'display-p3'
+  )
+);
 
 // Canvas sizes come from a ResizeObserver instead of measuring every frame.
 // Maps each canvas to its size in CSS pixels once sized.
@@ -174,7 +195,7 @@ const canvasSizes = new Map();
  * @param {HTMLCanvasElement} canvas
  * @returns {CanvasSize} Only called for canvases that have been sized.
  */
-const sizeOf = canvas => /** @type {CanvasSize} */ (canvasSizes.get(canvas));
+const sizeOf = (canvas) => /** @type {CanvasSize} */ (canvasSizes.get(canvas));
 
 /**
  * @param {HTMLCanvasElement} canvas
@@ -186,7 +207,9 @@ function sizeCanvas(canvas, width, height) {
   canvas.width = Math.round(width * ratio);
   canvas.height = Math.round(height * ratio);
   // Resizing resets the context, so the scale is set again here.
-  const context = /** @type {CanvasRenderingContext2D} */ (contexts.get(canvas));
+  const context = /** @type {CanvasRenderingContext2D} */ (
+    contexts.get(canvas)
+  );
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
   canvasSizes.set(canvas, { context, width, height });
 }
@@ -205,7 +228,9 @@ function vivid(context, hex) {
   if (!p3Contexts.has(context)) return hex;
   let color = vividColors.get(hex);
   if (!color) {
-    const [red, green, blue] = [1, 3, 5].map(start => parseInt(hex.slice(start, start + 2), 16) / 255);
+    const [red, green, blue] = [1, 3, 5].map(
+      (start) => parseInt(hex.slice(start, start + 2), 16) / 255
+    );
     color = `color(display-p3 ${String(red)} ${String(green)} ${String(blue)})`;
     vividColors.set(hex, color);
   }
@@ -281,7 +306,14 @@ function drawBoard() {
     for (let column = 0; column < columns; column++) {
       const cell = gameManager.gameBoard[row][column];
       // A filled cell always has a piece color.
-      if (cell.isFilled) drawBlock(context, column, row, blockSize, /** @type {string} */ (cell.color));
+      if (cell.isFilled)
+        drawBlock(
+          context,
+          column,
+          row,
+          blockSize,
+          /** @type {string} */ (cell.color)
+        );
     }
   }
 
@@ -333,7 +365,11 @@ function syncControls() {
   lastState = state;
   scoreLabel.textContent = `Score: ${String(gameManager.score)}`;
   highScoreLabel.textContent = `High Score: ${String(highScore)}`;
-  const message = engineFaultNotice ? internalErrorMessage : gameEnded ? 'Game Over' : '';
+  const message = engineFaultNotice
+    ? internalErrorMessage
+    : gameEnded
+      ? 'Game Over'
+      : '';
   gameOverMessage.hidden = !message;
   gameOverMessage.textContent = message;
   gameOverMessage.classList.toggle('engine-fault', engineFaultNotice);
@@ -344,7 +380,11 @@ function syncControls() {
   menuControls.hidden = !isGameOver && !paused;
   const canContinue = isGameOver && isSessionSaved;
   continueButton.hidden = !canContinue;
-  keyHint.textContent = paused ? 'Return: New Game    P: Resume' : canContinue ? 'Return: New Game    C: Continue' : 'Return: New Game';
+  keyHint.textContent = paused
+    ? 'Return: New Game    P: Resume'
+    : canContinue
+      ? 'Return: New Game    C: Continue'
+      : 'Return: New Game';
   // The engine asks before New Game gives up a paused game, and this dialog
   // shows the question.
   if (gameManager.isConfirmingNewGame !== newGameDialog.open) {
@@ -380,22 +420,25 @@ function setWakeLock(wanted) {
 }
 
 function requestWakeLock() {
-  return navigator.wakeLock.request('screen').then(sentinel => {
-    // Play may have stopped, or a newer request won, while this one waited.
-    if (!wakeLockWanted || wakeLock) {
-      void sentinel.release();
-      return;
-    }
-    wakeLock = sentinel;
-    // The system can take the lock back during play (when the battery runs
-    // low, for example), so ask for it again.
-    sentinel.addEventListener('release', () => {
-      if (wakeLock !== sentinel) return;
-      wakeLock = null;
-      void requestWakeLock();
-    });
-    return null;
-  }, () => {});
+  return navigator.wakeLock.request('screen').then(
+    (sentinel) => {
+      // Play may have stopped, or a newer request won, while this one waited.
+      if (!wakeLockWanted || wakeLock) {
+        void sentinel.release();
+        return;
+      }
+      wakeLock = sentinel;
+      // The system can take the lock back during play (when the battery runs
+      // low, for example), so ask for it again.
+      sentinel.addEventListener('release', () => {
+        if (wakeLock !== sentinel) return;
+        wakeLock = null;
+        void requestWakeLock();
+      });
+      return null;
+    },
+    () => {}
+  );
 }
 
 let lastSnapshot = '';
@@ -412,11 +455,13 @@ const drawnPreviews = new Map();
 
 function boardChanged() {
   const piece = gameManager.currentTetromino;
-  return piece !== drawnBoard.piece
-    || piece.position !== drawnBoard.position
-    || piece.rotationState !== drawnBoard.rotationState
-    || gameManager.boardVersion !== drawnBoard.boardVersion
-    || showsPieces() !== drawnBoard.showsPieces;
+  return (
+    piece !== drawnBoard.piece ||
+    piece.position !== drawnBoard.position ||
+    piece.rotationState !== drawnBoard.rotationState ||
+    gameManager.boardVersion !== drawnBoard.boardVersion ||
+    showsPieces() !== drawnBoard.showsPieces
+  );
 }
 
 function syncChangedControls() {
@@ -447,10 +492,13 @@ function drawIfChanged() {
   const pieces = showsPieces();
   /** @type {Array<[HTMLCanvasElement, Tetromino | null]>} */
   const previews = [[heldCanvas, pieces ? gameManager.heldTetromino : null]];
-  nextCanvases.forEach((canvas, index) => previews.push([canvas, pieces ? gameManager.nextTetrominos[index] : null]));
+  nextCanvases.forEach((canvas, index) =>
+    previews.push([canvas, pieces ? gameManager.nextTetrominos[index] : null])
+  );
   for (const [canvas, tetromino] of previews) {
     if (!canvasSizes.has(canvas)) continue;
-    if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino) continue;
+    if (drawnPreviews.has(canvas) && drawnPreviews.get(canvas) === tetromino)
+      continue;
     drawPreview(canvas, tetromino);
     drew = true;
     drawnPreviews.set(canvas, tetromino);
@@ -478,7 +526,8 @@ function drawSafely(draw) {
     drawnBoard = {};
     drawnPreviews.clear();
     lastSnapshot = '';
-    if (!renderErrorReported) console.error('Tetris drawing error, retrying next frame:', error);
+    if (!renderErrorReported)
+      console.error('Tetris drawing error, retrying next frame:', error);
     renderErrorReported = true;
     requestDraw();
   }
@@ -533,32 +582,46 @@ function requestDraw(allowRetry = true) {
 }
 
 // Resizing a canvas clears it, so redraw in the same frame to avoid a flash.
-const resizeObserver = new ResizeObserver(entries => {
+const resizeObserver = new ResizeObserver((entries) => {
   for (const entry of entries) {
     const { inlineSize, blockSize } = entry.contentBoxSize[0];
     if (entry.target === boardCanvas && drag.pointerId !== null) {
       const previous = canvasSizes.get(boardCanvas);
-      if (previous && (previous.width !== inlineSize || previous.height !== blockSize)) {
+      if (
+        previous &&
+        (previous.width !== inlineSize || previous.height !== blockSize)
+      ) {
         drag.canceledForResize = true;
         drag.moved = true;
       }
     }
-    sizeCanvas(/** @type {HTMLCanvasElement} */ (entry.target), inlineSize, blockSize);
+    sizeCanvas(
+      /** @type {HTMLCanvasElement} */ (entry.target),
+      inlineSize,
+      blockSize
+    );
   }
   drawSafely(redrawAll);
 });
-canvases.forEach(canvas => {
+canvases.forEach((canvas) => {
   resizeObserver.observe(canvas);
 });
 
 // Moving the window to a screen with a different pixel density does not
 // resize anything in CSS pixels, so rebuild the canvases for the new density.
 function watchPixelRatio() {
-  matchMedia(`(resolution: ${String(window.devicePixelRatio)}dppx)`).addEventListener('change', () => {
-    for (const [canvas, { width, height }] of canvasSizes) sizeCanvas(canvas, width, height);
-    drawSafely(redrawAll);
-    watchPixelRatio();
-  }, { once: true });
+  matchMedia(
+    `(resolution: ${String(window.devicePixelRatio)}dppx)`
+  ).addEventListener(
+    'change',
+    () => {
+      for (const [canvas, { width, height }] of canvasSizes)
+        sizeCanvas(canvas, width, height);
+      drawSafely(redrawAll);
+      watchPixelRatio();
+    },
+    { once: true }
+  );
 }
 watchPixelRatio();
 
@@ -606,11 +669,13 @@ function cellWidth() {
  */
 function tryMove(piece, step) {
   const column = piece.position.column;
-  gameManager.handleAction(step > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft);
+  gameManager.handleAction(
+    step > 0 ? PlayerAction.moveRight : PlayerAction.moveLeft
+  );
   return piece.position.column !== column;
 }
 
-boardCanvas.addEventListener('pointerdown', event => {
+boardCanvas.addEventListener('pointerdown', (event) => {
   // Another finger while one is down does nothing to the game: the first
   // keeps the drag, and the gesture is no longer a tap.
   if (drag.pointerId !== null) {
@@ -625,8 +690,13 @@ boardCanvas.addEventListener('pointerdown', event => {
   boardCanvas.setPointerCapture(event.pointerId);
 });
 
-boardCanvas.addEventListener('pointermove', event => {
-  if (event.pointerId !== drag.pointerId || drag.canceledForResize || !canvasSizes.has(boardCanvas)) return;
+boardCanvas.addEventListener('pointermove', (event) => {
+  if (
+    event.pointerId !== drag.pointerId ||
+    drag.canceledForResize ||
+    !canvasSizes.has(boardCanvas)
+  )
+    return;
   // The piece locked or was held mid gesture: ignore the rest of this drag
   // rather than moving or dropping the next piece.
   if (gameManager.currentTetromino !== drag.piece) return;
@@ -638,7 +708,10 @@ boardCanvas.addEventListener('pointermove', event => {
   const width = cellWidth();
 
   let offset = (event.clientX - drag.startX) / width;
-  if (drag.blocked !== 0 && Math.sign(offset - drag.cellOffset) === drag.blocked) {
+  if (
+    drag.blocked !== 0 &&
+    Math.sign(offset - drag.cellOffset) === drag.blocked
+  ) {
     // Still pushing against a wall or block. Slide in if a gap has opened,
     // and keep the anchor under the finger so pushing does not bank moves
     // and moving back responds after half a cell.
@@ -668,7 +741,10 @@ boardCanvas.addEventListener('pointermove', event => {
   }
 
   const newRowOffset = Math.max(0, Math.trunc(dy / width));
-  while (drag.rowOffset < newRowOffset && gameManager.currentTetromino === drag.piece) {
+  while (
+    drag.rowOffset < newRowOffset &&
+    gameManager.currentTetromino === drag.piece
+  ) {
     gameManager.softDrop();
     drag.rowOffset += 1;
   }
@@ -677,7 +753,11 @@ boardCanvas.addEventListener('pointermove', event => {
 /** @param {PointerEvent} event */
 function endDrag(event) {
   if (event.pointerId !== drag.pointerId) return;
-  const isTap = !drag.canceledForResize && !drag.moved && event.type === 'pointerup' && gameManager.currentTetromino === drag.piece;
+  const isTap =
+    !drag.canceledForResize &&
+    !drag.moved &&
+    event.type === 'pointerup' &&
+    gameManager.currentTetromino === drag.piece;
   if (isTap) gameManager.handleAction(PlayerAction.rotate);
   resetDragState();
 }
@@ -693,11 +773,15 @@ heldCanvas.addEventListener('click', () => {
 // and only then do Enter and Space hold instead of their game actions.
 // (Checking :focus-visible would not do: any key press makes it match.)
 // Hold only works while playing, so otherwise they keep their game actions.
-heldCanvas.addEventListener('mousedown', event => {
+heldCanvas.addEventListener('mousedown', (event) => {
   event.preventDefault();
 });
-heldCanvas.addEventListener('keydown', event => {
-  if ((event.key !== 'Enter' && event.key !== ' ') || gameManager.state !== GameState.playing) return;
+heldCanvas.addEventListener('keydown', (event) => {
+  if (
+    (event.key !== 'Enter' && event.key !== ' ') ||
+    gameManager.state !== GameState.playing
+  )
+    return;
   // A key pressed with Cmd, Ctrl or Alt is the browser's shortcut and
   // never holds (INP-3): leave it alone, like the input controller does.
   if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -731,23 +815,29 @@ const questionButtons = [cancelNewGameButton, confirmNewGameButton];
 // a controller and the arrow keys, which move the focus; A presses it, as
 // Enter does. With none selected, a move selects Cancel, the safe answer.
 const inputController = new InputController(gameManager, {
-  move: step => {
-    const index = questionButtons.indexOf(/** @type {HTMLElement} */ (document.activeElement));
-    questionButtons[Math.max(0, Math.min(questionButtons.length - 1, index + step))].focus();
+  move: (step) => {
+    const index = questionButtons.findIndex(
+      (button) => button === document.activeElement
+    );
+    questionButtons[
+      Math.max(0, Math.min(questionButtons.length - 1, index + step))
+    ].focus();
   },
-  press: () => questionButtons.find(button => button === document.activeElement)?.click()
+  press: () =>
+    questionButtons.find((button) => button === document.activeElement)?.click()
 });
 // Pressing the question or padding does nothing, including leaving the
 // selected answer focused. Buttons and the backdrop keep their defaults.
-newGameDialog.addEventListener('pointerdown', event => {
+newGameDialog.addEventListener('pointerdown', (event) => {
   if (!event.isPrimary || event.button !== 0) return;
   const target = /** @type {Element} */ (event.target);
-  if (target.closest('.dialog-content') && !target.closest('button')) event.preventDefault();
+  if (target.closest('.dialog-content') && !target.closest('button'))
+    event.preventDefault();
 });
-newGameDialog.addEventListener('click', event => {
+newGameDialog.addEventListener('click', (event) => {
   if (event.target === newGameDialog) gameManager.cancelNewGame();
 });
-newGameDialog.addEventListener('cancel', event => {
+newGameDialog.addEventListener('cancel', (event) => {
   event.preventDefault();
   gameManager.cancelNewGame();
 });
@@ -768,34 +858,49 @@ function togglePauseFromButton() {
 let pauseTouch = null;
 /** @type {number | null} */
 let handledPauseTouch = null;
-playPauseButton.addEventListener('pointerdown', event => {
-  if (event.pointerType !== 'touch' || gameManager.state !== GameState.playing) return;
+playPauseButton.addEventListener('pointerdown', (event) => {
+  if (event.pointerType !== 'touch' || gameManager.state !== GameState.playing)
+    return;
   if (pauseTouch !== null) return;
   handledPauseTouch = null;
-  pauseTouch = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+  pauseTouch = {
+    pointerId: event.pointerId,
+    x: event.clientX,
+    y: event.clientY,
+    moved: false
+  };
 });
-window.addEventListener('pointermove', event => {
+window.addEventListener('pointermove', (event) => {
   if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
-  if (Math.hypot(event.clientX - pauseTouch.x, event.clientY - pauseTouch.y) > TAP_SLOP_PX)
+  if (
+    Math.hypot(event.clientX - pauseTouch.x, event.clientY - pauseTouch.y) >
+    TAP_SLOP_PX
+  )
     pauseTouch.moved = true;
 });
-window.addEventListener('pointercancel', event => {
+window.addEventListener('pointercancel', (event) => {
   if (event.pointerId === pauseTouch?.pointerId) pauseTouch = null;
 });
-window.addEventListener('pointerup', event => {
+window.addEventListener('pointerup', (event) => {
   if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
   const touch = pauseTouch;
   pauseTouch = null;
   const box = playPauseButton.getBoundingClientRect();
-  const inside = event.clientX >= box.left && event.clientX <= box.right
-    && event.clientY >= box.top && event.clientY <= box.bottom;
+  const inside =
+    event.clientX >= box.left &&
+    event.clientX <= box.right &&
+    event.clientY >= box.top &&
+    event.clientY <= box.bottom;
   if (touch.moved || !inside || gameManager.state !== GameState.playing) return;
   handledPauseTouch = event.pointerId;
   togglePauseFromButton();
 });
-playPauseButton.addEventListener('click', event => {
-  if (event instanceof PointerEvent && event.pointerType === 'touch'
-    && event.pointerId === handledPauseTouch) {
+playPauseButton.addEventListener('click', (event) => {
+  if (
+    event instanceof PointerEvent &&
+    event.pointerType === 'touch' &&
+    event.pointerId === handledPauseTouch
+  ) {
     handledPauseTouch = null;
     return;
   }
@@ -810,7 +915,8 @@ document.addEventListener('visibilitychange', () => {
   }
   cancelDrawRetry();
   resetDragState();
-  if (gameManager.state === GameState.playing) gameManager.handleAction(PlayerAction.pause);
+  if (gameManager.state === GameState.playing)
+    gameManager.handleAction(PlayerAction.pause);
 });
 
 // Another tab saving or ending a game changes whether this one can continue,
@@ -841,13 +947,14 @@ requestDraw();
 // too. Every supported browser has a visual viewport.
 const viewport = /** @type {VisualViewport} */ (window.visualViewport);
 const zoomedIn = () => viewport.scale > 1;
-const watchZoom = () => document.documentElement.classList.toggle('zoomed', zoomedIn());
+const watchZoom = () =>
+  document.documentElement.classList.toggle('zoomed', zoomedIn());
 viewport.addEventListener('resize', watchZoom);
 watchZoom();
 
 // Cancelling Safari's pinch gestures stops pinch zoom.
 for (const type of ['gesturestart', 'gesturechange']) {
-  document.addEventListener(type, event => {
+  document.addEventListener(type, (event) => {
     if (!zoomedIn()) event.preventDefault();
   });
 }
@@ -867,7 +974,9 @@ if ('serviceWorker' in navigator) {
 
 // Do not expose controls until admission and synchronous bootstrap finish.
 element('tabLockStatus').hidden = true;
-const admittedGame = /** @type {HTMLElement} */ (document.querySelector('main.app'));
+const admittedGame = /** @type {HTMLElement} */ (
+  document.querySelector('main.app')
+);
 admittedGame.hidden = false;
 admittedGame.inert = false;
 document.documentElement.dataset.tabAdmission = 'ready';

@@ -983,6 +983,12 @@ const malformedCurrent = [
     }
   ],
   [
+    'a null piece',
+    (game) => {
+      poke(game, 'currentTetromino', null);
+    }
+  ],
+  [
     'no color',
     (game) => {
       poke(game.currentTetromino, 'color', undefined);
@@ -1028,6 +1034,12 @@ const malformedCurrent = [
     'no position',
     (game) => {
       poke(game.currentTetromino, 'position', undefined);
+    }
+  ],
+  [
+    'a null position',
+    (game) => {
+      poke(game.currentTetromino, 'position', null);
     }
   ],
   [
@@ -1093,6 +1105,39 @@ for (const paused of [false, true]) {
     });
   }
 }
+
+// A forged prototype entry must never stand in for a rotation the piece
+// lacks: the bounds checks reject the index before any prototype lookup.
+
+void test('a negative rotation index backed by a polluted prototype entry is caught [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame({
+    factory: fixedFactory(PieceColors.cyan)
+  });
+  const rotations = present(game.currentTetromino).rotations;
+  Array.prototype['-1'] = rotations[0];
+  try {
+    poke(game.currentTetromino, 'rotationState', -1);
+    game.guard(() => {});
+    assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
+  } finally {
+    Reflect.deleteProperty(Array.prototype, '-1');
+  }
+});
+
+void test('a rotation index past its last rotation backed by a polluted prototype entry is caught [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame({
+    factory: fixedFactory(PieceColors.cyan)
+  });
+  const rotations = present(game.currentTetromino).rotations;
+  Array.prototype[rotations.length] = rotations[0];
+  try {
+    poke(game.currentTetromino, 'rotationState', rotations.length);
+    game.guard(() => {});
+    assertSafeStop(game, scheduler, reported, BAD_CURRENT_REASON);
+  } finally {
+    Reflect.deleteProperty(Array.prototype, String(rotations.length));
+  }
+});
 
 void test('a piece with no blocks is caught even when it only waits to be dealt [SAF-4]', () => {
   const { game, scheduler, reported } = recordingGame({

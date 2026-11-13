@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 import {
   GAME_STORAGE_KEYS,
   GameManager,
-  createMemoryStorage
+  createMemoryStorage,
+  isKeyValueStorage
 } from '../public/game/gameManager.js';
 import { GameState, PlayerAction } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
@@ -65,9 +66,10 @@ function readRecord(storage, key) {
 /**
  * Parses saved-record bytes; fails the test when invalid, which is exactly
  * where the read sites already threw.
- * @param {string} text
+ * @param {unknown} text
  */
 function parseRecord(text) {
+  assert.ok(typeof text === 'string', 'a written record is always a string');
   const record = parseSavedRecord(text);
   assert.ok(record);
   return record;
@@ -131,6 +133,115 @@ void test('without injected storage it falls back to memory when localStorage is
   const game = new GameManager({ scheduler: createFakeScheduler() });
   game.highScore = 300;
   assert.equal(game.highScore, 300);
+});
+
+/** @param {unknown} foreign @param {() => void} body */
+function withLocalStorage(foreign, body) {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: foreign,
+    configurable: true,
+    writable: true
+  });
+  try {
+    body();
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else Reflect.deleteProperty(globalThis, 'localStorage');
+  }
+}
+
+void test('a present localStorage stores and reads [SAF-2]', () => {
+  /** @type {Map<string, string>} */
+  const backing = new Map();
+  const foreign = {
+    /** @param {string} key */
+    getItem: (key) => backing.get(key) ?? null,
+    /** @param {string} key @param {string} value */
+    setItem: (key, value) => {
+      backing.set(key, value);
+    }
+  };
+  withLocalStorage(foreign, () => {
+    const game = new GameManager({ scheduler: createFakeScheduler() });
+    game.highScore = 300;
+    assert.equal(
+      backing.get('tetris.highScore'),
+      '300',
+      'writes reach the store itself'
+    );
+    backing.set('tetris.highScore', '450');
+    assert.equal(game.highScore, 450, 'reads reach the store itself');
+  });
+});
+
+void test('isKeyValueStorage accepts only objects with both storage members [SAF-2]', () => {
+  const store = {
+    getItem: () => null,
+    setItem: () => {}
+  };
+  assert.equal(isKeyValueStorage(store), true, 'both members: storage');
+  assert.equal(isKeyValueStorage(null), false, 'null is not storage');
+  assert.equal(isKeyValueStorage(undefined), false, 'undefined is not storage');
+  assert.equal(isKeyValueStorage(42), false, 'a primitive is not storage');
+  assert.equal(isKeyValueStorage('text'), false, 'a string is not storage');
+  assert.equal(
+    isKeyValueStorage(() => 0),
+    false,
+    'a plain function is not storage'
+  );
+  assert.equal(isKeyValueStorage({}), false, 'no members: not storage');
+  assert.equal(
+    isKeyValueStorage({ getItem: () => null }),
+    false,
+    'getItem only: not storage'
+  );
+  assert.equal(
+    isKeyValueStorage({ setItem: () => {} }),
+    false,
+    'setItem only: not storage'
+  );
+  assert.equal(
+    isKeyValueStorage({ getItem: null, setItem: () => {} }),
+    false,
+    'a non-function member does not count'
+  );
+});
+
+void test('a localStorage slot without storage members falls back to memory [SAF-2]', () => {
+  for (const impostor of [{}, { getItem: () => null }, 42, () => 0]) {
+    withLocalStorage(impostor, () => {
+      const game = new GameManager({ scheduler: createFakeScheduler() });
+      game.highScore = 300;
+      assert.equal(
+        game.highScore,
+        300,
+        'memory fallback keeps working for the session'
+      );
+    });
+  }
+});
+
+void test('storage returning a foreign value fails loudly [SAF-2]', () => {
+  const game = new GameManager({
+    scheduler: createFakeScheduler(),
+    storage: {
+      getItem: () => 42,
+      setItem: () => {}
+    }
+  });
+  assert.throws(
+    () => game.highScore,
+    new TypeError(
+      'storage.getItem returned a foreign value, not a string or null'
+    ),
+    'a number from getItem is not a stored string'
+  );
+  assert.throws(
+    () => game.isSessionSaved,
+    TypeError,
+    'a number from getItem is not a saved record'
+  );
 });
 
 // State guards
@@ -2017,6 +2128,8 @@ void test('fresh Continue invalidates earlier cached ineligibility after restori
   const { storage } = priorSave();
   const record = storage.getItem(DATA);
   assert.ok(record);
+  if (typeof record !== 'string')
+    assert.fail('a written record is always a string');
   storage.setItem(
     DATA,
     serializeSavedRecord(parseRecord(record).position, false)

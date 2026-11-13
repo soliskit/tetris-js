@@ -21,20 +21,68 @@ export const PieceColors = Object.freeze({
  * @param {number[][][]} rows [row, column] offsets for each rotation state
  * @returns {Position[][]}
  */
-const kicks = rows => rows.map(row => row.map(([r, c]) => position(r, c)));
+const kicks = (rows) => rows.map((row) => row.map(([r, c]) => position(r, c)));
 
 const jlstzWallKicks = kicks([
-  [[0, 0], [0, -1], [-1, -1], [2, 0], [2, -1]],
-  [[0, 0], [0, 1], [1, 1], [-2, 0], [-2, 1]],
-  [[0, 0], [0, 1], [-1, 1], [2, 0], [2, 1]],
-  [[0, 0], [0, -1], [1, -1], [-2, 0], [-2, -1]]
+  [
+    [0, 0],
+    [0, -1],
+    [-1, -1],
+    [2, 0],
+    [2, -1]
+  ],
+  [
+    [0, 0],
+    [0, 1],
+    [1, 1],
+    [-2, 0],
+    [-2, 1]
+  ],
+  [
+    [0, 0],
+    [0, 1],
+    [-1, 1],
+    [2, 0],
+    [2, 1]
+  ],
+  [
+    [0, 0],
+    [0, -1],
+    [1, -1],
+    [-2, 0],
+    [-2, -1]
+  ]
 ]);
 
 const iWallKicks = kicks([
-  [[0, 0], [0, -2], [0, 1], [1, -2], [-2, 1]],
-  [[0, 0], [0, -1], [0, 2], [-2, -1], [1, 2]],
-  [[0, 0], [0, 2], [0, -1], [-1, 2], [2, -1]],
-  [[0, 0], [0, 1], [0, -2], [2, 1], [-1, -2]]
+  [
+    [0, 0],
+    [0, -2],
+    [0, 1],
+    [1, -2],
+    [-2, 1]
+  ],
+  [
+    [0, 0],
+    [0, -1],
+    [0, 2],
+    [-2, -1],
+    [1, 2]
+  ],
+  [
+    [0, 0],
+    [0, 2],
+    [0, -1],
+    [-1, 2],
+    [2, -1]
+  ],
+  [
+    [0, 0],
+    [0, 1],
+    [0, -2],
+    [2, 1],
+    [-1, -2]
+  ]
 ]);
 
 const oWallKicks = kicks([[[0, 0]]]);
@@ -47,10 +95,16 @@ const oWallKicks = kicks([[[0, 0]]]);
  */
 function piece(spawn, color, wallKickData) {
   /** @type {Shape[]} */
-  const rotations = [spawn.map(line => Array.from(line).map(ch => ch === 'X'))];
+  const rotations = [
+    spawn.map((line) => Array.from(line).map((ch) => ch === 'X'))
+  ];
   while (rotations.length < wallKickData.length) {
     const last = rotations[rotations.length - 1];
-    rotations.push(last.map((_, row) => last.map((__, column) => last[last.length - 1 - column][row])));
+    rotations.push(
+      last.map((_, row) =>
+        last.map((__, column) => last[last.length - 1 - column][row])
+      )
+    );
   }
   return new Tetromino({ rotations, color, wallKickData });
 }
@@ -100,7 +154,8 @@ export class TetrominoFactory {
       this.bag = shuffle(allPieces(), this.random);
     }
     // Never undefined: the bag was just refilled if it was empty.
-    return /** @type {Tetromino} */ (this.bag.shift());
+    const [piece] = this.bag.splice(0, 1);
+    return piece;
   }
 
   // Starts a full bag, or carries on with the pieces left in a saved one.

@@ -128,11 +128,5 @@ export default defineConfig(
   {
     files: ['**/*.cjs'],
     rules: { '@typescript-eslint/no-require-imports': 'off' }
-  },
-  {
-    // public/ (game code) and docs/audit/ (evidence records) are excluded from
-    // formatting enforcement only; every other rule still applies there.
-    files: ['public/**', 'docs/audit/**'],
-    rules: { 'prettier/prettier': 'off' }
   }
 );

@@ -143,8 +143,8 @@ jobs:
             for f in "${game_files[@]}"; do
               base=$(basename "$f" .js)
               case "$f" in
-                public/game/inputController.js) ranges=("1-141" "142-294" "295-99999") ;;
-                public/game/tetromino.js) ranges=("1-155" "156-99999") ;;
+                public/game/inputController.js) ranges=("1-157" "158-333" "334-99999") ;;
+                public/game/tetromino.js) ranges=("1-185" "186-99999") ;;
                 *) ranges=() ;;
               esac
               if [ "${#ranges[@]}" -eq 0 ]; then
