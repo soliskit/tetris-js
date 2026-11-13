@@ -38,10 +38,51 @@ const APP_SHELL = [
   'game/tetrominoFactory.js'
 ];
 
-// `self` is this service worker; the cast tells the type checker so.
-const worker = /** @type {ServiceWorkerGlobalScope} */ (
-  /** @type {unknown} */ (self)
-);
+/**
+ * The events this file listens for, with the payloads it reads.
+ * @typedef {{ install: ExtendableEvent, activate: ExtendableEvent, fetch: FetchEvent }} WorkerEvents
+ */
+/**
+ * The surface this file uses from its service worker: every member it
+ * calls, nothing more. A new call extends these types and the check below
+ * together; nothing is assumed from the ambient ServiceWorkerGlobalScope.
+ * @typedef {object} WorkerScope
+ * @property {{ matchAll(options?: { includeUncontrolled?: boolean }): Promise<{ id: string }[]>, claim(): Promise<void> }} clients
+ * @property {() => Promise<void>} skipWaiting
+ * @property {<K extends keyof WorkerEvents>(type: K, listener: (event: WorkerEvents[K]) => void) => void} addEventListener
+ */
+/**
+ * Presence and callability of the surface above. It cannot prove the
+ * behavior behind the functions - promise values and event payloads stay an
+ * assumption about the host - so the test double passes it by design.
+ * @param {unknown} scope
+ * @returns {scope is WorkerScope}
+ */
+function hasWorkerScope(scope) {
+  if (typeof scope !== 'object' || scope === null || !('clients' in scope)) {
+    return false;
+  }
+  const { clients } = scope;
+  return (
+    typeof clients === 'object' &&
+    clients !== null &&
+    'matchAll' in clients &&
+    typeof clients.matchAll === 'function' &&
+    'claim' in clients &&
+    typeof clients.claim === 'function' &&
+    'skipWaiting' in scope &&
+    typeof scope.skipWaiting === 'function' &&
+    'addEventListener' in scope &&
+    typeof scope.addEventListener === 'function'
+  );
+}
+
+/** @type {unknown} */
+const candidate = self;
+if (!hasWorkerScope(candidate)) {
+  throw new Error('sw.js must run as a service worker');
+}
+const worker = candidate;
 
 /** @param {string} name */
 const versionNumber = (name) => parseInt(name.slice(VERSION_PREFIX.length), 10);
