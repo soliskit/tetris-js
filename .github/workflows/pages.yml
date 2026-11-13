@@ -14,7 +14,6 @@ jobs:
   test:
     env:
       QUALIFICATION_HEAD: ${{ github.sha }}
-      QUALIFICATION_EVIDENCE: ${{ runner.temp }}/normal-browser-receipts
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,6 +25,9 @@ jobs:
       delivery_passed: ${{ steps.e2e.outputs.delivery_passed }}
       delivery_skipped: ${{ steps.e2e.outputs.delivery_skipped }}
     steps:
+      - name: Set the owned receipt path
+        shell: bash
+        run: echo "QUALIFICATION_EVIDENCE=$RUNNER_TEMP/normal-browser-receipts" >> "$GITHUB_ENV"
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:

@@ -15,8 +15,10 @@ jobs:
     env:
       QUALIFICATION_HEAD: ${{ github.sha }}
       QUALIFICATION_SOURCE_MODE: candidate
-      QUALIFICATION_EVIDENCE: ${{ runner.temp }}/current-offline-evidence-v1
     steps:
+      - name: Set the owned receipt path
+        shell: bash
+        run: echo "QUALIFICATION_EVIDENCE=$RUNNER_TEMP/current-offline-evidence-v1" >> "$GITHUB_ENV"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
