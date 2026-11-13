@@ -41,7 +41,7 @@ export default defineConfig({
     }
   ],
   webServer: {
-    command: 'node index.js',
+    command: 'node index.js --source-test',
     env: { PORT: String(PORT) },
     url: `http://localhost:${String(PORT)}`,
     reuseExistingServer: !process.env.CI

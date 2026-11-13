@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "description": "Required delivery-suite screenshot proofs: each listed test must attach exactly one passing PNG with the given name. Plain requirement data; no content hashes.",
+  "screenshots": [
+    {
+      "project": "iphone-14-pro-max-webkit",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls / [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/",
+      "name": "built-offline"
+    },
+    {
+      "project": "iphone-14-pro-max-webkit",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch / [APP-2] [APP-3]"
+      ],
+      "scope": "/",
+      "name": "persistent-offline"
+    },
+    {
+      "project": "iphone-14-pro-max-webkit",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls /nested/app/ [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "built-offline"
+    },
+    {
+      "project": "iphone-14-pro-max-webkit",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch /nested/app/ [APP-2] [APP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "persistent-offline"
+    },
+    {
+      "project": "iphone-14-pro-max",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls / [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/",
+      "name": "built-offline"
+    },
+    {
+      "project": "iphone-14-pro-max",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch / [APP-2] [APP-3]"
+      ],
+      "scope": "/",
+      "name": "persistent-offline"
+    },
+    {
+      "project": "iphone-14-pro-max",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls /nested/app/ [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "built-offline"
+    },
+    {
+      "project": "iphone-14-pro-max",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch /nested/app/ [APP-2] [APP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "persistent-offline"
+    },
+    {
+      "project": "desktop",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls / [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/",
+      "name": "built-offline"
+    },
+    {
+      "project": "desktop",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch / [APP-2] [APP-3]"
+      ],
+      "scope": "/",
+      "name": "persistent-offline"
+    },
+    {
+      "project": "desktop",
+      "file": "delivery-e2e/generated.spec.js",
+      "titles": [
+        "built current game opens offline with usable controls /nested/app/ [APP-2] [APP-3] [DSP-2] [DSP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "built-offline"
+    },
+    {
+      "project": "desktop",
+      "file": "delivery-e2e/persistent.spec.js",
+      "titles": [
+        "built game survives a persistent browser close and offline relaunch /nested/app/ [APP-2] [APP-3]"
+      ],
+      "scope": "/nested/app/",
+      "name": "persistent-offline"
+    }
+  ]
+}

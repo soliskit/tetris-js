@@ -1,0 +1,36 @@
+name: Request website publication after qualification
+
+on:
+  workflow_run:
+    workflows: [Test and deploy]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  request-site:
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.repository.id == github.repository_id && github.event.workflow_run.head_repository.id == github.repository_id
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Request exact qualified Tetris source
+        shell: bash
+        env:
+          SITE_PUBLISH_TOKEN: ${{ secrets.SITE_PUBLISH_TOKEN }}
+          TETRIS_SHA: ${{ github.event.workflow_run.head_sha }}
+          TETRIS_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          [[ "$TETRIS_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$TETRIS_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          test -n "$SITE_PUBLISH_TOKEN"
+          body=$(jq -n --arg sha "$TETRIS_SHA" --arg run "$TETRIS_RUN_ID" '{ref:"main",inputs:{tetris_sha:$sha,tetris_test_run_id:$run}}')
+          curl --fail-with-body --silent --show-error --max-time 60 \
+            --request POST \
+            --header 'Accept: application/vnd.github+json' \
+            --header "Authorization: Bearer $SITE_PUBLISH_TOKEN" \
+            --header 'Content-Type: application/json' \
+            --data "$body" \
+            https://api.github.com/repos/soliskit/soliskit.github.io/actions/workflows/pages.yml/dispatches

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "failures": [
+    {
+      "project": "iphone-14-pro-max",
+      "file": "e2e/f28-touch-lift.spec.js",
+      "titles": [
+        "a touch lift far from touch-down with no move event is not a tap [INP-5]"
+      ]
+    }
+  ]
+}
