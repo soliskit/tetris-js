@@ -258,7 +258,7 @@ function sameShape(actual, expected) {
  * @param {unknown} piece
  * @returns {piece is { color: string }} Whether it is an object with a string color.
  */
-function isColorKeyed(piece) {
+export function isColorKeyed(piece) {
   return (
     typeof piece === 'object' &&
     piece !== null &&
