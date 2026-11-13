@@ -28,7 +28,13 @@ function isFree(gameBoard, row, column) {
 
 export class Tetromino {
   /** @param {TetrominoData} data */
-  constructor({ rotations, color, wallKickData, position: pos = position(0, 0), rotationState = 0 }) {
+  constructor({
+    rotations,
+    color,
+    wallKickData,
+    position: pos = position(0, 0),
+    rotationState = 0
+  }) {
     this.color = color;
     this.position = pos;
     this.rotations = rotations;
@@ -58,7 +64,10 @@ export class Tetromino {
     const piece = this.copy();
     const width = this.rotations[0][0].length;
     piece.rotationState = 0;
-    piece.position = position(0, Math.max(0, Math.trunc((columns - width) / 2)));
+    piece.position = position(
+      0,
+      Math.max(0, Math.trunc((columns - width) / 2))
+    );
     return piece;
   }
 
@@ -91,7 +100,9 @@ export class Tetromino {
    * @returns {boolean}
    */
   static fits(shape, pos, gameBoard) {
-    return Tetromino.cells(shape, pos).every(cell => isFree(gameBoard, cell.row, cell.column));
+    return Tetromino.cells(shape, pos).every((cell) =>
+      isFree(gameBoard, cell.row, cell.column)
+    );
   }
 
   /**
@@ -113,7 +124,9 @@ export class Tetromino {
   dropDistance(gameBoard) {
     const cells = this.cells;
     let rows = 0;
-    while (cells.every(cell => isFree(gameBoard, cell.row + rows + 1, cell.column))) {
+    while (
+      cells.every((cell) => isFree(gameBoard, cell.row + rows + 1, cell.column))
+    ) {
       rows += 1;
     }
     return rows;
@@ -137,12 +150,20 @@ export class Tetromino {
     /** @type {Array<[number, Position[]]>} */
     const attempts = [
       [clockwise, this.wallKickData[this.rotationState]],
-      [counterClockwise, this.wallKickData[counterClockwise].map(kick => position(-kick.row, -kick.column))]
+      [
+        counterClockwise,
+        this.wallKickData[counterClockwise].map((kick) =>
+          position(-kick.row, -kick.column)
+        )
+      ]
     ];
     if (counterclockwise) attempts.reverse();
     for (const [state, kicks] of attempts) {
       for (const kick of kicks) {
-        const candidate = position(this.position.row + kick.row, this.position.column + kick.column);
+        const candidate = position(
+          this.position.row + kick.row,
+          this.position.column + kick.column
+        );
         if (Tetromino.fits(this.rotations[state], candidate, gameBoard)) {
           this.rotationState = state;
           this.position = candidate;
@@ -163,10 +184,16 @@ export class Tetromino {
  * @returns {boolean[][][]}
  */
 function expectedRotations(spawn, turns) {
-  const rotations = [spawn.map(line => Array.from(line).map(ch => ch === 'X'))];
+  const rotations = [
+    spawn.map((line) => Array.from(line).map((ch) => ch === 'X'))
+  ];
   while (rotations.length < turns) {
     const last = rotations[rotations.length - 1];
-    rotations.push(last.map((_, row) => last.map((__, column) => last[last.length - 1 - column][row])));
+    rotations.push(
+      last.map((_, row) =>
+        last.map((__, column) => last[last.length - 1 - column][row])
+      )
+    );
   }
   return rotations;
 }
@@ -185,7 +212,7 @@ const EXPECTED = new Map([
 
 /**
  * @param {unknown} list
- * @returns {boolean} Whether it is an array with every index present.
+ * @returns {list is unknown[]} Whether it is an array with every index present.
  */
 function isDense(list) {
   if (!Array.isArray(list)) return false;
@@ -196,13 +223,22 @@ function isDense(list) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {value is number} Whether it is a whole number.
+ */
+const isInteger = (value) => Number.isInteger(value);
+
+/**
  * @param {unknown} actual
  * @param {boolean[]} expected
  * @returns {boolean}
  */
 function sameRow(actual, expected) {
-  return isDense(actual) && /** @type {unknown[]} */ (actual).length === expected.length
-    && expected.every((filled, column) => /** @type {unknown[]} */ (actual)[column] === filled);
+  return (
+    isDense(actual) &&
+    actual.length === expected.length &&
+    expected.every((filled, column) => actual[column] === filled)
+  );
 }
 
 /**
@@ -211,17 +247,23 @@ function sameRow(actual, expected) {
  * @returns {boolean}
  */
 function sameShape(actual, expected) {
-  return isDense(actual) && /** @type {unknown[]} */ (actual).length === expected.length
-    && expected.every((row, index) => sameRow(/** @type {unknown[]} */ (actual)[index], row));
+  return (
+    isDense(actual) &&
+    actual.length === expected.length &&
+    expected.every((row, index) => sameRow(actual[index], row))
+  );
 }
 
 /**
  * @param {unknown} piece
- * @returns {boolean[][][] | undefined} The expected rotations for this piece's kind, if it has one.
+ * @returns {piece is { color: string }} Whether it is an object with a string color.
  */
-function expectedFor(piece) {
-  const data = /** @type {{ color?: unknown } | null | undefined} */ (piece);
-  return typeof data?.color === 'string' ? EXPECTED.get(data.color) : undefined;
+export function isColorKeyed(piece) {
+  return (
+    typeof piece === 'object' &&
+    piece !== null &&
+    typeof Reflect.get(piece, 'color') === 'string'
+  );
 }
 
 /**
@@ -231,11 +273,16 @@ function expectedFor(piece) {
  * @returns {boolean}
  */
 export function isValidPiece(piece) {
-  const expected = expectedFor(piece);
+  if (!isColorKeyed(piece)) return false;
+  const expected = EXPECTED.get(piece.color);
   if (!expected) return false;
-  const rotations = /** @type {{ rotations?: unknown }} */ (piece).rotations;
-  return isDense(rotations) && /** @type {unknown[]} */ (rotations).length === expected.length
-    && expected.every((shape, index) => sameShape(/** @type {unknown[]} */ (rotations)[index], shape));
+  /** @type {unknown} */
+  const rotations = Reflect.get(piece, 'rotations');
+  return (
+    isDense(rotations) &&
+    rotations.length === expected.length &&
+    expected.every((shape, index) => sameShape(rotations[index], shape))
+  );
 }
 
 /**
@@ -254,20 +301,43 @@ export function isValidPieceList(pieces) {
  * @returns {boolean}
  */
 export function isValidFallingPiece(piece, board) {
-  const expected = expectedFor(piece);
+  if (!isColorKeyed(piece)) return false;
+  const expected = EXPECTED.get(piece.color);
   if (!expected) return false;
-  const { rotationState, position, rotations } = /** @type {{ rotationState?: unknown, position?: { row?: unknown, column?: unknown }, rotations?: unknown }} */ (piece);
-  const row = position?.row;
-  const column = position?.column;
-  if (!Number.isInteger(row) || !Number.isInteger(column)) return false;
-  // A whole-number index only: expected has no entry for -1, 0.5 or 4.
-  const shape = Number.isInteger(rotationState) ? expected[/** @type {number} */ (rotationState)] : undefined;
-  if (!shape || !isDense(rotations) || !sameShape(/** @type {unknown[]} */ (rotations)[/** @type {number} */ (rotationState)], shape)) return false;
-  const startRow = /** @type {number} */ (row);
-  const startColumn = /** @type {number} */ (column);
-  return shape.every((blocks, r) => blocks.every((filled, c) => !filled || cellAt(board, startRow + r, startColumn + c)?.isFilled === false));
+  /** @type {unknown} */
+  const rotationState = Reflect.get(piece, 'rotationState');
+  /** @type {unknown} */
+  const position = Reflect.get(piece, 'position');
+  /** @type {unknown} */
+  const rotations = Reflect.get(piece, 'rotations');
+  /** @type {unknown} */
+  const row =
+    typeof position === 'object' && position !== null
+      ? Reflect.get(position, 'row')
+      : undefined;
+  /** @type {unknown} */
+  const column =
+    typeof position === 'object' && position !== null
+      ? Reflect.get(position, 'column')
+      : undefined;
+  if (!isInteger(row) || !isInteger(column)) return false;
+  // A whole-number index in range only: expected has no entry for -1, 0.5 or 4.
+  if (
+    !isInteger(rotationState) ||
+    rotationState < 0 ||
+    rotationState >= expected.length
+  )
+    return false;
+  const shape = expected[rotationState];
+  if (!isDense(rotations) || !sameShape(rotations[rotationState], shape))
+    return false;
+  return shape.every((blocks, r) =>
+    blocks.every(
+      (filled, c) =>
+        !filled || cellAt(board, row + r, column + c)?.isFilled === false
+    )
+  );
 }
-
 
 // The board part of the engine's safety check: every row present and dense,
 // every cell a real cell.
@@ -281,8 +351,10 @@ export function isValidFallingPiece(piece, board) {
  * @returns {boolean}
  */
 export function isValidBoard(board) {
-  return isDense(board) && /** @type {unknown[]} */ (board).every(row =>
-    isDense(row) && /** @type {unknown[]} */ (row).every(isValidCell));
+  return (
+    isDense(board) &&
+    board.every((row) => isDense(row) && row.every(isValidCell))
+  );
 }
 
 /**
@@ -292,9 +364,18 @@ export function isValidBoard(board) {
  * @returns {boolean}
  */
 function isValidCell(cell) {
-  if (typeof cell !== 'object' || cell === null || Array.isArray(cell)) return false;
-  if (Reflect.ownKeys(cell).length !== 2 || !Object.hasOwn(cell, 'isFilled') || !Object.hasOwn(cell, 'color')) return false;
-  const { isFilled, color } = /** @type {{ isFilled: unknown, color: unknown }} */ (cell);
+  if (typeof cell !== 'object' || cell === null || Array.isArray(cell))
+    return false;
+  if (
+    Reflect.ownKeys(cell).length !== 2 ||
+    !Object.hasOwn(cell, 'isFilled') ||
+    !Object.hasOwn(cell, 'color')
+  )
+    return false;
+  /** @type {unknown} */
+  const isFilled = Reflect.get(cell, 'isFilled');
+  /** @type {unknown} */
+  const color = Reflect.get(cell, 'color');
   if (typeof isFilled !== 'boolean') return false;
   return isFilled ? EXPECTED.has(color) : color === null;
 }
