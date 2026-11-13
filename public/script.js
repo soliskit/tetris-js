@@ -816,8 +816,8 @@ const questionButtons = [cancelNewGameButton, confirmNewGameButton];
 // Enter does. With none selected, a move selects Cancel, the safe answer.
 const inputController = new InputController(gameManager, {
   move: (step) => {
-    const index = questionButtons.indexOf(
-      /** @type {HTMLElement} */ (document.activeElement)
+    const index = questionButtons.findIndex(
+      (button) => button === document.activeElement
     );
     questionButtons[
       Math.max(0, Math.min(questionButtons.length - 1, index + step))
