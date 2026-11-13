@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { createBoard } from '../public/game/gameState.js';
 import { position } from '../public/game/position.js';
 import { present } from './json.js';
+import { isColorKeyed } from '../public/game/tetromino.js';
 import { PieceColors } from '../public/game/tetrominoFactory.js';
 import { filled, pieceByColor, shapeStrings } from './helpers.js';
 
@@ -420,4 +421,13 @@ void test('turning counterclockwise, a J piece kicks right off the left wall [PC
   assert.equal(j.rotationState, 0, 'turned counterclockwise, not clockwise');
   assert.deepEqual(j.position, position(10, 0));
   assert.ok(j.fits(board));
+});
+
+void test('isColorKeyed admits only objects keyed by a text color [SAF-4]', () => {
+  assert.ok(isColorKeyed(pieceByColor(colorNamed('yellow'))));
+  assert.ok(!isColorKeyed(null));
+  assert.ok(!isColorKeyed('yellow'));
+  assert.ok(!isColorKeyed({}));
+  assert.ok(!isColorKeyed({ color: 7 }));
+  assert.ok(!isColorKeyed({ color: undefined }));
 });
