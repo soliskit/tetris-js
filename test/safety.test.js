@@ -444,6 +444,30 @@ const violations = [
       poke(present(game.gameBoard[2]), 4, filled());
     },
     'piece resting with no lock delay'
+  ],
+  // An undefined handle is not a handle: no state lets it pass.
+  [
+    'gravity missing behind an undefined handle',
+    (game) => {
+      game.stopGameLoop();
+      poke(game, 'gameLoopTask', undefined);
+    },
+    'gravity stopped while playing'
+  ],
+  [
+    'the piece resting with an undefined lock delay handle',
+    (game) => {
+      poke(present(game.gameBoard[2]), 4, filled());
+      poke(game, 'lockDelayTask', undefined);
+    },
+    'piece resting with no lock delay'
+  ],
+  [
+    'an undefined lock delay handle while the piece is in the air',
+    (game) => {
+      poke(game, 'lockDelayTask', undefined);
+    },
+    'lock delay running off the surface'
   ]
 ];
 
@@ -470,6 +494,14 @@ void test('the invariant monitor catches timers running while paused [SAF-4]', (
   const { game, scheduler, reported } = recordingGame();
   game.togglePause();
   game.startGameLoop();
+  game.guard(() => {});
+  assertSafeStop(game, scheduler, reported, 'timers running while not playing');
+});
+
+void test('the invariant monitor catches an undefined timer handle while paused [SAF-4]', () => {
+  const { game, scheduler, reported } = recordingGame();
+  game.togglePause();
+  poke(game, 'gameLoopTask', undefined);
   game.guard(() => {});
   assertSafeStop(game, scheduler, reported, 'timers running while not playing');
 });

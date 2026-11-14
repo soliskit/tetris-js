@@ -33,7 +33,8 @@ import { TetrominoFactory } from './tetrominoFactory.js';
 /** @typedef {{ getItem(key: string): unknown, setItem(key: string, value: string): void }} KeyValueStorage */
 /**
  * A scheduler's clearTimeout accepts exactly the handles its own setTimeout
- * issued: browser timers use numbers, other implementations their own.
+ * issued: browser timers use numbers, other implementations their own, never
+ * null or undefined.
  * @template THandle
  * @typedef {{ setTimeout(callback: () => void, ms: number): THandle, clearTimeout(handle: THandle): void }} Scheduler
  */
@@ -605,10 +606,12 @@ export class GameManager {
     )
       return 'piece is invalid or overlaps the board';
     if (this.state === GameState.playing) {
-      if (this.gameLoopTask === null) return 'gravity stopped while playing';
+      // The engine stores null for no timer and the scheduler's handle
+      // otherwise. Undefined is neither, so the checks here report it.
+      if (this.gameLoopTask == null) return 'gravity stopped while playing';
       if (this.lockDelayTask !== null && !this.isOnSurface)
         return 'lock delay running off the surface';
-      if (this.lockDelayTask === null && this.isOnSurface)
+      if (this.lockDelayTask == null && this.isOnSurface)
         return 'piece resting with no lock delay';
     } else if (this.gameLoopTask !== null || this.lockDelayTask !== null) {
       return 'timers running while not playing';
