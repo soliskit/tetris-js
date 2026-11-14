@@ -180,12 +180,12 @@ void test('mutation testing must leave no mutant alive, and runs weekly and on p
   );
   assert.match(workflow, /schedule:/);
   assert.match(workflow, /npm run test:mutation/);
-  // Every pull request: a plan job classifies each changed path; the
-  // matrix runs in parallel per game file, skipping only when every
-  // changed path is one of the enumerated documentation/metadata files
-  // while each stays a regular non-executable file, and one aggregate
-  // check stands for the whole matrix so the merge rule can require it
-  // (D85).
+  // Every pull request: a plan job classifies each changed path against
+  // the positive critical definition; the matrix runs in parallel per
+  // game file when a critical path matches, paths outside the definition
+  // are listed in the check summary instead of triggering, and one
+  // aggregate check stands for the whole matrix so the merge rule can
+  // require it (D85).
   const pullRequests = fs.readFileSync(
     path.join(root, '.github/workflows/mutation-pr.yml'),
     'utf8'
@@ -196,10 +196,22 @@ void test('mutation testing must leave no mutant alive, and runs weekly and on p
     /on:\n {2}pull_request:\n {4}types: \[opened, synchronize, reopened, ready_for_review\]/,
     'an opened, synchronized, reopened or ready-for-review pull request runs the workflow, whatever it changes'
   );
-  assert.ok(
-    pullRequests.includes('.gitignore|LICENSE|README.md'),
-    'the skip enumeration names .gitignore, LICENSE and README.md'
-  );
+  for (const arm of [
+    'public/*|index.js',
+    'test/*|e2e/*|delivery-e2e/*|delivery-checks/*',
+    'scripts/*',
+    'docs/requirements.md',
+    'docs/sources/2-srs_table.txt',
+    '.github/*',
+    'package.json|package-lock.json',
+    'stryker.config.json|playwright.config.js|playwright.delivery.config.js',
+    'tsconfig.json|tsconfig.tests.json|tsconfig.sw.json|tsconfig.generated-sw.json',
+    'eslint.config.mjs|.prettierrc.json|.prettierignore|ruff.toml|lefthook.yml|.gitignore',
+  ])
+    assert.ok(
+      pullRequests.includes(arm),
+      `the critical definition names ${arm}`
+    );
   assert.match(
     pullRequests,
     /fromJSON\(needs\.plan\.outputs\.files\)/,
@@ -237,8 +249,18 @@ void test('mutation testing must leave no mutant alive, and runs weekly and on p
   );
   assert.match(
     pullRequests,
-    /docs\/ is\n# NOT in the zero set/,
-    'the workflow documents that docs/ changes are not in the zero set'
+    /positive definition of the critical surface/,
+    'the workflow documents its positive critical definition'
+  );
+  assert.match(
+    pullRequests,
+    /does not trigger mutation/,
+    'the workflow documents that unmatched paths do not trigger mutation'
+  );
+  assert.match(
+    pullRequests,
+    /check summary/,
+    'the workflow documents that unmatched paths are listed in the check summary'
   );
   // Every unit test file that exercises the game logic takes part.
   for (const file of fs
