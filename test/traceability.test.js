@@ -206,7 +206,7 @@ void test('mutation testing must leave no mutant alive, and runs weekly and on p
     'package.json|package-lock.json',
     'stryker.config.json|playwright.config.js|playwright.delivery.config.js',
     'tsconfig.json|tsconfig.tests.json|tsconfig.sw.json|tsconfig.generated-sw.json',
-    'eslint.config.mjs|.prettierrc.json|.prettierignore|ruff.toml|lefthook.yml|.gitignore',
+    'eslint.config.mjs|.prettierrc.json|.prettierignore|ruff.toml|lefthook.yml|.gitignore'
   ])
     assert.ok(
       pullRequests.includes(arm),
