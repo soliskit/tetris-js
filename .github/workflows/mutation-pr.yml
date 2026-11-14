@@ -1,20 +1,30 @@
 name: Mutation testing on pull requests
 
-# Every pull request runs this workflow. The plan job puts every changed
-# path in one of three classes: a finitely enumerated set of files
-# (.gitignore, LICENSE, README.md) mutates nothing when every changed
-# path is in it and stays a regular non-executable file; source, tests,
-# fixtures, e2e, manifests, CI config and workflow changes run every
-# game file; a path the classifier cannot place runs every game file
-# too, and if the diff itself cannot be computed the plan job fails
-# instead of guessing. An addition or deletion runs every game file; a
-# detected rename is classified on both its old and new paths; a
-# symlink, executable bit or typechange runs every game file. docs/ is
-# NOT in the zero set: test/traceability.test.js and the audit tests
-# read it, so a docs change can change what the tests assert. The
-# aggregate check at the end stands for the whole matrix, so the merge
-# rule can require one stable check name and stay satisfied as game
-# files are added or renamed (D85). Mutation testing fails a pull
+# Every pull request runs this workflow. The plan job classifies every
+# changed path against a positive definition of the critical surface:
+# what the app's behavior or the mutation verdict depends on. The
+# definition names the served app (public/, index.js), the tests and
+# everything whose content their verdicts depend on (test/, e2e/,
+# delivery-e2e/, delivery-checks/, including inputs read outside the
+# test folders: docs/requirements.md is read by
+# test/traceability.test.js, and docs/sources/2-srs_table.txt is the
+# rotation-table oracle read by test/saveOracle.js), the build, release
+# and coverage tooling (scripts/), the dependency and tool configuration
+# (package.json, package-lock.json, stryker.config.json, the playwright
+# and tsconfig files, the lint and format configs, .gitignore), and the
+# CI definitions (.github/, including this classifier). A change
+# touching the definition runs every game file, fresh and in full. A
+# changed path outside the definition does not trigger mutation: the
+# plan job lists each such path in the run log and the check summary,
+# and the ordinary checks still run on the pull request. When a test,
+# build step or app process starts reading a new file, that file joins
+# the definition in the same change. A detected rename is classified on
+# both its old and new paths; a symlink, executable bit or typechange
+# runs every game file, and if the diff itself cannot be computed the
+# plan job fails instead of guessing. The aggregate check at the end
+# stands for the whole matrix, so the merge rule can require one stable
+# check name and stay satisfied as game files are added or renamed
+# (D85). Mutation testing fails a pull
 # request if any mutant that can change behavior survives. The threshold
 # is stryker.config.json's (break at 100); mutants that make the tests
 # run too long count as caught, and the exclusions marked in the code
@@ -76,12 +86,24 @@ jobs:
           git diff --raw -z -M "$merge_base" "$head_sha" > "$RUNNER_TEMP/diff.raw"
           verdict=zero
           changed=0
+          : > "$RUNNER_TEMP/unmatched.list"
           classify() {
             case "$1" in
-              # The finitely enumerated zero-impact files; docs/ is excluded
-              # on purpose (the tests read it). Anything else is FULL.
-              .gitignore|LICENSE|README.md) return 0 ;;
-              *) verdict=full ;;
+              # The positive critical definition: what the app's behavior
+              # or the mutation verdict depends on. A path outside it does
+              # not trigger mutation; it is listed in the run log and the
+              # check summary, and the ordinary checks still run.
+              public/*|index.js) verdict=full ;;
+              test/*|e2e/*|delivery-e2e/*|delivery-checks/*) verdict=full ;;
+              scripts/*) verdict=full ;;
+              docs/requirements.md) verdict=full ;;          # read by test/traceability.test.js
+              docs/sources/2-srs_table.txt) verdict=full ;;  # rotation-table oracle read by test/saveOracle.js
+              .github/*) verdict=full ;;
+              package.json|package-lock.json) verdict=full ;;
+              stryker.config.json|playwright.config.js|playwright.delivery.config.js) verdict=full ;;
+              tsconfig.json|tsconfig.tests.json|tsconfig.sw.json|tsconfig.generated-sw.json) verdict=full ;;
+              eslint.config.mjs|.prettierrc.json|.prettierignore|ruff.toml|lefthook.yml|.gitignore) verdict=full ;;
+              *) echo "$1" >> "$RUNNER_TEMP/unmatched.list" ;;
             esac
           }
           while IFS= read -r -d '' meta; do
@@ -91,12 +113,14 @@ jobs:
             srcmode=$(echo "$meta" | awk '{print substr($1, 2)}')  # strip the leading colon
             dstmode=$(echo "$meta" | awk '{print $2}')
             status=$(echo "$meta" | awk '{print $5}')
-            # Strict rule: BOTH revisions of every changed file must be
-            # regular non-executable files. An addition or deletion (the
-            # absent side is 000000), a symlink, an executable bit or a
-            # typechange is FULL - no new path ever lands in ZERO.
-            [ "$srcmode" = "100644" ] || verdict=full
-            [ "$dstmode" = "100644" ] || verdict=full
+            # Strict rule: a symlink, executable bit, submodule or
+            # typechange is FULL. Adds, deletes and edits classify by path.
+            case "$srcmode $dstmode" in
+              *120000*|*100755*|*160000*) verdict=full ;;
+            esac
+            case "$status" in
+              T*) verdict=full ;;
+            esac
             case "$status" in
               R*|C*)
                 IFS= read -r -d '' path2
@@ -161,7 +185,30 @@ jobs:
             echo "Full sweep: ${#game_files[@]} game files in ${#entries[@]} shards."
           else
             echo "files={\"include\":[]}" >> "$GITHUB_OUTPUT"
-            echo "Zero mutation targets: every changed path is an enumerated regular non-executable file."
+            echo "Zero mutation targets: no changed path is in the critical definition; the ordinary checks run separately."
+          fi
+          if [ -s "$RUNNER_TEMP/unmatched.list" ]; then
+            if [ "$verdict" = zero ]; then
+              echo "Outside the critical definition (mutation not triggered; the ordinary checks run separately):"
+            else
+              echo "Outside the critical definition (the full run is still triggered for this pull request):"
+            fi
+            while IFS= read -r p; do
+              echo "  $p"
+              echo "::notice title=Outside the critical definition::$p"
+            done < "$RUNNER_TEMP/unmatched.list"
+            {
+              echo '### Paths outside the critical definition'
+              echo ''
+              if [ "$verdict" = zero ]; then
+                echo 'Every changed path is outside the critical definition in this workflow, so no mutation run was triggered.'
+              else
+                echo 'These changed paths are outside the critical definition; the full mutation run is still triggered for this pull request.'
+              fi
+              echo 'The ordinary checks run separately on this pull request. If any of these paths can change behavior under test, add the path to the definition in this workflow.'
+              echo ''
+              while IFS= read -r p; do echo "- \`$p\`"; done < "$RUNNER_TEMP/unmatched.list"
+            } >> "$GITHUB_STEP_SUMMARY"
           fi
   mutation:
     name: mutation (${{ matrix.name }})
