@@ -126,6 +126,6 @@ jobs:
           check unit "$RESULT" "$UNIT_TESTS" "$UNIT_SKIPPED" 0
           check source-browser "$RESULT" "$E2E_EXPECTED" "$E2E_SKIPPED" 30
           check delivery-browser "$RESULT" "$DELIVERY_PASSED" "$DELIVERY_SKIPPED" 0
-          [ "$E2E_EXPECTED" = 420 ] && [ "$E2E_SKIPPED" = 30 ] || fail=1
+          [ "$E2E_EXPECTED" = 435 ] && [ "$E2E_SKIPPED" = 30 ] || fail=1
           [ "$DELIVERY_PASSED" = 42 ] && [ "$DELIVERY_SKIPPED" = 0 ] || fail=1
           exit "$fail"
