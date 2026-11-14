@@ -332,6 +332,10 @@ Waiting pieces do not inherit the current falling piece's board-fit, live positi
 
 This rule covers only the upcoming queue; the current-piece check is separate.
 
+### Timer handle check
+
+The engine stores null for a timer with no scheduled firing and the scheduler's handle for one that is scheduled. An undefined stored handle is neither: each required safety check reports it as a broken timer invariant in every mode, handled like SAF-3. A scheduler does not issue null or undefined as a handle. This settles B13's deferred handle correspondence for the runtime check only; B13's semantic definition of running is unchanged. No supported browser was shown to return an undefined handle.
+
 ## Process
 
 | ID   | Requirement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
