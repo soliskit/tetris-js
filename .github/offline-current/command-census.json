@@ -247,10 +247,10 @@
   "semantics": "One fresh hosted attempt. Every native status, process settlement, source identity, output binding, full result roster and final inventory must pass. Original stage and global deadlines remain stop bounds. No repair, retry, fallback or evidence truncation inside an attempt. Pixel inspection and reproducibility are separate completion gates.",
   "expectedBrowserCounts": {
     "source": {
-      "planned": 450,
-      "passed": 419,
+      "planned": 465,
+      "passed": 434,
       "expectedFailed": 1,
-      "expected": 420,
+      "expected": 435,
       "skipped": 30
     },
     "delivery": {

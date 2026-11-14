@@ -765,7 +765,72 @@ function endDrag(event) {
 boardCanvas.addEventListener('pointerup', endDrag);
 boardCanvas.addEventListener('pointercancel', endDrag);
 
-heldCanvas.addEventListener('click', () => {
+// A non-primary touch need not generate a click, so a tap made while another
+// finger is down would do nothing. While playing, track a completed touch tap
+// on the control separately, then ignore only that touch's compatibility
+// click. Every other activation stays a click.
+/**
+ * @param {HTMLElement} control
+ * @param {() => void} activate
+ */
+function activateOnTap(control, activate) {
+  /** @type {{ pointerId: number, x: number, y: number, moved: boolean } | null} */
+  let touch = null;
+  /** @type {number | null} */
+  let handledTouch = null;
+  control.addEventListener('pointerdown', (event) => {
+    if (
+      event.pointerType !== 'touch' ||
+      gameManager.state !== GameState.playing
+    )
+      return;
+    if (touch !== null) return;
+    handledTouch = null;
+    touch = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      moved: false
+    };
+  });
+  window.addEventListener('pointermove', (event) => {
+    if (touch === null || event.pointerId !== touch.pointerId) return;
+    if (
+      Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > TAP_SLOP_PX
+    )
+      touch.moved = true;
+  });
+  window.addEventListener('pointercancel', (event) => {
+    if (event.pointerId === touch?.pointerId) touch = null;
+  });
+  window.addEventListener('pointerup', (event) => {
+    if (touch === null || event.pointerId !== touch.pointerId) return;
+    const tap = touch;
+    touch = null;
+    const box = control.getBoundingClientRect();
+    const inside =
+      event.clientX >= box.left &&
+      event.clientX <= box.right &&
+      event.clientY >= box.top &&
+      event.clientY <= box.bottom;
+    if (tap.moved || !inside || gameManager.state !== GameState.playing) return;
+    handledTouch = event.pointerId;
+    activate();
+  });
+  control.addEventListener('click', (event) => {
+    if (
+      event instanceof PointerEvent &&
+      event.pointerType === 'touch' &&
+      event.pointerId === handledTouch
+    ) {
+      handledTouch = null;
+      return;
+    }
+    activate();
+  });
+}
+
+activateOnTap(heldCanvas, () => {
   gameManager.handleAction(PlayerAction.hold);
 });
 // The hold box is a button to keyboards and screen readers too. A click
@@ -852,60 +917,7 @@ function togglePauseFromButton() {
   }
 }
 
-// A non-primary touch need not generate a click. Track a completed touch
-// tap separately, then ignore only that touch's compatibility click.
-/** @type {{ pointerId: number, x: number, y: number, moved: boolean } | null} */
-let pauseTouch = null;
-/** @type {number | null} */
-let handledPauseTouch = null;
-playPauseButton.addEventListener('pointerdown', (event) => {
-  if (event.pointerType !== 'touch' || gameManager.state !== GameState.playing)
-    return;
-  if (pauseTouch !== null) return;
-  handledPauseTouch = null;
-  pauseTouch = {
-    pointerId: event.pointerId,
-    x: event.clientX,
-    y: event.clientY,
-    moved: false
-  };
-});
-window.addEventListener('pointermove', (event) => {
-  if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
-  if (
-    Math.hypot(event.clientX - pauseTouch.x, event.clientY - pauseTouch.y) >
-    TAP_SLOP_PX
-  )
-    pauseTouch.moved = true;
-});
-window.addEventListener('pointercancel', (event) => {
-  if (event.pointerId === pauseTouch?.pointerId) pauseTouch = null;
-});
-window.addEventListener('pointerup', (event) => {
-  if (pauseTouch === null || event.pointerId !== pauseTouch.pointerId) return;
-  const touch = pauseTouch;
-  pauseTouch = null;
-  const box = playPauseButton.getBoundingClientRect();
-  const inside =
-    event.clientX >= box.left &&
-    event.clientX <= box.right &&
-    event.clientY >= box.top &&
-    event.clientY <= box.bottom;
-  if (touch.moved || !inside || gameManager.state !== GameState.playing) return;
-  handledPauseTouch = event.pointerId;
-  togglePauseFromButton();
-});
-playPauseButton.addEventListener('click', (event) => {
-  if (
-    event instanceof PointerEvent &&
-    event.pointerType === 'touch' &&
-    event.pointerId === handledPauseTouch
-  ) {
-    handledPauseTouch = null;
-    return;
-  }
-  togglePauseFromButton();
-});
+activateOnTap(playPauseButton, togglePauseFromButton);
 
 // Matches the scenePhase handler: pause when the page is hidden.
 document.addEventListener('visibilitychange', () => {
