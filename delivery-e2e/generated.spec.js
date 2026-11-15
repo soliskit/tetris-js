@@ -13,6 +13,7 @@ import {
   hash,
   cleanupAll
 } from './helpers.js';
+import { startReloadEvidence, writeReloadEvidence } from './reload-evidence.js';
 const receipt = JSON.parse(
   fs.readFileSync('.release-evidence/release.json', 'utf8')
 );
@@ -217,17 +218,28 @@ for (const scope of ['/', '/nested/app/']) {
     'incomplete or corrupt built update cannot replace a complete installed game ' +
       scope +
       ' [APP-2] [SAF-2]',
-    async ({ page }) => {
+    async ({ page }, info) => {
       const a = await derivedRelease('A');
       let b;
       let host;
       let primary;
+      let evidence;
       try {
         b = await derivedRelease('B');
         host = await serverFor(a.dir, scope);
+        evidence = startReloadEvidence(host);
+        evidence.attach(page);
         await ready(page, host.base);
-        await page.reload();
-        expect(await page.evaluate(() => window.__releaseTag)).toBe('A');
+        evidence.navigation(await page.reload());
+        // The same immediate check, one evaluation as before, now also
+        // carrying the browser state the diagnostic needs.
+        const immediate = await page.evaluate(() => ({
+          releaseTag: window.__releaseTag,
+          readyState: document.readyState,
+          controller: navigator.serviceWorker?.controller?.state ?? null
+        }));
+        evidence.immediate(immediate);
+        expect(immediate.releaseTag).toBe('A');
         host.state.directory = b.dir;
         host.state.corrupt = true;
         const rejected = await page.evaluate(async () => {
@@ -257,6 +269,18 @@ for (const scope of ['/', '/nested/app/']) {
       } catch (error) {
         primary = error;
       } finally {
+        // Evidence is saved even when the case fails, before any cleanup;
+        // a missing file fails the workflow's always-on upload step.
+        try {
+          await writeReloadEvidence(evidence, page, info);
+        } catch (error) {
+          primary = primary
+            ? new AggregateError(
+                [primary, error],
+                'Test failure and evidence failure'
+              )
+            : error;
+        }
         await cleanupAll([host, b, a], primary);
       }
     }

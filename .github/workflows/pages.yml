@@ -72,6 +72,14 @@ jobs:
         env:
           QUALIFICATION_SUITE: delivery
         run: node node_modules/playwright/cli.js test --config playwright.delivery.config.js --reporter=list,.github/offline-current/qualification-reporter.mjs --output test-results/delivery-current
+      - name: Save reload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reload-evidence-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: test-results/delivery-current/generated-incomplete-or-*/reload-evidence.json
+          if-no-files-found: error
+          retention-days: 7
       - run: node scripts/browser-coverage.js
       - name: Validate complete browser results and screenshot assignments
         run: python3 .github/offline-current/validate-reports.py
