@@ -9,7 +9,7 @@ name: Mutation testing
 # the exclusions marked in the code stay excluded.
 on:
   schedule:
-    - cron: '0 7 * * 6' # Saturdays 7:00 AM Los Angeles time
+    - cron: '20 7 * * 6' # Saturdays 7:20 AM Los Angeles time
       timezone: 'America/Los_Angeles'
   workflow_dispatch:
 
