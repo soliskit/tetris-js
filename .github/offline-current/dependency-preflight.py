@@ -81,6 +81,20 @@ def run_checks(common, contract, receipts):
                 dict(os.environ),
             )
             result["checks"].append({"name": name, "native": outcome})
+            # Recognize the pinned dry-run's explicit missing-package response
+            # only after every non-exit native/cleanup gate has passed.
+            # This classification still stops before browser download.
+            if (
+                name == "playwright-dependency-dry-run"
+                and type(outcome.get("rc")) is int
+                and outcome["rc"] == 1
+            ):
+                classification_native = dict(outcome, rc=0)
+                if contract.native_ok(classification_native):
+                    stdout = (receipts / (name + ".stdout")).read_text()
+                    stderr = (receipts / (name + ".stderr")).read_text()
+                    if not stderr and contract.missing_dry_run_status(stdout):
+                        raise contract.PreflightStop("missing-or-unconfigured")
             if not contract.native_ok(outcome):
                 raise contract.PreflightStop(
                     "timeout" if outcome.get("timeout") else "parse-or-command-error"

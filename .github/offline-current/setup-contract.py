@@ -132,6 +132,18 @@ def installed_status(text, packages):
         raise PreflightStop("missing-or-unconfigured")
 
 
+def missing_dry_run_status(stdout):
+    match = re.fullmatch(
+        r"Missing system dependencies \(([1-9][0-9]*)\):\n"
+        r"((?:  [a-z0-9][a-z0-9.+-]*\n)+)",
+        stdout,
+    )
+    if not match:
+        return False
+    packages = [line[2:] for line in match[2].splitlines()]
+    return int(match[1]) == len(packages) and packages == sorted(set(packages))
+
+
 def dry_run_status(stdout, stderr):
     if stderr or stdout != "All system dependencies are installed.\n":
         if stdout.startswith("Missing system dependencies ("):

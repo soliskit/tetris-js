@@ -41,6 +41,54 @@ class PreflightTests(unittest.TestCase):
                     "cleanup": {"groupAbsent": True},
                     "descendants": {"allAbsent": True},
                 }
+                if name == "playwright-dependency-dry-run" and failure in [
+                    "missing",
+                    "missing-unsafe-cleanup",
+                    "missing-ambiguous",
+                    "missing-warning",
+                    "nonzero-positive",
+                    "missing-bool-rc",
+                    "missing-float-rc",
+                    "missing-string-rc",
+                    "missing-none-rc",
+                    "missing-duplicate",
+                    "missing-unsorted",
+                    "missing-zero-count",
+                    "missing-timeout",
+                    "missing-interrupted",
+                    "missing-no-cleanup",
+                    "missing-no-descendants",
+                ]:
+                    outcome["rc"] = 1
+                    output = "Missing system dependencies (1):\n  a\n"
+                    if failure == "missing-unsafe-cleanup":
+                        outcome["cleanup"] = {"groupAbsent": False}
+                    elif failure == "missing-ambiguous":
+                        output = "Missing system dependencies (2):\n  a\n"
+                    elif failure == "missing-bool-rc":
+                        outcome["rc"] = True
+                    elif failure == "missing-float-rc":
+                        outcome["rc"] = 1.0
+                    elif failure == "missing-string-rc":
+                        outcome["rc"] = "1"
+                    elif failure == "missing-none-rc":
+                        outcome["rc"] = None
+                    elif failure == "missing-duplicate":
+                        output = "Missing system dependencies (2):\n  a\n  a\n"
+                    elif failure == "missing-unsorted":
+                        output = "Missing system dependencies (2):\n  b\n  a\n"
+                    elif failure == "missing-zero-count":
+                        output = "Missing system dependencies (0):\n"
+                    elif failure == "missing-timeout":
+                        outcome["timeout"] = True
+                    elif failure == "missing-interrupted":
+                        outcome["interrupted"] = True
+                    elif failure == "missing-no-cleanup":
+                        outcome.pop("cleanup")
+                    elif failure == "missing-no-descendants":
+                        outcome.pop("descendants")
+                    elif failure == "nonzero-positive":
+                        output = "All system dependencies are installed.\n"
                 if failure == name:
                     output = "bad"
                 if failure == "timeout" and name == "package-status":
@@ -50,7 +98,12 @@ class PreflightTests(unittest.TestCase):
                 if failure == "descendant" and name == "package-status":
                     outcome["descendants"] = {"allAbsent": False}
                 (target / (name + ".stdout")).write_text(output)
-                (target / (name + ".stderr")).write_text("")
+                (target / (name + ".stderr")).write_text(
+                    "warning"
+                    if failure == "missing-warning"
+                    and name == "playwright-dependency-dry-run"
+                    else ""
+                )
                 return outcome
 
             common = types.SimpleNamespace(
@@ -85,6 +138,39 @@ class PreflightTests(unittest.TestCase):
         self.assertEqual([c[2] for c in calls], [900, 900, 900])
         self.assertEqual(calls[1][1], ["dpkg", "--audit"])
         self.assertIn("--dry-run", calls[2][1])
+
+    def test_documented_missing_exit_is_classified_but_never_passes(self):
+        rc, result, calls = self.execute("missing")
+        self.assertEqual(rc, 1)
+        self.assertEqual(result["status"], "missing-or-unconfigured")
+        self.assertEqual(len(calls), 3)
+        for failure in [
+            "missing-unsafe-cleanup",
+            "missing-ambiguous",
+            "missing-warning",
+            "nonzero-positive",
+            "missing-bool-rc",
+            "missing-float-rc",
+            "missing-string-rc",
+            "missing-none-rc",
+            "missing-duplicate",
+            "missing-unsorted",
+            "missing-zero-count",
+            "missing-timeout",
+            "missing-interrupted",
+            "missing-no-cleanup",
+            "missing-no-descendants",
+        ]:
+            with self.subTest(failure=failure):
+                rc, result, calls = self.execute(failure)
+                self.assertEqual(rc, 1)
+                self.assertEqual(
+                    result["status"],
+                    "timeout"
+                    if failure == "missing-timeout"
+                    else "parse-or-command-error",
+                )
+                self.assertEqual(len(calls), 3)
 
     def test_all_early_failures_stop_following_queries(self):
         for failure in [
