@@ -37,6 +37,18 @@ def main():
     subprocess.run(
         [sys.executable, "-m", "ruff", "format", "--check", "."], env=env, check=True
     )
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            ".github/offline-current/tests",
+        ],
+        env=env,
+        check=True,
+    )
 
 
 if __name__ == "__main__":
