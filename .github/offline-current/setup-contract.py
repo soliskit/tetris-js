@@ -132,6 +132,57 @@ def installed_status(text, packages):
         raise PreflightStop("missing-or-unconfigured")
 
 
+def missing_package_query_status(stdout, stderr, packages):
+    # This is classification only, never a success adapter. The native rc=1
+    # and all non-exit lifecycle gates are checked by the caller.
+    if (
+        not isinstance(stdout, str)
+        or not isinstance(stderr, str)
+        or not isinstance(packages, list)
+        or not packages
+        or len(packages) > 72
+        or any(
+            not isinstance(p, str) or not re.fullmatch(r"[a-z0-9][a-z0-9.+-]*", p)
+            for p in packages
+        )
+        or packages != sorted(set(packages))
+        or "\r" in stdout
+        or "\r" in stderr
+        or len(stdout) > 32768
+        or len(stderr) > 32768
+        or (stdout and not stdout.endswith("\n"))
+        or not stderr.endswith("\n")
+    ):
+        return False
+    observed = set()
+    for line in stdout.splitlines():
+        match = re.fullmatch(
+            r"([a-z0-9][a-z0-9.+-]*)\t"
+            r"(?:unknown|install|hold|deinstall|purge) "
+            r"(?:ok|reinstreq) "
+            r"(?:not-installed|config-files|half-installed|unpacked|"
+            r"half-configured|triggers-awaited|triggers-pending|installed)",
+            line,
+        )
+        if not match or match[1] not in packages or match[1] in observed:
+            return False
+        observed.add(match[1])
+    missing = set()
+    for line in stderr.splitlines():
+        match = re.fullmatch(
+            r"dpkg-query: no packages found matching ([a-z0-9][a-z0-9.+-]*)", line
+        )
+        if (
+            not match
+            or match[1] not in packages
+            or match[1] in observed
+            or match[1] in missing
+        ):
+            return False
+        missing.add(match[1])
+    return bool(missing) and observed | missing == set(packages)
+
+
 def missing_dry_run_status(stdout):
     match = re.fullmatch(
         r"Missing system dependencies \(([1-9][0-9]*)\):\n"
