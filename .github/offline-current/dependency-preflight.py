@@ -78,7 +78,9 @@ def run_checks(common, contract, receipts):
                 max(0.1, common.WORK_END - time.monotonic()),
                 ROOT,
                 receipts,
-                dict(os.environ),
+                dict(os.environ, LC_ALL="C", LANGUAGE="C")
+                if name == "package-status"
+                else dict(os.environ),
             )
             result["checks"].append({"name": name, "native": outcome})
             # Recognize the pinned dry-run's explicit missing-package response
@@ -94,6 +96,22 @@ def run_checks(common, contract, receipts):
                     stdout = (receipts / (name + ".stdout")).read_text()
                     stderr = (receipts / (name + ".stderr")).read_text()
                     if not stderr and contract.missing_dry_run_status(stdout):
+                        raise contract.PreflightStop("missing-or-unconfigured")
+            # A failed package lookup remains failed. Classify it only when
+            # all non-exit native gates pass and every requested package is
+            # accounted for by a strict C-locale response.
+            if (
+                name == "package-status"
+                and type(outcome.get("rc")) is int
+                and outcome["rc"] == 1
+            ):
+                classification_native = dict(outcome, rc=0)
+                if contract.native_ok(classification_native):
+                    stdout = (receipts / (name + ".stdout")).read_text()
+                    stderr = (receipts / (name + ".stderr")).read_text()
+                    if common.live_invalid(common.WORK_END) or common.RETENTION_ERRORS:
+                        raise contract.PreflightStop("parse-or-command-error")
+                    if contract.missing_package_query_status(stdout, stderr, packages):
                         raise contract.PreflightStop("missing-or-unconfigured")
             if not contract.native_ok(outcome):
                 raise contract.PreflightStop(
