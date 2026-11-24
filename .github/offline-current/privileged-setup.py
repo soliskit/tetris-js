@@ -18,9 +18,14 @@ spec = importlib.util.spec_from_file_location(
 )
 common = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(common)
+contract_spec = importlib.util.spec_from_file_location(
+    "setup_contract", root / ".github/offline-current/setup-contract.py"
+)
+contract = importlib.util.module_from_spec(contract_spec)
+contract_spec.loader.exec_module(contract)
 now = time.monotonic()
 requested = float(os.environ["QUALIFICATION_SETUP_DEADLINE"])
-if not now + 35 < requested <= now + 390:
+if not contract.finite(requested) or not now + 35 < requested <= now + 390:
     raise RuntimeError("setup deadline outside finite approved envelope")
 common.ABSOLUTE_END = requested
 common.WORK_END = requested - 30
@@ -46,11 +51,14 @@ env = {
     "PATH": os.environ["PATH"],
     "HOME": str(isolated),
     "CI": "1",
-    "LANG": "C.UTF-8",
+    "LANG": "C",
+    "LC_ALL": "C",
+    "QUALIFICATION_SETUP_DEADLINE": str(requested),
+    "QUALIFICATION_EVIDENCE": os.environ["QUALIFICATION_EVIDENCE"],
     "PLAYWRIGHT_BROWSERS_PATH": os.environ["PLAYWRIGHT_BROWSERS_PATH"],
 }
 state = {
-    "schema": 1,
+    "schema": 2,
     "identity": identity,
     "supervisorUid": os.geteuid(),
     "subreaper": common.enable_subreaper(),
@@ -58,49 +66,13 @@ state = {
     "isolatedTemporaryRoot": str(isolated),
     "verdict": "INCOMPLETE",
     "errors": [],
+    "phases": [],
 }
 try:
-    outcome = common.stage(
-        "fixed-browser-setup",
-        [
-            "node",
-            "node_modules/playwright/cli.js",
-            "install",
-            "--with-deps",
-            "chromium",
-            "webkit",
-        ],
-        max(0.1, common.WORK_END - time.monotonic()),
-        root,
-        receipts,
-        env,
+    state["phases"] = contract.perform_setup(
+        common, root, receipts, env, identity, requested
     )
-    state["native"] = outcome
-    cleanup = outcome.get("cleanup", {})
-    descendants = outcome.get("descendants", {})
-    if (
-        outcome.get("rc") != 0
-        or outcome.get("error")
-        or outcome.get("errors")
-        or outcome.get("timeout")
-        or outcome.get("interrupted")
-        or outcome.get("receiptWriteError")
-        or (not cleanup.get("groupAbsent"))
-        or any(
-            cleanup.get(k)
-            for k in [
-                "leaderRetained",
-                "term",
-                "kill",
-                "emergencyKill",
-                "cleanupError",
-            ]
-        )
-        or (not descendants.get("allAbsent"))
-        or descendants.get("term")
-        or descendants.get("kill")
-    ):
-        raise RuntimeError("privileged setup did not qualify")
+    contract.validate_phases(state, identity, requested)
     if (
         common.EVER_INTERRUPTED
         or common.RETENTION_ERRORS

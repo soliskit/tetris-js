@@ -261,5 +261,22 @@
       "skipped": 0
     },
     "screenshots": 12
+  },
+  "setupPhases": {
+    "schema": 1,
+    "orderedPhases": [
+      "dependency-preflight",
+      "browser-download"
+    ],
+    "preflightChecks": [
+      "package-status",
+      "package-audit",
+      "playwright-dependency-dry-run"
+    ],
+    "sharedAbsoluteMaximumSeconds": 390,
+    "workReserveSeconds": 30,
+    "cleanupFinishReserveSeconds": 5,
+    "packagesManifest": "browser-dependencies.json",
+    "mutation": false
   }
 }

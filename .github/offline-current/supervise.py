@@ -1,5 +1,6 @@
 import ctypes
 import hashlib
+import importlib.util
 import json
 import os
 import pathlib
@@ -740,6 +741,54 @@ def main():
                     raise RuntimeError(
                         "privileged setup native final receipt did not qualify"
                     )
+                contract_spec = importlib.util.spec_from_file_location(
+                    "setup_contract", root / ".github/offline-current/setup-contract.py"
+                )
+                contract = importlib.util.module_from_spec(contract_spec)
+                contract_spec.loader.exec_module(contract)
+                setup_identity = {
+                    key: stage_env[key]
+                    for key in [
+                        "QUALIFICATION_HEAD",
+                        "GITHUB_SHA",
+                        "GITHUB_RUN_ID",
+                        "GITHUB_RUN_ATTEMPT",
+                    ]
+                }
+                if census.get("setupPhases") != {
+                    "schema": 1,
+                    "orderedPhases": list(contract.PHASES),
+                    "preflightChecks": list(contract.CHECKS),
+                    "sharedAbsoluteMaximumSeconds": 390,
+                    "workReserveSeconds": 30,
+                    "cleanupFinishReserveSeconds": 5,
+                    "packagesManifest": "browser-dependencies.json",
+                    "mutation": False,
+                }:
+                    raise RuntimeError("setup command census differs")
+                phases = contract.validate_phases(
+                    helper,
+                    setup_identity,
+                    float(stage_env["QUALIFICATION_SETUP_DEADLINE"]),
+                )
+                for phase in phases:
+                    if (
+                        json.loads(
+                            (helper_root / (phase["phase"] + ".json")).read_text()
+                        )
+                        != phase
+                    ):
+                        raise RuntimeError(
+                            "setup phase receipt differs from helper census"
+                        )
+                for check in phases[0]["checks"]:
+                    native_path = (
+                        helper_root / "preflight-checks" / (check["name"] + ".json")
+                    )
+                    if json.loads(native_path.read_text()) != check["native"]:
+                        raise RuntimeError(
+                            "preflight check receipt differs from phase census"
+                        )
             invalid = live_invalid(WORK_END)
             if invalid or RETENTION_ERRORS:
                 raise RuntimeError(
