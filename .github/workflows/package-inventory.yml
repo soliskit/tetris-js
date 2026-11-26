@@ -1,0 +1,45 @@
+name: Package inventory diagnostic
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    if: >-
+      github.event.action == 'opened' &&
+      github.event.pull_request.head.ref == 'diagnostic/package-inventory-20261124' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.repository == 'soliskit/tetris-js' &&
+      github.event.repository.id == 821557448 &&
+      github.event.pull_request.head.repo.id == 821557448 &&
+      github.event.pull_request.base.repo.id == 821557448 &&
+      github.event.pull_request.head.repo.full_name == 'soliskit/tetris-js' &&
+      github.event.pull_request.base.repo.full_name == 'soliskit/tetris-js' &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read the exact diagnostic source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Collect only the pinned package census
+        timeout-minutes: 3
+        run: >-
+          python3 -I -S .github/offline-current/package-inventory.py
+          "$RUNNER_TEMP/package-inventory-export"
+          "$RUNNER_TEMP/package-inventory-private"
+      - name: Retain one diagnostic artifact, never release evidence
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: package-inventory-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/package-inventory-export/inventory.json
+          if-no-files-found: error
+          retention-days: 3
